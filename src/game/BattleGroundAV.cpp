@@ -53,7 +53,7 @@ void BattleGroundAV::HandleKillPlayer(Player *player, Player *killer)
 {
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
-	UpdateScore((player->GetTeam() == ALLIANCE) ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE,-1);
+	UpdateScore((player->GetTeam() == ALLIANCE) ? HORDE : ALLIANCE,-1);
 }
 
 void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
@@ -77,7 +77,7 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     {
         RewardReputationToTeam(729,BG_AV_REP_CAPTAIN,HORDE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),HORDE);
-	    UpdateScore(BG_TEAM_ALLIANCE,(-1)*BG_AV_RES_CAPTAIN);
+	    UpdateScore(ALLIANCE,(-1)*BG_AV_RES_CAPTAIN);
         //spawn destroyed aura
         for(uint8 i=0; i<=9; i++)
             SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_ALLIANCE+i,RESPAWN_IMMEDIATELY);
@@ -86,22 +86,22 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     {
         RewardReputationToTeam(730,BG_AV_REP_CAPTAIN,ALLIANCE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),ALLIANCE);
-	UpdateScore(BG_TEAM_HORDE,(-1)*BG_AV_RES_CAPTAIN);
+	UpdateScore(HORDE,(-1)*BG_AV_RES_CAPTAIN);
         //spawn destroyed aura
         for(uint8 i=0; i<=9; i++)
             SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_HORDE+i,RESPAWN_IMMEDIATELY);
     }
-    else if ( entry == BG_AV_CreatureInfo[AV_NPC_IRONDEEP_N_4][0] )
+    else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][0] )
     {
         m_Mine_Owner[AV_NORTH_MINE] = killer->GetTeam();
         PopulateMine(AV_NORTH_MINE);
     }
-    else if ( entry == BG_AV_CreatureInfo[AV_NPC_IRONDEEP_A_4][0] )
+    else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_A_4][0] )
     {
         m_Mine_Owner[AV_NORTH_MINE] = killer->GetTeam();
         PopulateMine(AV_NORTH_MINE);
     }
-    else if ( entry == BG_AV_CreatureInfo[AV_NPC_IRONDEEP_H_4][0] )
+    else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_H_4][0] )
     {
         m_Mine_Owner[AV_NORTH_MINE] = killer->GetTeam();
         PopulateMine(AV_NORTH_MINE);
@@ -213,9 +213,9 @@ void BattleGroundAV::UpdateQuest(uint32 questid, Player *player)
 }
 
 
-void BattleGroundAV::UpdateScore(uint8 team, int16 points )
+void BattleGroundAV::UpdateScore(uint16 team, int16 points )
 {
-    if( team == BG_TEAM_ALLIANCE )
+    if( team == ALLIANCE )
     {
         m_Team_Scores[0] += points;
         if( m_Team_Scores[0] < 0)
@@ -225,7 +225,7 @@ void BattleGroundAV::UpdateScore(uint8 team, int16 points )
         }
 	    UpdateWorldState(AV_Alliance_Score, m_Team_Scores[0]);
     }
-    else if ( team == BG_TEAM_HORDE )
+    else if ( team == HORDE )
     {
         m_Team_Scores[1] += points;
         if( m_Team_Scores[1] < 0)
@@ -399,6 +399,32 @@ void BattleGroundAV::Update(time_t diff)
     }
     else if(GetStatus() == STATUS_IN_PROGRESS)
     {
+        m_Mine_Timer -=diff;
+        if(m_Mine_Owner[AV_SOUTH_MINE] != BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][1])
+        {
+            m_Mine_Reclaim_Timer[AV_SOUTH_MINE] -= diff;
+            if( m_Mine_Timer <= 0)
+                UpdateScore(m_Mine_Owner[AV_SOUTH_MINE],1);
+            if( m_Mine_Reclaim_Timer[AV_SOUTH_MINE] <= 0)
+            {
+                m_Mine_Owner[AV_SOUTH_MINE] = BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][1];
+                PopulateMine(AV_SOUTH_MINE);
+            }
+        }
+        if(m_Mine_Owner[AV_NORTH_MINE] != BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][1])
+        {
+            m_Mine_Reclaim_Timer[AV_NORTH_MINE] -= diff;
+            if( m_Mine_Timer <= 0)
+                UpdateScore(m_Mine_Owner[AV_NORTH_MINE],1);
+            if( m_Mine_Reclaim_Timer[AV_NORTH_MINE] <= 0)
+            {
+                m_Mine_Owner[AV_NORTH_MINE] = BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][1];
+                PopulateMine(AV_NORTH_MINE);
+            }
+        }
+        if( m_Mine_Timer <= 0)
+            m_Mine_Timer=AV_MINE_TICK_TIMER;
+
         for(uint32 i = BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; i++)
             if(m_Points_State[i] == POINT_ASSAULTED)
                 if(m_Points_Timer[i] <= 0)
@@ -544,7 +570,7 @@ void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
         else
             sLog.outError("BG_AV: playerdestroyedpoint: marshal %i doesn't exist",AV_CPLACE_A_MARSHAL_SOUTH+(node-BG_AV_NODES_DUNBALDAR_SOUTH));
         m_Points_State[GetNodePlace(node)]=POINT_DESTROYED;
-        UpdateScore((team == ALLIANCE) ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE, (-1)*BG_AV_RES_TOWER);
+        UpdateScore((team == ALLIANCE) ? HORDE : ALLIANCE, (-1)*BG_AV_RES_TOWER);
         //spawn destroyed aura
         for(uint8 i=0; i<=9; i++)
             SpawnBGObject(BG_AV_OBJECT_BURN_DUNBALDAR_SOUTH+((GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)*10)+i,RESPAWN_IMMEDIATELY);
@@ -593,58 +619,57 @@ void BattleGroundAV::PopulateMine(uint8 mine)
     uint32 team = m_Mine_Owner[mine];
     uint16 cinfo;
     //also neutral team exists.. after a big time, the neutral team tries to conquer the mine
+    SendMineWorldStates(mine);
     if(mine==AV_NORTH_MINE)
     {
         if(team == ALLIANCE)
-        {
-            UpdateWorldState(AV_IRONDEEP_MINE_A,1);
-            UpdateWorldState(AV_IRONDEEP_MINE_N,0);
-            UpdateWorldState(AV_IRONDEEP_MINE_H,0);
-            cinfo = AV_NPC_IRONDEEP_A_1;
-        }
-        else if(team == HORDE)
-        {
-            UpdateWorldState(AV_IRONDEEP_MINE_A,0);
-            UpdateWorldState(AV_IRONDEEP_MINE_N,0);
-            UpdateWorldState(AV_IRONDEEP_MINE_H,1);
-            cinfo = AV_NPC_IRONDEEP_H_1;
-        }
+            cinfo = AV_NPC_N_MINE_A_1;
+        else if (team == HORDE)
+            cinfo = AV_NPC_N_MINE_H_1;
         else
-        {
-            UpdateWorldState(AV_IRONDEEP_MINE_A,0);
-            UpdateWorldState(AV_IRONDEEP_MINE_N,1);
-            UpdateWorldState(AV_IRONDEEP_MINE_H,0);
-            cinfo = AV_NPC_IRONDEEP_N_1;
-        }
+            cinfo = AV_NPC_N_MINE_N_1;
     }
     else
-        return; //TODO: get spawns of the south-mine
+    {
+        return;
+        //TODO:...
+        /*if(team == ALLIANCE)
+            cinfo = AV_NPC_N_MINE_A_1;
+        else if (team == HORDE)
+            cinfo = AV_NPC_N_MINE_H_1;
+        else
+            cinfo = AV_NPC_N_MINE_N_1;*/
+    }
     //all spawns (except boss) are at the same place
-    for(uint16 i=AV_CPLACE_IRONDEEP_S_1_MIN; i <= AV_CPLACE_IRONDEEP_S_1_MAX; i++)
+    for(uint16 i=AV_CPLACE_N_S_1_MIN; i <= AV_CPLACE_N_S_1_MAX; i++)
         if( BG_AV_CreaturePos[i][0] != 0)
             AddAVCreature(cinfo,i);
     cinfo++;
-    for(uint16 i=AV_CPLACE_IRONDEEP_S_2_MIN; i <= AV_CPLACE_IRONDEEP_S_2_MAX; i++)
+    for(uint16 i=AV_CPLACE_N_S_2_MIN; i <= AV_CPLACE_N_S_2_MAX; i++)
         if( BG_AV_CreaturePos[i][0] != 0)
             AddAVCreature(cinfo,i);
     cinfo++;
-    for(uint16 i=AV_CPLACE_IRONDEEP_S_3_MIN; i <= AV_CPLACE_IRONDEEP_S_3_MAX; i++)
+    for(uint16 i=AV_CPLACE_N_S_3_MIN; i <= AV_CPLACE_N_S_3_MAX; i++)
         if( BG_AV_CreaturePos[i][0] != 0)
             AddAVCreature(cinfo,i);
     //change cinfo with care.. following stuff depends on it
     //the moving group:
-    AddAVCreature(cinfo-2,AV_CPLACE_IRONDEEP_M_1_1);
-    AddAVCreature(cinfo-2,AV_CPLACE_IRONDEEP_M_1_2);
-    AddAVCreature(cinfo-2,AV_CPLACE_IRONDEEP_M_1_3);
-    AddAVCreature(cinfo-1,AV_CPLACE_IRONDEEP_M_2);
-    AddAVCreature(cinfo,AV_CPLACE_IRONDEEP_M_3);
+    AddAVCreature(cinfo-2,AV_CPLACE_N_M_1_1);
+    AddAVCreature(cinfo-2,AV_CPLACE_N_M_1_2);
+    AddAVCreature(cinfo-2,AV_CPLACE_N_M_1_3);
+    AddAVCreature(cinfo-1,AV_CPLACE_N_M_2);
+    AddAVCreature(cinfo,AV_CPLACE_N_M_3);
     //boss with surrounding group:
     //actually neutral and alliance spawns are different
     //TODO find the different spawnpoints and implement them.. currently all spawns are like the neutral one
-    AddAVCreature(cinfo+1,AV_CPLACE_IRONDEEP_B_4);
-    AddAVCreature(cinfo-1,AV_CPLACE_IRONDEEP_B_2_1);
-    AddAVCreature(cinfo-1,AV_CPLACE_IRONDEEP_B_2_2);
+    AddAVCreature(cinfo+1,AV_CPLACE_N_B_4);
+    AddAVCreature(cinfo-1,AV_CPLACE_N_B_2_1);
+    AddAVCreature(cinfo-1,AV_CPLACE_N_B_2_2);
 
+    if(mine == AV_SOUTH_MINE && m_Mine_Owner[mine] != BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][1])
+        m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
+    if(mine == AV_NORTH_MINE && m_Mine_Owner[mine] != BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][1])
+        m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
     //TODO: i think the gameobjects (those crates which are needed for a quest) have to be spawned + despawned..
     return;
 }
@@ -1001,14 +1026,56 @@ void BattleGroundAV::FillInitialWorldStates(WorldPacket& data)
         data << uint32(AV_SHOW_A_SCORE) << uint32(0);
         data << uint32(AV_SHOW_H_SCORE) << uint32(0);
     }
-    //TODO: implement the mines right
-    data << uint32(AV_IRONDEEP_MINE_N) << uint32(1);
-    data << uint32(AV_IRONDEEP_MINE_A) << uint32(0);
-    data << uint32(AV_IRONDEEP_MINE_H) << uint32(0);
-    data << uint32(AV_S_MINE_N) << uint32(1);
-    data << uint32(AV_S_MINE_A) << uint32(0);
-    data << uint32(AV_S_MINE_H) << uint32(0);
+    SendMineWorldStates(AV_NORTH_MINE);
+    SendMineWorldStates(AV_SOUTH_MINE);
 }
+
+void BattleGroundAV::SendMineWorldStates(uint32 mine)
+{
+    if(mine == AV_NORTH_MINE)
+    {
+        if(m_Mine_Owner[AV_NORTH_MINE] == ALLIANCE)
+        {
+            UpdateWorldState(AV_N_MINE_A,1);
+            UpdateWorldState(AV_N_MINE_N,0);
+            UpdateWorldState(AV_N_MINE_H,0);
+        }
+        else if(m_Mine_Owner[AV_NORTH_MINE] == HORDE)
+        {
+            UpdateWorldState(AV_N_MINE_A,0);
+            UpdateWorldState(AV_N_MINE_N,0);
+            UpdateWorldState(AV_N_MINE_H,1);
+        }
+        else
+        {
+            UpdateWorldState(AV_N_MINE_A,0);
+            UpdateWorldState(AV_N_MINE_N,1);
+            UpdateWorldState(AV_N_MINE_H,0);
+        }
+    }
+    else
+    {
+        if(m_Mine_Owner[AV_SOUTH_MINE] == ALLIANCE)
+        {
+            UpdateWorldState(AV_S_MINE_A,1);
+            UpdateWorldState(AV_S_MINE_N,0);
+            UpdateWorldState(AV_S_MINE_H,0);
+        }
+        else if(m_Mine_Owner[AV_SOUTH_MINE] == HORDE)
+        {
+            UpdateWorldState(AV_S_MINE_A,0);
+            UpdateWorldState(AV_S_MINE_N,0);
+            UpdateWorldState(AV_S_MINE_H,1);
+        }
+        else
+        {
+            UpdateWorldState(AV_S_MINE_A,0);
+            UpdateWorldState(AV_S_MINE_N,1);
+            UpdateWorldState(AV_S_MINE_H,0);
+        }
+    }
+}
+
 
 
 
@@ -1066,6 +1133,8 @@ bool BattleGroundAV::SetupBattleGround()
         for(uint8 j=0; j<5;j++)
             m_Team_QuestStatus[i][j]=0;
     }
+    m_Mine_Owner[AV_NORTH_MINE] = BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][1];
+    m_Mine_Owner[AV_SOUTH_MINE] = BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][1];
     m_IsInformedNearVictory=false;
     // Create starting objects
     if(

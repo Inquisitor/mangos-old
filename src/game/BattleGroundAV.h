@@ -58,13 +58,14 @@ class BattleGround;
 //bonushonor at the end
 #define BG_AV_SURVIVING_TOWER           2
 #define BG_AV_SURVIVING_CAPTAIN         2
-
 enum BG_AV_OTHER_VALUES
 {
     AV_STATICCPLACE_MAX        = 128,
     AV_STATICOPLACE_MAX        = 83,
     AV_NORTH_MINE              = 0,
-    AV_SOUTH_MINE              = 1
+    AV_SOUTH_MINE              = 1,
+    AV_MINE_TICK_TIMER         = 45,
+    AV_MINE_RECLAIM_TIMER      = 900 //TODO: get the right value.. 15 minutes are maybe to short..
 };
 enum BG_AV_ObjectIds
 {
@@ -590,24 +591,24 @@ enum BG_AV_CreaturePlace
     AV_CPLACE_H_MARSHAL_ETOWER      = 75,
     AV_CPLACE_H_MARSHAL_WTOWER      = 76,
 //following static means, no waypoints
-    AV_CPLACE_IRONDEEP_S_1_MIN      = 77, //S=static and 1=type1 (trogg)
-    AV_CPLACE_IRONDEEP_S_1_MAX      = 96, //if you are in a for-loop and want all type1-troggs make for(i=...irondeep_s_1;i<=..irondeep_max;i++)
+    AV_CPLACE_N_S_1_MIN      = 77, //S=static and 1=type1 (trogg)
+    AV_CPLACE_N_S_1_MAX      = 96, //if you are in a for-loop and want all type1-troggs make for(i=...N_s_1;i<=..N_max;i++)
 //-150 placeholder
-    AV_CPLACE_IRONDEEP_S_2_MIN      = 147, //thats the number of pokemon+mew  (2=shaman)
-    AV_CPLACE_IRONDEEP_S_2_MAX      = 155,
+    AV_CPLACE_N_S_2_MIN      = 147, //thats the number of pokemon+mew  (2=shaman)
+    AV_CPLACE_N_S_2_MAX      = 155,
 //-175 placeholder
-    AV_CPLACE_IRONDEEP_S_3_MIN      = 172,
-    AV_CPLACE_IRONDEEP_S_3_MAX      = 173,
+    AV_CPLACE_N_S_3_MIN      = 172,
+    AV_CPLACE_N_S_3_MAX      = 173,
 //-185 placeholder
-    AV_CPLACE_IRONDEEP_M_1_1        = 182, //m=moving 1_1 = type1 creature 1
-    AV_CPLACE_IRONDEEP_M_1_2        = 183,
-    AV_CPLACE_IRONDEEP_M_1_3        = 184,
-    AV_CPLACE_IRONDEEP_M_2          = 185,
-    AV_CPLACE_IRONDEEP_M_3          = 186,
+    AV_CPLACE_N_M_1_1        = 182, //m=moving 1_1 = type1 creature 1
+    AV_CPLACE_N_M_1_2        = 183,
+    AV_CPLACE_N_M_1_3        = 184,
+    AV_CPLACE_N_M_2          = 185,
+    AV_CPLACE_N_M_3          = 186,
 
-    AV_CPLACE_IRONDEEP_B_4          = 187,
-    AV_CPLACE_IRONDEEP_B_2_1        = 188,
-    AV_CPLACE_IRONDEEP_B_2_2        = 189,
+    AV_CPLACE_N_B_4          = 187,
+    AV_CPLACE_N_B_2_1        = 188,
+    AV_CPLACE_N_B_2_2        = 189,
 
     AV_CPLACE_MAX = 190
 };
@@ -863,19 +864,31 @@ enum BG_AV_CreatureIds
     AV_NPC_H_MARSHAL_TOWER       = 19,
     AV_NPC_MARSHAL_ETOWER      = 20,
     AV_NPC_H_MARSHAL_WTOWER      = 21,
-    AV_NPC_IRONDEEP_N_1           = 22,
-    AV_NPC_IRONDEEP_N_2           = 23,
-    AV_NPC_IRONDEEP_N_3           = 24,
-    AV_NPC_IRONDEEP_N_4           = 25,
-    AV_NPC_IRONDEEP_A_1           = 26,
-    AV_NPC_IRONDEEP_A_2           = 27,
-    AV_NPC_IRONDEEP_A_3           = 28,
-    AV_NPC_IRONDEEP_A_4           = 29,
-    AV_NPC_IRONDEEP_H_1           = 30,
-    AV_NPC_IRONDEEP_H_2           = 31,
-    AV_NPC_IRONDEEP_H_3           = 32,
-    AV_NPC_IRONDEEP_H_4           = 33,
-    AV_NPC_INFO_MAX              = 34
+    AV_NPC_N_MINE_N_1           = 22,
+    AV_NPC_N_MINE_N_2           = 23,
+    AV_NPC_N_MINE_N_3           = 24,
+    AV_NPC_N_MINE_N_4           = 25,
+    AV_NPC_N_MINE_A_1           = 26,
+    AV_NPC_N_MINE_A_2           = 27,
+    AV_NPC_N_MINE_A_3           = 28,
+    AV_NPC_N_MINE_A_4           = 29,
+    AV_NPC_N_MINE_H_1           = 30,
+    AV_NPC_N_MINE_H_2           = 31,
+    AV_NPC_N_MINE_H_3           = 32,
+    AV_NPC_N_MINE_H_4           = 33,
+    AV_NPC_S_MINE_N_1           = 34,
+    AV_NPC_S_MINE_N_2           = 35,
+    AV_NPC_S_MINE_N_3           = 36,
+    AV_NPC_S_MINE_N_4           = 37,
+    AV_NPC_S_MINE_A_1           = 38,
+    AV_NPC_S_MINE_A_2           = 39,
+    AV_NPC_S_MINE_A_3           = 40,
+    AV_NPC_S_MINE_A_4           = 41,
+    AV_NPC_S_MINE_H_1           = 42,
+    AV_NPC_S_MINE_H_2           = 43,
+    AV_NPC_S_MINE_H_3           = 44,
+    AV_NPC_S_MINE_H_4           = 45,
+    AV_NPC_INFO_MAX              = 46
 
 };
 
@@ -918,8 +931,22 @@ const uint32 BG_AV_CreatureInfo[AV_NPC_INFO_MAX][4] = {
     {13397,67,52,53}, //irondeep horde
     {13099,67,53,54},
     {13081,67,54,55},
-    {13079,67,58,58}
-//south:ally-boss: 13086 hordeboss: 13088 neutralboss:11677
+    {13079,67,58,58},
+
+    { 10987, 59, 52, 53 }, //south mine neutral
+    { 11600, 59, 53, 54 },
+    { 11602, 59, 54, 55 },
+    { 11677, 59, 58, 58 },
+
+    {13396,469,52,53}, //alliance
+    {13080,469,53,54},
+    {13099,469,54,55},
+    {13086,469,58,58},
+
+    {13397,67,52,53}, //horde
+    {13099,67,53,54},
+    {13081,67,54,55},
+    {13088,67,58,58}
 
 };
 
@@ -1234,9 +1261,9 @@ enum BG_AV_WorldStates
     AV_FROSTWOLFE_ASSAULTED         = 1388,
 */
     //mines
-    AV_IRONDEEP_MINE_N              = 1360,
-    AV_IRONDEEP_MINE_A              = 1358,
-    AV_IRONDEEP_MINE_H              = 1359,
+    AV_N_MINE_N              = 1360,
+    AV_N_MINE_A              = 1358,
+    AV_N_MINE_H              = 1359,
 
     AV_S_MINE_N                     = 1357,
     AV_S_MINE_A                     = 1355,
@@ -1378,7 +1405,7 @@ class BattleGroundAV : public BattleGround
         void EventPlayerDefendsPoint(Player* player, uint32 type);
         void EventPlayerDestroyedPoint(uint32 node);
         void UpdatePointsIcons(uint8 node);
-        void UpdateScore(uint8 team, int16 points);
+        void UpdateScore(uint16 team, int16 points);
         void UpdateNode(uint32 type, uint32 state);
         void PopulateMine(uint8 mine);
         void PopulateNode(uint32 node);
@@ -1395,6 +1422,7 @@ class BattleGroundAV : public BattleGround
         void HandleKillUnit(Creature *unit, Player *killer);
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 MapId, uint32 team);
         void UpdateQuest(uint32 questid, Player *player);
+        void SendMineWorldStates(uint32 mine);
 
     private:
         void FillInitialWorldStates(WorldPacket& data);
@@ -1409,6 +1437,8 @@ class BattleGroundAV : public BattleGround
         int32  m_Points_Timer[BG_AV_NODES_MAX];
 
         uint32 m_Mine_Owner[2];
+        uint32 m_Mine_Timer;
+        uint32 m_Mine_Reclaim_Timer[2];
 
         uint8 m_MaxLevel; //TODO remove this when battlegroundmgr provides a function for this..
         bool m_Snowfall_Capped;
