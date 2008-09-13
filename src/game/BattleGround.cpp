@@ -641,10 +641,6 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
         // Log
         sLog.outDetail("BATTLEGROUND: Removed player %s from BattleGround.", plr->GetName());
     }
-    else
-    {
-        sLog.outError("BATTLEGROUND: RemovePlayerAtLeave: couldnt find player to remove");
-    }
 
     /// there will be code which will add battleground to BGFreeSlotQueue , when battleground instance will exist
     // we always should check if BG is in that queue before adding..
@@ -664,6 +660,8 @@ void BattleGround::Reset()
     SetStartTime(0);
     SetEndTime(0);
     SetLastResurrectTime(0);
+
+    m_Events = 0;
 
     if (m_InvitedAlliance > 0 || m_InvitedHorde > 0)
         sLog.outError("BattleGround system ERROR: bad counter, m_InvitedAlliance: %d, m_InvitedHorde: %d", m_InvitedAlliance, m_InvitedHorde);
@@ -1071,21 +1069,6 @@ bool BattleGround::AddSpiritGuide(uint32 type, float x, float y, float z, float 
     return true;
 }
 
-
-
-int32 BattleGround::GetObjectType(uint64 guid)
-{
-    uint32 i = 0;
-    while(i <= m_BgObjects.size())
-    {
-        if(m_BgObjects[i] == guid)
-            return i;
-        else i++;
-    }
-    sLog.outError("BattleGround: cheating? a player used a gameobject which isnt supposed to be a usable object!");
-    return -1;
-}
-
 void BattleGround::SendMessageToAll(char const* text)
 {
     WorldPacket data;
@@ -1183,7 +1166,22 @@ void BattleGround::HandleKillPlayer( Player *player, Player *killer )
     player->SetFlag( UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE );
 }
 
+int32 BattleGround::GetObjectType(uint64 guid)
+{
+    uint32 i = 0;
+    while(i <= m_BgObjects.size())
+    {
+        if(m_BgObjects[i] == guid)
+            return i;
+        else i++;
+    }
+    sLog.outError("BattleGround: cheating? a player used a gameobject which isnt supposed to be a usable object!");
+    return -1;
+}
+
 void BattleGround::HandleKillUnit(Creature *creature, Player *killer)
 {
 }
+
+
 

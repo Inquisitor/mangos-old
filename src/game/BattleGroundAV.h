@@ -62,11 +62,79 @@ class BattleGround;
 enum BG_AV_OTHER_VALUES
 {
     AV_STATICCPLACE_MAX        = 128,
-    AV_BURNPLACE_MAX           = 93,
-    AV_STATICOPLACE_MAX        = 84,
+    AV_STATICOPLACE_MAX        = 83,
     AV_NORTH_MINE              = 0,
     AV_SOUTH_MINE              = 1
 };
+enum BG_AV_ObjectIds
+{
+    //cause the mangos-system is a bit different, we don't use the right go-ids for every node.. if we want to be 100% like another big server, we must take one object for every node
+    //snowfall 4flags as eyecandy 179424 (alliance neutral)
+    //Banners
+    BG_AV_OBJECTID_BANNER_A             = 178925, // can only be used by horde
+    BG_AV_OBJECTID_BANNER_H             = 178943, // can only be used by alliance
+    BG_AV_OBJECTID_BANNER_CONT_A        = 178940, // can only be used by horde
+    BG_AV_OBJECTID_BANNER_CONT_H        = 179435, // can only be used by alliance
+
+    BG_AV_OBJECTID_BANNER_A_B           = 178365,
+    BG_AV_OBJECTID_BANNER_H_B           = 178364,
+    BG_AV_OBJECTID_BANNER_CONT_A_B      = 179286,
+    BG_AV_OBJECTID_BANNER_CONT_H_B      = 179287,
+    BG_AV_OBJECTID_BANNER_SNOWFALL_N    = 180418,
+
+
+    //snowfall eyecandy banner:
+    BG_AV_OBJECTID_SNOWFALL_CANDY_A     = 179044,
+    BG_AV_OBJECTID_SNOWFALL_CANDY_PA    = 179424,
+    BG_AV_OBJECTID_SNOWFALL_CANDY_H     = 179064,
+    BG_AV_OBJECTID_SNOWFALL_CANDY_PH    = 179425,
+
+    //banners on top of towers:
+    BG_AV_OBJECTID_TOWER_BANNER_A  = 178927, //[PH] Alliance A1 Tower Banner BIG
+    BG_AV_OBJECTID_TOWER_BANNER_H  = 178955, //[PH] Horde H1 Tower Banner BIG
+    BG_AV_OBJECTID_TOWER_BANNER_PA = 179446, //[PH] Alliance H1 Tower Pre-Banner BIG
+    BG_AV_OBJECTID_TOWER_BANNER_PH = 179436, //[PH] Horde A1 Tower Pre-Banner BIG
+
+    //Auras
+    BG_AV_OBJECTID_AURA_A               = 180421,
+    BG_AV_OBJECTID_AURA_H               = 180422,
+    BG_AV_OBJECTID_AURA_N               = 180423,
+    BG_AV_OBJECTID_AURA_A_S             = 180100,
+    BG_AV_OBJECTID_AURA_H_S             = 180101,
+    BG_AV_OBJECTID_AURA_N_S             = 180102,
+
+    BG_AV_OBJECTID_GATE_A               = 180424,
+    BG_AV_OBJECTID_GATE_H               = 180424,
+
+    //mine supplies
+    BG_AV_OBJECTID_MINE_IRONDEEP        = 178785,
+    BG_AV_OBJECTID_MINE_COLDTOOTH       = 178784,
+
+    BG_AV_OBJECTID_FIRE                 = 179065,
+    BG_AV_OBJECTID_SMOKE                 = 179066
+};
+
+enum BG_AV_Nodes
+{
+    BG_AV_NODES_FIRSTAID_STATION        = 0,
+    BG_AV_NODES_STORMPIKE_GRAVE         = 1,
+    BG_AV_NODES_STONEHEART_GRAVE        = 2,
+    BG_AV_NODES_SNOWFALL_GRAVE          = 3,
+    BG_AV_NODES_ICEBLOOD_GRAVE          = 4,
+    BG_AV_NODES_FROSTWOLF_GRAVE         = 5,
+    BG_AV_NODES_FROSTWOLF_HUT           = 6,
+    BG_AV_NODES_DUNBALDAR_SOUTH         = 7,
+    BG_AV_NODES_DUNBALDAR_NORTH         = 8,
+    BG_AV_NODES_ICEWING_BUNKER          = 9,
+    BG_AV_NODES_STONEHEART_BUNKER       = 10,
+    BG_AV_NODES_ICEBLOOD_TOWER          = 11,
+    BG_AV_NODES_TOWER_POINT             = 12,
+    BG_AV_NODES_FROSTWOLF_ETOWER        = 13,
+    BG_AV_NODES_FROSTWOLF_WTOWER        = 14,
+
+    BG_AV_NODES_MAX                     = 15
+};
+
 enum BG_AV_ObjectTypes
 {
     //Initial setup
@@ -195,75 +263,54 @@ enum BG_AV_ObjectTypes
     BG_AV_OBJECT_SNOW_EYECANDY_PH            = 211,
 
 
-    BG_AV_OBJECT_MAX                          = 212
+    BG_AV_OBJECT_MAX                          = 215
 };
 
-enum BG_AV_ObjectIds
+
+
+enum BG_AV_OBJECTS
 {
-    //cause the mangos-system is a bit different, we don't use the right go-ids for every node.. if we want to be 100% like another big server, we must take one object for every node
-    //snowfall 4flags as eyecandy 179424 (alliance neutral)
-    //Banners
-    BG_AV_OBJECTID_BANNER_A             = 178925, // can only be used by horde
-    BG_AV_OBJECTID_BANNER_H             = 178943, // can only be used by alliance
-    BG_AV_OBJECTID_BANNER_CONT_A        = 178940, // can only be used by horde
-    BG_AV_OBJECTID_BANNER_CONT_H        = 179435, // can only be used by alliance
+    AV_OPLACE_FIRSTAID_STATION          = 0,
+    AV_OPLACE_STORMPIKE_GRAVE         = 1,
+    AV_OPLACE_STONEHEART_GRAVE        = 2,
+    AV_OPLACE_SNOWFALL_GRAVE          = 3,
+    AV_OPLACE_ICEBLOOD_GRAVE          = 4,
+    AV_OPLACE_FROSTWOLF_GRAVE         = 5,
+    AV_OPLACE_FROSTWOLF_HUT           = 6,
+    AV_OPLACE_DUNBALDAR_SOUTH         = 7,
+    AV_OPLACE_DUNBALDAR_NORTH         = 8,
+    AV_OPLACE_ICEWING_BUNKER          = 9,
+    AV_OPLACE_STONEHEART_BUNKER       = 10,
+    AV_OPLACE_ICEBLOOD_TOWER          = 11,
+    AV_OPLACE_TOWER_POINT             = 12,
+    AV_OPLACE_FROSTWOLF_ETOWER        = 13,
+    AV_OPLACE_FROSTWOLF_WTOWER        = 14,
+    AV_OPLACE_BIGBANNER_DUNBALDAR_SOUTH         = 15,
+    AV_OPLACE_BIGBANNER_DUNBALDAR_NORTH         = 16,
+    AV_OPLACE_BIGBANNER_ICEWING_BUNKER          = 17,
+    AV_OPLACE_BIGBANNER_STONEHEART_BUNKER       = 18,
+    AV_OPLACE_BIGBANNER_ICEBLOOD_TOWER          = 19,
+    AV_OPLACE_BIGBANNER_TOWER_POINT             = 20,
+    AV_OPLACE_BIGBANNER_FROSTWOLF_ETOWER        = 21,
+    AV_OPLACE_BIGBANNER_FROSTWOLF_WTOWER        = 22,
 
-    BG_AV_OBJECTID_BANNER_A_B           = 178365,
-    BG_AV_OBJECTID_BANNER_H_B           = 178364,
-    BG_AV_OBJECTID_BANNER_CONT_A_B      = 179286,
-    BG_AV_OBJECTID_BANNER_CONT_H_B      = 179287,
-    BG_AV_OBJECTID_BANNER_SNOWFALL_N    = 180418,
-
-
-    //snowfall eyecandy banner:
-    BG_AV_OBJECTID_SNOWFALL_CANDY_A     = 179044,
-    BG_AV_OBJECTID_SNOWFALL_CANDY_PA    = 179424,
-    BG_AV_OBJECTID_SNOWFALL_CANDY_H     = 179064,
-    BG_AV_OBJECTID_SNOWFALL_CANDY_PH    = 179425,
-
-    //banners on top of towers:
-    BG_AV_OBJECTID_TOWER_BANNER_A = 178927, //[PH] Alliance A1 Tower Banner BIG
-    BG_AV_OBJECTID_TOWER_BANNER_H = 178955, //[PH] Horde H1 Tower Banner BIG
-    //Auras
-    BG_AV_OBJECTID_AURA_A               = 180421,
-    BG_AV_OBJECTID_AURA_H               = 180422,
-    BG_AV_OBJECTID_AURA_N               = 180423,
-    BG_AV_OBJECTID_AURA_A_S             = 180100,
-    BG_AV_OBJECTID_AURA_H_S             = 180101,
-    BG_AV_OBJECTID_AURA_N_S             = 180102,
-
-    BG_AV_OBJECTID_GATE_A               = 180424,
-    BG_AV_OBJECTID_GATE_H               = 180424,
-
-    //mine supplies
-    BG_AV_OBJECTID_MINE_IRONDEEP        = 178785,
-    BG_AV_OBJECTID_MINE_COLDTOOTH       = 178784,
-
-    BG_AV_OBJECTID_FIRE                 = 179065,
-    BG_AV_OBJECTID_SMOKE                 = 179066
+    AV_OPLACE_BURN_DUNBALDAR_SOUTH         = 23,
+    AV_OPLACE_BURN_DUNBALDAR_NORTH         = 33,
+    AV_OPLACE_BURN_ICEWING_BUNKER          = 43,
+    AV_OPLACE_BURN_STONEHEART_BUNKER       = 53,
+    AV_OPLACE_BURN_ICEBLOOD_TOWER          = 63,
+    AV_OPLACE_BURN_TOWER_POINT             = 73,
+    AV_OPLACE_BURN_FROSTWOLF_ETOWER        = 83,
+    AV_OPLACE_BURN_FROSTWOLF_WTOWER        = 93,
+    AV_OPLACE_BURN_BUILDING_A        = 103,
+    AV_OPLACE_BURN_BUILDING_H        = 113,
+    AV_OPLACE_SNOW_1                      = 123,
+    AV_OPLACE_SNOW_2                      = 124,
+    AV_OPLACE_SNOW_3                      = 125,
+    AV_OPLACE_SNOW_4                      = 126,
+    AV_OPLACE_MAX                         = 127
 };
-
-enum BG_AV_Nodes
-{
-    BG_AV_NODES_FIRSTAID_STATION        = 0,
-    BG_AV_NODES_STORMPIKE_GRAVE         = 1,
-    BG_AV_NODES_STONEHEART_GRAVE        = 2,
-    BG_AV_NODES_SNOWFALL_GRAVE          = 3,
-    BG_AV_NODES_ICEBLOOD_GRAVE          = 4,
-    BG_AV_NODES_FROSTWOLF_GRAVE         = 5,
-    BG_AV_NODES_FROSTWOLF_HUT           = 6,
-    BG_AV_NODES_DUNBALDAR_SOUTH         = 7,
-    BG_AV_NODES_DUNBALDAR_NORTH         = 8,
-    BG_AV_NODES_ICEWING_BUNKER          = 9,
-    BG_AV_NODES_STONEHEART_BUNKER       = 10,
-    BG_AV_NODES_ICEBLOOD_TOWER          = 11,
-    BG_AV_NODES_TOWER_POINT             = 12,
-    BG_AV_NODES_FROSTWOLF_ETOWER        = 13,
-    BG_AV_NODES_FROSTWOLF_WTOWER        = 14,
-
-    BG_AV_NODES_MAX                     = 15
-};
-const float BG_AV_NodePositions[127][4] = {
+const float BG_AV_ObjectPos[AV_OPLACE_MAX][4] = {
     {638.592f,-32.422f,46.0608f,-1.62316f },//firstaid station - OK
     {669.007f,-294.078f,30.2909f,2.77507f },//stormpike -OK
     {77.8013f,-404.7f,46.7549f,-0.872665f },//stone grave - OK
@@ -278,7 +325,7 @@ const float BG_AV_NodePositions[127][4] = {
     {-571.88f,-262.777f,75.0087f,-0.802851f }, //ice tower - OK
     {-768.907f,-363.71f,90.8949f,1.07991f},  //tower point
     {-1302.9f,-316.981f,113.867f,2.00713f }, //frostwolf etower - OK
-    {-1302.89f,-316.92f,113.867f,2.01453f},   //frostwolf wtower
+    {-1297.5f,-266.767f,114.15f,3.31044f},   //frostwolf wtower
     //bigbanner: all ok
     {555.848f,-84.4151f,64.4397f,3.12414f }, //duns
     {679.339f,-136.468f,73.9626f,-2.16421f }, //dunn
@@ -492,8 +539,7 @@ const float BG_AV_StaticObjectPos[AV_STATICOPLACE_MAX][5] = {
     {553.725f,-102.396f,44.8191f,0.15708f,179397 },//179397 - Anvil
     {-1423.16f,-318.436f,89.1136f,2.35619f,179419 },//179419 - Brazier
     {618.748f,-52.1126f,42.1122f,-0.0698131f,179437 },//179437 - Wanted: ORCS!
-    {-1181.1f,-370.747f,53.6246f,2.68781f,179438 },//179438 - Wanted: DWARVES!
-    {-612.914f,-396.838f,60.8584f,3.10669f,179481 },//179481 - Alliance Banner
+    {-1181.1f,-370.747f,53.6246f,2.68781f,179438 }//179438 - Wanted: DWARVES!
 };
 
 
@@ -534,36 +580,36 @@ enum BG_AV_CreaturePlace
     AV_CPLACE_DEFENSE_TOWERPOINT     = 57,
     AV_CPLACE_DEFENSE_FROST_E        = 61,
     AV_CPLACE_DEFENSE_FROST_t        = 65,
-//here is a little hole, cause i move boss annd captain to static
-    AV_CPLACE_A_MARSHAL_SOUTH       = 73,
-    AV_CPLACE_A_MARSHAL_NORTH       = 74,
-    AV_CPLACE_A_MARSHAL_ICE         = 75,
-    AV_CPLACE_A_MARSHAL_STONE       = 76,
-    AV_CPLACE_H_MARSHAL_ICE         = 77,
-    AV_CPLACE_H_MARSHAL_TOWER       = 78,
-    AV_CPLACE_H_MARSHAL_ETOWER      = 79,
-    AV_CPLACE_H_MARSHAL_WTOWER      = 80,
+
+    AV_CPLACE_A_MARSHAL_SOUTH       = 69,
+    AV_CPLACE_A_MARSHAL_NORTH       = 70,
+    AV_CPLACE_A_MARSHAL_ICE         = 71,
+    AV_CPLACE_A_MARSHAL_STONE       = 72,
+    AV_CPLACE_H_MARSHAL_ICE         = 73,
+    AV_CPLACE_H_MARSHAL_TOWER       = 74,
+    AV_CPLACE_H_MARSHAL_ETOWER      = 75,
+    AV_CPLACE_H_MARSHAL_WTOWER      = 76,
 //following static means, no waypoints
-    AV_CPLACE_IRONDEEP_S_1_MIN      = 81, //S=static and 1=type1 (trogg)
-    AV_CPLACE_IRONDEEP_S_1_MAX      = 100, //if you are in a for-loop and want all type1-troggs make for(i=...irondeep_s_1;i<=..irondeep_max;i++)
+    AV_CPLACE_IRONDEEP_S_1_MIN      = 77, //S=static and 1=type1 (trogg)
+    AV_CPLACE_IRONDEEP_S_1_MAX      = 96, //if you are in a for-loop and want all type1-troggs make for(i=...irondeep_s_1;i<=..irondeep_max;i++)
 //-150 placeholder
-    AV_CPLACE_IRONDEEP_S_2_MIN      = 151, //thats the number of pokemon+mew  (2=shaman)
-    AV_CPLACE_IRONDEEP_S_2_MAX      = 159,
+    AV_CPLACE_IRONDEEP_S_2_MIN      = 147, //thats the number of pokemon+mew  (2=shaman)
+    AV_CPLACE_IRONDEEP_S_2_MAX      = 155,
 //-175 placeholder
-    AV_CPLACE_IRONDEEP_S_3_MIN      = 176,
-    AV_CPLACE_IRONDEEP_S_3_MAX      = 177,
+    AV_CPLACE_IRONDEEP_S_3_MIN      = 172,
+    AV_CPLACE_IRONDEEP_S_3_MAX      = 173,
 //-185 placeholder
-    AV_CPLACE_IRONDEEP_M_1_1        = 186, //m=moving 1_1 = type1 creature 1
-    AV_CPLACE_IRONDEEP_M_1_2        = 187,
-    AV_CPLACE_IRONDEEP_M_1_3        = 188,
-    AV_CPLACE_IRONDEEP_M_2          = 189,
-    AV_CPLACE_IRONDEEP_M_3          = 190,
+    AV_CPLACE_IRONDEEP_M_1_1        = 182, //m=moving 1_1 = type1 creature 1
+    AV_CPLACE_IRONDEEP_M_1_2        = 183,
+    AV_CPLACE_IRONDEEP_M_1_3        = 184,
+    AV_CPLACE_IRONDEEP_M_2          = 185,
+    AV_CPLACE_IRONDEEP_M_3          = 186,
 
-    AV_CPLACE_IRONDEEP_B_4          = 191,
-    AV_CPLACE_IRONDEEP_B_2_1        = 192,
-    AV_CPLACE_IRONDEEP_B_2_2        = 193,
+    AV_CPLACE_IRONDEEP_B_4          = 187,
+    AV_CPLACE_IRONDEEP_B_2_1        = 188,
+    AV_CPLACE_IRONDEEP_B_2_2        = 189,
 
-    AV_CPLACE_MAX = 194
+    AV_CPLACE_MAX = 190
 };
 
 //x, y, z, o
@@ -667,11 +713,8 @@ const float BG_AV_CreaturePos[AV_CPLACE_MAX][4] = {
     {-1370.96f,-223.532f,98.4266f,4.93012f},
     {-1378.37f,-228.614f,99.3546f,5.38565f},
     {-1358.02f,-228.998f,98.868f,3.87768f},
-    //wingcommander at base
-//    {569.963f,-42.0218f,37.7581f,4.27606f},//174 slidore (A)
-//    {-1332f,-331.243f,91.2631f,1.50098f},//13179 - Wing Commander Guse (H)
 
-    //irondeep mine
+ //irondeep mine
     //troggs:
     {801.405f,-328.055f,53.0195f,4.31096f},
     {805.399f,-320.146f,52.8546f,0.296706f},
@@ -867,16 +910,16 @@ const uint32 BG_AV_CreatureInfo[AV_NPC_INFO_MAX][4] = {
     { 11602, 59, 54, 55 }, //Irondeep Skullthumper
     { 11657, 59, 58, 58 }, //Morloch
 
-    {10987,469,52,53}, //irondeep alliance
-    {11600,469,53,54},
-    {13080,469,54,55},
-    {11657,469,58,58},
+    {13396,469,52,53}, //irondeep alliance TODO: get the right ids
+    {13080,469,53,54},
+    {13099,469,54,55},
+    {13078,469,58,58},
 
     {13397,67,52,53}, //irondeep horde
-    {11600,67,53,54},
-    {11602,67,54,55},
-    {11657,67,58,58}
-
+    {13099,67,53,54},
+    {13081,67,54,55},
+    {13079,67,58,58}
+//south:ally-boss: 13086 hordeboss: 13088 neutralboss:11677
 
 };
 
