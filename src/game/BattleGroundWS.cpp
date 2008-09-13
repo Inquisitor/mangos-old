@@ -85,6 +85,12 @@ void BattleGroundWS::Update(time_t diff)
             SpawnBGObject(BG_WS_OBJECT_DOOR_H_3, RESPAWN_ONE_DAY);
             SpawnBGObject(BG_WS_OBJECT_DOOR_H_4, RESPAWN_ONE_DAY);
 
+            if( !AddSpiritGuide(WS_SPIRIT_MAIN_ALLIANCE, BG_WS_SpiritGuidePos[0][0], BG_WS_SpiritGuidePos[0][1], BG_WS_SpiritGuidePos[0][2], BG_WS_SpiritGuidePos[0][3], ALLIANCE) )
+                sLog.outErrorDb("BatteGroundWS: Failed to spawn Alliance spirit guide at bg-waitjoin!");
+            if( !AddSpiritGuide(WS_SPIRIT_MAIN_HORDE, BG_WS_SpiritGuidePos[1][0], BG_WS_SpiritGuidePos[1][1], BG_WS_SpiritGuidePos[1][2], BG_WS_SpiritGuidePos[1][3], HORDE) )
+                sLog.outErrorDb("BatteGroundWS: Failed to spawn Horde spirit guide at bg-waitjoin!");
+
+
             for(uint32 i = BG_WS_OBJECT_A_FLAG; i <= BG_WS_OBJECT_BERSERKBUFF_2; i++)
                 SpawnBGObject(i, RESPAWN_IMMEDIATELY);
 
@@ -572,22 +578,6 @@ bool BattleGroundWS::SetupBattleGround()
         sLog.outErrorDb("BatteGroundWS: Failed to spawn some object BattleGround not created!");
         return false;
     }
-
-    WorldSafeLocsEntry const *sg = sWorldSafeLocsStore.LookupEntry(WS_GRAVEYARD_MAIN_ALLIANCE);
-    if(!sg || !AddSpiritGuide(WS_SPIRIT_MAIN_ALLIANCE, sg->x, sg->y, sg->z, 3.124139f, ALLIANCE))
-    {
-        sLog.outErrorDb("BatteGroundWS: Failed to spawn Alliance spirit guide! BattleGround not created!");
-        return false;
-    }
-
-    sg = sWorldSafeLocsStore.LookupEntry(WS_GRAVEYARD_MAIN_HORDE);
-    if(!sg || !AddSpiritGuide(WS_SPIRIT_MAIN_HORDE, sg->x, sg->y, sg->z, 3.193953f, HORDE))
-    {
-        sLog.outErrorDb("BatteGroundWS: Failed to spawn Horde spirit guide! BattleGround not created!");
-        return false;
-    }
-
-    sLog.outDebug("BatteGroundWS: BG objects and spirit guides spawned");
 
     return true;
 }

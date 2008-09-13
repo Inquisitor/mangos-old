@@ -969,19 +969,22 @@ void BattleGround::SpawnBGCreature(uint32 type, uint32 respawntime)
         if(obj)
         {
             obj->SetRespawnTime(0);
-            objmgr.SaveCreatureRespawnTime(obj->GetGUIDLow(), GetInstanceID(), 0);
             //MapManager::Instance().GetMap(obj->GetMapId(), obj)->Add(obj);
         }
+        else
+            objmgr.SaveCreatureRespawnTime(obj->GetGUIDLow(), GetInstanceID(), 0);
     }
     else
     {
         Creature *obj = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
         if(obj)
         {
-            obj->setDeathState(DEAD);
             obj->SetRespawnTime(respawntime);
+            obj->setDeathState(DEAD);
             //MapManager::Instance().GetMap(obj->GetMapId(), obj)->Add(obj);
         }
+        else
+            objmgr.SaveCreatureRespawnTime(obj->GetGUIDLow(), GetInstanceID(), time(NULL)+respawntime);
     }
 }
 
