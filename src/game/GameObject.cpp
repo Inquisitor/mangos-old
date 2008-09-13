@@ -35,7 +35,11 @@
 #include "CellImpl.h"
 #include "InstanceData.h"
 #include "BattleGround.h"
+<<<<<<< HEAD:src/game/GameObject.cpp
 #include "Util.h"
+=======
+#include "BattleGroundAV.h"
+>>>>>>> 13.9.4:src/game/GameObject.cpp
 
 GameObject::GameObject() : WorldObject()
 {
@@ -745,8 +749,22 @@ bool GameObject::ActivateToQuest( Player *pTarget)const
         // scan GO chest with loot including quest items
         case GAMEOBJECT_TYPE_CHEST:
         {
+            sLog.outDebug("muh looks if player can click on the stuff around entry %i",GetEntry());
             if(LootTemplates_Gameobject.HaveQuestLootForPlayer(GetLootId(), pTarget))
+            {
+                sLog.outDebug("muh looks if player can click on the stuff around2 entry %i",GetEntry());
+                if(BattleGround *bg = pTarget->GetBattleGround())
+                    if(bg->GetTypeID() == BATTLEGROUND_AV)
+                        if(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(GetEntry(),pTarget->GetTeam()))
+                            return true;
+                        else
+                            return false;
+                    else
+                        return true;
+                else
+                    return true;
                 return true;
+            }
             break;
         }
         case GAMEOBJECT_TYPE_GOOBER:

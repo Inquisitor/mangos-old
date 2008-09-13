@@ -1573,6 +1573,7 @@ class BattleGroundAV : public BattleGround
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 MapId, uint32 team);
         void UpdateQuest(uint32 questid, Player *player);
         void SendMineWorldStates(uint32 mine);
+        bool PlayerCanDoMineQuest(int32 GOId,uint32 team);
 
     private:
         void FillInitialWorldStates(WorldPacket& data);

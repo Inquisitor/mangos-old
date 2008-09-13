@@ -671,7 +671,7 @@ void BattleGroundAV::PopulateMine(uint8 mine)
         AddAVCreature(miner+(urand(1,2)),i);
     AddAVCreature(miner+3,(mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3);
     //set the gameobjects so that the current owning team is the only one who can loot
-    for(uint16 i = ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MIN:BG_AV_OBJECT_MINE_SUPPLY_N_MIN); i <= ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MAX:BG_AV_OBJECT_MINE_SUPPLY_N_MAX); i++)
+/*    for(uint16 i = ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MIN:BG_AV_OBJECT_MINE_SUPPLY_N_MIN); i <= ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MAX:BG_AV_OBJECT_MINE_SUPPLY_N_MAX); i++)
     {
         GameObject *go = GetBGObject(i);
         if(!go)
@@ -685,15 +685,27 @@ void BattleGroundAV::PopulateMine(uint8 mine)
                 faction = 83;
             else
                 faction = 73;
-            go->SetUInt32Value(GAMEOBJECT_FACTION, faction);
+            //go->SetUInt32Value(GAMEOBJECT_FACTION, faction);
             sLog.outDebug("gameobjects get now faction %i",faction);
         }
     }
+    */
 
 
     if(m_Mine_Owner[mine] != ALLIANCE && m_Mine_Owner[mine] != HORDE)
         m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
     return;
+}
+
+bool BattleGroundAV::PlayerCanDoMineQuest(int32 GOId,uint32 team)
+{
+    sLog.outDebug("muh looking for playermine for entry %i",GOId);
+    if(GOId != BG_AV_OBJECTID_MINE_N)
+        if(GOId != BG_AV_OBJECTID_MINE_S)
+            return true; //cause it's no mine'object it is ok if this is true
+    uint8 mine = (GOId==BG_AV_OBJECTID_MINE_N)?AV_NORTH_MINE:AV_SOUTH_MINE;
+    sLog.outDebug("returns team %i mine owner %i",team,(m_Mine_Owner[mine]));
+    return (m_Mine_Owner[mine]==team);
 }
 
 void BattleGroundAV::PopulateNode(uint32 node)
@@ -1257,7 +1269,6 @@ bool BattleGroundAV::SetupBattleGround()
     }
     for(uint16 i= 0 ; i<=1+(BG_AV_OBJECT_MINE_SUPPLY_S_MAX-BG_AV_OBJECT_MINE_SUPPLY_S_MIN);i++)
     {
-        sLog.outError("muhkuh %i %i",i,(AV_OPLACE_MINE_SUPPLY_S_MIN+i));
         if(!AddObject(BG_AV_OBJECT_MINE_SUPPLY_S_MIN+i,BG_AV_OBJECTID_MINE_S,BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][0],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][1],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][2],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][3], 0, 0, sin(BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][3]/2), cos(BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][3]/2),RESPAWN_ONE_DAY))
         {
             sLog.outError("BatteGroundAV: Failed to spawn some mine supplies BattleGround not created!7.6.%i",i);
