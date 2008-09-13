@@ -292,7 +292,7 @@ void BattleGroundAV::Update(time_t diff)
             }
             for(uint8 i = BG_AV_OBJECT_FLAG_A_DUNBALDAR_SOUTH; i <= BG_AV_OBJECT_FLAG_A_STONEHEART_BUNKER ; i++)
                 SpawnBGObject(i, RESPAWN_IMMEDIATELY);
-            for(uint8 i = BG_AV_OBJECT_FLAG_H_ICEBLOOD_GRAVE; i <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_ETOWER ; i++){
+            for(uint8 i = BG_AV_OBJECT_FLAG_H_ICEBLOOD_GRAVE; i <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER ; i++){
                 SpawnBGObject(i, RESPAWN_IMMEDIATELY);
                 if(i<=BG_AV_OBJECT_FLAG_H_FROSTWOLF_HUT)
                     SpawnBGObject(BG_AV_OBJECT_AURA_H_FIRSTAID_STATION+3*GetNodePlace(i),RESPAWN_IMMEDIATELY);
@@ -338,6 +338,8 @@ void BattleGroundAV::Update(time_t diff)
         // After 2 minutes, gates OPEN ! x)
         else if (GetStartDelayTime() <= 0 && !(m_Events & 0x10))
         {
+            UpdateWorldState(AV_SHOW_H_SCORE, 1);
+            UpdateWorldState(AV_SHOW_A_SCORE, 1);
             m_Events |= 0x10;
             SendMessageToAll(LANG_BG_AV_STARTED);
 
@@ -489,6 +491,7 @@ void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
     //despawn banner
     SpawnBGObject(node, RESPAWN_ONE_DAY);
     m_Points_PrevState[GetNodePlace(node)] = m_Points_State[GetNodePlace(node)];
+    m_Points_PrevOwner[GetNodePlace(node)] = m_Points_Owner[GetNodePlace(node)];
     if( IsTower(GetNodePlace(node)) )
     {
         m_Points_State[GetNodePlace(node)]=POINT_DESTROYED;
@@ -517,9 +520,8 @@ void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
         sprintf(buf, LANG_BG_AV_TOWER_TAKEN , GetNodeName(GetNodePlace(node)));
     else
         sprintf(buf, LANG_BG_AV_GRAVE_TAKEN, GetNodeName(GetNodePlace(node)), ( team == ALLIANCE ) ?  LANG_BG_AV_ALLY : LANG_BG_AV_HORDE  );
-    uint8 type = ( team == ALLIANCE ) ? CHAT_MSG_BG_SYSTEM_ALLIANCE : CHAT_MSG_BG_SYSTEM_HORDE;
     WorldPacket data;
-    ChatHandler::FillMessageData(&data, NULL, type, LANG_UNIVERSAL, NULL, 0, buf, NULL);
+    ChatHandler::FillMessageData(&data, NULL,( team == ALLIANCE ) ? CHAT_MSG_BG_SYSTEM_ALLIANCE : CHAT_MSG_BG_SYSTEM_HORDE, LANG_UNIVERSAL, NULL, 0, buf, NULL);
     SendPacketToAll(&data);
 }
 
@@ -596,13 +598,13 @@ const uint8 BattleGroundAV::GetNodePlace(uint16 node)
 		return node;
 	if( node <= BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_HUT )
 		return node-11;
-	if( node <= BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_ETOWER )
+	if( node <= BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_WTOWER )
 		return node-7;
 	if( node <= BG_AV_OBJECT_FLAG_C_H_STONEHEART_BUNKER )
 		return node-22;
 	if( node <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_HUT )
 		return node-33;
-	if( node <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_ETOWER )
+	if( node <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER )
 		return node-29;
 	if( node == BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE )
 		return 3;
@@ -617,7 +619,7 @@ const uint16 BattleGroundAV::GetPlaceNode(uint8 node)
        {
             if( node <= BG_AV_NODES_FROSTWOLF_HUT )
                 return node+11;
-            if( node >= BG_AV_NODES_ICEBLOOD_TOWER && node <= BG_AV_NODES_FROSTWOLF_ETOWER)
+            if( node >= BG_AV_NODES_ICEBLOOD_TOWER && node <= BG_AV_NODES_FROSTWOLF_WTOWER)
                 return node+7;
        }
        else if ( m_Points_State[node] == POINT_CONTROLED )
@@ -633,7 +635,7 @@ const uint16 BattleGroundAV::GetPlaceNode(uint8 node)
        {
            if( node <= BG_AV_NODES_FROSTWOLF_HUT )
                return node+33;
-           if( node >= BG_AV_NODES_ICEBLOOD_TOWER && node <= BG_AV_NODES_FROSTWOLF_ETOWER)
+           if( node >= BG_AV_NODES_ICEBLOOD_TOWER && node <= BG_AV_NODES_FROSTWOLF_WTOWER)
                return node+29;
        }
    }
@@ -750,8 +752,8 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 node)
         m_Points_Timer[GetNodePlace(node)] = BG_AV_CAPTIME;
     }
     m_Points_PrevOwner[GetNodePlace(node)] = m_Points_Owner[GetNodePlace(node)];
-    m_Points_Owner[GetNodePlace(node)] = player->GetTeam();
     m_Points_PrevState[GetNodePlace(node)] = m_Points_State[GetNodePlace(node)];
+    m_Points_Owner[GetNodePlace(node)] = player->GetTeam();
     m_Points_State[GetNodePlace(node)] = POINT_ASSAULTED;
 
     UpdatePointsIcons(GetNodePlace(node));
@@ -779,7 +781,7 @@ const uint8 BattleGroundAV::GetWorldStateType(uint8 state, uint16 team)
     }
     if(team == HORDE)
     {
-        if(state==POINT_CONTROLED || state==POINT_DESTROYED)
+        if(state==POINT_DESTROYED || state==POINT_CONTROLED)
             return 2;
         if(state==POINT_ASSAULTED)
             return 3;
@@ -790,7 +792,7 @@ const uint8 BattleGroundAV::GetWorldStateType(uint8 state, uint16 team)
 }
 
 
-void BattleGroundAV::UpdatePointsIcons(uint32 node)
+void BattleGroundAV::UpdatePointsIcons(uint8 node)
 {
     UpdateWorldState(BG_AV_WorldStates[node][GetWorldStateType(m_Points_State[node],m_Points_Owner[node])],1);
     if(m_Points_PrevState[node] == POINT_NEUTRAL)
@@ -801,18 +803,43 @@ void BattleGroundAV::UpdatePointsIcons(uint32 node)
 
 void BattleGroundAV::FillInitialWorldStates(WorldPacket& data)
 {
-    for (uint8 i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_ETOWER; ++i)
-        for (uint8 j =1; j <= 3; ++j)
-        {
-            data << uint32(BG_AV_WorldStates[i][GetWorldStateType(j,ALLIANCE)]) << uint32((m_Points_Owner[i] == ALLIANCE && m_Points_State[i] == j)?1:0);
-            data << uint32(BG_AV_WorldStates[i][GetWorldStateType(j,HORDE)]) << uint32((m_Points_Owner[i] == HORDE && m_Points_State[i] == j)?1:0);
+    bool stateok;
+    //graveyards
+    for (uint8 i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_HUT; i++)
+        for (uint8 j =1; j <= 3; j+=2)
+        {//j=1=assaulted j=3=controled
+            stateok = (m_Points_State[i] == j);
+            data << uint32(BG_AV_WorldStates[i][GetWorldStateType(j,ALLIANCE)]) << uint32((m_Points_Owner[i] == ALLIANCE && stateok)?1:0);
+            data << uint32(BG_AV_WorldStates[i][GetWorldStateType(j,HORDE)]) << uint32((m_Points_Owner[i] == HORDE && stateok)?1:0);
+        }
+    //towers
+    for (uint8 i = BG_AV_NODES_DUNBALDAR_SOUTH; i <= BG_AV_NODES_MAX; i++)
+        for (uint8 j =1; j <= 3; j+=2)
+        {//j=1=assaulted j=3=controled //i dont have j=2=destroyed cause destroyed is the same like enemy-team controll
+            stateok = (m_Points_State[i] == j || (m_Points_State[i] == POINT_DESTROYED && j==3));
+            data << uint32(BG_AV_WorldStates[i][GetWorldStateType(j,ALLIANCE)]) << uint32((m_Points_Owner[i] == ALLIANCE && stateok)?1:0);
+            data << uint32(BG_AV_WorldStates[i][GetWorldStateType(j,HORDE)]) << uint32((m_Points_Owner[i] == HORDE && stateok)?1:0);
         }
     if(!m_Snowfall_Capped)
         data << uint32(AV_SNOWFALL_N) << uint32(1);
-    data << uint32(AV_SHOW_A_SCORE) << uint32(1); //maybe score will not be showed all the time TODO:find this out
-    data << uint32(AV_SHOW_H_SCORE) << uint32(1);
     data << uint32(AV_Alliance_Score)  << uint32(m_Team_Scores[0]);
     data << uint32(AV_Horde_Score) << uint32(m_Team_Scores[1]);
+    if(GetStatus() == STATUS_IN_PROGRESS){
+        data << uint32(AV_SHOW_A_SCORE) << uint32(1);
+        data << uint32(AV_SHOW_H_SCORE) << uint32(1);
+    }
+    else
+    {
+        data << uint32(AV_SHOW_A_SCORE) << uint32(0);
+        data << uint32(AV_SHOW_H_SCORE) << uint32(0);
+    }
+    //TODO: implement the mines right
+    data << uint32(AV_IRONDEEP_MINE_N) << uint32(1);
+    data << uint32(AV_IRONDEEP_MINE_A) << uint32(0);
+    data << uint32(AV_IRONDEEP_MINE_H) << uint32(0);
+    data << uint32(AV_S_MINE_N) << uint32(1);
+    data << uint32(AV_S_MINE_A) << uint32(0);
+    data << uint32(AV_S_MINE_H) << uint32(0);
 }
 
 
@@ -893,7 +920,7 @@ bool BattleGroundAV::SetupBattleGround()
     }
 
 //spawn graveyard flags
-    for (int i = BG_AV_NODES_FIRSTAID_STATION ; i <= BG_AV_NODES_FROSTWOLF_ETOWER; ++i)
+    for (int i = BG_AV_NODES_FIRSTAID_STATION ; i < BG_AV_NODES_MAX; ++i)
     {
         if( i <= BG_AV_NODES_FROSTWOLF_HUT )
         {
@@ -1001,7 +1028,7 @@ void BattleGroundAV::ResetBGSubclass()
         m_Points_State[i] = POINT_CONTROLED;
         m_Points_PrevState[i] = m_Points_State[i];
     }
-    for(uint32 i = BG_AV_NODES_ICEBLOOD_TOWER; i <= BG_AV_NODES_FROSTWOLF_ETOWER; i++)
+    for(uint32 i = BG_AV_NODES_ICEBLOOD_TOWER; i <= BG_AV_NODES_FROSTWOLF_WTOWER; i++)
     {
         m_Points_Owner[i] = HORDE;
         m_Points_PrevOwner[i] = m_Points_Owner[i];

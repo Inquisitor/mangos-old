@@ -83,8 +83,8 @@ enum BG_AV_ObjectTypes
     BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_HUT       = 17,
     BG_AV_OBJECT_FLAG_C_A_ICEBLOOD_TOWER      = 18,
     BG_AV_OBJECT_FLAG_C_A_TOWER_POINT         = 19,
-    BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_WTOWER    = 20,
-    BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_ETOWER    = 21,
+    BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_ETOWER    = 20,
+    BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_WTOWER    = 21,
 
     BG_AV_OBJECT_FLAG_C_H_FIRSTAID_STATION    = 22,
     BG_AV_OBJECT_FLAG_C_H_STORMPIKE_GRAVE     = 23,
@@ -107,8 +107,8 @@ enum BG_AV_ObjectTypes
     BG_AV_OBJECT_FLAG_H_FROSTWOLF_HUT       = 39,
     BG_AV_OBJECT_FLAG_H_ICEBLOOD_TOWER      = 40,
     BG_AV_OBJECT_FLAG_H_TOWER_POINT         = 41,
-    BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER    = 42,
-    BG_AV_OBJECT_FLAG_H_FROSTWOLF_ETOWER    = 43,
+    BG_AV_OBJECT_FLAG_H_FROSTWOLF_ETOWER    = 42,
+    BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER    = 43,
 
     BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE      = 44,
 
@@ -167,8 +167,8 @@ enum BG_AV_ObjectIds
 
 //TODO: following objects aren't implemented yet
     //mine supplies
-    BG_AV_OBJECTID_MINE_IRONDEEP        = 178785, //on spawning we must set, that only the mine-controlling team can use them
-    BG_AV_OBJECTID_MINE_COLDTOOTH       = 178784, // .. don't forget..
+    BG_AV_OBJECTID_MINE_IRONDEEP        = 178785,
+    BG_AV_OBJECTID_MINE_COLDTOOTH       = 178784,
 
     BG_AV_OBJECTID_FIRE                 = 179065
 };
@@ -188,8 +188,8 @@ enum BG_AV_Nodes
     BG_AV_NODES_STONEHEART_BUNKER       = 10,
     BG_AV_NODES_ICEBLOOD_TOWER          = 11,
     BG_AV_NODES_TOWER_POINT             = 12,
-    BG_AV_NODES_FROSTWOLF_WTOWER        = 13,
-    BG_AV_NODES_FROSTWOLF_ETOWER        = 14,
+    BG_AV_NODES_FROSTWOLF_ETOWER        = 13,
+    BG_AV_NODES_FROSTWOLF_WTOWER        = 14,
 
     BG_AV_NODES_MAX                     = 15
 };
@@ -207,8 +207,8 @@ const float BG_AV_NodePositions[15][4] = {
     {-151.864f,-440.838f,40.3897f,4.1744f},  //stone bunker
     {-572.723f,-262.062f,75.0087f,5.44671f}, //ice tower
     {-768.907f,-363.71f,90.8949f,1.07991f},  //tower point
-    {-1302.89f,-316.92f,113.867f,2.01453f},   //frostwolf wtower
-    {-1297.5f,-266.767f,114.15f,3.31044f}   //frostwolf etower
+    {-1297.5f,-266.767f,114.15f,3.31044f},   //frostwolf etower
+    {-1302.89f,-316.92f,113.867f,2.01453f}   //frostwolf wtower
 };
 
 const float BG_AV_DoorPositons[2][4] = {
@@ -589,10 +589,10 @@ const uint32 BG_AV_WorldStates[16][4] = {
     {1368,1390,1385,1395},
     //Tower Point
     {1367,1389,1384,1394},
+    //Frostwolf East
+    {1366,1388,1383,1393},
     //Frostwolf West
     {1365,1387,1382,1392},
-    //Frostwolf East
-    {1366,1388,1383,1393}
 };
 
 
@@ -680,7 +680,7 @@ class BattleGroundAV : public BattleGround
         void EventPlayerAssaultsPoint(Player* player, uint32 type);
         void EventPlayerDefendsPoint(Player* player, uint32 type);
         void EventPlayerDestroyedPoint(uint32 node);
-        void UpdatePointsIcons(uint32 node);
+        void UpdatePointsIcons(uint8 node);
         void UpdateScore(uint8 team, int16 points);
         void UpdateNode(uint32 type, uint32 state);
         void PopulateNode(uint32 node);
