@@ -154,14 +154,19 @@ enum BG_AV_ObjectIds
     BG_AV_OBJECTID_AURA_A               = 180421,
     BG_AV_OBJECTID_AURA_H               = 180422,
     BG_AV_OBJECTID_AURA_N               = 180423,
-    BG_AV_OBJECTID_AURA_A_S             = 180100,
-    BG_AV_OBJECTID_AURA_H_S             = 180101,
-    BG_AV_OBJECTID_AURA_N_S             = 180102,
+    BG_AV_OBJECTID_AURA_A_S             = 180100, //needed?
+    BG_AV_OBJECTID_AURA_H_S             = 180101, //needed?
+    BG_AV_OBJECTID_AURA_N_S             = 180102, //needed?
 
     BG_AV_OBJECTID_GATE_A               = 180424,
     BG_AV_OBJECTID_GATE_H               = 180424,
 
-    BG_AB_OBJECTID_FIRE                 = 179065
+//TODO: following objects aren't implemented yet
+    //mine supplies
+    BG_AV_OBJECTID_MINE_IRONDEEP        = 178785, //on spawning we must set, that only the mine-controlling team can use them
+    BG_AV_OBJECTID_MINE_COLDTOOTH       = 178784, // .. don't forget..
+
+    BG_AV_OBJECTID_FIRE                 = 179065
 };
 
 enum BG_AV_Nodes
@@ -523,31 +528,49 @@ enum BG_AV_WorldStates
     AV_FROSTWOLFW_ASSAULTED         = 1388
 };
 
+enum BG_AV_ItemIds
+{
+    AV_ITEM_BLOOD  = 17306,
+    AV_ITEM_SCRAPS = 17422,
+    AV_ITEM_CRYSTAL= 17423,
+    AV_ITEM_A_SOLDIER = 17502,
+    AV_ITEM_A_LIEUTNANT = 17503,
+    AV_ITEM_A_COMMANDER = 17504,
+    AV_ITEM_H_SOLDIER = 17326,
+    AV_ITEM_H_LIEUTNANT = 17327,
+    AV_ITEM_H_COMMANDER =17328,
+    AV_ITEM_A_HIDE      = 17643,
+    AV_ITEM_H_HIDE      = 17642,
+    AV_ITEM_IRONDEEP = 17522,
+    AV_ITEM_COLDTOOTH = 17542
+
+};
+
 enum BG_AV_QuestIds
 {
     //TODO search and add the questids (and also search and add the first for example 6781 has 7223 first)
     AV_QUEST_A_SCRAPS1      = 7223,
     AV_QUEST_A_SCRAPS2      = 6781,
-    AV_QUEST_H_SCRAPS1       = 7224,
-    AV_QUEST_H_SCRAPS2       = 6741,
-    AV_QUEST_A_COMMANDER1   = 3, //soldier
-    AV_QUEST_H_COMMANDER1   = 4,
-    AV_QUEST_A_COMMANDER2   = 5, //leutnant
-    AV_QUEST_H_COMMANDER2   = 6,
-    AV_QUEST_A_COMMANDER3   = 7, //commander
-    AV_QUEST_H_COMMANDER3   = 8,
-    AV_QUEST_A_BOSS1        = 9, // 10 cristal/blood
-    AV_QUEST_H_BOSS1        = 10,
-    AV_QUEST_A_BOSS2        = 11, // 1
-    AV_QUEST_H_BOSS2        = 12,
-    AV_QUEST_A_NEAR_MINE    = 123, //the mine near start location of team
-    AV_QUEST_H_NEAR_MINE    = 456,
-    AV_QUEST_A_OTHER_MINE   = 987, //the other mine ;)
-    AV_QUEST_H_OTHER_MINE   = 654,
-    AV_QUEST_A_RIDER_HIDE   = 345,
-    AV_QUEST_H_RIDER_HIDE   = 543,
-    AV_QUEST_A_RIDER_TAME   = 101010,
-    AV_QUEST_H_RIDER_TAME   = 42
+    AV_QUEST_H_SCRAPS1      = 7224,
+    AV_QUEST_H_SCRAPS2      = 6741,
+    AV_QUEST_A_COMMANDER1   = 6942, //soldier
+    AV_QUEST_H_COMMANDER1   = 6825,
+    AV_QUEST_A_COMMANDER2   = 6941, //leutnant
+    AV_QUEST_H_COMMANDER2   = 6826,
+    AV_QUEST_A_COMMANDER3   = 6943, //commander
+    AV_QUEST_H_COMMANDER3   = 6827,
+    AV_QUEST_A_BOSS1        = 7386, // 5 cristal/blood
+    AV_QUEST_H_BOSS1        = 7385,
+    AV_QUEST_A_BOSS2        = 6881, // 1
+    AV_QUEST_H_BOSS2        = 6801,
+    AV_QUEST_A_NEAR_MINE    = 5892, //the mine near start location of team
+    AV_QUEST_H_NEAR_MINE    = 5893,
+    AV_QUEST_A_OTHER_MINE   = 6982, //the other mine ;)
+    AV_QUEST_H_OTHER_MINE   = 6985,
+    AV_QUEST_A_RIDER_HIDE   = 7026,
+    AV_QUEST_H_RIDER_HIDE   = 7002,
+    AV_QUEST_A_RIDER_TAME   = 7027,
+    AV_QUEST_H_RIDER_TAME   = 7001
 };
 
 const uint32 BG_AV_State_Auras[5] = { BG_AV_OBJECTID_AURA_N, BG_AV_OBJECTID_AURA_A, BG_AV_OBJECTID_AURA_H, BG_AV_OBJECTID_AURA_N, BG_AV_OBJECTID_AURA_N };
@@ -594,11 +617,10 @@ class BattleGroundAV : public BattleGround
         void UpdateNode(uint32 type, uint32 state);
         void PopulateNode(uint32 node);
         void DePopulateNode(uint32 node);
-        int32 GetNode(uint64 guid);
-        uint32 GetNodePlace(uint32 guid);
-        uint32 GetPlaceNode(uint32 node);
-        const char* GetNodeName(uint32 node);
-        bool IsTower(uint32 node);
+        const uint8 GetNodePlace(uint16 guid);
+        const uint16 GetPlaceNode(uint8 node);
+        const char* GetNodeName(uint8 node);
+        const bool IsTower(uint8 node);
 
         /* Scorekeeping */
         void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);

@@ -238,7 +238,16 @@ Creature* BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type)
     if(level != 0)
         level += m_MaxLevel-60; //maybe we can do this more generic for custom level-range.. actually it's blizzlike
     creature->SetLevel(level);
+    CreatureData &data = objmgr.NewOrExistCreatureData(creature->GetDBTableGUIDLow());
+    data.posX = BG_AV_CreaturePos[type][0];
+    data.posY = BG_AV_CreaturePos[type][1];
+    data.posZ = BG_AV_CreaturePos[type][2];
     //if is bowman, make unit stand still <--this must be added here..(TODO)
+//    creature->SaveToDB();
+//    uint32 db_guid = pCreature->GetDBTableGUIDLow();
+//    pCreature->LoadFromDB(db_guid, chr->GetInstanceId());
+//    map->Add(pCreature);
+//    objmgr.AddCreatureToGrid(db_guid, objmgr.GetCreatureData(db_guid));
     return creature;
 }
 
@@ -351,17 +360,24 @@ void BattleGroundAV::AddPlayer(Player *plr)
 
 void BattleGroundAV::RemovePlayer(Player* /*plr*/,uint64 /*guid*/)
 {
-    plr->RemoveAurasDueToSpell(AV_BUFF_ARMOR); // i think those buffs were removed at the end..
-    //TODO add the iteams in the header-file (so it'll be easier to change this later)
-    plr->DestroyItemCount( 17306, 99999, true, false);
-    plr->DestroyItemCount( 17422, 99999, true, false);
-    plr->DestroyItemCount( 17423, 99999, true, false);
-    plr->DestroyItemCount( 17502, 99999, true, false);
-    plr->DestroyItemCount( 17503, 99999, true, false);
-    plr->DestroyItemCount( 17504, 99999, true, false);
-    plr->DestroyItemCount( 17326, 99999, true, false);
-    plr->DestroyItemCount( 17327, 99999, true, false);
-    plr->DestroyItemCount( 17328, 99999, true, false);
+    //TODO search more buffs
+    plr->RemoveAurasDueToSpell(AV_BUFF_ARMOR);
+
+    //all items found :)
+    plr->DestroyItemCount( AV_ITEM_BLOOD, 99999, true, false);
+    plr->DestroyItemCount( AV_ITEM_SCRAPS, 99999, true, false);
+    plr->DestroyItemCount( AV_ITEM_CRYSTAL, 99999, true, false);
+    plr->DestroyItemCount( AV_ITEM_A_SOLDIER, 99999, true, false);
+    plr->DestroyItemCount( AV_ITEM_A_LIEUTNANT, 99999, true, false);
+    plr->DestroyItemCount( AV_ITEM_A_COMMANDER, 99999, true, false);
+    plr->DestroyItemCount( AV_ITEM_H_SOLDIER, 99999, true, false);
+    plr->DestroyItemCount( AV_ITEM_H_LIEUTNANT, 99999, true, false);
+    plr->DestroyItemCount( AV_ITEM_H_COMMANDER, 99999, true, false);
+    plr->DestroyItemCount( AV_ITEM_A_HIDE, 99999, true, false);
+    plr->DestroyItemCount( AV_ITEM_H_HIDE, 99999, true, false);
+    plr->DestroyItemCount( AV_ITEM_IRONDEEP, 99999, true, false);
+    plr->DestroyItemCount( AV_ITEM_COLDTOOTH, 99999, true, false);
+
 }
 
 void BattleGroundAV::HandleAreaTrigger(Player *Source, uint32 Trigger)
@@ -550,10 +566,9 @@ void BattleGroundAV::DePopulateNode(uint32 node)
 }
 
 
-uint32 BattleGroundAV::GetNodePlace(uint32 node)
+const uint8 BattleGroundAV::GetNodePlace(uint16 node)
 {
 	//warning GetNodePlace(GetNodePlace(node))!=GetNodePlace(node) in some cases, so watch out that it will not be applied 2 times
-	//as long as we can trust GetNode we can trust that node is in object-range
 	if( node <= BG_AV_OBJECT_FLAG_A_STONEHEART_BUNKER )
 		return node;
 	if( node <= BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_HUT )
@@ -571,7 +586,7 @@ uint32 BattleGroundAV::GetNodePlace(uint32 node)
 	sLog.outError("BattleGroundAV: ERROR! GetPlace got a wrong node :(");
 }
 
-uint32 BattleGroundAV::GetPlaceNode(uint32 node)
+const uint16 BattleGroundAV::GetPlaceNode(uint8 node)
 { //this function is the counterpart to getnodeplace()
    if( m_Points_Owner[node] == ALLIANCE )
    {
@@ -1104,7 +1119,7 @@ void BattleGroundAV::UpdatePointsIcons(uint32 node)
     }
 }
 
-bool BattleGroundAV::IsTower(uint32 node)
+const bool BattleGroundAV::IsTower(uint8 node)
 {
     if(   node != BG_AV_NODES_FIRSTAID_STATION
        && node != BG_AV_NODES_STORMPIKE_GRAVE
@@ -1225,7 +1240,7 @@ bool BattleGroundAV::SetupBattleGround()
    return true;
 }
 
-const char* BattleGroundAV::GetNodeName(uint32 node)
+const char* BattleGroundAV::GetNodeName(uint8 node)
 {
     switch (node)
     {
@@ -1251,7 +1266,6 @@ const char* BattleGroundAV::GetNodeName(uint32 node)
             break;
             }
     }
-    return "";
 }
 
 void BattleGroundAV::ResetBGSubclass()
