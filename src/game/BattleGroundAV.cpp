@@ -691,23 +691,6 @@ void BattleGroundAV::DePopulateNode(uint32 node)
     if(IsTower(node))
         return;
     //spiritguide
-    // Those who are waiting to resurrect at this node are taken to the closest own node's graveyard
-    std::vector<uint64> ghost_list = m_ReviveQueue[m_BgCreatures[node]];
-    if( !ghost_list.empty() )
-    {
-        WorldSafeLocsEntry const *ClosestGrave = NULL;
-        Player *plr;
-        for (std::vector<uint64>::iterator itr = ghost_list.begin(); itr != ghost_list.end(); ++itr)
-        {
-            plr = objmgr.GetPlayer(*ghost_list.begin());
-            if( !plr )
-                continue;
-            if( !ClosestGrave )
-                ClosestGrave = GetClosestGraveYard(plr->GetPositionX(), plr->GetPositionY(), plr->GetPositionZ(), 30, plr->GetTeam());
-
-            plr->TeleportTo(30, ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, plr->GetOrientation());
-        }
-    }
     if( m_BgCreatures[node] )
         DelCreature(node);
 }
@@ -905,18 +888,38 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 node)
         SpawnBGObject(BG_AV_OBJECT_TAURA_H_DUNBALDAR_SOUTH+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),(m_Points_Owner[GetNodePlace(node)]==HORDE)? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
         SpawnBGObject(BG_AV_OBJECT_TFLAG_A_DUNBALDAR_SOUTH+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),(m_Points_Owner[GetNodePlace(node)]==ALLIANCE)? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
         SpawnBGObject(BG_AV_OBJECT_TFLAG_H_DUNBALDAR_SOUTH+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),(m_Points_Owner[GetNodePlace(node)]==HORDE)? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
-    } else if(GetNodePlace(node) == BG_AV_NODES_SNOWFALL_GRAVE) //snowfall eyecandy
-    {
-        for(uint8 i = 0; i < 4; i++)
+    } else {
+        // Those who are waiting to resurrect at this node are taken to the closest own node's graveyard
+        std::vector<uint64> ghost_list = m_ReviveQueue[m_BgCreatures[node]];
+        if( !ghost_list.empty() )
         {
-            if(m_Snowfall_Capped)
+            Player *plr;
+            WorldSafeLocsEntry const *ClosestGrave = NULL;
+            plr= objmgr.GetPlayer(*ghost_list.begin());
+            for (std::vector<uint64>::iterator itr = ghost_list.begin(); itr != ghost_list.end(); ++itr)
             {
-                if( m_Points_PrevState[GetNodePlace(node)] == POINT_ASSAULTED )
-                    SpawnBGObject(((m_Points_PrevOwner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_ONE_DAY);
-                else
-                    SpawnBGObject(((m_Points_PrevOwner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_A : BG_AV_OBJECT_SNOW_EYECANDY_H)+i,RESPAWN_ONE_DAY);
+                plr = objmgr.GetPlayer(*ghost_list.begin());
+                if( !plr )
+                    continue;
+                if(!ClosestGrave)
+                    ClosestGrave = GetClosestGraveYard(plr->GetPositionX(), plr->GetPositionY(), plr->GetPositionZ(), plr->GetMapId(), plr->GetTeam());
+                plr->TeleportTo(GetMapId(), ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, plr->GetOrientation());
             }
-            SpawnBGObject(((m_Points_Owner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_IMMEDIATELY);
+            m_ReviveQueue[m_BgCreatures[node]].empty();
+        }
+        if(GetNodePlace(node) == BG_AV_NODES_SNOWFALL_GRAVE) //snowfall eyecandy
+        {
+            for(uint8 i = 0; i < 4; i++)
+            {
+                if(m_Snowfall_Capped)
+                {
+                    if( m_Points_PrevState[GetNodePlace(node)] == POINT_ASSAULTED )
+                        SpawnBGObject(((m_Points_PrevOwner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_ONE_DAY);
+                    else
+                        SpawnBGObject(((m_Points_PrevOwner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_A : BG_AV_OBJECT_SNOW_EYECANDY_H)+i,RESPAWN_ONE_DAY);
+                }
+                SpawnBGObject(((m_Points_Owner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_IMMEDIATELY);
+            }
         }
     }
     UpdatePointsIcons(GetNodePlace(node));
@@ -1027,18 +1030,11 @@ WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(float x, float y, 
     WorldSafeLocsEntry const* good_entry = NULL;
     if( GetStatus() == STATUS_IN_PROGRESS) //TODO: get out, if this is right (if a player dies before game starts and gets ressurected in main graveyard)
     {
-    sLog.outError("bg_av closest grave");
         // Is there any occupied node for this team?
-        std::vector<uint8> nodes;
+        float mindist = 9999999.0f;
         for (uint8 i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i)
-            if (m_Points_Owner[i] == team && m_Points_State[i] == POINT_CONTROLED)
-                nodes.push_back(i);
-
-        // If so, select the closest node to place ghost on
-        if( !nodes.empty() )
         {
-            float mindist = 999999.0f;
-            for (uint8 i = 0; i < nodes.size(); ++i)
+            if (m_Points_Owner[i] == team && m_Points_State[i] == POINT_CONTROLED)
             {
                 WorldSafeLocsEntry const*entry = sWorldSafeLocsStore.LookupEntry( BG_AV_GraveyardIds[i] );
                 if( !entry )
@@ -1050,7 +1046,6 @@ WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(float x, float y, 
                     good_entry = entry;
                 }
             }
-            nodes.clear();
         }
     }
     // If not, place ghost on starting location
