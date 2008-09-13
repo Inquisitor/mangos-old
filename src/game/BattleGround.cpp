@@ -1055,6 +1055,20 @@ bool BattleGround::AddSpiritGuide(uint32 type, float x, float y, float z, float 
     return true;
 }
 
+
+int32 BattleGround::GetBGObjectId(uint64 guid)
+{
+    uint32 i = 0;
+    while(i <= m_BgObjects.size())
+    {
+        if(m_BgObjects[i] == guid)
+            return i;
+        i++;
+    }
+    sLog.outError("BattleGround: cheating? a player used a gameobjecti (guid %i) which isnt supposed to be a usable object!",guid);
+    return -1;
+}
+
 void BattleGround::SendMessageToAll(char const* text)
 {
     WorldPacket data;
