@@ -95,13 +95,6 @@ enum BG_WS_ObjectEntry
     BG_OBJECT_H_FLAG_WS_ENTRY            = 179831
 };
 
-
-// x, y, z, o
-const float BG_WS_SpiritGuidePos[2][4] = {
-    {1415.329956f,1554.790039f,343.156006f,3.124139f}, //alliance
-    {1029.140015f,1387.489990f,340.835999f,3.193953f} //horde
-};
-
 enum BG_WS_FlagState
 {
     BG_WS_FLAG_STATE_ON_BASE      = 0,

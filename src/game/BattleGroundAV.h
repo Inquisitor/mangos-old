@@ -42,7 +42,7 @@ class BattleGround;
 #define SEND_MSG_NEAR_LOSE               120
 #define BG_AV_SPIRITGUIDE_ENTRY_A        13116
 #define BG_AV_CAPTIME                    240000  //4:00
-#define BG_AV_SNOWFALL_FIRSTCAP          245000  //4:05
+#define BG_AV_SNOWFALL_FIRSTCAP          300000  //5:00 but i also have seen 4:05
 #define BG_AV_SCORE_INITIAL_POINTS       600
 #define BG_AV_BANNER_RESPAWN_TIMER       3000
 
@@ -110,8 +110,30 @@ enum BG_AV_ObjectTypes
 
     BG_AV_OBJECT_DOOR_H                     = 45,
     BG_AV_OBJECT_DOOR_A                     = 46,
+//auras for graveyards (3auras per graveyard neutral,alliance,horde)
+    BG_AV_OBJECT_AURA_N_FIRSTAID_STATION    = 47,
+    BG_AV_OBJECT_AURA_A_FIRSTAID_STATION    = 48,
+    BG_AV_OBJECT_AURA_H_FIRSTAID_STATION    = 49,
+    BG_AV_OBJECT_AURA_N_STORMPIKE_GRAVE     = 50,
+    BG_AV_OBJECT_AURA_A_STORMPIKE_GRAVE     = 51,
+    BG_AV_OBJECT_AURA_H_STORMPIKE_GRAVE     = 52,
+    BG_AV_OBJECT_AURA_N_STONEHEART_GRAVE    = 53,
+    BG_AV_OBJECT_AURA_A_STONEHEART_GRAVE    = 54,
+    BG_AV_OBJECT_AURA_H_STONEHEART_GRAVE    = 55,
+    BG_AV_OBJECT_AURA_N_SNOWFALL_GRAVE      = 56,
+    BG_AV_OBJECT_AURA_A_SNOWFALL_GRAVE      = 57,
+    BG_AV_OBJECT_AURA_H_SNOWFALL_GRAVE      = 58,
+    BG_AV_OBJECT_AURA_N_ICEBLOOD_GRAVE      = 59,
+    BG_AV_OBJECT_AURA_A_ICEBLOOD_GRAVE      = 60,
+    BG_AV_OBJECT_AURA_H_ICEBLOOD_GRAVE      = 61,
+    BG_AV_OBJECT_AURA_N_FROSTWOLF_GRAVE     = 62,
+    BG_AV_OBJECT_AURA_A_FROSTWOLF_GRAVE     = 63,
+    BG_AV_OBJECT_AURA_H_FROSTWOLF_GRAVE     = 64,
+    BG_AV_OBJECT_AURA_N_FROSTWOLF_HUT       = 65,
+    BG_AV_OBJECT_AURA_A_FROSTWOLF_HUT       = 66,
+    BG_AV_OBJECT_AURA_H_FROSTWOLF_HUT       = 67,
 
-    BG_AV_OBJECT_MAX                          = 47
+    BG_AV_OBJECT_MAX                          = 68
 };
 
 enum BG_AV_ObjectIds
@@ -557,7 +579,7 @@ class BattleGroundAV : public BattleGround
         void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
         void HandleKillPlayer(Player* player, Player *killer);
         void HandleKillUnit(Creature *unit, Player *killer);
-        WorldSafeLocsEntry const* SelectGraveYard(Player* player);
+        virtual WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 MapId, uint32 team);
 
     private:
         int32 m_Team_Scores[2];
