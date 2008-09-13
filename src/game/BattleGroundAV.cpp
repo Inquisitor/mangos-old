@@ -30,7 +30,7 @@
 BattleGroundAV::BattleGroundAV()
 {
 
-    m_BgObjects.resize(BG_AV_OBJECT_MAX);
+    m_BgObjects.resize(BG_AV_OBJECT_MAX+AV_STATICOPLACE_MAX);
     m_BgCreatures.resize(AV_CPLACE_MAX+AV_STATICCPLACE_MAX);
 }
 
@@ -78,12 +78,18 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
         RewardReputationToTeam(729,BG_AV_REP_CAPTAIN,HORDE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),HORDE);
 	    UpdateScore(BG_TEAM_ALLIANCE,(-1)*BG_AV_RES_CAPTAIN);
+        //spawn destroyed aura
+        for(uint8 i=0; i<=9; i++)
+            SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_ALLIANCE+i,RESPAWN_IMMEDIATELY);
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_H_CAPTAIN][0] )
     {
         RewardReputationToTeam(730,BG_AV_REP_CAPTAIN,ALLIANCE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),ALLIANCE);
 	UpdateScore(BG_TEAM_HORDE,(-1)*BG_AV_RES_CAPTAIN);
+        //spawn destroyed aura
+        for(uint8 i=0; i<=9; i++)
+            SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_HORDE+i,RESPAWN_IMMEDIATELY);
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_IRONDEEP_N_4][0] )
     {
@@ -300,8 +306,8 @@ void BattleGroundAV::Update(time_t diff)
 
         if (!(m_Events & 0x01))
         {
-            uint16 i;
             m_Events |= 0x01;
+            uint16 i;
             sLog.outDebug("Alterac Valley: entering state STATUS_WAIT_JOIN ...");
             // Initial Nodes
             for(i = 0; i < BG_AV_OBJECT_MAX; i++)
@@ -316,12 +322,24 @@ void BattleGroundAV::Update(time_t diff)
                 SpawnBGObject(i, RESPAWN_IMMEDIATELY);
                 if(i<=BG_AV_OBJECT_FLAG_H_FROSTWOLF_HUT)
                     SpawnBGObject(BG_AV_OBJECT_AURA_H_FIRSTAID_STATION+3*GetNodePlace(i),RESPAWN_IMMEDIATELY);
-             }
+            }
+            for(i = BG_AV_OBJECT_TFLAG_A_DUNBALDAR_SOUTH; i <= BG_AV_OBJECT_TFLAG_A_STONEHEART_BUNKER; i+=2)
+            {
+                SpawnBGObject(i, RESPAWN_IMMEDIATELY); //flag
+                SpawnBGObject(i+16, RESPAWN_IMMEDIATELY); //aura
+            }
+            for(i = BG_AV_OBJECT_TFLAG_H_ICEBLOOD_TOWER; i <= BG_AV_OBJECT_TFLAG_H_FROSTWOLF_WTOWER; i+=2)
+            {
+                SpawnBGObject(i, RESPAWN_IMMEDIATELY); //flag
+                SpawnBGObject(i+16, RESPAWN_IMMEDIATELY); //aura
+            }
             //snowfall and the doors
             for(i = BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE; i <= BG_AV_OBJECT_DOOR_A; i++)
                 SpawnBGObject(i, RESPAWN_IMMEDIATELY);
             SpawnBGObject(BG_AV_OBJECT_AURA_N_SNOWFALL_GRAVE,RESPAWN_IMMEDIATELY);
 
+            for(i = 123; i < BG_AV_OBJECT_MAX; i++)
+                SpawnBGObject(i, RESPAWN_ONE_DAY);
             //creatures
             sLog.outDebug("BG_AV start poputlating nodes");
 			for(i= BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; i++ )
@@ -330,6 +348,9 @@ void BattleGroundAV::Update(time_t diff)
             sLog.outDebug("BG_AV: start spawning static creatures");
             for(i=0; i < AV_STATICCPLACE_MAX; i++ )
                 AddAVCreature(0,i+AV_CPLACE_MAX);
+            //the same for gameobjects:
+            for(i=0; i < AV_STATICOPLACE_MAX; i++)
+                SpawnBGObject(BG_AV_OBJECT_MAX+i,RESPAWN_IMMEDIATELY);
 		//mainspiritguides:
             sLog.outDebug("BG_AV: start spawning spiritguides creatures");
 	        AddSpiritGuide(7, BG_AV_CreaturePos[7][0], BG_AV_CreaturePos[7][1], BG_AV_CreaturePos[7][2], BG_AV_CreaturePos[7][3], ALLIANCE);
@@ -527,8 +548,13 @@ void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
         m_Points_State[GetNodePlace(node)]=POINT_DESTROYED;
         UpdateScore((team == ALLIANCE) ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE, (-1)*BG_AV_RES_TOWER);
         //spawn destroyed aura
+        for(uint8 i=0; i<=9; i++)
+            SpawnBGObject(BG_AV_OBJECT_BURN_DUNBALDAR_SOUTH+((GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)*10)+i,RESPAWN_IMMEDIATELY);
         RewardReputationToTeam((team == ALLIANCE)?730:729,BG_AV_REP_TOWER,team);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_TOWER),team);
+        //despawn big banner+aura on top of tower
+        SpawnBGObject(BG_AV_OBJECT_TAURA_A_DUNBALDAR_SOUTH+((m_Points_Owner[GetNodePlace(node)]==ALLIANCE)?0:1)+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),RESPAWN_ONE_DAY);
+        SpawnBGObject(BG_AV_OBJECT_TFLAG_A_DUNBALDAR_SOUTH+((m_Points_Owner[GetNodePlace(node)]==ALLIANCE)?0:1)+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),RESPAWN_ONE_DAY);
     }
     else
     {
@@ -542,6 +568,14 @@ void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
         SpawnBGObject(BG_AV_OBJECT_AURA_A_FIRSTAID_STATION+GetTeamIndexByTeamId(team)+3*GetNodePlace(node),RESPAWN_IMMEDIATELY);
         m_Points_State[GetNodePlace(node)]=POINT_CONTROLED;
         PopulateNode(GetNodePlace(node));
+        if(GetNodePlace(node) == BG_AV_NODES_SNOWFALL_GRAVE) //snowfall eyecandy
+        {
+            for(uint8 i = 0; i < 4; i++)
+            {
+                SpawnBGObject(((m_Points_Owner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_ONE_DAY);
+                SpawnBGObject(((m_Points_Owner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_A : BG_AV_OBJECT_SNOW_EYECANDY_H)+i,RESPAWN_IMMEDIATELY);
+            }
+        }
     }
     UpdatePointsIcons(GetNodePlace(node));
     //send a nice message to all :)
@@ -771,13 +805,35 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 node)
         SpawnBGObject(BG_AV_OBJECT_AURA_N_FIRSTAID_STATION+3*GetNodePlace(node),RESPAWN_ONE_DAY);
         SpawnBGObject(BG_AV_OBJECT_AURA_A_FIRSTAID_STATION+GetTeamIndexByTeamId(player->GetTeam())+3*GetNodePlace(node),RESPAWN_IMMEDIATELY);
     }
-    // despawn old go
+        // despawn old go
     SpawnBGObject(node, RESPAWN_ONE_DAY);
 
     m_Points_PrevState[GetNodePlace(node)] = m_Points_State[GetNodePlace(node)];
     m_Points_PrevOwner[GetNodePlace(node)] = m_Points_Owner[GetNodePlace(node)];
     m_Points_State[GetNodePlace(node)] = POINT_CONTROLED;
     m_Points_Owner[GetNodePlace(node)] = player->GetTeam();
+    if(IsTower(GetNodePlace(node)))
+    {
+        //spawn big flag+aura on top of tower
+        SpawnBGObject(BG_AV_OBJECT_TAURA_A_DUNBALDAR_SOUTH+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),(m_Points_Owner[GetNodePlace(node)]==ALLIANCE)? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
+        SpawnBGObject(BG_AV_OBJECT_TAURA_H_DUNBALDAR_SOUTH+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),(m_Points_Owner[GetNodePlace(node)]==HORDE)? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
+        SpawnBGObject(BG_AV_OBJECT_TFLAG_A_DUNBALDAR_SOUTH+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),(m_Points_Owner[GetNodePlace(node)]==ALLIANCE)? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
+        SpawnBGObject(BG_AV_OBJECT_TFLAG_H_DUNBALDAR_SOUTH+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),(m_Points_Owner[GetNodePlace(node)]==HORDE)? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
+    }
+    else if(GetNodePlace(node) == BG_AV_NODES_SNOWFALL_GRAVE) //snowfall eyecandy
+    {
+        for(uint8 i = 0; i < 4; i++)
+        {
+            if(m_Snowfall_Capped)
+            {
+                if( m_Points_PrevState[GetNodePlace(node)] == POINT_ASSAULTED )
+                    SpawnBGObject(((m_Points_PrevOwner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_ONE_DAY);
+                else
+                    SpawnBGObject(((m_Points_PrevOwner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_A : BG_AV_OBJECT_SNOW_EYECANDY_H)+i,RESPAWN_ONE_DAY);
+            }
+            SpawnBGObject(((m_Points_Owner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_A : BG_AV_OBJECT_SNOW_EYECANDY_H)+i,RESPAWN_IMMEDIATELY);
+        }
+    }
     UpdatePointsIcons(GetNodePlace(node));
 	//send a nice message to all :)
 	char buf[256];
@@ -831,7 +887,26 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 node)
     m_Points_PrevState[GetNodePlace(node)] = m_Points_State[GetNodePlace(node)];
     m_Points_Owner[GetNodePlace(node)] = player->GetTeam();
     m_Points_State[GetNodePlace(node)] = POINT_ASSAULTED;
-
+    if(IsTower(GetNodePlace(node)))
+    { //spawn assaulted big flag+aura on top of tower
+        SpawnBGObject(BG_AV_OBJECT_TAURA_A_DUNBALDAR_SOUTH+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),(m_Points_Owner[GetNodePlace(node)]==ALLIANCE)? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
+        SpawnBGObject(BG_AV_OBJECT_TAURA_H_DUNBALDAR_SOUTH+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),(m_Points_Owner[GetNodePlace(node)]==HORDE)? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
+        SpawnBGObject(BG_AV_OBJECT_TFLAG_A_DUNBALDAR_SOUTH+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),(m_Points_Owner[GetNodePlace(node)]==ALLIANCE)? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
+        SpawnBGObject(BG_AV_OBJECT_TFLAG_H_DUNBALDAR_SOUTH+(2*(GetNodePlace(node)-BG_AV_NODES_DUNBALDAR_SOUTH)),(m_Points_Owner[GetNodePlace(node)]==HORDE)? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
+    } else if(GetNodePlace(node) == BG_AV_NODES_SNOWFALL_GRAVE) //snowfall eyecandy
+    {
+        for(uint8 i = 0; i < 4; i++)
+        {
+            if(m_Snowfall_Capped)
+            {
+                if( m_Points_PrevState[GetNodePlace(node)] == POINT_ASSAULTED )
+                    SpawnBGObject(((m_Points_PrevOwner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_ONE_DAY);
+                else
+                    SpawnBGObject(((m_Points_PrevOwner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_A : BG_AV_OBJECT_SNOW_EYECANDY_H)+i,RESPAWN_ONE_DAY);
+            }
+            SpawnBGObject(((m_Points_Owner[GetNodePlace(node)]==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_IMMEDIATELY);
+        }
+    }
     UpdatePointsIcons(GetNodePlace(node));
 
     //send a nice message to all :)
@@ -991,12 +1066,13 @@ bool BattleGroundAV::SetupBattleGround()
         // horde gates
         || !AddObject(BG_AV_OBJECT_DOOR_H, BG_AV_OBJECTID_GATE_H, BG_AV_DoorPositons[1][0],BG_AV_DoorPositons[1][1],BG_AV_DoorPositons[1][2],BG_AV_DoorPositons[1][3],0,0,sin(BG_AV_DoorPositons[1][3]/2),cos(BG_AV_DoorPositons[1][3]/2),RESPAWN_IMMEDIATELY))
     {
-        sLog.outErrorDb("BatteGroundAV: Failed to spawn some object BattleGround not created!");
+        sLog.outErrorDb("BatteGroundAV: Failed to spawn some object BattleGround not created!1");
         return false;
     }
 
-//spawn graveyard flags
-    for (int i = BG_AV_NODES_FIRSTAID_STATION ; i < BG_AV_NODES_MAX; ++i)
+//spawn node-objects
+    uint8 tmp;
+    for (uint8 i = BG_AV_NODES_FIRSTAID_STATION ; i < BG_AV_NODES_MAX; ++i)
     {
         if( i <= BG_AV_NODES_FROSTWOLF_HUT )
         {
@@ -1009,38 +1085,98 @@ bool BattleGroundAV::SetupBattleGround()
                 || !AddObject(BG_AV_OBJECT_AURA_A_FIRSTAID_STATION+i*3,BG_AV_OBJECTID_AURA_A,BG_AV_NodePositions[i][0],BG_AV_NodePositions[i][1],BG_AV_NodePositions[i][2],BG_AV_NodePositions[i][3], 0, 0, sin(BG_AV_NodePositions[i][3]/2), cos(BG_AV_NodePositions[i][3]/2),RESPAWN_ONE_DAY)
                 || !AddObject(BG_AV_OBJECT_AURA_H_FIRSTAID_STATION+i*3,BG_AV_OBJECTID_AURA_H,BG_AV_NodePositions[i][0],BG_AV_NodePositions[i][1],BG_AV_NodePositions[i][2],BG_AV_NodePositions[i][3], 0, 0, sin(BG_AV_NodePositions[i][3]/2), cos(BG_AV_NodePositions[i][3]/2),RESPAWN_ONE_DAY))
             {
-                sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!");
+                sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!2");
                 return false;
             }
         }
-        else
+        else //towers
         {
-            if( i <= BG_AV_NODES_STONEHEART_BUNKER )
+            if( i <= BG_AV_NODES_STONEHEART_BUNKER ) //alliance towers
             {
                 if(   !AddObject(i,BG_AV_OBJECTID_BANNER_A,BG_AV_NodePositions[i][0],BG_AV_NodePositions[i][1],BG_AV_NodePositions[i][2],BG_AV_NodePositions[i][3], 0, 0, sin(BG_AV_NodePositions[i][3]/2), cos(BG_AV_NodePositions[i][3]/2),RESPAWN_ONE_DAY)
-                    || !AddObject(i+22,BG_AV_OBJECTID_BANNER_CONT_H,BG_AV_NodePositions[i][0],BG_AV_NodePositions[i][1],BG_AV_NodePositions[i][2],BG_AV_NodePositions[i][3], 0, 0, sin(BG_AV_NodePositions[i][3]/2), cos(BG_AV_NodePositions[i][3]/2),RESPAWN_ONE_DAY))
+                    || !AddObject(i+22,BG_AV_OBJECTID_BANNER_CONT_H,BG_AV_NodePositions[i][0],BG_AV_NodePositions[i][1],BG_AV_NodePositions[i][2],BG_AV_NodePositions[i][3], 0, 0, sin(BG_AV_NodePositions[i][3]/2), cos(BG_AV_NodePositions[i][3]/2),RESPAWN_ONE_DAY)
+                    || !AddObject(BG_AV_OBJECT_TAURA_A_DUNBALDAR_SOUTH+(2*(i-BG_AV_NODES_DUNBALDAR_SOUTH)),BG_AV_OBJECTID_AURA_A,BG_AV_NodePositions[i+8][0],BG_AV_NodePositions[i+8][1],BG_AV_NodePositions[i+8][2],BG_AV_NodePositions[i+8][3], 0, 0, sin(BG_AV_NodePositions[i+8][3]/2), cos(BG_AV_NodePositions[i+8][3]/2),RESPAWN_ONE_DAY)
+                    || !AddObject(BG_AV_OBJECT_TAURA_H_DUNBALDAR_SOUTH+(2*(i-BG_AV_NODES_DUNBALDAR_SOUTH)),BG_AV_OBJECTID_AURA_N,BG_AV_NodePositions[i+8][0],BG_AV_NodePositions[i+8][1],BG_AV_NodePositions[i+8][2],BG_AV_NodePositions[i+8][3], 0, 0, sin(BG_AV_NodePositions[i+8][3]/2), cos(BG_AV_NodePositions[i+8][3]/2),RESPAWN_ONE_DAY)
+                    || !AddObject(BG_AV_OBJECT_TFLAG_A_DUNBALDAR_SOUTH+(2*(i-BG_AV_NODES_DUNBALDAR_SOUTH)),BG_AV_OBJECTID_TOWER_BANNER_A,BG_AV_NodePositions[i+8][0],BG_AV_NodePositions[i+8][1],BG_AV_NodePositions[i+8][2],BG_AV_NodePositions[i+8][3], 0, 0, sin(BG_AV_NodePositions[i+8][3]/2), cos(BG_AV_NodePositions[i+8][3]/2),RESPAWN_ONE_DAY)
+                    || !AddObject(BG_AV_OBJECT_TFLAG_H_DUNBALDAR_SOUTH+(2*(i-BG_AV_NODES_DUNBALDAR_SOUTH)),BG_AV_OBJECTID_TOWER_BANNER_H,BG_AV_NodePositions[i+8][0],BG_AV_NodePositions[i+8][1],BG_AV_NodePositions[i+8][2],BG_AV_NodePositions[i+8][3], 0, 0, sin(BG_AV_NodePositions[i+8][3]/2), cos(BG_AV_NodePositions[i+8][3]/2),RESPAWN_ONE_DAY))
                 {
-                    sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!");
+                    sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!3");
                     return false;
                 }
             }
-            else
+            else //horde towers
             {
                 if(     !AddObject(i+7,BG_AV_OBJECTID_BANNER_CONT_A,BG_AV_NodePositions[i][0],BG_AV_NodePositions[i][1],BG_AV_NodePositions[i][2],BG_AV_NodePositions[i][3], 0, 0, sin(BG_AV_NodePositions[i][3]/2), cos(BG_AV_NodePositions[i][3]/2),RESPAWN_ONE_DAY)
-                    || !AddObject(i+29,BG_AV_OBJECTID_BANNER_H,BG_AV_NodePositions[i][0],BG_AV_NodePositions[i][1],BG_AV_NodePositions[i][2],BG_AV_NodePositions[i][3], 0, 0, sin(BG_AV_NodePositions[i][3]/2), cos(BG_AV_NodePositions[i][3]/2),RESPAWN_ONE_DAY))
+                    || !AddObject(i+29,BG_AV_OBJECTID_BANNER_H,BG_AV_NodePositions[i][0],BG_AV_NodePositions[i][1],BG_AV_NodePositions[i][2],BG_AV_NodePositions[i][3], 0, 0, sin(BG_AV_NodePositions[i][3]/2), cos(BG_AV_NodePositions[i][3]/2),RESPAWN_ONE_DAY)
+                    || !AddObject(BG_AV_OBJECT_TAURA_A_DUNBALDAR_SOUTH+(2*(i-BG_AV_NODES_DUNBALDAR_SOUTH)),BG_AV_OBJECTID_AURA_N,BG_AV_NodePositions[i+8][0],BG_AV_NodePositions[i+8][1],BG_AV_NodePositions[i+8][2],BG_AV_NodePositions[i+8][3], 0, 0, sin(BG_AV_NodePositions[i+8][3]/2), cos(BG_AV_NodePositions[i+8][3]/2),RESPAWN_ONE_DAY)
+                    || !AddObject(BG_AV_OBJECT_TAURA_H_DUNBALDAR_SOUTH+(2*(i-BG_AV_NODES_DUNBALDAR_SOUTH)),BG_AV_OBJECTID_AURA_H,BG_AV_NodePositions[i+8][0],BG_AV_NodePositions[i+8][1],BG_AV_NodePositions[i+8][2],BG_AV_NodePositions[i+8][3], 0, 0, sin(BG_AV_NodePositions[i+8][3]/2), cos(BG_AV_NodePositions[i+8][3]/2),RESPAWN_ONE_DAY)
+                    || !AddObject(BG_AV_OBJECT_TFLAG_A_DUNBALDAR_SOUTH+(2*(i-BG_AV_NODES_DUNBALDAR_SOUTH)),BG_AV_OBJECTID_TOWER_BANNER_A,BG_AV_NodePositions[i+8][0],BG_AV_NodePositions[i+8][1],BG_AV_NodePositions[i+8][2],BG_AV_NodePositions[i+8][3], 0, 0, sin(BG_AV_NodePositions[i+8][3]/2), cos(BG_AV_NodePositions[i+8][3]/2),RESPAWN_ONE_DAY)
+                    || !AddObject(BG_AV_OBJECT_TFLAG_H_DUNBALDAR_SOUTH+(2*(i-BG_AV_NODES_DUNBALDAR_SOUTH)),BG_AV_OBJECTID_TOWER_BANNER_H,BG_AV_NodePositions[i+8][0],BG_AV_NodePositions[i+8][1],BG_AV_NodePositions[i+8][2],BG_AV_NodePositions[i+8][3], 0, 0, sin(BG_AV_NodePositions[i+8][3]/2), cos(BG_AV_NodePositions[i+8][3]/2),RESPAWN_ONE_DAY))
                 {
-                    sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!");
+                    sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!4");
+                    return false;
+                }
+            }
+            for(uint8 j=0; j<=9; j++) //burning aura
+            {
+                tmp=23+((i-BG_AV_NODES_DUNBALDAR_SOUTH)*10)+j;
+                if(!AddObject(BG_AV_OBJECT_BURN_DUNBALDAR_SOUTH+((i-BG_AV_NODES_DUNBALDAR_SOUTH)*10)+j,BG_AV_OBJECTID_FIRE,BG_AV_NodePositions[tmp][0],BG_AV_NodePositions[tmp][1],BG_AV_NodePositions[tmp][2],BG_AV_NodePositions[tmp][3], 0, 0, sin(BG_AV_NodePositions[tmp][3]/2), cos(BG_AV_NodePositions[tmp][3]/2),RESPAWN_ONE_DAY))
+                {
+                    sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!5.%i",i);
                     return false;
                 }
             }
         }
     }
-   if(!AddObject(BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE, BG_AV_OBJECTID_BANNER_SNOWFALL_N ,BG_AV_NodePositions[BG_AV_NODES_SNOWFALL_GRAVE][0],BG_AV_NodePositions[BG_AV_NODES_SNOWFALL_GRAVE][1],BG_AV_NodePositions[BG_AV_NODES_SNOWFALL_GRAVE][2],BG_AV_NodePositions[BG_AV_NODES_SNOWFALL_GRAVE][3],0,0,sin(BG_AV_NodePositions[BG_AV_NODES_SNOWFALL_GRAVE][3]/2), cos(BG_AV_NodePositions[BG_AV_NODES_SNOWFALL_GRAVE][3]/2), RESPAWN_ONE_DAY))
-   {
-        sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!");
+    for(uint8 i=0;i<2;i++) //burning aura for buildings
+    {
+        for(uint8 j=0; j<=9; j++)
+        {
+            tmp=103+(i*10)+j;
+            if(j<5)
+            {
+                if(!AddObject(BG_AV_OBJECT_BURN_BUILDING_ALLIANCE+(i*10)+j,BG_AV_OBJECTID_SMOKE,BG_AV_NodePositions[tmp][0],BG_AV_NodePositions[tmp][1],BG_AV_NodePositions[tmp][2],BG_AV_NodePositions[tmp][3], 0, 0, sin(BG_AV_NodePositions[tmp][3]/2), cos(BG_AV_NodePositions[tmp][3]/2),RESPAWN_ONE_DAY))
+                {
+                    sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!6.%i",i);
+                    return false;
+                }
+            }
+            else
+            {
+                if(!AddObject(BG_AV_OBJECT_BURN_BUILDING_ALLIANCE+(i*10)+j,BG_AV_OBJECTID_FIRE,BG_AV_NodePositions[tmp][0],BG_AV_NodePositions[tmp][1],BG_AV_NodePositions[tmp][2],BG_AV_NodePositions[tmp][3], 0, 0, sin(BG_AV_NodePositions[tmp][3]/2), cos(BG_AV_NodePositions[tmp][3]/2),RESPAWN_ONE_DAY))
+                {
+                    sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!7.%i",i);
+                    return false;
+                }
+            }
+        }
+    }
+
+    if(!AddObject(BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE, BG_AV_OBJECTID_BANNER_SNOWFALL_N ,BG_AV_NodePositions[BG_AV_NODES_SNOWFALL_GRAVE][0],BG_AV_NodePositions[BG_AV_NODES_SNOWFALL_GRAVE][1],BG_AV_NodePositions[BG_AV_NODES_SNOWFALL_GRAVE][2],BG_AV_NodePositions[BG_AV_NODES_SNOWFALL_GRAVE][3],0,0,sin(BG_AV_NodePositions[BG_AV_NODES_SNOWFALL_GRAVE][3]/2), cos(BG_AV_NodePositions[BG_AV_NODES_SNOWFALL_GRAVE][3]/2), RESPAWN_ONE_DAY))
+    {
+        sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!8");
         return false;
-   }
-   return true;
+    }
+    for(uint8 i = 0; i < 4; i++)
+    {
+        tmp=123+i;
+        if(!AddObject(BG_AV_OBJECT_SNOW_EYECANDY_A+i, BG_AV_OBJECTID_SNOWFALL_CANDY_A ,BG_AV_NodePositions[tmp][0],BG_AV_NodePositions[tmp][1],BG_AV_NodePositions[tmp][2],BG_AV_NodePositions[tmp][3],0,0,sin(BG_AV_NodePositions[tmp][3]/2), cos(BG_AV_NodePositions[tmp][3]/2), RESPAWN_ONE_DAY)
+            || !AddObject(BG_AV_OBJECT_SNOW_EYECANDY_PA+i, BG_AV_OBJECTID_SNOWFALL_CANDY_PA ,BG_AV_NodePositions[tmp][0],BG_AV_NodePositions[tmp][1],BG_AV_NodePositions[tmp][2],BG_AV_NodePositions[tmp][3],0,0,sin(BG_AV_NodePositions[tmp][3]/2), cos(BG_AV_NodePositions[tmp][3]/2), RESPAWN_ONE_DAY)
+            || !AddObject(BG_AV_OBJECT_SNOW_EYECANDY_H+i, BG_AV_OBJECTID_SNOWFALL_CANDY_H ,BG_AV_NodePositions[tmp][0],BG_AV_NodePositions[tmp][1],BG_AV_NodePositions[tmp][2],BG_AV_NodePositions[tmp][3],0,0,sin(BG_AV_NodePositions[tmp][3]/2), cos(BG_AV_NodePositions[tmp][3]/2), RESPAWN_ONE_DAY)
+            || !AddObject(BG_AV_OBJECT_SNOW_EYECANDY_PH+i, BG_AV_OBJECTID_SNOWFALL_CANDY_PH ,BG_AV_NodePositions[tmp][0],BG_AV_NodePositions[tmp][1],BG_AV_NodePositions[tmp][2],BG_AV_NodePositions[tmp][3],0,0,sin(BG_AV_NodePositions[tmp][3]/2), cos(BG_AV_NodePositions[tmp][3]/2), RESPAWN_ONE_DAY))
+        {
+            sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!9.%i",i);
+            return false;
+        }
+    }
+    for(uint8 i = 0; i< AV_STATICOPLACE_MAX; i++)
+    {
+        if(!AddObject(BG_AV_OBJECT_MAX+i,int(BG_AV_StaticObjectPos[i][4]) ,BG_AV_StaticObjectPos[i][0],BG_AV_StaticObjectPos[i][1],BG_AV_StaticObjectPos[i][2],BG_AV_StaticObjectPos[i][3],0,0,sin(BG_AV_StaticObjectPos[i][3]/2), cos(BG_AV_StaticObjectPos[i][3]/2), RESPAWN_ONE_DAY))
+        {
+            sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!10.%i",i);
+            return false;
+        }
+    }
 }
 
 const char* BattleGroundAV::GetNodeName(uint8 node)
@@ -1120,7 +1256,6 @@ void BattleGroundAV::ResetBGSubclass()
     for(uint16 i = 0; i < AV_CPLACE_MAX+AV_STATICCPLACE_MAX; i++)
         if(m_BgCreatures[i])
             DelCreature(i);
-
 
 }
 

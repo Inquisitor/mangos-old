@@ -641,6 +641,10 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
         // Log
         sLog.outDetail("BATTLEGROUND: Removed player %s from BattleGround.", plr->GetName());
     }
+    else
+    {
+        sLog.outError("BATTLEGROUND: RemovePlayerAtLeave: couldnt find player to remove");
+    }
 
     /// there will be code which will add battleground to BGFreeSlotQueue , when battleground instance will exist
     // we always should check if BG is in that queue before adding..
@@ -660,8 +664,6 @@ void BattleGround::Reset()
     SetStartTime(0);
     SetEndTime(0);
     SetLastResurrectTime(0);
-
-    m_Events = 0;
 
     if (m_InvitedAlliance > 0 || m_InvitedHorde > 0)
         sLog.outError("BattleGround system ERROR: bad counter, m_InvitedAlliance: %d, m_InvitedHorde: %d", m_InvitedAlliance, m_InvitedHorde);
@@ -707,6 +709,7 @@ void BattleGround::AddPlayer(Player *plr)
     if(isArena())
     {
 <<<<<<< HEAD:src/game/BattleGround.cpp
+<<<<<<< HEAD:src/game/BattleGround.cpp
         plr->RemoveArenaSpellCooldowns();
         //plr->RemoveArenaAuras();
         plr->RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
@@ -729,6 +732,8 @@ void BattleGround::AddPlayer(Player *plr)
         }
         RemovePlayer(plr, guid);                                // BG subclass specific code
 
+=======
+>>>>>>> 13.6.9:src/game/BattleGround.cpp
         if(isArena())
 >>>>>>> 13.6.5:src/game/BattleGround.cpp
         {
@@ -742,10 +747,6 @@ void BattleGround::AddPlayer(Player *plr)
     {
         if(GetStatus() == STATUS_WAIT_JOIN)                 // not started yet
             plr->CastSpell(plr, SPELL_PREPARATION, true);   // reduces all mana cost of spells.
-    }
-    else
-    {
-        sLog.outError("BATTLEGROUND: RemovePlayerAtLeave: couldnt find player to remove");
     }
 
     if(isArena())
