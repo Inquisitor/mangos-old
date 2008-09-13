@@ -384,6 +384,7 @@ class BattleGround
         // must be implemented in BG subclass if need AND call base class generic code
         virtual void HandleKillPlayer(Player *player, Player *killer);
         virtual void HandleKillUnit(Creature* /*unit*/, Player* /*killer*/);
+        virtual void UpdateQuest(uint32 questid, Player *player);
 
         /* Battleground events */
         /* these functions will return true event is possible, but false if player is bugger */

@@ -910,9 +910,9 @@ const uint32 BG_AV_CreatureInfo[AV_NPC_INFO_MAX][4] = {
     { 11602, 59, 54, 55 }, //Irondeep Skullthumper
     { 11657, 59, 58, 58 }, //Morloch
 
-    {13396,469,52,53}, //irondeep alliance TODO: get the right ids
-    {13080,469,53,54},
-    {13099,469,54,55},
+    {13396,469,52,53}, //irondeep alliance TODO: get the right ids - currently i'm not sure if all of them (mine-npcs) are right
+    {13098,469,53,54},
+    {13080,469,54,55},
     {13078,469,58,58},
 
     {13397,67,52,53}, //irondeep horde
