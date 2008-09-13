@@ -52,6 +52,8 @@ BattleGround::BattleGround()
     m_MaxPlayers        = 0;
     m_MinPlayersPerTeam = 0;
     m_MinPlayers        = 0;
+    m_AlertDiff         = 0;
+    m_warned            = false;
 
     m_MapId             = 0;
 
@@ -199,6 +201,27 @@ void BattleGround::Update(time_t diff)
                 m_RemovedPlayers[itr->first] = 1;           // add to remove list (BG)
             }
             // do not change any battleground's private variables
+        }
+    }
+    if(GetStatus() == STATUS_IN_PROGRESS)
+    {
+        if(CheckPlayerCountRatio())
+        {
+            if(m_warned == false)
+            {
+                WorldPacket data;
+                ChatHandler::FillMessageData(&data, NULL, CHAT_MSG_BG_SYSTEM_NEUTRAL, LANG_UNIVERSAL, NULL, NULL, "The playercount of one team dropped to low, therefore this battleground will close in one minute.", NULL);
+                SendPacketToAll(&data);
+                m_warned = true;
+            }
+            m_AlertDiff+=diff;
+            if(m_AlertDiff >= BG_SIZE_KICK_DELAY)
+                EndNow();
+        }
+        else
+        {
+            m_warned = false;
+            m_AlertDiff = 0;
         }
     }
 }
@@ -641,6 +664,10 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
         // Log
         sLog.outDetail("BATTLEGROUND: Removed player %s from BattleGround.", plr->GetName());
     }
+    else
+    {
+        sLog.outError("BATTLEGROUND: RemovePlayerAtLeave: couldnt find player to remove");
+    }
 
     /// there will be code which will add battleground to BGFreeSlotQueue , when battleground instance will exist
     // we always should check if BG is in that queue before adding..
@@ -662,6 +689,8 @@ void BattleGround::Reset()
     SetLastResurrectTime(0);
 
     m_Events = 0;
+    m_warned = false;
+    m_AlertDiff = 0;
 
     if (m_InvitedAlliance > 0 || m_InvitedHorde > 0)
         sLog.outError("BattleGround system ERROR: bad counter, m_InvitedAlliance: %d, m_InvitedHorde: %d", m_InvitedAlliance, m_InvitedHorde);
@@ -1064,10 +1093,18 @@ int32 BattleGround::GetBGObjectId(uint64 guid)
     {
         if(m_BgObjects[i] == guid)
             return i;
-        i++;
+        else i++;
     }
-    sLog.outError("BattleGround: cheating? a player used a gameobjecti (guid %i) which isnt supposed to be a usable object!",guid);
+    sLog.outError("BattleGround: cheating? a player used a gameobject which isnt supposed to be a usable object!");
     return -1;
+}
+
+bool BattleGround::CheckPlayerCountRatio()
+{
+    if(GetInvitedCount(ALLIANCE) < (GetInvitedCount(HORDE)/2) || GetInvitedCount(HORDE) < (GetInvitedCount(ALLIANCE)/2)
+        || GetInvitedCount(HORDE) < GetMinPlayersPerTeam() || GetInvitedCount(ALLIANCE) < GetMinPlayersPerTeam())
+        return true;
+    else return false;
 }
 
 void BattleGround::SendMessageToAll(char const* text)

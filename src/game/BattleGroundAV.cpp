@@ -232,14 +232,6 @@ void BattleGroundAV::UpdateScore(uint8 team, int16 points )
     }
 }
 
-void BattleGroundAV::InitWorldStates()
-{
-		UpdateWorldState(AV_Alliance_Score, m_Team_Scores[0]);
-		UpdateWorldState(AV_Horde_Score, m_Team_Scores[1]);
-		UpdateWorldState(AV_SHOW_H_SCORE, 1);
-		UpdateWorldState(AV_SHOW_A_SCORE, 1);
-}
-
 Creature* BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type)
 {
     if(m_BgCreatures[type])
@@ -286,7 +278,6 @@ void BattleGroundAV::Update(time_t diff)
     if (GetStatus() == STATUS_WAIT_JOIN && GetPlayersSize())
     {
         ModifyStartDelayTime(diff);
-		InitWorldStates();
 
         if (!(m_Events & 0x01))
         {
@@ -301,7 +292,7 @@ void BattleGroundAV::Update(time_t diff)
             }
             for(uint8 i = BG_AV_OBJECT_FLAG_A_DUNBALDAR_SOUTH; i <= BG_AV_OBJECT_FLAG_A_STONEHEART_BUNKER ; i++)
                 SpawnBGObject(i, RESPAWN_IMMEDIATELY);
-            for(uint8 i = BG_AV_OBJECT_FLAG_H_ICEBLOOD_GRAVE; i <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER ; i++){
+            for(uint8 i = BG_AV_OBJECT_FLAG_H_ICEBLOOD_GRAVE; i <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_ETOWER ; i++){
                 SpawnBGObject(i, RESPAWN_IMMEDIATELY);
                 if(i<=BG_AV_OBJECT_FLAG_H_FROSTWOLF_HUT)
                     SpawnBGObject(BG_AV_OBJECT_AURA_H_FIRSTAID_STATION+3*GetNodePlace(i),RESPAWN_IMMEDIATELY);
@@ -376,18 +367,20 @@ void BattleGroundAV::AddPlayer(Player *plr)
 {
     BattleGround::AddPlayer(plr);
     //create score and add it to map, default values are set in constructor
-    //TODO:update the players map, so he can see which nodes are occupied (in ab this is done in fillinitialworldstates)
     BattleGroundAVScore* sc = new BattleGroundAVScore;
     m_PlayerScores[plr->GetGUID()] = sc;
     if(m_MaxLevel==0)
         m_MaxLevel=(plr->getLevel()%10 == 0)? plr->getLevel() : (plr->getLevel()-(plr->getLevel()%10))+10; //TODO: just look at the code \^_^/ --but queue-info should provide this information..
 
-
-    InitWorldStates();
 }
 
 void BattleGroundAV::RemovePlayer(Player* /*plr*/,uint64 /*guid*/)
 {
+   /*if(!plr)
+    {
+        sLog.outError("bg_AV no player at remove");
+        return;
+    }*/
     //TODO search more buffs
     plr->RemoveAurasDueToSpell(AV_BUFF_ARMOR);
 
@@ -407,6 +400,7 @@ void BattleGroundAV::RemovePlayer(Player* /*plr*/,uint64 /*guid*/)
     plr->DestroyItemCount( AV_ITEM_COLDTOOTH, 99999, true, false);
 
 }
+
 
 void BattleGroundAV::HandleAreaTrigger(Player *Source, uint32 Trigger)
 {
@@ -494,6 +488,7 @@ void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
 
     //despawn banner
     SpawnBGObject(node, RESPAWN_ONE_DAY);
+    m_Points_PrevState[GetNodePlace(node)] = m_Points_State[GetNodePlace(node)];
     if( IsTower(GetNodePlace(node)) )
     {
         m_Points_State[GetNodePlace(node)]=POINT_DESTROYED;
@@ -601,13 +596,13 @@ const uint8 BattleGroundAV::GetNodePlace(uint16 node)
 		return node;
 	if( node <= BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_HUT )
 		return node-11;
-	if( node <= BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_WTOWER )
+	if( node <= BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_ETOWER )
 		return node-7;
 	if( node <= BG_AV_OBJECT_FLAG_C_H_STONEHEART_BUNKER )
 		return node-22;
 	if( node <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_HUT )
 		return node-33;
-	if( node <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER )
+	if( node <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_ETOWER )
 		return node-29;
 	if( node == BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE )
 		return 3;
@@ -622,7 +617,7 @@ const uint16 BattleGroundAV::GetPlaceNode(uint8 node)
        {
             if( node <= BG_AV_NODES_FROSTWOLF_HUT )
                 return node+11;
-            if( node >= BG_AV_NODES_ICEBLOOD_TOWER && node <= BG_AV_NODES_FROSTWOLF_WTOWER)
+            if( node >= BG_AV_NODES_ICEBLOOD_TOWER && node <= BG_AV_NODES_FROSTWOLF_ETOWER)
                 return node+7;
        }
        else if ( m_Points_State[node] == POINT_CONTROLED )
@@ -638,7 +633,7 @@ const uint16 BattleGroundAV::GetPlaceNode(uint8 node)
        {
            if( node <= BG_AV_NODES_FROSTWOLF_HUT )
                return node+33;
-           if( node >= BG_AV_NODES_ICEBLOOD_TOWER && node <= BG_AV_NODES_FROSTWOLF_WTOWER)
+           if( node >= BG_AV_NODES_ICEBLOOD_TOWER && node <= BG_AV_NODES_FROSTWOLF_ETOWER)
                return node+29;
        }
    }
@@ -692,7 +687,6 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 node)
         SpawnBGObject(node+22, RESPAWN_IMMEDIATELY); //spawn horde banner
     else
         SpawnBGObject(node-22, RESPAWN_IMMEDIATELY); //spawn alliance banner
-    m_Points_State[GetNodePlace(node)] = POINT_CONTROLED;
 
     if(!IsTower(GetNodePlace(node)))
     {
@@ -702,7 +696,9 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 node)
     // despawn old go
     SpawnBGObject(node, RESPAWN_ONE_DAY);
 
+    m_Points_PrevState[GetNodePlace(node)] = m_Points_State[GetNodePlace(node)];
     m_Points_PrevOwner[GetNodePlace(node)] = m_Points_Owner[GetNodePlace(node)];
+    m_Points_State[GetNodePlace(node)] = POINT_CONTROLED;
     m_Points_Owner[GetNodePlace(node)] = player->GetTeam();
     UpdatePointsIcons(GetNodePlace(node));
 	//send a nice message to all :)
@@ -755,6 +751,7 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 node)
     }
     m_Points_PrevOwner[GetNodePlace(node)] = m_Points_Owner[GetNodePlace(node)];
     m_Points_Owner[GetNodePlace(node)] = player->GetTeam();
+    m_Points_PrevState[GetNodePlace(node)] = m_Points_State[GetNodePlace(node)];
     m_Points_State[GetNodePlace(node)] = POINT_ASSAULTED;
 
     UpdatePointsIcons(GetNodePlace(node));
@@ -770,382 +767,55 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 node)
     UpdatePlayerScore(player, ( IsTower(GetNodePlace(node)) ) ? SCORE_TOWERS_ASSAULTED : SCORE_GRAVEYARDS_ASSAULTED, 1);
 }
 
+const uint8 BattleGroundAV::GetWorldStateType(uint8 state, uint16 team)
+{
+//a_c a_a h_c h_a the positions in worldstate-array
+    if(team == ALLIANCE)
+    {
+        if(state==POINT_CONTROLED || state==POINT_DESTROYED)
+            return 0;
+        if(state==POINT_ASSAULTED)
+            return 1;
+    }
+    if(team == HORDE)
+    {
+        if(state==POINT_CONTROLED || state==POINT_DESTROYED)
+            return 2;
+        if(state==POINT_ASSAULTED)
+            return 3;
+    }
+    //neutral stuff cant get handled
+    sLog.outError("BG_AV: should update a strange worldstate state:%i team:%i",state,team);
+    return 255;
+}
+
+
 void BattleGroundAV::UpdatePointsIcons(uint32 node)
 {
-    switch(node)
-    {
-        case BG_AV_NODES_FIRSTAID_STATION:
-        {
-            if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_AID_A_C, 1);
-                UpdateWorldState(AV_AID_A_A, 0);
-                UpdateWorldState(AV_AID_H_C, 0);
-                UpdateWorldState(AV_AID_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_AID_A_C, 0);
-                UpdateWorldState(AV_AID_A_A, 0);
-                UpdateWorldState(AV_AID_H_C, 1);
-                UpdateWorldState(AV_AID_H_A, 0);
-            }  else if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_AID_A_C, 0);
-                UpdateWorldState(AV_AID_A_A, 1);
-                UpdateWorldState(AV_AID_H_C, 0);
-                UpdateWorldState(AV_AID_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_AID_A_C, 0);
-                UpdateWorldState(AV_AID_A_A, 0);
-                UpdateWorldState(AV_AID_H_C, 0);
-                UpdateWorldState(AV_AID_H_A, 1);
-            }
-        break;
-        }
-        case BG_AV_NODES_DUNBALDAR_SOUTH:
-        {
-            if(m_Points_Owner[node] == ALLIANCE)
-            {
-                UpdateWorldState(AV_DUNS_CONTROLLED, 1);
-                UpdateWorldState(AV_DUNS_DESTROYED, 0);
-                UpdateWorldState(AV_DUNS_ASSAULTED, 0);
-            } else if (m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_DUNS_CONTROLLED, 0);
-                UpdateWorldState(AV_DUNS_DESTROYED, 0);
-                UpdateWorldState(AV_DUNS_ASSAULTED, 1);
-            } else if (m_Points_State[node] == POINT_DESTROYED)
-            {
-                UpdateWorldState(AV_DUNS_CONTROLLED, 0);
-                UpdateWorldState(AV_DUNS_DESTROYED, 1);
-                UpdateWorldState(AV_DUNS_ASSAULTED, 0);
-            }
-        break;
-        }
-        case BG_AV_NODES_DUNBALDAR_NORTH:
-        {
-            if(m_Points_Owner[node] == ALLIANCE)
-            {
-                UpdateWorldState(AV_DUNN_CONTROLLED, 1);
-                UpdateWorldState(AV_DUNN_DESTROYED, 0);
-                UpdateWorldState(AV_DUNN_ASSAULTED, 0);
-            } else if (m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_DUNN_CONTROLLED, 0);
-                UpdateWorldState(AV_DUNN_DESTROYED, 0);
-                UpdateWorldState(AV_DUNN_ASSAULTED, 1);
-            } else if (m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_DESTROYED)
-            {
-                UpdateWorldState(AV_DUNN_CONTROLLED, 0);
-                UpdateWorldState(AV_DUNN_DESTROYED, 1);
-                UpdateWorldState(AV_DUNN_ASSAULTED, 0);
-            }
-        break;
-        }
-        case BG_AV_NODES_STORMPIKE_GRAVE:
-        {
-            if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_PIKEGRAVE_A_C, 1);
-                UpdateWorldState(AV_PIKEGRAVE_A_A, 0);
-                UpdateWorldState(AV_PIKEGRAVE_H_C, 0);
-                UpdateWorldState(AV_PIKEGRAVE_A_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_PIKEGRAVE_A_C, 0);
-                UpdateWorldState(AV_PIKEGRAVE_A_A, 0);
-                UpdateWorldState(AV_PIKEGRAVE_H_C, 1);
-                UpdateWorldState(AV_PIKEGRAVE_H_A, 0);
-            }  else if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_PIKEGRAVE_A_C, 0);
-                UpdateWorldState(AV_PIKEGRAVE_A_A, 1);
-                UpdateWorldState(AV_PIKEGRAVE_H_C, 0);
-                UpdateWorldState(AV_PIKEGRAVE_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_PIKEGRAVE_A_C, 0);
-                UpdateWorldState(AV_PIKEGRAVE_A_A, 0);
-                UpdateWorldState(AV_PIKEGRAVE_H_C, 0);
-                UpdateWorldState(AV_PIKEGRAVE_H_A, 1);
-            }
-        break;
-        }
-        case BG_AV_NODES_ICEWING_BUNKER:
-        {
-            if(m_Points_Owner[node] == ALLIANCE)
-            {
-                UpdateWorldState(AV_ICEWING_CONTROLLED, 1);
-                UpdateWorldState(AV_ICEWING_DESTROYED, 0);
-                UpdateWorldState(AV_ICEWING_ASSAULTED, 0);
-            } else if (m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_ICEWING_CONTROLLED, 0);
-                UpdateWorldState(AV_ICEWING_DESTROYED, 0);
-                UpdateWorldState(AV_ICEWING_ASSAULTED, 1);
-            } else if (m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_DESTROYED)
-            {
-                UpdateWorldState(AV_ICEWING_CONTROLLED, 0);
-                UpdateWorldState(AV_ICEWING_DESTROYED, 1);
-                UpdateWorldState(AV_ICEWING_ASSAULTED, 0);
-            }
-        break;
-        }
-        case BG_AV_NODES_STONEHEART_GRAVE:
-        {
-            if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_STONEHEART_A_C, 1);
-                UpdateWorldState(AV_STONEHEART_A_A, 0);
-                UpdateWorldState(AV_STONEHEART_H_C, 0);
-                UpdateWorldState(AV_STONEHEART_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_STONEHEART_A_C, 0);
-                UpdateWorldState(AV_STONEHEART_A_A, 0);
-                UpdateWorldState(AV_STONEHEART_H_C, 1);
-                UpdateWorldState(AV_STONEHEART_H_A, 0);
-            }  else if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_STONEHEART_A_C, 0);
-                UpdateWorldState(AV_STONEHEART_A_A, 1);
-                UpdateWorldState(AV_STONEHEART_H_C, 0);
-                UpdateWorldState(AV_STONEHEART_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_STONEHEART_A_C, 0);
-                UpdateWorldState(AV_STONEHEART_A_A, 0);
-                UpdateWorldState(AV_STONEHEART_H_C, 0);
-                UpdateWorldState(AV_STONEHEART_H_A, 1);
-            }
-        break;
-        }
-        case BG_AV_NODES_STONEHEART_BUNKER:
-        {
-            if(m_Points_Owner[node] == ALLIANCE)
-            {
-                UpdateWorldState(AV_STONEH_CONTROLLED, 1);
-                UpdateWorldState(AV_STONEH_DESTROYED, 0);
-                UpdateWorldState(AV_STONEH_ASSAULTED, 0);
-            } else if (m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_STONEH_CONTROLLED, 0);
-                UpdateWorldState(AV_STONEH_DESTROYED, 0);
-                UpdateWorldState(AV_STONEH_ASSAULTED, 1);
-            } else if (m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_DESTROYED)
-            {
-                UpdateWorldState(AV_STONEH_CONTROLLED, 0);
-                UpdateWorldState(AV_STONEH_DESTROYED, 1);
-                UpdateWorldState(AV_STONEH_ASSAULTED, 0);
-            }
-        break;
-        }
-        case BG_AV_NODES_SNOWFALL_GRAVE:
-        {
-            if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_SNOWFALL_N, 0);
-                UpdateWorldState(AV_SNOWFALL_A_C, 1);
-                UpdateWorldState(AV_SNOWFALL_A_A, 0);
-                UpdateWorldState(AV_SNOWFALL_H_C, 0);
-                UpdateWorldState(AV_SNOWFALL_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_SNOWFALL_N, 0);
-                UpdateWorldState(AV_SNOWFALL_A_C, 0);
-                UpdateWorldState(AV_SNOWFALL_A_A, 0);
-                UpdateWorldState(AV_SNOWFALL_H_C, 1);
-                UpdateWorldState(AV_SNOWFALL_H_A, 0);
-            }  else if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_SNOWFALL_N, 0);
-                UpdateWorldState(AV_SNOWFALL_A_C, 0);
-                UpdateWorldState(AV_SNOWFALL_A_A, 1);
-                UpdateWorldState(AV_SNOWFALL_H_C, 0);
-                UpdateWorldState(AV_SNOWFALL_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_SNOWFALL_N, 0);
-                UpdateWorldState(AV_SNOWFALL_A_C, 0);
-                UpdateWorldState(AV_SNOWFALL_A_A, 0);
-                UpdateWorldState(AV_SNOWFALL_H_C, 0);
-                UpdateWorldState(AV_SNOWFALL_H_A, 1);
-            }
-
-        break;
-        }
-        case BG_AV_NODES_ICEBLOOD_TOWER:
-        {
-            if(m_Points_Owner[node] == ALLIANCE)
-            {
-                UpdateWorldState(AV_ICEBLOOD_CONTROLLED, 1);
-                UpdateWorldState(AV_ICEBLOOD_DESTROYED, 0);
-                UpdateWorldState(AV_ICEBLOOD_ASSAULTED, 0);
-            } else if (m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_ICEBLOOD_CONTROLLED, 0);
-                UpdateWorldState(AV_ICEBLOOD_DESTROYED, 0);
-                UpdateWorldState(AV_ICEBLOOD_ASSAULTED, 1);
-            } else if (m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_DESTROYED)
-            {
-                UpdateWorldState(AV_ICEBLOOD_CONTROLLED, 0);
-                UpdateWorldState(AV_ICEBLOOD_DESTROYED, 1);
-                UpdateWorldState(AV_ICEBLOOD_ASSAULTED, 0);
-            }
-        break;
-        }
-        case BG_AV_NODES_ICEBLOOD_GRAVE:
-        {
-            if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_ICEBLOOD_A_C, 1);
-                UpdateWorldState(AV_ICEBLOOD_A_A, 0);
-                UpdateWorldState(AV_ICEBLOOD_H_C, 0);
-                UpdateWorldState(AV_ICEBLOOD_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_ICEBLOOD_A_C, 0);
-                UpdateWorldState(AV_ICEBLOOD_A_A, 0);
-                UpdateWorldState(AV_ICEBLOOD_H_C, 1);
-                UpdateWorldState(AV_ICEBLOOD_H_A, 0);
-            }  else if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_ICEBLOOD_A_C, 0);
-                UpdateWorldState(AV_ICEBLOOD_A_A, 1);
-                UpdateWorldState(AV_ICEBLOOD_H_C, 0);
-                UpdateWorldState(AV_ICEBLOOD_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_ICEBLOOD_A_C, 0);
-                UpdateWorldState(AV_ICEBLOOD_A_A, 0);
-                UpdateWorldState(AV_ICEBLOOD_H_C, 0);
-                UpdateWorldState(AV_ICEBLOOD_H_A, 1);
-            }
-        break;
-        }
-        case BG_AV_NODES_TOWER_POINT:
-        {
-            if(m_Points_Owner[node] == HORDE)
-            {
-                UpdateWorldState(AV_TOWERPOINT_CONTROLLED, 1);
-                UpdateWorldState(AV_TOWERPOINT_DESTROYED, 0);
-                UpdateWorldState(AV_TOWERPOINT_ASSAULTED, 0);
-            } else if (m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_TOWERPOINT_CONTROLLED, 0);
-                UpdateWorldState(AV_TOWERPOINT_DESTROYED, 0);
-                UpdateWorldState(AV_TOWERPOINT_ASSAULTED, 1);
-            } else if (m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_DESTROYED)
-            {
-                UpdateWorldState(AV_TOWERPOINT_CONTROLLED, 0);
-                UpdateWorldState(AV_TOWERPOINT_DESTROYED, 1);
-                UpdateWorldState(AV_TOWERPOINT_ASSAULTED, 0);
-            }
-        break;
-        }
-        case BG_AV_NODES_FROSTWOLF_GRAVE:
-        {
-            if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_FROSTWOLF_A_C, 1);
-                UpdateWorldState(AV_FROSTWOLF_A_A, 0);
-                UpdateWorldState(AV_FROSTWOLF_H_C, 0);
-                UpdateWorldState(AV_FROSTWOLF_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_FROSTWOLF_A_C, 0);
-                UpdateWorldState(AV_FROSTWOLF_A_A, 0);
-                UpdateWorldState(AV_FROSTWOLF_H_C, 1);
-                UpdateWorldState(AV_FROSTWOLF_H_A, 0);
-            }  else if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_FROSTWOLF_A_C, 0);
-                UpdateWorldState(AV_FROSTWOLF_A_A, 1);
-                UpdateWorldState(AV_FROSTWOLF_H_C, 0);
-                UpdateWorldState(AV_FROSTWOLF_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_FROSTWOLF_A_C, 0);
-                UpdateWorldState(AV_FROSTWOLF_A_A, 0);
-                UpdateWorldState(AV_FROSTWOLF_H_C, 0);
-                UpdateWorldState(AV_FROSTWOLF_H_A, 1);
-            }
-        break;
-        }
-        case BG_AV_NODES_FROSTWOLF_ETOWER:
-        {
-            if(m_Points_Owner[node] == HORDE)
-            {
-                UpdateWorldState(AV_FROSTWOLFE_CONTROLLED, 1);
-                UpdateWorldState(AV_FROSTWOLFE_DESTROYED, 0);
-                UpdateWorldState(AV_FROSTWOLFE_ASSAULTED, 0);
-            } else if (m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_FROSTWOLFE_CONTROLLED, 0);
-                UpdateWorldState(AV_FROSTWOLFE_DESTROYED, 0);
-                UpdateWorldState(AV_FROSTWOLFE_ASSAULTED, 1);
-            } else if (m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_DESTROYED)
-            {
-                UpdateWorldState(AV_FROSTWOLFE_CONTROLLED, 0);
-                UpdateWorldState(AV_FROSTWOLFE_DESTROYED, 1);
-                UpdateWorldState(AV_FROSTWOLFE_ASSAULTED, 0);
-            }
-        break;
-        }
-        case BG_AV_NODES_FROSTWOLF_WTOWER:
-        {
-            if(m_Points_Owner[node] == HORDE)
-            {
-                UpdateWorldState(AV_FROSTWOLFW_CONTROLLED, 1);
-                UpdateWorldState(AV_FROSTWOLFW_DESTROYED, 0);
-                UpdateWorldState(AV_FROSTWOLFW_ASSAULTED, 0);
-            } else if (m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_FROSTWOLFW_CONTROLLED, 0);
-                UpdateWorldState(AV_FROSTWOLFW_DESTROYED, 0);
-                UpdateWorldState(AV_FROSTWOLFW_ASSAULTED, 1);
-            } else if (m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_DESTROYED)
-            {
-                UpdateWorldState(AV_FROSTWOLFW_CONTROLLED, 0);
-                UpdateWorldState(AV_FROSTWOLFW_DESTROYED, 1);
-                UpdateWorldState(AV_FROSTWOLFW_ASSAULTED, 0);
-            }
-        break;
-        }
-        case BG_AV_NODES_FROSTWOLF_HUT:
-        {
-            if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_FROSTWOLFHUT_A_C, 1);
-                UpdateWorldState(AV_FROSTWOLFHUT_A_A, 0);
-                UpdateWorldState(AV_FROSTWOLFHUT_H_C, 0);
-                UpdateWorldState(AV_FROSTWOLFHUT_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_CONTROLED)
-            {
-                UpdateWorldState(AV_FROSTWOLFHUT_A_C, 0);
-                UpdateWorldState(AV_FROSTWOLFHUT_A_A, 0);
-                UpdateWorldState(AV_FROSTWOLFHUT_H_C, 1);
-                UpdateWorldState(AV_FROSTWOLFHUT_H_A, 0);
-            }  else if(m_Points_Owner[node] == ALLIANCE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_FROSTWOLFHUT_A_C, 0);
-                UpdateWorldState(AV_FROSTWOLFHUT_A_A, 1);
-                UpdateWorldState(AV_FROSTWOLFHUT_H_C, 0);
-                UpdateWorldState(AV_FROSTWOLFHUT_H_A, 0);
-            }  else if(m_Points_Owner[node] == HORDE && m_Points_State[node] == POINT_ASSAULTED)
-            {
-                UpdateWorldState(AV_FROSTWOLFHUT_A_C, 0);
-                UpdateWorldState(AV_FROSTWOLFHUT_A_A, 0);
-                UpdateWorldState(AV_FROSTWOLFHUT_H_C, 0);
-                UpdateWorldState(AV_FROSTWOLFHUT_H_A, 1);
-            }
-        break;
-        }
-        default:
-            break;
-    }
+    UpdateWorldState(BG_AV_WorldStates[node][GetWorldStateType(m_Points_State[node],m_Points_Owner[node])],1);
+    if(m_Points_PrevState[node] == POINT_NEUTRAL)
+        UpdateWorldState(AV_SNOWFALL_N,0);
+    else
+        UpdateWorldState(BG_AV_WorldStates[node][GetWorldStateType(m_Points_PrevState[node],m_Points_PrevOwner[node])],0);
 }
+
+void BattleGroundAV::FillInitialWorldStates(WorldPacket& data)
+{
+    for (uint8 i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_ETOWER; ++i)
+        for (uint8 j =1; j <= 3; ++j)
+        {
+            data << uint32(BG_AV_WorldStates[i][GetWorldStateType(j,ALLIANCE)]) << uint32((m_Points_Owner[i] == ALLIANCE && m_Points_State[i] == j)?1:0);
+            data << uint32(BG_AV_WorldStates[i][GetWorldStateType(j,HORDE)]) << uint32((m_Points_Owner[i] == HORDE && m_Points_State[i] == j)?1:0);
+        }
+    if(!m_Snowfall_Capped)
+        data << uint32(AV_SNOWFALL_N) << uint32(1);
+    data << uint32(AV_SHOW_A_SCORE) << uint32(1); //maybe score will not be showed all the time TODO:find this out
+    data << uint32(AV_SHOW_H_SCORE) << uint32(1);
+    data << uint32(AV_Alliance_Score)  << uint32(m_Team_Scores[0]);
+    data << uint32(AV_Horde_Score) << uint32(m_Team_Scores[1]);
+}
+
+
 
 const bool BattleGroundAV::IsTower(uint8 node)
 {
@@ -1165,8 +835,9 @@ const bool BattleGroundAV::IsTower(uint8 node)
 WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(float x, float y, float z, uint32 MapId, uint32 team)
 {
     WorldSafeLocsEntry const* good_entry = NULL;
-    if( GetStatus() != STATUS_IN_PROGRESS) //TODO: get out, if this is right (if a player dies before game starts and gets ressurected in main graveyard)
+    if( GetStatus() == STATUS_IN_PROGRESS) //TODO: get out, if this is right (if a player dies before game starts and gets ressurected in main graveyard)
     {
+    sLog.outError("bg_av closest grave");
         // Is there any occupied node for this team?
         std::vector<uint8> nodes;
         for (uint8 i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i)
@@ -1176,6 +847,7 @@ WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(float x, float y, 
         // If so, select the closest node to place ghost on
         if( !nodes.empty() )
         {
+    sLog.outError("bg_av closest grave22");
             float mindist = 999999.0f;
             for (uint8 i = 0; i < nodes.size(); ++i)
             {
@@ -1221,7 +893,7 @@ bool BattleGroundAV::SetupBattleGround()
     }
 
 //spawn graveyard flags
-    for (int i = BG_AV_NODES_FIRSTAID_STATION ; i <= BG_AV_NODES_FROSTWOLF_WTOWER; ++i)
+    for (int i = BG_AV_NODES_FIRSTAID_STATION ; i <= BG_AV_NODES_FROSTWOLF_ETOWER; ++i)
     {
         if( i <= BG_AV_NODES_FROSTWOLF_HUT )
         {
@@ -1312,12 +984,14 @@ void BattleGroundAV::ResetBGSubclass()
         m_Points_Owner[i] = ALLIANCE;
         m_Points_PrevOwner[i] = m_Points_Owner[i];
         m_Points_State[i] = POINT_CONTROLED;
+        m_Points_PrevState[i] = m_Points_State[i];
     }
 	for(uint32 i = BG_AV_NODES_DUNBALDAR_SOUTH; i <= BG_AV_NODES_STONEHEART_BUNKER; i++)
     {
         m_Points_Owner[i] = ALLIANCE;
         m_Points_PrevOwner[i] = m_Points_Owner[i];
         m_Points_State[i] = POINT_CONTROLED;
+        m_Points_PrevState[i] = m_Points_State[i];
     }
 
     for(uint32 i = BG_AV_NODES_ICEBLOOD_GRAVE; i <= BG_AV_NODES_FROSTWOLF_HUT; i++)
@@ -1325,17 +999,20 @@ void BattleGroundAV::ResetBGSubclass()
         m_Points_Owner[i] = HORDE;
         m_Points_PrevOwner[i] = m_Points_Owner[i];
         m_Points_State[i] = POINT_CONTROLED;
+        m_Points_PrevState[i] = m_Points_State[i];
     }
-    for(uint32 i = BG_AV_NODES_ICEBLOOD_TOWER; i <= BG_AV_NODES_FROSTWOLF_WTOWER; i++)
+    for(uint32 i = BG_AV_NODES_ICEBLOOD_TOWER; i <= BG_AV_NODES_FROSTWOLF_ETOWER; i++)
     {
         m_Points_Owner[i] = HORDE;
         m_Points_PrevOwner[i] = m_Points_Owner[i];
         m_Points_State[i] = POINT_CONTROLED;
+        m_Points_PrevState[i] = m_Points_State[i];
     }
 
     m_Points_Owner[BG_AV_NODES_SNOWFALL_GRAVE] = 0;
     m_Points_PrevOwner[BG_AV_NODES_SNOWFALL_GRAVE] = 0;
     m_Points_State[BG_AV_NODES_SNOWFALL_GRAVE] = POINT_NEUTRAL;
+    m_Points_PrevState[BG_AV_NODES_SNOWFALL_GRAVE] = m_Points_State[BG_AV_NODES_SNOWFALL_GRAVE];
 
     for(uint8 i = 0; i < AV_CPLACE_MAX; i++)
         if(m_BgCreatures[i])

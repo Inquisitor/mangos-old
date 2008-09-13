@@ -83,8 +83,8 @@ enum BG_AV_ObjectTypes
     BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_HUT       = 17,
     BG_AV_OBJECT_FLAG_C_A_ICEBLOOD_TOWER      = 18,
     BG_AV_OBJECT_FLAG_C_A_TOWER_POINT         = 19,
-    BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_ETOWER    = 20,
-    BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_WTOWER    = 21,
+    BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_WTOWER    = 20,
+    BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_ETOWER    = 21,
 
     BG_AV_OBJECT_FLAG_C_H_FIRSTAID_STATION    = 22,
     BG_AV_OBJECT_FLAG_C_H_STORMPIKE_GRAVE     = 23,
@@ -107,8 +107,8 @@ enum BG_AV_ObjectTypes
     BG_AV_OBJECT_FLAG_H_FROSTWOLF_HUT       = 39,
     BG_AV_OBJECT_FLAG_H_ICEBLOOD_TOWER      = 40,
     BG_AV_OBJECT_FLAG_H_TOWER_POINT         = 41,
-    BG_AV_OBJECT_FLAG_H_FROSTWOLF_ETOWER    = 42,
-    BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER    = 43,
+    BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER    = 42,
+    BG_AV_OBJECT_FLAG_H_FROSTWOLF_ETOWER    = 43,
 
     BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE      = 44,
 
@@ -188,8 +188,8 @@ enum BG_AV_Nodes
     BG_AV_NODES_STONEHEART_BUNKER       = 10,
     BG_AV_NODES_ICEBLOOD_TOWER          = 11,
     BG_AV_NODES_TOWER_POINT             = 12,
-    BG_AV_NODES_FROSTWOLF_ETOWER        = 13,
-    BG_AV_NODES_FROSTWOLF_WTOWER        = 14,
+    BG_AV_NODES_FROSTWOLF_WTOWER        = 13,
+    BG_AV_NODES_FROSTWOLF_ETOWER        = 14,
 
     BG_AV_NODES_MAX                     = 15
 };
@@ -207,8 +207,8 @@ const float BG_AV_NodePositions[15][4] = {
     {-151.864f,-440.838f,40.3897f,4.1744f},  //stone bunker
     {-572.723f,-262.062f,75.0087f,5.44671f}, //ice tower
     {-768.907f,-363.71f,90.8949f,1.07991f},  //tower point
-    {-1297.5f,-266.767f,114.15f,3.31044f},   //frostwolf etower
-    {-1302.89f,-316.92f,113.867f,2.01453f}   //frostwolf wtower
+    {-1302.89f,-316.92f,113.867f,2.01453f},   //frostwolf wtower
+    {-1297.5f,-266.767f,114.15f,3.31044f}   //frostwolf etower
 };
 
 const float BG_AV_DoorPositons[2][4] = {
@@ -455,46 +455,51 @@ enum BG_AV_WorldStates
     AV_SHOW_H_SCORE                 = 3133,
     AV_SHOW_A_SCORE                 = 3134,
 
+/*
+    //the comments behind the state shows which icon overlaps the other.. but is, until now, unused
     // Graves
+
     // Alliance
     //Stormpike first aid station
-    AV_AID_A_C                      = 1327,
-    AV_AID_A_A                      = 1328,
-    AV_AID_H_C                      = 1325,
-    AV_AID_H_A                      = 1326,
+    AV_AID_A_C                      = 1325,
+    AV_AID_A_A                      = 1326,
+    AV_AID_H_C                      = 1327,
+    AV_AID_H_A                      = 1328,
     //Stormpike Graveyard
     AV_PIKEGRAVE_A_C                = 1333,
     AV_PIKEGRAVE_A_A                = 1335,
     AV_PIKEGRAVE_H_C                = 1334,
     AV_PIKEGRAVE_H_A                = 1336,
     //Stoneheart Grave
-    AV_STONEHEART_A_C               = 1319,
-    AV_STONEHEART_A_A               = 1318, //wrong
-    AV_STONEHEART_H_C               = 1317, //wrong
-    AV_STONEHEART_H_A               = 1320, //wrong
+    AV_STONEHEART_A_C               = 1302,
+    AV_STONEHEART_A_A               = 1304, //over hc
+    AV_STONEHEART_H_C               = 1301, //over ac
+    AV_STONEHEART_H_A               = 1303, //over aa
     //Neutral
     //Snowfall Grave
-    AV_SNOWFALL_N                   = 1966,
-    AV_SNOWFALL_A_C                 = 1341,
-    AV_SNOWFALL_A_A                 = 1343,
+*/
+    AV_SNOWFALL_N                   = 1966, //over aa
+/*
+    AV_SNOWFALL_A_C                 = 1341, //over hc
+    AV_SNOWFALL_A_A                 = 1343, //over ha
     AV_SNOWFALL_H_C                 = 1342,
-    AV_SNOWFALL_H_A                 = 1344,
+    AV_SNOWFALL_H_A                 = 1344, //over ac
     //Horde
     //Iceblood grave
-    AV_ICEBLOOD_A_C                 = 1346,
-    AV_ICEBLOOD_A_A                 = 1348,
+    AV_ICEBLOOD_A_C                 = 1346, //over hc
+    AV_ICEBLOOD_A_A                 = 1348, //over ac
     AV_ICEBLOOD_H_C                 = 1347,
-    AV_ICEBLOOD_H_A                 = 1349,
+    AV_ICEBLOOD_H_A                 = 1349, //over aa
     //Frostwolf Grave
-    AV_FROSTWOLF_A_C                = 1337,
-    AV_FROSTWOLF_A_A                = 1339,
+    AV_FROSTWOLF_A_C                = 1337, //over hc
+    AV_FROSTWOLF_A_A                = 1339, //over ac
     AV_FROSTWOLF_H_C                = 1338,
-    AV_FROSTWOLF_H_A                = 1340,
+    AV_FROSTWOLF_H_A                = 1340, //over aa
     //Frostwolf Hut
-    AV_FROSTWOLFHUT_A_C             = 1329,
-    AV_FROSTWOLFHUT_A_A             = 1331,
+    AV_FROSTWOLFHUT_A_C             = 1329, //over hc
+    AV_FROSTWOLFHUT_A_A             = 1331, //over ha
     AV_FROSTWOLFHUT_H_C             = 1330,
-    AV_FROSTWOLFHUT_H_A             = 1332,
+    AV_FROSTWOLFHUT_H_A             = 1332, //over ac
 
     //Towers
     //Alliance
@@ -516,22 +521,81 @@ enum BG_AV_WorldStates
     AV_STONEH_ASSAULTED             = 1381,
     //Horde
     //Iceblood Tower
-    AV_ICEBLOOD_CONTROLLED          = 1385, //wrong
-    AV_ICEBLOOD_DESTROYED           = 1368, //wrong
-    AV_ICEBLOOD_ASSAULTED           = 1386, //wrong
+    AV_ICEBLOOD_CONTROLLED          = 1385,
+    AV_ICEBLOOD_DESTROYED           = 1368,
+    AV_ICEBLOOD_ASSAULTED           = 1390,
     //Tower Point
     AV_TOWERPOINT_CONTROLLED        = 1384,
-    AV_TOWERPOINT_DESTROYED         = 1367,
-    AV_TOWERPOINT_ASSAULTED         = 1389,
-    //Frostwolf East
-    AV_FROSTWOLFE_CONTROLLED        = 1382,
-    AV_FROSTWOLFE_DESTROYED         = 1365,
-    AV_FROSTWOLFE_ASSAULTED         = 1387,
+    AV_TOWERPOINT_DESTROYED         = 1367, //goes over controlled
+    AV_TOWERPOINT_ASSAULTED         = 1389, //goes over destroyed
     //Frostwolf West
-    AV_FROSTWOLFW_CONTROLLED        = 1383,
-    AV_FROSTWOLFW_DESTROYED         = 1366,
-    AV_FROSTWOLFW_ASSAULTED         = 1388
+    AV_FROSTWOLFW_CONTROLLED        = 1382,
+    AV_FROSTWOLFW_DESTROYED         = 1365, //over controlled
+    AV_FROSTWOLFW_ASSAULTED         = 1387, //over destroyed
+    //Frostwolf East
+    AV_FROSTWOLFE_CONTROLLED        = 1383,
+    AV_FROSTWOLFE_DESTROYED         = 1366,
+    AV_FROSTWOLFE_ASSAULTED         = 1388,
+*/
+    //mines
+    AV_IRONDEEP_MINE_N              = 1360,
+    AV_IRONDEEP_MINE_A              = 1358,
+    AV_IRONDEEP_MINE_H              = 1359,
+
+    AV_S_MINE_N                     = 1357,
+    AV_S_MINE_A                     = 1355,
+    AV_S_MINE_H                     = 1356,
+
+/*
+    //towers assaulted by own team (unused)
+    AV_STONEH_UNUSED                = 1377,
+    AV_ICEWING_UNUSED               = 1376,
+    AV_DUNS_UNUSED                  = 1375,
+    AV_DUNN_UNUSED                  = 1374,
+
+    AV_ICEBLOOD_UNUSED              = 1395,
+    AV_TOWERPOINT_UNUSED            = 1394,
+    AV_FROSTWOLFE_UNUSED            = 1393,
+    AV_FROSTWOLFW_UNUSED            = 1392
+*/
+
 };
+
+//a_c a_a h_c h_a
+const uint32 BG_AV_WorldStates[16][4] = {
+    //Stormpike first aid station
+    {1325, 1326,1327,1328},
+    //Stormpike Graveyard
+    {1333,1335,1334,1336},
+    //Stoneheart Grave
+    {1302,1304,1301,1303},
+    //Snowfall Grave
+    {1341,1343,1342,1344},
+    //Iceblood grave
+    {1346,1348,1347,1349},
+    //Frostwolf Grave
+    {1337,1339,1338,1340},
+    //Frostwolf Hut
+    {1329,1331,1330,1332},
+    //Dunbaldar South Bunker
+    {1361,1375,1370,1378},
+    //Dunbaldar North Bunker
+    {1362,1374,1371,1379},
+    //Icewing Bunker
+    {1363,1376,1372,1380},
+    //Stoneheart Bunker
+    {1364,1377,1373,1381},
+    //Iceblood Tower
+    {1368,1390,1385,1395},
+    //Tower Point
+    {1367,1389,1384,1394},
+    //Frostwolf West
+    {1365,1387,1382,1392},
+    //Frostwolf East
+    {1366,1388,1383,1393}
+};
+
+
 
 enum BG_AV_ItemIds
 {
@@ -618,7 +682,6 @@ class BattleGroundAV : public BattleGround
         void EventPlayerDestroyedPoint(uint32 node);
         void UpdatePointsIcons(uint32 node);
         void UpdateScore(uint8 team, int16 points);
-        void InitWorldStates();
         void UpdateNode(uint32 type, uint32 state);
         void PopulateNode(uint32 node);
         void DePopulateNode(uint32 node);
@@ -636,12 +699,15 @@ class BattleGroundAV : public BattleGround
         void UpdateQuest(uint32 questid, Player *player);
 
     private:
+        void FillInitialWorldStates(WorldPacket& data);
+        const uint8 GetWorldStateType(uint8 state, uint16 team);
         Creature* AddAVCreature(uint8 cinfoid, uint16 type);
         int32 m_Team_Scores[2];
         uint32 m_Team_QuestStatus[2][9]; //[x][y] x=team y=questcounter
         uint32 m_Points_Owner[BG_AV_NODES_MAX];
         uint32 m_Points_PrevOwner[BG_AV_NODES_MAX];
         uint32 m_Points_State[BG_AV_NODES_MAX];
+        uint32 m_Points_PrevState[BG_AV_NODES_MAX];
         int32  m_Points_Timer[BG_AV_NODES_MAX];
         uint8 m_MaxLevel; //TODO remove this when battlegroundmgr provides a function for this..
         bool m_Snowfall_Capped;

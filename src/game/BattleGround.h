@@ -90,6 +90,7 @@ enum BattleGroundTimeIntervals
     START_DELAY1                    = 60000,                // ms
     START_DELAY2                    = 30000,                // ms
     START_DELAY3                    = 15000,                // ms used only in arena
+    BG_SIZE_KICK_DELAY              = 60000,                // ms used when player count to low
     RESPAWN_ONE_DAY                 = 86400,                // secs
     RESPAWN_IMMEDIATELY             = 0,                    // secs
     BUFF_RESPAWN_TIME               = 180,                  // secs
@@ -247,8 +248,6 @@ class BattleGround
         uint32 GetLastResurrectTime() const { return m_LastResurrectTime; }
         uint32 GetMaxPlayers() const        { return m_MaxPlayers; }
         uint32 GetMinPlayers() const        { return m_MinPlayers; }
-
-        int32 GetBGObjectId(uint64 guid);
 
         uint32 GetMinLevel() const          { return m_LevelMin; }
         uint32 GetMaxLevel() const          { return m_LevelMax; }
@@ -409,6 +408,11 @@ class BattleGround
         bool DelCreature(uint32 type);
         bool DelObject(uint32 type);
         bool AddSpiritGuide(uint32 type, float x, float y, float z, float o, uint32 team);
+        int32 GetBGObjectId(uint64 guid);
+
+        bool CheckPlayerCountRatio();
+        uint32 m_AlertDiff;
+        bool m_warned;
 
         void DoorOpen(uint32 type);
         void DoorClose(uint32 type);
