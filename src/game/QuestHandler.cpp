@@ -29,8 +29,6 @@
 #include "ObjectAccessor.h"
 #include "ScriptCalls.h"
 #include "Group.h"
-#include "BattleGround.h"
-#include "BattleGroundAV.h"
 
 void WorldSession::HandleQuestgiverStatusQueryOpcode( WorldPacket & recv_data )
 {
@@ -391,7 +389,7 @@ void WorldSession::HandleQuestComplete(WorldPacket& recv_data)
     uint32 quest;
     uint64 guid;
     recv_data >> guid >> quest;
-    BattleGround* bg;
+
     if(!GetPlayer()->isAlive())
         return;
 
@@ -400,11 +398,6 @@ void WorldSession::HandleQuestComplete(WorldPacket& recv_data)
     Quest const *pQuest = objmgr.GetQuestTemplate(quest);
     if( pQuest )
     {
-        if(GetPlayer()->InBattleGround())
-            if(bg = GetPlayer()->GetBattleGround())
-                if(bg->GetTypeID() == BATTLEGROUND_AV)
-                    ((BattleGroundAV*)bg)->UpdateQuest(quest, GetPlayer());
-
         if( _player->GetQuestStatus( quest ) != QUEST_STATUS_COMPLETE )
         {
             if( pQuest->IsRepeatable() )

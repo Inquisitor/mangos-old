@@ -139,7 +139,7 @@ enum BG_AV_ObjectTypes
 enum BG_AV_ObjectIds
 {
     //Banners
-    BG_AV_OBJECTID_BANNER_A             = 178925, // can only be used by horde
+    BG_AV_OBJECTID_BANNER_A             = 180058, //178925, // can only be used by horde
     BG_AV_OBJECTID_BANNER_H             = 178943, // can only be used by alliance
     BG_AV_OBJECTID_BANNER_CONT_A        = 178940, // can only be used by horde
     BG_AV_OBJECTID_BANNER_CONT_H        = 179435, // can only be used by alliance
@@ -544,11 +544,9 @@ enum BG_AV_WorldStates
 
 enum BG_AV_QuestIds
 {
-    //TODO search and add the questids (and also search and add the first for example 6781 has 7223 first)
-    AV_QUEST_A_SCRAPS1      = 7223,
-    AV_QUEST_A_SCRAPS2      = 6781,
-    AV_QUEST_H_SCRAPS1       = 7224,
-    AV_QUEST_H_SCRAPS2       = 6741,
+    //todo search and add the questids
+    AV_QUEST_A_SCRAPS      = 1,
+    AV_QUEST_H_SCRAPS       = 2,
     AV_QUEST_A_COMMANDER1   = 3, //soldier
     AV_QUEST_H_COMMANDER1   = 4,
     AV_QUEST_A_COMMANDER2   = 5, //leutnant
@@ -608,7 +606,7 @@ class BattleGroundAV : public BattleGround
         void EventPlayerDefendsPoint(Player* player, uint32 type);
         void EventPlayerDestroyedPoint(uint32 node);
         void UpdatePointsIcons(uint32 node);
-        void UpdateScore(uint8 team, int16 points);
+        void UpdateScore();
         void InitWorldStates();
         void UpdateNode(uint32 type, uint32 state);
         void PopulateNode(uint32 node);
@@ -624,7 +622,6 @@ class BattleGroundAV : public BattleGround
         void HandleKillPlayer(Player* player, Player *killer);
         void HandleKillUnit(Creature *unit, Player *killer);
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 MapId, uint32 team);
-        void UpdateQuest(uint32 questid, Player *player);
 
     private:
         Creature* AddAVCreature(uint8 cinfoid, uint16 type);
