@@ -248,8 +248,6 @@ class BattleGround
         uint32 GetMaxPlayers() const        { return m_MaxPlayers; }
         uint32 GetMinPlayers() const        { return m_MinPlayers; }
 
-        int32 GetBGObjectId(uint64 guid);
-
         uint32 GetMinLevel() const          { return m_LevelMin; }
         uint32 GetMaxLevel() const          { return m_LevelMax; }
 
@@ -409,6 +407,7 @@ class BattleGround
         bool DelCreature(uint32 type);
         bool DelObject(uint32 type);
         bool AddSpiritGuide(uint32 type, float x, float y, float z, float o, uint32 team);
+        int32 GetBGObjectId(uint64 guid);
 
         void DoorOpen(uint32 type);
         void DoorClose(uint32 type);

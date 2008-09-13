@@ -41,7 +41,7 @@ void BattleGroundAV::HandleKillPlayer(Player *player, Player *killer)
 {
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
-	UpdateScore((player->GetTeam() == ALLIANCE) ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE,-1);
+	UpdateScore((player-GetTeam() == ALLIANCE) ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE,-1);
 }
 
 void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
@@ -78,7 +78,7 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
 
 void BattleGroundAV::UpdateQuest(uint32 questid, Player *player)
 {
-    if (GetStatus() != STATUS_IN_PROGRESS)
+    if (GetStatus() != STATUS_WAIT_JOIN)
         return;//maybe we should log this, cause this must be a cheater or a big bug
     uint8 team = (player->GetTeam() == ALLIANCE)? 0 : 1;
     //TODO add reputation, events (including quest not available anymore, next quest availabe, go/npc de/spawning)and maybe honor
@@ -102,21 +102,18 @@ void BattleGroundAV::UpdateQuest(uint32 questid, Player *player)
         case AV_QUEST_A_COMMANDER1:
         case AV_QUEST_H_COMMANDER1:
             m_Team_QuestStatus[team][1]++;
-            RewardReputationToTeam(team,1,player->GetTeam());
             if(m_Team_QuestStatus[team][1] == 30)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
         case AV_QUEST_A_COMMANDER2:
         case AV_QUEST_H_COMMANDER2:
             m_Team_QuestStatus[team][2]++;
-            RewardReputationToTeam(team,1,player->GetTeam());
             if(m_Team_QuestStatus[team][2] == 60)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
         case AV_QUEST_A_COMMANDER3:
         case AV_QUEST_H_COMMANDER3:
             m_Team_QuestStatus[team][3]++;
-            RewardReputationToTeam(team,1,player->GetTeam());
             if(m_Team_QuestStatus[team][1] == 120)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
@@ -181,23 +178,18 @@ void BattleGroundAV::UpdateScore(uint8 team, int16 points )
 {
     if( team == BG_TEAM_ALLIANCE )
     {
-        m_Team_Scores[0] += points;
-        if( m_Team_Scores[0] < 0)
-        {
-            m_Team_Scores[0]=0;
+        TAScore += points;
+	    uint32 TAScore = (m_Team_Scores[0] < 0)?0:m_Team_Scores[0];
+	    UpdateWorldState(AV_Alliance_Score, TAScore);
+        if(TAScore==0)
             EndBattleGround(HORDE);
-        }
-	    UpdateWorldState(AV_Alliance_Score, m_Team_Scores[0]);
     }
     else if ( team == BG_TEAM_HORDE )
     {
-        m_Team_Scores[1] += points;
-        if( m_Team_Scores[1] < 0)
-        {
-            m_Team_Scores[1]=0;
+        uint32 THScore = (m_Team_Scores[1] < 0)?0:m_Team_Scores[1];
+        UpdateWorldState(AV_Horde_Score, THScore);
+        if(THScore==0)
             EndBattleGround(ALLIANCE);
-        }
-	    UpdateWorldState(AV_Horde_Score, m_Team_Scores[1]);
     }
     else
         sLog.outError("BG_AV unknown team %i in updatescore",team);
@@ -231,11 +223,12 @@ void BattleGroundAV::InitWorldStates()
 
 Creature* BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type)
 {
-    if(m_BgCreatures[type])
+    if(m_BgCreatures[type]) // in v13 of this patch this is not needed, but i think later its not bad..
             DelCreature(type);
     Creature* creature = AddCreature(BG_AV_CreatureInfo[cinfoid][0],type,BG_AV_CreatureInfo[cinfoid][1],BG_AV_CreaturePos[type][0],BG_AV_CreaturePos[type][1],BG_AV_CreaturePos[type][2],BG_AV_CreaturePos[type][3]);
     uint8 level = ( BG_AV_CreatureInfo[cinfoid][2] == BG_AV_CreatureInfo[cinfoid][3] ) ? BG_AV_CreatureInfo[cinfoid][2] : urand(BG_AV_CreatureInfo[cinfoid][2],BG_AV_CreatureInfo[cinfoid][3]);
-    level += m_MaxLevel-60; //maybe we can do this more generic for custom level-range.. actually it's blizzlike
+    level += GetMinLevel()-51; //maybe we can do this more generic for custom level-range.. actually it's blizzlike
+    sLog.outError("BG_AV minlevel %i",GetMinLevel());
     creature->SetLevel(level);
     //if is bowman, make unit stand still <--this must be added here..(TODO)
     return creature;
@@ -335,28 +328,15 @@ void BattleGroundAV::AddPlayer(Player *plr)
 {
     BattleGround::AddPlayer(plr);
     //create score and add it to map, default values are set in constructor
-    //TODO:update the players map, so he can see which nodes are occupied (in ab this is done in fillinitialworldstates)
+    //TODO:update the players map, so he can see which nodes are occupied
     BattleGroundAVScore* sc = new BattleGroundAVScore;
-    m_PlayerScores[plr->GetGUID()] = sc;
-    if(m_MaxLevel==0)
-        m_MaxLevel=(plr->getLevel()-(plr->getLevel()%10))+10; //TODO: just look at the code \^_^/
 
+    m_PlayerScores[plr->GetGUID()] = sc;
     InitWorldStates();
 }
 
 void BattleGroundAV::RemovePlayer(Player* /*plr*/,uint64 /*guid*/)
 {
-    plr->RemoveAurasDueToSpell(AV_BUFF_ARMOR); // i think those buffs were removed at the end..
-    //TODO add the iteams in the header-file (so it'll be easier to change this later)
-    plr->DestroyItemCount( 17306, 99999, true, false);
-    plr->DestroyItemCount( 17422, 99999, true, false);
-    plr->DestroyItemCount( 17423, 99999, true, false);
-    plr->DestroyItemCount( 17502, 99999, true, false);
-    plr->DestroyItemCount( 17503, 99999, true, false);
-    plr->DestroyItemCount( 17504, 99999, true, false);
-    plr->DestroyItemCount( 17326, 99999, true, false);
-    plr->DestroyItemCount( 17327, 99999, true, false);
-    plr->DestroyItemCount( 17328, 99999, true, false);
 }
 
 void BattleGroundAV::HandleAreaTrigger(Player *Source, uint32 Trigger)
@@ -482,7 +462,6 @@ void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
 
 
 }
-
 
 void BattleGroundAV::PopulateNode(uint32 node)
 {
@@ -611,7 +590,7 @@ void BattleGroundAV::EventPlayerClaimsPoint(Player *player, uint64 guid, uint32 
         return;
     if(GetBGObjectId(guid) < 0)
         return;
-    sLog.outDebug("BG_AV: EventPlayerClaimsPoint with guid %i",guid);
+
     switch(entry)
     {
         case BG_AV_OBJECTID_BANNER_A:
@@ -1293,7 +1272,6 @@ const char* BattleGroundAV::GetNodeName(uint32 node)
 
 void BattleGroundAV::ResetBGSubclass()
 {
-    m_MaxLevel=0;
     for(uint8 i=0; i<2; i++)
     {
         for(uint8 j=0; j<9; j++)

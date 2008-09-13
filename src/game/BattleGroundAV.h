@@ -133,7 +133,7 @@ enum BG_AV_ObjectTypes
     BG_AV_OBJECT_AURA_A_FROSTWOLF_HUT       = 66,
     BG_AV_OBJECT_AURA_H_FROSTWOLF_HUT       = 67,
 
-    BG_AV_OBJECT_MAX                          = 68
+    BG_AV_OBJECT_MAX                        = 68
 };
 
 enum BG_AV_ObjectIds
@@ -449,10 +449,6 @@ const uint32 BG_AV_GraveyardIds[9]= {
   AV_GRAVE_MAIN_HORDE
 };
 
-enum BG_AV_BUFF
-{ //TODO add all other buffs here
-    AV_BUFF_ARMOR = 21163
-};
 enum BG_AV_States
 {
     POINT_NEUTRAL              =  0,
@@ -608,8 +604,8 @@ class BattleGroundAV : public BattleGround
 
         /* Nodes occupying */
         void EventPlayerClaimsPoint(Player *player, uint64 guid, uint32 entry);
-        void EventPlayerAssaultsPoint(Player* player, uint32 type);
-        void EventPlayerDefendsPoint(Player* player, uint32 type);
+        void EventPlayerAssaultsPoint(Player* player, uint32 node);
+        void EventPlayerDefendsPoint(Player* player, uint32 node);
         void EventPlayerDestroyedPoint(uint32 node);
         void UpdatePointsIcons(uint32 node);
         void UpdateScore(uint8 team, int16 points);
@@ -617,7 +613,7 @@ class BattleGroundAV : public BattleGround
         void UpdateNode(uint32 type, uint32 state);
         void PopulateNode(uint32 node);
         void DePopulateNode(uint32 node);
-        int32 GetNode(uint64 guid);
+        //int32 GetNode(uint64 guid);
         uint32 GetNodePlace(uint32 guid);
         uint32 GetPlaceNode(uint32 node);
         const char* GetNodeName(uint32 node);
@@ -638,7 +634,6 @@ class BattleGroundAV : public BattleGround
         uint32 m_Points_PrevOwner[BG_AV_NODES_MAX];
         uint32 m_Points_State[BG_AV_NODES_MAX];
         int32  m_Points_Timer[BG_AV_NODES_MAX];
-        uint8 m_MaxLevel; //TODO remove this when battlegroundmgr provides a function for this..
         bool m_Snowfall_Capped;
         bool m_IsInformedNearVictory;
 
