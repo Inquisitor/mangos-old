@@ -614,7 +614,37 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
 
             if(killer)
                 if(BattleGround *bg = killed->GetBattleGround())
+                {
                     bg->HandleKillPlayer(killed, killer);   // drop flags and etc
+                    // add +1 deaths
+                    bg->UpdatePlayerScore(killed, SCORE_DEATHS, 1);
+                    if(killer)
+                    {
+                        // add +1 kills
+                        bg->UpdatePlayerScore(killer, SCORE_HONORABLE_KILLS, 1);
+                        bg->UpdatePlayerScore(killer, SCORE_KILLING_BLOWS, 1);
+                    }
+                    // to be able to remove insignia
+                    killed->SetFlag( UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE );
+                }
+        }else if(pVictim->GetTypeId() == TYPEID_UNIT)
+        {
+            Player *killer = NULL;
+            if(GetTypeId() == TYPEID_PLAYER)
+                killer = ((Player*)this);
+            else if(GetTypeId() == TYPEID_UNIT && ((Creature*)this)->isPet())
+            {
+                Unit *owner = GetOwner();
+                if(owner && owner->GetTypeId() == TYPEID_PLAYER)
+                    killer = ((Player*)owner);
+            }
+            if(killer)
+            {
+                if(BattleGround *bg = killer->GetBattleGround())
+                {
+                    bg->HandleKillUnit((Creature*)pVictim,killer);
+                }
+            }
         }
 
         DEBUG_LOG("DealDamage: victim just died");

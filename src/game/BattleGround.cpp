@@ -957,6 +957,31 @@ void BattleGround::SpawnBGObject(uint32 type, uint32 respawntime)
         }
         else
             objmgr.SaveGORespawnTime(GUID_LOPART(m_BgObjects[type]), 0, time(NULL) + respawntime);
+
+    }
+}
+
+void BattleGround::SpawnBGCreature(uint32 type, uint32 respawntime)
+{
+    if(respawntime == 0)
+    {
+        Creature *obj = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
+        if(obj)
+        {
+            obj->SetRespawnTime(0);
+            objmgr.SaveCreatureRespawnTime(obj->GetGUIDLow(), GetInstanceID(), 0);
+            //MapManager::Instance().GetMap(obj->GetMapId(), obj)->Add(obj);
+        }
+    }
+    else
+    {
+        Creature *obj = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
+        if(obj)
+        {
+            obj->setDeathState(DEAD);
+            obj->SetRespawnTime(respawntime);
+            //MapManager::Instance().GetMap(obj->GetMapId(), obj)->Add(obj);
+        }
     }
 }
 
@@ -1150,4 +1175,8 @@ void BattleGround::HandleKillPlayer( Player *player, Player *killer )
 
     // to be able to remove insignia
     player->SetFlag( UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE );
+}
+
+void BattleGround::HandleKillUnit(Creature *creature, Player *killer)
+{
 }
