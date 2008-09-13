@@ -412,6 +412,7 @@ void BattleGroundAB::_NodeDeOccupied(uint8 node)
             plr->TeleportTo(GetMapId(), ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, plr->GetOrientation());
         }
     }
+    m_ReviveQueue[m_BgCreatures[node]].empty();
 
      if( m_BgCreatures[node] )
         DelCreature(node);

@@ -714,6 +714,7 @@ const uint8 BattleGroundAV::GetNodePlace(uint32 node)
 	if( node == BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE )
 		return 3;
 	sLog.outError("BattleGroundAV: ERROR! GetPlace got a wrong node :(");
+    return 0; //i don't know what i should return, maybe I should crash the server at this point :>
 }
 
 const uint32 BattleGroundAV::GetPlaceNode(uint8 node)
@@ -747,6 +748,7 @@ const uint32 BattleGroundAV::GetPlaceNode(uint8 node)
    else if ( m_Points_State[node] == POINT_NEUTRAL )
        return BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE;
    sLog.outError("BattleGroundAV: Error! GetPlaceNode couldn't resolve node %i",node);
+   return 0; //i don't know what i should return, maybe I should crash the server at this point :>
 }
 
 
@@ -1179,6 +1181,7 @@ bool BattleGroundAV::SetupBattleGround()
             return false;
         }
     }
+    return true;
 }
 
 const char* BattleGroundAV::GetNodeName(uint8 node)
