@@ -139,7 +139,7 @@ enum BG_AV_ObjectTypes
 enum BG_AV_ObjectIds
 {
     //Banners
-    BG_AV_OBJECTID_BANNER_A             = 180058, //178925, // can only be used by horde
+    BG_AV_OBJECTID_BANNER_A             = 178925, // can only be used by horde
     BG_AV_OBJECTID_BANNER_H             = 178943, // can only be used by alliance
     BG_AV_OBJECTID_BANNER_CONT_A        = 178940, // can only be used by horde
     BG_AV_OBJECTID_BANNER_CONT_H        = 179435, // can only be used by alliance
@@ -386,24 +386,41 @@ enum BG_AV_Creatures
 enum BG_AV_CreatureIds
 {
 
-	AV_NPC_ID_A_GRAVEDEFENSE0 = 12050,		// stormpike Defender
-	AV_NPC_ID_A_GRAVEDEFENSE1 = 13326,		// seasoned defender
-	AV_NPC_ID_A_GRAVEDEFENSE2 = 13331,		// veteran defender
-    AV_NPC_ID_A_GRAVEDEFENSE3 = 13422,      // champion defender
-    AV_NPC_ID_A_TOWERDEFENSE  = 13358,      // stormpike bowman
-    AV_NPC_ID_A_CAPTAIN       = 11949,      // balinda
-    AV_NPC_ID_A_BOSS          = 11948,      // vanndar
+	AV_NPC_A_GRAVEDEFENSE0 = 0,		// stormpike Defender
+	AV_NPC_A_GRAVEDEFENSE1 = 1,		// seasoned defender
+	AV_NPC_A_GRAVEDEFENSE2 = 2,		// veteran defender
+    AV_NPC_A_GRAVEDEFENSE3 = 3,      // champion defender
+    AV_NPC_A_TOWERDEFENSE  = 4,      // stormpike bowman
+    AV_NPC_A_CAPTAIN       = 5,      // balinda
+    AV_NPC_A_BOSS          = 6,      // vanndar
 
-    AV_NPC_ID_H_GRAVEDEFENSE0 = 12053,      // frostwolf guardian
-	AV_NPC_ID_H_GRAVEDEFENSE1 = 13328,      // seasoned guardian
-	AV_NPC_ID_H_GRAVEDEFENSE2 = 13332,      // veteran guardian
-    AV_NPC_ID_H_GRAVEDEFENSE3 = 13421,      // champion guardian
-    AV_NPC_ID_H_TOWERDEFENSE  = 13359,      // frostwolf bowman
-    AV_NPC_ID_H_CAPTAIN       = 11947,      // galvangar
-    AV_NPC_ID_H_BOSS          = 11946       // drek thar
+    AV_NPC_H_GRAVEDEFENSE0 = 7,      // frostwolf guardian
+	AV_NPC_H_GRAVEDEFENSE1 = 8,      // seasoned guardian
+	AV_NPC_H_GRAVEDEFENSE2 = 9,      // veteran guardian
+    AV_NPC_H_GRAVEDEFENSE3 = 10,     // champion guardian
+    AV_NPC_H_TOWERDEFENSE  = 11,     // frostwolf bowman
+    AV_NPC_H_CAPTAIN       = 12,     // galvangar
+    AV_NPC_H_BOSS          = 13      // drek thar
 };
 
+//entry, team, minlevel, maxlevel
+const uint32 BG_AV_CreatureInfo[14][4] = {
+	{ 12050,469,58,58 },
+	{ 13326,469,59,59},
+	{ 13331,469,60,60},
+    { 13422,469,61,61},
+    { 13358,469,60,61},
+    { 11949,469,0,0},
+    { 11948,469,0,0},
 
+    { 12053,67,58,58},
+	{ 13328,67,59,59},
+	{ 13332,67,60,60},
+    { 13421,67,61,61},
+    { 13359,67,60,61},
+    { 11947,67,0,0},
+    { 11946,67,0,0}
+};
 
 enum BG_AV_Graveyards
 {
@@ -525,6 +542,33 @@ enum BG_AV_WorldStates
     AV_FROSTWOLFW_ASSAULTED         = 1388
 };
 
+enum BG_AV_QuestIds
+{
+    //TODO search and add the questids (and also search and add the first for example 6781 has 7223 first)
+    AV_QUEST_A_SCRAPS1      = 7223,
+    AV_QUEST_A_SCRAPS2      = 6781,
+    AV_QUEST_H_SCRAPS1       = 7224,
+    AV_QUEST_H_SCRAPS2       = 6741,
+    AV_QUEST_A_COMMANDER1   = 3, //soldier
+    AV_QUEST_H_COMMANDER1   = 4,
+    AV_QUEST_A_COMMANDER2   = 5, //leutnant
+    AV_QUEST_H_COMMANDER2   = 6,
+    AV_QUEST_A_COMMANDER3   = 7, //commander
+    AV_QUEST_H_COMMANDER3   = 8,
+    AV_QUEST_A_BOSS1        = 9, // 10 cristal/blood
+    AV_QUEST_H_BOSS1        = 10,
+    AV_QUEST_A_BOSS2        = 11, // 1
+    AV_QUEST_H_BOSS2        = 12,
+    AV_QUEST_A_NEAR_MINE    = 123, //the mine near start location of team
+    AV_QUEST_H_NEAR_MINE    = 456,
+    AV_QUEST_A_OTHER_MINE   = 987, //the other mine ;)
+    AV_QUEST_H_OTHER_MINE   = 654,
+    AV_QUEST_A_RIDER_HIDE   = 345,
+    AV_QUEST_H_RIDER_HIDE   = 543,
+    AV_QUEST_A_RIDER_TAME   = 101010,
+    AV_QUEST_H_RIDER_TAME   = 42
+};
+
 const uint32 BG_AV_State_Auras[5] = { BG_AV_OBJECTID_AURA_N, BG_AV_OBJECTID_AURA_A, BG_AV_OBJECTID_AURA_H, BG_AV_OBJECTID_AURA_N, BG_AV_OBJECTID_AURA_N };
 const uint32 BG_AV_State_Auras_Small[5] = { BG_AV_OBJECTID_AURA_N,BG_AV_OBJECTID_AURA_A_S,BG_AV_OBJECTID_AURA_H_S,BG_AV_OBJECTID_AURA_N_S,BG_AV_OBJECTID_AURA_N_S };
 
@@ -564,7 +608,7 @@ class BattleGroundAV : public BattleGround
         void EventPlayerDefendsPoint(Player* player, uint32 type);
         void EventPlayerDestroyedPoint(uint32 node);
         void UpdatePointsIcons(uint32 node);
-        void UpdateScore();
+        void UpdateScore(uint8 team, int16 points);
         void InitWorldStates();
         void UpdateNode(uint32 type, uint32 state);
         void PopulateNode(uint32 node);
@@ -580,10 +624,12 @@ class BattleGroundAV : public BattleGround
         void HandleKillPlayer(Player* player, Player *killer);
         void HandleKillUnit(Creature *unit, Player *killer);
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 MapId, uint32 team);
+        void UpdateQuest(uint32 questid, Player *player);
 
     private:
+        Creature* AddAVCreature(uint8 cinfoid, uint16 type);
         int32 m_Team_Scores[2];
-        uint32 m_Team_Scraps[2]; //armor scraps turned in for both teams
+        uint32 m_Team_QuestStatus[2][9]; //[x][y] x=team y=questcounter
         uint32 m_Points_Owner[BG_AV_NODES_MAX];
         uint32 m_Points_PrevOwner[BG_AV_NODES_MAX];
         uint32 m_Points_State[BG_AV_NODES_MAX];
