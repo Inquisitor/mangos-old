@@ -1056,6 +1056,7 @@ bool BattleGround::AddSpiritGuide(uint32 type, float x, float y, float z, float 
 }
 
 
+
 int32 BattleGround::GetBGObjectId(uint64 guid)
 {
     uint32 i = 0;

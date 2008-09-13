@@ -25,6 +25,7 @@
 #include "ObjectMgr.h"
 #include "MapManager.h"
 #include "Language.h"
+#include "SpellAuras.h"
 
 BattleGroundAV::BattleGroundAV()
 {
@@ -35,6 +36,16 @@ BattleGroundAV::BattleGroundAV()
 BattleGroundAV::~BattleGroundAV()
 {
 
+}
+
+const uint16 BattleGroundAV::GetBonusHonor(uint8 kills)
+{
+    //bonushonor is calculated through "kills" and a kill is in every levelrange other honor worth
+    uint8 honor;
+    if(m_MaxLevel==70)
+        return 21*kills;
+    else
+        return 14*kills;
 }
 
 void BattleGroundAV::HandleKillPlayer(Player *player, Player *killer)
@@ -64,13 +75,13 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     else if(entry == BG_AV_CreatureInfo[AV_NPC_A_CAPTAIN][0])
     {
         RewardReputationToTeam(729,BG_AV_REP_CAPTAIN,HORDE);
-        RewardHonorToTeam(BG_AV_HONOR_CAPTAIN,HORDE);
+        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),HORDE);
 	    UpdateScore(BG_TEAM_ALLIANCE,(-1)*BG_AV_RES_CAPTAIN);
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_H_CAPTAIN][0] )
     {
         RewardReputationToTeam(730,BG_AV_REP_CAPTAIN,ALLIANCE);
-        RewardHonorToTeam(BG_AV_HONOR_CAPTAIN,ALLIANCE);
+        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),ALLIANCE);
 	UpdateScore(BG_TEAM_HORDE,(-1)*BG_AV_RES_CAPTAIN);
     }
 //TODO add both mine bosses here.. (and for this "killer" is needed)
@@ -242,19 +253,36 @@ Creature* BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type)
     data.posX = BG_AV_CreaturePos[type][0];
     data.posY = BG_AV_CreaturePos[type][1];
     data.posZ = BG_AV_CreaturePos[type][2];
-    //if is bowman, make unit stand still <--this must be added here..(TODO)
-//    creature->SaveToDB();
-//    uint32 db_guid = pCreature->GetDBTableGUIDLow();
-//    pCreature->LoadFromDB(db_guid, chr->GetInstanceId());
-//    map->Add(pCreature);
-//    objmgr.AddCreatureToGrid(db_guid, objmgr.GetCreatureData(db_guid));
+    creature->LoadCreaturesAddon(true);
+
+//  if(cinfoid == AV_NPC_A_TOWERDEFENSE || cinfoid == AV_NPC_H_TOWERDEFENSE)
+//  {
+//      Aura *Aur = CreateAura(-1282473452, 0, NULL, creature); //make creature stand stall
+//      creature->AddAura(Aur);
+        /* if someone asks where -1284... comes from :
+        SpellEntry const *spellInfo = sSpellStore.LookupEntry(42716);
+        if(spellInfo)
+        {
+            for(uint32 i = 0;i<3;i++)
+            {
+                uint8 eff = spellInfo->Effect[i];
+                if (eff>=TOTAL_SPELL_EFFECTS)
+                    continue;
+                if(eff == SPELL_EFFECT_APPLY_AREA_AURA || eff == SPELL_EFFECT_APPLY_AURA || eff == SPELL_EFFECT_PERSISTENT_AREA_AURA)
+                {
+                    Aura *Aur = CreateAura(spellInfo, i, NULL, creature);
+                    sLog.outError("muuh %i %i",spellInfo,i);
+                    creature->AddAura(Aur);
+                }
+            }
+        }*/
+//  }
     return creature;
 }
 
 void BattleGroundAV::Update(time_t diff)
 {
     BattleGround::Update(diff);
-
     if (GetStatus() == STATUS_WAIT_JOIN && GetPlayersSize())
     {
         ModifyStartDelayTime(diff);
@@ -472,7 +500,7 @@ void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
         UpdateScore((team == ALLIANCE) ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE, (-1)*BG_AV_RES_TOWER);
         //spawn destroyed aura
         RewardReputationToTeam((team == ALLIANCE)?730:729,BG_AV_REP_TOWER,team);
-        RewardHonorToTeam(BG_AV_HONOR_TOWER,team);
+        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_TOWER),team);
     }
     else
     {

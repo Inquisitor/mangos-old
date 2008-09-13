@@ -46,14 +46,18 @@ class BattleGround;
 #define BG_AV_SCORE_INITIAL_POINTS       600
 #define BG_AV_BANNER_RESPAWN_TIMER       3000
 
-#define BG_AV_REP_BOSS                  375 // i think you get this, if you win the bg, and not only at killing the boss
-#define BG_AV_HONOR_BOSS                80
-#define BG_AV_REP_CAPTAIN               125
-#define BG_AV_HONOR_CAPTAIN             42
+#define BG_AV_REP_BOSS                  100 //not sure
+#define BG_AV_HONOR_BOSS                80 //not sure (4kills)
+#define BG_AV_REP_CAPTAIN               125 //not sure
+#define BG_AV_KILL_CAPTAIN              3
 #define BG_AV_RES_CAPTAIN               100
 #define BG_AV_REP_TOWER                 12
-#define BG_AV_HONOR_TOWER               42
+#define BG_AV_KILL_TOWER                 3
 #define BG_AV_RES_TOWER                 75
+#define BG_AV_KILL_COMMANDER            1 //for a safely returned wingcommander
+//bonushonor at the end
+#define BG_AV_SURVIVING_TOWER           2
+#define BG_AV_SURVIVING_CAPTAIN         2
 
 enum BG_AV_ObjectTypes
 {
@@ -400,6 +404,7 @@ const uint32 BG_AV_CreatureInfo[16][4] = {
     { 13359,67,60,61},
     { 11947,67,0,0},
     { 11946,67,0,0},
+
     { 13257,469,60,60},
     { 13176,67,60,60}
 };
@@ -621,6 +626,7 @@ class BattleGroundAV : public BattleGround
         const uint16 GetPlaceNode(uint8 node);
         const char* GetNodeName(uint8 node);
         const bool IsTower(uint8 node);
+        const uint16 GetBonusHonor(uint8 kills);
 
         /* Scorekeeping */
         void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);

@@ -681,6 +681,7 @@ ByteBuffer& operator<<(ByteBuffer& b, LootView const& lv)
         case ALL_PERMISSION:
         case MASTER_PERMISSION:
         {
+            sLog.outError("lootmgr muh2");
             uint8 slot_type = (lv.permission==MASTER_PERMISSION) ? 2 : 0;
             for (uint8 i = 0; i < l.items.size(); ++i)
             {
