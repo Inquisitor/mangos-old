@@ -391,11 +391,13 @@ void WorldSession::HandleQuestComplete(WorldPacket& recv_data)
     uint32 quest;
     uint64 guid;
     recv_data >> guid >> quest;
+
     BattleGround* bg;
     if(!GetPlayer()->isAlive())
         return;
 
     sLog.outDebug( "WORLD: Received CMSG_QUESTGIVER_COMPLETE_QUEST npc = %u, quest = %u",uint32(GUID_LOPART(guid)),quest );
+
 
     Quest const *pQuest = objmgr.GetQuestTemplate(quest);
     if( pQuest )

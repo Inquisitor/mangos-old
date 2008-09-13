@@ -641,10 +641,6 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
         // Log
         sLog.outDetail("BATTLEGROUND: Removed player %s from BattleGround.", plr->GetName());
     }
-    else
-    {
-        sLog.outError("BATTLEGROUND: RemovePlayerAtLeave: couldnt find player to remove");
-    }
 
     /// there will be code which will add battleground to BGFreeSlotQueue , when battleground instance will exist
     // we always should check if BG is in that queue before adding..
@@ -710,6 +706,7 @@ void BattleGround::AddPlayer(Player *plr)
 
     if(isArena())
     {
+<<<<<<< HEAD:src/game/BattleGround.cpp
         plr->RemoveArenaSpellCooldowns();
         //plr->RemoveArenaAuras();
         plr->RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
@@ -724,6 +721,16 @@ void BattleGround::AddPlayer(Player *plr)
         plr->DestroyConjuredItems(true);
 
         if(GetStatus() == STATUS_WAIT_JOIN)                 // not started yet
+=======
+        if(!plr->isAlive())                              // resurrect on exit
+        {
+            plr->ResurrectPlayer(1.0f);
+            plr->SpawnCorpseBones();
+        }
+        RemovePlayer(plr, guid);                                // BG subclass specific code
+
+        if(isArena())
+>>>>>>> 13.6.5:src/game/BattleGround.cpp
         {
             plr->CastSpell(plr, SPELL_ARENA_PREPARATION, true);
 
@@ -735,6 +742,10 @@ void BattleGround::AddPlayer(Player *plr)
     {
         if(GetStatus() == STATUS_WAIT_JOIN)                 // not started yet
             plr->CastSpell(plr, SPELL_PREPARATION, true);   // reduces all mana cost of spells.
+    }
+    else
+    {
+        sLog.outError("BATTLEGROUND: RemovePlayerAtLeave: couldnt find player to remove");
     }
 
     if(isArena())
@@ -1061,7 +1072,7 @@ bool BattleGround::AddSpiritGuide(uint32 type, float x, float y, float z, float 
 
 
 
-int32 BattleGround::GetBGObjectId(uint64 guid)
+int32 BattleGround::GetObjectType(uint64 guid)
 {
     uint32 i = 0;
     while(i <= m_BgObjects.size())
@@ -1174,3 +1185,4 @@ void BattleGround::HandleKillPlayer( Player *player, Player *killer )
 void BattleGround::HandleKillUnit(Creature *creature, Player *killer)
 {
 }
+

@@ -29,8 +29,9 @@
 
 BattleGroundAV::BattleGroundAV()
 {
+
     m_BgObjects.resize(BG_AV_OBJECT_MAX);
-    m_BgCreatures.resize(AV_CPLACE_MAX);
+    m_BgCreatures.resize(AV_CPLACE_MAX+AV_STATICCPLACE_MAX);
 }
 
 BattleGroundAV::~BattleGroundAV()
@@ -84,6 +85,21 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),ALLIANCE);
 	UpdateScore(BG_TEAM_HORDE,(-1)*BG_AV_RES_CAPTAIN);
     }
+    else if ( entry == BG_AV_CreatureInfo[AV_NPC_IRONDEEP_N_4][0] )
+    {
+        m_Mine_Owner[AV_NORTH_MINE] = killer->GetTeam();
+        PopulateMine(AV_NORTH_MINE);
+    }
+    else if ( entry == BG_AV_CreatureInfo[AV_NPC_IRONDEEP_A_4][0] )
+    {
+        m_Mine_Owner[AV_NORTH_MINE] = killer->GetTeam();
+        PopulateMine(AV_NORTH_MINE);
+    }
+    else if ( entry == BG_AV_CreatureInfo[AV_NPC_IRONDEEP_H_4][0] )
+    {
+        m_Mine_Owner[AV_NORTH_MINE] = killer->GetTeam();
+        PopulateMine(AV_NORTH_MINE);
+    }
 //TODO add both mine bosses here.. (and for this "killer" is needed)
 }
 
@@ -106,8 +122,11 @@ void BattleGroundAV::UpdateQuest(uint32 questid, Player *player)
                 sLog.outDebug("BG_AV Quest %i completed starting with unit upgrading..",questid);
                 for (uint8 i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i)
                     if (m_Points_Owner[i] == player->GetTeam() && m_Points_State[i] == POINT_CONTROLED)
-                        PopulateNode(i); //update all graveyards (depopulate is not important cause addavcreature deletes befor spawning)
+                    {
+                        DePopulateNode(i);
+                        PopulateNode(i);
                             //maybe this is bad, because it will instantly respawn all creatures on every grave..
+                     }
             }
             break;
         case AV_QUEST_A_COMMANDER1:
@@ -225,51 +244,51 @@ void BattleGroundAV::UpdateScore(uint8 team, int16 points )
                     SendMessageToAll(LANG_BG_AV_A_NEAR_LOSE);
                 else
                     SendMessageToAll(LANG_BG_AV_H_NEAR_LOSE);
-//                PlaySoundToAll(SOUND_NEAR_VICTORY);
+//                PlaySoundToAll(SOUND_NEAR_VICTORY); - will this be played?
                 m_IsInformedNearVictory = true;
             }
         }
     }
 }
 
-Creature* BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type)
+
+bool BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type )
 {
-    if(m_BgCreatures[type])
-            DelCreature(type);
-    Creature* creature = AddCreature(BG_AV_CreatureInfo[cinfoid][0],type,BG_AV_CreatureInfo[cinfoid][1],BG_AV_CreaturePos[type][0],BG_AV_CreaturePos[type][1],BG_AV_CreaturePos[type][2],BG_AV_CreaturePos[type][3]);
-    uint8 level = ( BG_AV_CreatureInfo[cinfoid][2] == BG_AV_CreatureInfo[cinfoid][3] ) ? BG_AV_CreatureInfo[cinfoid][2] : urand(BG_AV_CreatureInfo[cinfoid][2],BG_AV_CreatureInfo[cinfoid][3]);
+    uint32 level;
+    Creature* creature;
+    if(type > AV_CPLACE_MAX + AV_STATICCPLACE_MAX)
+    {
+        sLog.outError("BG_AV: addavcreature received strange type %i",type); //hopefully everything works..
+        return false;
+    }
+    if(type>=AV_CPLACE_MAX) //static
+    {
+        type-=(AV_CPLACE_MAX);
+        cinfoid=int(BG_AV_StaticCreaturePos[type][4]);
+
+        if(cinfoid==25 || cinfoid==31) //TODO: remove this (but don't forget to remove this from the header-file
+            return true;
+        creature = AddCreature(BG_AV_StaticCreatureInfo[cinfoid][0],(type+AV_CPLACE_MAX),BG_AV_StaticCreatureInfo[cinfoid][1],BG_AV_StaticCreaturePos[type][0],BG_AV_StaticCreaturePos[type][1],BG_AV_StaticCreaturePos[type][2],BG_AV_StaticCreaturePos[type][3]);
+        level = ( BG_AV_StaticCreatureInfo[cinfoid][2] == BG_AV_StaticCreatureInfo[cinfoid][3] ) ? BG_AV_StaticCreatureInfo[cinfoid][2] : urand(BG_AV_StaticCreatureInfo[cinfoid][2],BG_AV_StaticCreatureInfo[cinfoid][3]);
+        CreatureData &data = objmgr.NewOrExistCreatureData(creature->GetDBTableGUIDLow());
+        data.posX = BG_AV_StaticCreaturePos[type][0]; //this is needed, else they have a wrong aggrorange
+        data.posY = BG_AV_StaticCreaturePos[type][1];
+        data.posZ = BG_AV_StaticCreaturePos[type][2];
+    }
+    else
+    {
+        creature = AddCreature(BG_AV_CreatureInfo[cinfoid][0],type,BG_AV_CreatureInfo[cinfoid][1],BG_AV_CreaturePos[type][0],BG_AV_CreaturePos[type][1],BG_AV_CreaturePos[type][2],BG_AV_CreaturePos[type][3]);
+        level = ( BG_AV_CreatureInfo[cinfoid][2] == BG_AV_CreatureInfo[cinfoid][3] ) ? BG_AV_CreatureInfo[cinfoid][2] : urand(BG_AV_CreatureInfo[cinfoid][2],BG_AV_CreatureInfo[cinfoid][3]);
+        CreatureData &data = objmgr.NewOrExistCreatureData(creature->GetDBTableGUIDLow());
+        data.posX = BG_AV_CreaturePos[type][0]; //this is needed, else they have a wrong aggrorange
+        data.posY = BG_AV_CreaturePos[type][1];
+        data.posZ = BG_AV_CreaturePos[type][2];
+    }
+    creature->LoadCreaturesAddon(true); //currently it's only for the bowman, so they have the entangling-aura.. but later it's needed for the watchdogs
     if(level != 0)
         level += m_MaxLevel-60; //maybe we can do this more generic for custom level-range.. actually it's blizzlike
     creature->SetLevel(level);
-    CreatureData &data = objmgr.NewOrExistCreatureData(creature->GetDBTableGUIDLow());
-    data.posX = BG_AV_CreaturePos[type][0];
-    data.posY = BG_AV_CreaturePos[type][1];
-    data.posZ = BG_AV_CreaturePos[type][2];
-    creature->LoadCreaturesAddon(true);
-
-//  if(cinfoid == AV_NPC_A_TOWERDEFENSE || cinfoid == AV_NPC_H_TOWERDEFENSE)
-//  {
-//      Aura *Aur = CreateAura(-1282473452, 0, NULL, creature); //make creature stand stall
-//      creature->AddAura(Aur);
-        /* if someone asks where -1284... comes from :
-        SpellEntry const *spellInfo = sSpellStore.LookupEntry(42716);
-        if(spellInfo)
-        {
-            for(uint32 i = 0;i<3;i++)
-            {
-                uint8 eff = spellInfo->Effect[i];
-                if (eff>=TOTAL_SPELL_EFFECTS)
-                    continue;
-                if(eff == SPELL_EFFECT_APPLY_AREA_AURA || eff == SPELL_EFFECT_APPLY_AURA || eff == SPELL_EFFECT_PERSISTENT_AREA_AURA)
-                {
-                    Aura *Aur = CreateAura(spellInfo, i, NULL, creature);
-                    sLog.outError("muuh %i %i",spellInfo,i);
-                    creature->AddAura(Aur);
-                }
-            }
-        }*/
-//  }
-    return creature;
+    return true;
 }
 
 void BattleGroundAV::Update(time_t diff)
@@ -281,43 +300,48 @@ void BattleGroundAV::Update(time_t diff)
 
         if (!(m_Events & 0x01))
         {
+            uint16 i;
             m_Events |= 0x01;
             sLog.outDebug("Alterac Valley: entering state STATUS_WAIT_JOIN ...");
             // Initial Nodes
-            for(uint8 i = 0; i < BG_AV_OBJECT_MAX; i++)
+            for(i = 0; i < BG_AV_OBJECT_MAX; i++)
                 SpawnBGObject(i, RESPAWN_ONE_DAY);
             for(uint8 i = BG_AV_OBJECT_FLAG_A_FIRSTAID_STATION; i <= BG_AV_OBJECT_FLAG_A_STONEHEART_GRAVE ; i++){
                 SpawnBGObject(BG_AV_OBJECT_AURA_A_FIRSTAID_STATION+3*i,RESPAWN_IMMEDIATELY);
                 SpawnBGObject(i, RESPAWN_IMMEDIATELY);
             }
-            for(uint8 i = BG_AV_OBJECT_FLAG_A_DUNBALDAR_SOUTH; i <= BG_AV_OBJECT_FLAG_A_STONEHEART_BUNKER ; i++)
+            for(i = BG_AV_OBJECT_FLAG_A_DUNBALDAR_SOUTH; i <= BG_AV_OBJECT_FLAG_A_STONEHEART_BUNKER ; i++)
                 SpawnBGObject(i, RESPAWN_IMMEDIATELY);
-            for(uint8 i = BG_AV_OBJECT_FLAG_H_ICEBLOOD_GRAVE; i <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER ; i++){
+            for(i = BG_AV_OBJECT_FLAG_H_ICEBLOOD_GRAVE; i <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER ; i++){
                 SpawnBGObject(i, RESPAWN_IMMEDIATELY);
                 if(i<=BG_AV_OBJECT_FLAG_H_FROSTWOLF_HUT)
                     SpawnBGObject(BG_AV_OBJECT_AURA_H_FIRSTAID_STATION+3*GetNodePlace(i),RESPAWN_IMMEDIATELY);
              }
-
             //snowfall and the doors
-            for(uint8 i = BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE; i <= BG_AV_OBJECT_DOOR_A; i++)
+            for(i = BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE; i <= BG_AV_OBJECT_DOOR_A; i++)
                 SpawnBGObject(i, RESPAWN_IMMEDIATELY);
             SpawnBGObject(BG_AV_OBJECT_AURA_N_SNOWFALL_GRAVE,RESPAWN_IMMEDIATELY);
-            //creatures
-			for (uint8 i= BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; i++ )
-				PopulateNode(i);
-            //boss and captain of both teams:
-		AddAVCreature(AV_NPC_H_BOSS,AV_CPLACE_H_BOSS);
-		AddAVCreature(AV_NPC_A_BOSS,AV_CPLACE_A_BOSS);
-		AddAVCreature(AV_NPC_H_CAPTAIN,AV_CPLACE_H_CAPTAIN);
-		AddAVCreature(AV_NPC_A_CAPTAIN,AV_CPLACE_A_CAPTAIN);
-		AddAVCreature(AV_NPC_A_SMITH,AV_CPLACE_A_SMITH);
-		AddAVCreature(AV_NPC_H_SMITH,AV_CPLACE_H_SMITH);
 
+            //creatures
+            sLog.outDebug("BG_AV start poputlating nodes");
+			for(i= BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; i++ )
+				PopulateNode(i);
+            //all creatures which don't get despawned through the script are static
+            sLog.outDebug("BG_AV: start spawning static creatures");
+            for(i=0; i < AV_STATICCPLACE_MAX; i++ )
+                AddAVCreature(0,i+AV_CPLACE_MAX);
 		//mainspiritguides:
-            //if a player can ressurect before the bg starts, this must stay here...
+            sLog.outDebug("BG_AV: start spawning spiritguides creatures");
 	        AddSpiritGuide(7, BG_AV_CreaturePos[7][0], BG_AV_CreaturePos[7][1], BG_AV_CreaturePos[7][2], BG_AV_CreaturePos[7][3], ALLIANCE);
 		AddSpiritGuide(8, BG_AV_CreaturePos[8][0], BG_AV_CreaturePos[8][1], BG_AV_CreaturePos[8][2], BG_AV_CreaturePos[8][3], HORDE);
+            //spawn the marshals (those who get deleted, if a tower gets destroyed)
+            sLog.outDebug("BG_AV: start spawning marshal creatures");
+            for(i=AV_NPC_A_MARSHAL_SOUTH; i<= AV_NPC_H_MARSHAL_WTOWER; i++)
+                AddAVCreature(i,AV_CPLACE_A_MARSHAL_SOUTH+(i-AV_NPC_A_MARSHAL_SOUTH));
 
+            sLog.outDebug("BG_AV: start spawning mine creatures");
+            PopulateMine(AV_NORTH_MINE);
+            PopulateMine(AV_SOUTH_MINE);
             DoorClose(BG_AV_OBJECT_DOOR_A);
             DoorClose(BG_AV_OBJECT_DOOR_H);
 
@@ -374,6 +398,7 @@ void BattleGroundAV::AddPlayer(Player *plr)
     if(m_MaxLevel==0)
         m_MaxLevel=(plr->getLevel()%10 == 0)? plr->getLevel() : (plr->getLevel()-(plr->getLevel()%10))+10; //TODO: just look at the code \^_^/ --but queue-info should provide this information..
 
+    m_PlayerScores[plr->GetGUID()] = sc;
 }
 
 void BattleGroundAV::RemovePlayer(Player* /*plr*/,uint64 /*guid*/)
@@ -494,6 +519,11 @@ void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
     m_Points_PrevOwner[GetNodePlace(node)] = m_Points_Owner[GetNodePlace(node)];
     if( IsTower(GetNodePlace(node)) )
     {
+        //despawn general
+        if(m_BgCreatures[AV_CPLACE_A_MARSHAL_SOUTH+(node-BG_AV_NODES_DUNBALDAR_SOUTH)])
+            DelCreature(AV_CPLACE_A_MARSHAL_SOUTH+(node-BG_AV_NODES_DUNBALDAR_SOUTH));
+        else
+            sLog.outError("BG_AV: playerdestroyedpoint: marshal %i doesn't exist",AV_CPLACE_A_MARSHAL_SOUTH+(node-BG_AV_NODES_DUNBALDAR_SOUTH));
         m_Points_State[GetNodePlace(node)]=POINT_DESTROYED;
         UpdateScore((team == ALLIANCE) ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE, (-1)*BG_AV_RES_TOWER);
         //spawn destroyed aura
@@ -525,6 +555,52 @@ void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
     SendPacketToAll(&data);
 }
 
+//depopulate is not needed.. (afaik)
+void BattleGroundAV::PopulateMine(uint8 mine)
+{ //mine=0 northmine mine=1 southmin
+    uint32 team = m_Mine_Owner[mine];
+    uint16 cinfo;
+    //also neutral team exists.. after a big time, the neutral team tries to conquer the mine
+    if(mine==AV_NORTH_MINE)
+    {
+        if(team == ALLIANCE)
+            cinfo = AV_NPC_IRONDEEP_A_1;
+        else if(team == HORDE)
+            cinfo = AV_NPC_IRONDEEP_H_1;
+        else
+            cinfo = AV_NPC_IRONDEEP_N_1;
+    }
+    else
+        return; //TODO: get spawns of the south-mine
+    //all spawns (except boss) are at the same place
+    for(uint16 i=AV_CPLACE_IRONDEEP_S_1_MIN; i <= AV_CPLACE_IRONDEEP_S_1_MAX; i++)
+        if( BG_AV_CreaturePos[i][0] != 0)
+            AddAVCreature(cinfo,i);
+    cinfo++;
+    for(uint16 i=AV_CPLACE_IRONDEEP_S_2_MIN; i <= AV_CPLACE_IRONDEEP_S_2_MAX; i++)
+        if( BG_AV_CreaturePos[i][0] != 0)
+            AddAVCreature(cinfo,i);
+    cinfo++;
+    for(uint16 i=AV_CPLACE_IRONDEEP_S_3_MIN; i <= AV_CPLACE_IRONDEEP_S_3_MAX; i++)
+        if( BG_AV_CreaturePos[i][0] != 0)
+            AddAVCreature(cinfo,i);
+    //change cinfo with care.. following stuff depends on it
+    //the moving group:
+    AddAVCreature(cinfo-2,AV_CPLACE_IRONDEEP_M_1_1);
+    AddAVCreature(cinfo-2,AV_CPLACE_IRONDEEP_M_1_2);
+    AddAVCreature(cinfo-2,AV_CPLACE_IRONDEEP_M_1_3);
+    AddAVCreature(cinfo-1,AV_CPLACE_IRONDEEP_M_2);
+    AddAVCreature(cinfo,AV_CPLACE_IRONDEEP_M_3);
+    //boss with surrounding group:
+    //actually neutral and alliance spawns are different
+    //TODO find the different spawnpoints and implement them.. currently all spawns are like the neutral one
+    AddAVCreature(cinfo+1,AV_CPLACE_IRONDEEP_B_4);
+    AddAVCreature(cinfo-1,AV_CPLACE_IRONDEEP_B_2_1);
+    AddAVCreature(cinfo-1,AV_CPLACE_IRONDEEP_B_2_2);
+
+    //TODO: i think the gameobjects (those crates which are needed for a quest) have to be spawned + despawned..
+    return;
+}
 
 void BattleGroundAV::PopulateNode(uint32 node)
 {
@@ -591,7 +667,7 @@ void BattleGroundAV::DePopulateNode(uint32 node)
 }
 
 
-const uint8 BattleGroundAV::GetNodePlace(uint16 node)
+const uint8 BattleGroundAV::GetNodePlace(uint32 node)
 {
 	//warning GetNodePlace(GetNodePlace(node))!=GetNodePlace(node) in some cases, so watch out that it will not be applied 2 times
 	if( node <= BG_AV_OBJECT_FLAG_A_STONEHEART_BUNKER )
@@ -611,7 +687,7 @@ const uint8 BattleGroundAV::GetNodePlace(uint16 node)
 	sLog.outError("BattleGroundAV: ERROR! GetPlace got a wrong node :(");
 }
 
-const uint16 BattleGroundAV::GetPlaceNode(uint8 node)
+const uint32 BattleGroundAV::GetPlaceNode(uint8 node)
 { //this function is the counterpart to getnodeplace()
    if( m_Points_Owner[node] == ALLIANCE )
    {
@@ -650,7 +726,7 @@ void BattleGroundAV::EventPlayerClaimsPoint(Player *player, uint64 guid, uint32 
 {
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
-    if(GetBGObjectId(guid) < 0)
+    if(GetObjectType(guid) < 0)
         return;
     sLog.outDebug("BG_AV: EventPlayerClaimsPoint with guid %i",guid);
     switch(entry)
@@ -660,13 +736,13 @@ void BattleGroundAV::EventPlayerClaimsPoint(Player *player, uint64 guid, uint32 
         case BG_AV_OBJECTID_BANNER_H:
         case BG_AV_OBJECTID_BANNER_H_B:
         case BG_AV_OBJECTID_BANNER_SNOWFALL_N:
-            EventPlayerAssaultsPoint(player, GetBGObjectId(guid));
+            EventPlayerAssaultsPoint(player, GetObjectType(guid));
             break;
         case BG_AV_OBJECTID_BANNER_CONT_A:
         case BG_AV_OBJECTID_BANNER_CONT_A_B:
         case BG_AV_OBJECTID_BANNER_CONT_H:
         case BG_AV_OBJECTID_BANNER_CONT_H_B:
-            EventPlayerDefendsPoint(player, GetBGObjectId(guid));
+            EventPlayerDefendsPoint(player, GetObjectType(guid));
             break;
         default:
             break;
@@ -1041,9 +1117,10 @@ void BattleGroundAV::ResetBGSubclass()
     m_Points_State[BG_AV_NODES_SNOWFALL_GRAVE] = POINT_NEUTRAL;
     m_Points_PrevState[BG_AV_NODES_SNOWFALL_GRAVE] = m_Points_State[BG_AV_NODES_SNOWFALL_GRAVE];
 
-    for(uint8 i = 0; i < AV_CPLACE_MAX; i++)
+    for(uint16 i = 0; i < AV_CPLACE_MAX+AV_STATICCPLACE_MAX; i++)
         if(m_BgCreatures[i])
             DelCreature(i);
 
 
 }
+

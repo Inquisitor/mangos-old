@@ -142,6 +142,7 @@ enum BG_AV_ObjectTypes
 
 enum BG_AV_ObjectIds
 {
+
     //Banners
     BG_AV_OBJECTID_BANNER_A             = 178925, // can only be used by horde
     BG_AV_OBJECTID_BANNER_H             = 178943, // can only be used by alliance
@@ -153,7 +154,6 @@ enum BG_AV_ObjectIds
     BG_AV_OBJECTID_BANNER_CONT_A_B      = 179286,
     BG_AV_OBJECTID_BANNER_CONT_H_B      = 179287,
     BG_AV_OBJECTID_BANNER_SNOWFALL_N    = 180418,
-
     //Auras
     BG_AV_OBJECTID_AURA_A               = 180421,
     BG_AV_OBJECTID_AURA_H               = 180422,
@@ -218,9 +218,70 @@ const float BG_AV_DoorPositons[2][4] = {
 
 
 //creaturestuff starts here
+//is related to BG_AV_CreaturePos
+enum BG_AV_CreaturePlace
+{
+    AV_CPLACE_SPIRIT_STORM_AID      = 0,
+    AV_CPLACE_SPIRIT_STORM_GRAVE    = 1,
+    AV_CPLACE_SPIRIT_STONE_GRAVE    = 2,
+    AV_CPLACE_SPIRIT_SNOWFALL       = 3,
+    AV_CPLACE_SPIRIT_FROSTWOLF      = 4,
+    AV_CPLACE_SPIRIT_ICE_GRAVE      = 5,
+    AV_CPLACE_SPIRIT_FROST_HUT      = 6,
+    AV_CPLACE_SPIRIT_MAIN_ALLIANCE  = 7,
+    AV_CPLACE_SPIRIT_MAIN_HORDE     = 8,
+//i don't will add for all 4 positions a variable.. i think one is enough to compute the rest
+    AV_CPLACE_DEFENSE_STORM_AID      = 9,
+    AV_CPLACE_DEFEMSE_STORM_GRAVE    = 13,
+    AV_CPLACE_DEFENSE_STONE_GRAVE    = 17,
+    AV_CPLACE_DEFENSE_SNOWFALL       = 21,
+    AV_CPLACE_DEFENSE_FROSTWOLF      = 25,
+    AV_CPLACE_DEFENSE_ICE_GRAVE      = 29,
+    AV_CPLACE_DEFENSE_FROST_HUT      = 33,
+
+    AV_CPLACE_DEFENSE_DUN_S          = 37,
+    AV_CPLACE_DEFENSE_DUN_N          = 41,
+    AV_CPLACE_DEFENSE_ICEWING        = 45,
+    AV_CPLACE_DEFENSE_STONE_TOWER    = 49,
+    AV_CPLACE_DEFENSE_ICE_TOWER      = 53,
+    AV_CPLACE_DEFENSE_TOWERPOINT     = 57,
+    AV_CPLACE_DEFENSE_FROST_E        = 61,
+    AV_CPLACE_DEFENSE_FROST_t        = 65,
+//here is a little hole, cause i move boss annd captain to static
+    AV_CPLACE_A_MARSHAL_SOUTH       = 73,
+    AV_CPLACE_A_MARSHAL_NORTH       = 74,
+    AV_CPLACE_A_MARSHAL_ICE         = 75,
+    AV_CPLACE_A_MARSHAL_STONE       = 76,
+    AV_CPLACE_H_MARSHAL_ICE         = 77,
+    AV_CPLACE_H_MARSHAL_TOWER       = 78,
+    AV_CPLACE_H_MARSHAL_ETOWER      = 79,
+    AV_CPLACE_H_MARSHAL_WTOWER      = 80,
+//following static means, no waypoints
+    AV_CPLACE_IRONDEEP_S_1_MIN      = 81, //S=static and 1=type1 (trogg)
+    AV_CPLACE_IRONDEEP_S_1_MAX      = 100, //if you are in a for-loop and want all type1-troggs make for(i=...irondeep_s_1;i<=..irondeep_max;i++)
+//-150 placeholder
+    AV_CPLACE_IRONDEEP_S_2_MIN      = 151, //thats the number of pokemon+mew  (2=shaman)
+    AV_CPLACE_IRONDEEP_S_2_MAX      = 159,
+//-175 placeholder
+    AV_CPLACE_IRONDEEP_S_3_MIN      = 176,
+    AV_CPLACE_IRONDEEP_S_3_MAX      = 177,
+//-185 placeholder
+    AV_CPLACE_IRONDEEP_M_1_1        = 186, //m=moving 1_1 = type1 creature 1
+    AV_CPLACE_IRONDEEP_M_1_2        = 187,
+    AV_CPLACE_IRONDEEP_M_1_3        = 188,
+    AV_CPLACE_IRONDEEP_M_2          = 189,
+    AV_CPLACE_IRONDEEP_M_3          = 190,
+
+    AV_CPLACE_IRONDEEP_B_4          = 191,
+    AV_CPLACE_IRONDEEP_B_2_1        = 192,
+    AV_CPLACE_IRONDEEP_B_2_2        = 193,
+
+    AV_CPLACE_MAX = 194
+};
 
 //x, y, z, o
-const float BG_AV_CreaturePos[75][4] = {
+const float BG_AV_CreaturePos[AV_CPLACE_MAX][4] = {
+    //spiritguides
     {643.000000f,44.000000f,69.740196f,-0.001854f},
     {676.000000f,-374.000000f,30.000000f,-0.001854f},
     {73.417755f,-496.433105f,48.731918f,-0.001854f},
@@ -232,11 +293,11 @@ const float BG_AV_CreaturePos[75][4] = {
     {-1437.670044f,-610.088989f,51.161900f,-0.001854f},
 //alliance
  //grave
- //firstaid
-    {645.532f,-30.2852f,46.8587f,0.226968f},
-    {639.823f,-25.7137f,47.0798f,1.45219f},
-    {635.435f,-32.0167f,45.9817f,2.95151f},
-    {641.079f,-36.9292f,45.6846f,4.66997f},
+ //firstaid - OK
+    {635.17f,-29.5594f,46.5056f,4.81711f},
+    {642.488f,-32.9437f,46.365f,4.67748f},
+    {642.326f,-27.9442f,46.9211f,4.59022f},
+    {635.945f,-33.6171f,45.7164f,4.97419f},
    //stormpike
     {669.272f,-297.304f,30.291f,4.66604f},
     {674.08f,-292.328f,30.4817f,0.0918785f},
@@ -268,31 +329,31 @@ const float BG_AV_CreaturePos[75][4] = {
     {-1400.64f,-304.3f,89.7008f,1.0595f},
     {-1400.4f,-311.35f,89.3028f,4.99434f},
   //towers
-  //dun south
-    {566.87f,-73.6021f,52.5224f,1.06106f},
-    {574.349f,-81.493f,52.3379f,0.0502529f},
-    {574.858f,-90.2643f,52.3968f,5.61637f},
-    {568.527f,-99.569f,52.6258f,5.56924f},
-    //dun north
-    {668.627f,-121.855f,64.0853f,2.51718f},
-    {663.357f,-130.285f,64.1588f,2.979f},
-    {661.803f,-137.394f,64.2315f,3.19341f},
-    {665.178f,-144.785f,64.1426f,3.70392f},
-    //icewing
-    {192.439f,-364.37f,57.0477f,3.03868f},
-    {194.121f,-374.727f,56.9618f,3.37484f},
-    {202.65f,-382.997f,56.88f,4.18851f},
-    {215.096f,-382.895f,56.8842f,4.88594f},
+  //dun south - OK
+    {569.395f,-101.064f,52.8296f,2.34974f},
+    {574.85f,-92.9842f,52.5869f,3.09325f},
+    {575.411f,-83.597f,52.3626f,6.26573f},
+    {571.352f,-75.6582f,52.479f,0.523599f},
+    //dun north - OK
+    {668.60f,-122.53f,64.12f,2.34f}, //not 100% ok
+    {662.253f,-129.105f,64.1794f,2.77507f},
+    {661.209f,-138.877f,64.2251f,3.38594f},
+    {665.481f,-146.857f,64.1271f,3.75246f},
+    //icewing - OK
+    {225.228f,-368.909f,56.9983f,6.23806f},
+    {191.36f,-369.899f,57.1524f,3.24631f},
+    {215.518f,-384.019f,56.9889f,5.09636f},
+    {199.625f,-382.177f,56.8691f,4.08407f},
     //stone
     {-172.851f,-452.366f,40.8725f,3.31829f},
     {-147.147f,-435.053f,40.8022f,0.599238f},
     {-169.456f,-440.325f,40.985f,2.59101f},
     {-163.494f,-434.904f,41.0725f,1.84174f},
-    //ice
-    {-563.516f,-262.086f,74.9223f,6.14886f},
-    {-580.222f,-267.368f,74.9545f,4.34716f},
-    {-573.164f,-271.241f,74.9268f,4.65032f},
-    {-565.353f,-257.227f,74.9879f,0.43038f},
+    //ice - OK
+    {-573.522f,-271.854f,75.0078f,3.9619f},
+    {-565.616f,-269.051f,74.9952f,5.02655f},
+    {-562.825f,-261.087f,74.9898f,5.95157f},
+    {-569.176f,-254.446f,74.8771f,0.820305f},
     //towerpoint
     {-763.04f,-371.032f,90.7933f,5.25979f},
     {-759.764f,-358.264f,90.8681f,0.289795f},
@@ -308,59 +369,148 @@ const float BG_AV_CreaturePos[75][4] = {
     {-1302.41f,-259.256f,114.065f,1.67602f},
     {-1287.97f,-262.087f,114.165f,6.18264f},
     {-1291.59f,-271.166f,114.151f,5.28257f},
-    //drek thar
+    //drek thar //moved to static creatures TODO: clean this up
     {-1370.9f,-219.793f,98.4258f,5.04381f},
     //vanndar stormpike
-    {728.3f,-8.99467f,50.6213f,3.40862f},
+    {722.43f,-10.9982f,50.7046f,3.42085f},
     //garni
     {-538.972f,-168.116f,57.0112f,5.83707f},
     //balinda
     {-54.2655f,-288.492f,15.5646f,5.98551f},
-    //73 till now
-    //both smiths
-    {642.863f,-57.4503f,41.6571f,4.26077f},
-    {-1253.88f,-317.969f,62.6003f,1.20972f}
 
+    //alliance marshall
+    {721.104f,-7.64155f,50.7046f,3.45575f},// south
+    {723.058f,-14.1548f,50.7046f,3.40339f},// north
+    {715.691f,-4.72233f,50.2187f,3.47321f},// icewing
+    {720.046f,-19.9413f,50.2187f,3.36849f},// stone
+//horde  (coords not 100% ok)
+    {-1363.99f,-221.99f,98.4053f,4.93012f},
+    {-1370.96f,-223.532f,98.4266f,4.93012f},
+    {-1378.37f,-228.614f,99.3546f,5.38565f},
+    {-1358.02f,-228.998f,98.868f,3.87768f},
+    //wingcommander at base
+//    {569.963f,-42.0218f,37.7581f,4.27606f},//174 slidore (A)
+//    {-1332f,-331.243f,91.2631f,1.50098f},//13179 - Wing Commander Guse (H)
 
-};
-//is related to BG_AV_CreaturePos
-enum BG_AV_CreaturePlace
-{
-    AV_CPLACE_SPIRIT_STORM_AID      = 0,
-    AV_CPLACE_SPIRIT_STORM_GRAVE    = 1,
-    AV_CPLACE_SPIRIT_STONE_GRAVE    = 2,
-    AV_CPLACE_SPIRIT_SNOWFALL       = 3,
-    AV_CPLACE_SPIRIT_FROSTWOLF      = 4,
-    AV_CPLACE_SPIRIT_ICE_GRAVE      = 5,
-    AV_CPLACE_SPIRIT_FROST_HUT      = 6,
-    AV_CPLACE_SPIRIT_MAIN_ALLIANCE  = 7,
-    AV_CPLACE_SPIRIT_MAIN_HORDE     = 8,
-
-//i don't will add for all 4 positions a variable.. i think one is enough to compute the rest
-    AV_CPLACE_DEFENSE_STORM_AID      = 9,
-    AV_CPLACE_DEFEMSE_STORM_GRAVE    = 13,
-    AV_CPLACE_DEFENSE_STONE_GRAVE    = 17,
-    AV_CPLACE_DEFENSE_SNOWFALL       = 21,
-    AV_CPLACE_DEFENSE_FROSTWOLF      = 25,
-    AV_CPLACE_DEFENSE_ICE_GRAVE      = 29,
-    AV_CPLACE_DEFENSE_FROST_HUT      = 33,
-
-    AV_CPLACE_DEFENSE_DUN_S          = 37,
-    AV_CPLACE_DEFENSE_DUN_N          = 41,
-    AV_CPLACE_DEFENSE_ICEWING        = 45,
-    AV_CPLACE_DEFENSE_STONE_TOWER    = 49,
-    AV_CPLACE_DEFENSE_ICE_TOWER      = 53,
-    AV_CPLACE_DEFENSE_TOWERPOINT     = 57,
-    AV_CPLACE_DEFENSE_FROST_E        = 61,
-    AV_CPLACE_DEFENSE_FROST_t        = 65,
-    AV_CPLACE_H_BOSS                 = 69,
-    AV_CPLACE_A_BOSS                 = 70,
-    AV_CPLACE_H_CAPTAIN              = 71,
-    AV_CPLACE_A_CAPTAIN              = 72,
-
-    AV_CPLACE_A_SMITH                = 73,
-    AV_CPLACE_H_SMITH                = 74,
-    AV_CPLACE_MAX = 75
+    //irondeep mine
+    //troggs:
+    {801.405f,-328.055f,53.0195f,4.31096f},
+    {805.399f,-320.146f,52.8546f,0.296706f},
+    {831.711f,-346.785f,47.2975f,0.226893f},
+    {834.354f,-355.526f,48.1491f,6.07375f},
+    {859.03f,-367.231f,47.4655f,0.0174533f},
+    {852.632f,-372.416f,48.1657f,3.66519f},
+    {835.077f,-379.418f,48.2755f,5.93412f},
+    {821.006f,-387.635f,49.0728f,3.15905f},
+    {817.26f,-447.432f,49.4308f,2.18166f},
+    {821.892f,-464.723f,48.9451f,4.66003f},
+    {834.87f,-453.304f,47.9075f,0.226893f},
+    {847.601f,-423.072f,50.0852f,4.57276f},
+    {847.135f,-411.307f,50.2106f,1.5708f},
+    {874.577f,-414.786f,52.7817f,1.67552f},
+    {881.618f,-419.948f,53.6411f,0.593412f},
+    {900.962f,-427.44f,59.0842f,1.50098f},
+    {907.209f,-428.267f,59.8869f,1.8675f},
+    {901.809f,-457.709f,59.0657f,3.52557f},
+    {897.929f,-471.742f,59.7729f,2.54818f},
+    {909.246f,-474.576f,58.2901f,0.226893f},
+    {0,0,0,0}, //placeholder
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    //shaman
+    {808.953f,-325.964f,52.5075f,3.01942f},//452
+    {826.402f,-349.454f,47.2722f,1.51844f},//488
+    {851.471f,-362.52f,47.314f,4.06662f},//456
+    {817.83f,-455.715f,48.4207f,0.925025f},//149
+    {842.08f,-421.775f,48.2659f,1.0821f},//480
+    {877.989f,-418.051f,52.9753f,4.46804f},//492
+    {898.801f,-437.105f,58.5266f,0.959931f},//489
+    {902.195f,-475.891f,58.3954f,1.39626f},//487
+    {909.99f,-462.154f,59.1644f,3.7001f},//142
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    //skullthumper
+    {832.035f,-389.301f,47.5567f,2.11185f},//409
+    {827.012f,-457.397f,48.9331f,2.35619f},//534
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    {0,0,0,0},
+    //moving group trogg,trogg,trogg,skull,sham
+    {826.92f,-425.763f,48.2884f,1.49238f},//609
+    {827.251f,-421.546f,48.3029f,1.49237f},//610
+    {827.089f,-423.614f,48.2707f,1.49237f},//608
+    {826.762f,-427.763f,48.3039f,1.49237f},//428
+    {826.616f,-429.625f,48.2699f,1.49239f},//490
+    //boss morloch,sham,sham
+    {867.107f,-437.199f,50.7527f,1.69662f},//299
+    {858.593f,-439.614f,50.2184f,0.872665f},//530
+    {868.182f,-444.315f,51.5415f,1.64061f},//532
 };
 
 
@@ -383,30 +533,263 @@ enum BG_AV_CreatureIds
     AV_NPC_H_CAPTAIN       = 12,     // galvangar
     AV_NPC_H_BOSS          = 13,      // drek thar
 
-    AV_NPC_A_SMITH         = 14,     // murgot
-    AV_NPC_H_SMITH         = 15     // regzar
+    AV_NPC_A_MARSHAL_SOUTH       = 14,
+    AV_NPC_MARSHAL_NORTH       = 15,
+    AV_NPC_A_MARSHAL_ICE         = 16,
+    AV_NPC_A_MARSHAL_STONE       = 17,
+    AV_NPC_H_MARSHAL_ICE         = 18,
+    AV_NPC_H_MARSHAL_TOWER       = 19,
+    AV_NPC_MARSHAL_ETOWER      = 20,
+    AV_NPC_H_MARSHAL_WTOWER      = 21,
+    AV_NPC_IRONDEEP_N_1           = 22,
+    AV_NPC_IRONDEEP_N_2           = 23,
+    AV_NPC_IRONDEEP_N_3           = 24,
+    AV_NPC_IRONDEEP_N_4           = 25,
+    AV_NPC_IRONDEEP_A_1           = 26,
+    AV_NPC_IRONDEEP_A_2           = 27,
+    AV_NPC_IRONDEEP_A_3           = 28,
+    AV_NPC_IRONDEEP_A_4           = 29,
+    AV_NPC_IRONDEEP_H_1           = 30,
+    AV_NPC_IRONDEEP_H_2           = 31,
+    AV_NPC_IRONDEEP_H_3           = 32,
+    AV_NPC_IRONDEEP_H_4           = 33,
+    AV_NPC_INFO_MAX              = 34
+
 };
 
 //entry, team, minlevel, maxlevel
-const uint32 BG_AV_CreatureInfo[16][4] = {
-	{ 12050,469,58,58 },
-	{ 13326,469,59,59},
-	{ 13331,469,60,60},
-    { 13422,469,61,61},
-    { 13358,469,60,61},
-    { 11949,469,0,0},
-    { 11948,469,0,0},
+const uint32 BG_AV_CreatureInfo[AV_NPC_INFO_MAX][4] = {
+    { 12050, 1216, 58, 58 }, //Stormpike Defender
+    { 13326, 1216, 59, 59 }, //Seasoned Defender
+    { 13331, 1216, 60, 60 }, //Veteran Defender
+    { 13422, 1216, 61, 61 }, //Champion Defender
+    { 13358, 1216, 59, 60 }, //Stormpike Bowman //i think its 60,61 and 69,70.. but this is until now not possible TODO look if this is ok
+    { 11949,469,0,0},//not spawned with this data, but used for handlekillunit
+    { 11948,469,0,0},//not spawned with this data, but used for handlekillunit
+    { 12053, 1214, 58, 58 }, //Frostwolf Guardian
+    { 13328, 1214, 59, 59 }, //Seasoned Guardian
+    { 13332, 1214, 60, 60 }, //Veteran Guardian
+    { 13421, 1214, 61, 61 }, //Champion Guardian
+    { 13359, 1214, 59, 60 }, //Frostwolf Bowman
+    { 11947,67,0,0}, //not spawned with this data, but used for handlekillunit
+    { 11946,67,0,0}, //not spawned with this data, but used for handlekillunit
+    { 14763, 1534, 60, 60 }, //Dun Baldar South Marshal
+    { 14762, 1534, 60, 60 }, //Dun Baldar North Marshal
+    { 14764, 1534, 60, 60 }, //Icewing Marshal
+    { 14765, 1534, 60, 60 }, //Stonehearth Marshal
 
-    { 12053,67,58,58},
-	{ 13328,67,59,59},
-	{ 13332,67,60,60},
-    { 13421,67,61,61},
-    { 13359,67,60,61},
-    { 11947,67,0,0},
-    { 11946,67,0,0},
+    { 14773, 1214, 70, 70 }, //Iceblood Warmaster
+    { 14776, 1214, 70, 70 }, //Tower Point Warmaster
+    { 14772, 1214, 70, 70 }, //East Frostwolf Warmaster
+    { 14777, 1214, 70, 70 }, //West Frostwolf Warmaster
 
-    { 13257,469,60,60},
-    { 13176,67,60,60}
+    { 10987, 59, 52, 53 }, //Irondeep Trogg
+    { 11600, 59, 53, 54 }, //Irondeep Shaman
+    { 11602, 59, 54, 55 }, //Irondeep Skullthumper
+    { 11657, 59, 58, 58 }, //Morloch
+
+    {10987,469,52,53}, //irondeep alliance
+    {11600,469,53,54},
+    {13080,469,54,55},
+    {11657,469,58,58},
+
+    {13397,67,52,53}, //irondeep horde
+    {11600,67,53,54},
+    {11602,67,54,55},
+    {11657,67,58,58}
+
+
+};
+
+enum BG_AV_OTHER_VALUES
+{
+    AV_STATICCPLACE_MAX = 131,
+    AV_NORTH_MINE       = 0,
+    AV_SOUTH_MINE       = 1
+};
+//x,y,z,o,static_creature_info-id
+const float BG_AV_StaticCreaturePos[131][5] = { //static creatures
+    {-1235.31f,-340.777f,60.5088f,3.31613f,0 },//2225 - Zora Guthrek
+    {-1244.02f,-323.795f,61.0485f,5.21853f,1 },//3343 - Grelkor
+    {-1235.16f,-332.302f,60.2985f,2.96706f,2 },//3625 - Rarck
+    {587.303f,-42.8257f,37.5615f,5.23599f,3 },//4255 - Brogus Thunderbrew
+    {643.635f,-58.3987f,41.7405f,4.72984f,4 },//4257 - Lana Thunderbrew
+    {591.464f,-44.452f,37.6166f,5.65487f,5 },//5134 - Jonivera Farmountain
+    {608.515f,-33.3935f,42.0003f,5.41052f,6 },//5135 - Svalbrad Farmountain
+    {617.656f,-32.0701f,42.7168f,4.06662f,7 },//5139 - Kurdrum Barleybeard
+    {-1183.76f,-268.295f,72.8233f,3.28122f,8 },//10364 - Yaelika Farclaw
+    {-1187.86f,-275.31f,73.0481f,3.63028f,9 },//10367 - Shrye Ragefist
+    {-1008.42f,-368.006f,55.3426f,5.95647f,10 },//10981 - Frostwolf
+    {-1091.92f,-424.28f,53.0139f,2.93958f,10 },//10981 - Frostwolf
+    {-558.455f,-198.768f,58.1755f,4.97946f,10 },//10981 - Frostwolf
+    {-861.247f,-312.51f,55.1427f,3.35382f,10 },//10981 - Frostwolf
+    {-1003.81f,-395.913f,50.4736f,2.85631f,10 },//10981 - Frostwolf
+    {-904.5f,-289.815f,65.1222f,5.7847f,10 },//10981 - Frostwolf
+    {-1064.41f,-438.839f,51.3614f,1.88857f,10 },//10981 - Frostwolf
+    {258.814f,76.2017f,18.6468f,6.19052f,11 },//10986 - Snowblind Harpy
+    {265.838f,-315.846f,-16.5429f,3.15917f,11 },//10986 - Snowblind Harpy
+    {426.485f,-51.1927f,-5.66286f,1.60347f,11 },//10986 - Snowblind Harpy
+    {452.044f,-33.9594f,-0.044651f,2.72815f,11 },//10986 - Snowblind Harpy
+    {266.032f,-315.639f,-16.5429f,4.67962f,11 },//10986 - Snowblind Harpy
+    {532.64f,-54.5863f,20.7024f,2.93215f,11 },//10986 - Snowblind Harpy
+    {295.183f,-299.908f,-34.6123f,0.135851f,12 },//10990 - Alterac Ram
+    {421.08f,-225.006f,-23.73f,0.166754f,12 },//10990 - Alterac Ram
+    {-55.7766f,-192.498f,20.4352f,6.12221f,12 },//10990 - Alterac Ram
+    {527.887f,-477.223f,62.3559f,0.170935f,12 },//10990 - Alterac Ram
+    {389.144f,-346.508f,-30.334f,4.14117f,12 },//10990 - Alterac Ram
+    {108.121f,-322.248f,37.5655f,4.46788f,12 },//10990 - Alterac Ram
+    {507.479f,-67.9403f,10.3571f,3.26304f,12 },//10990 - Alterac Ram
+    {329.071f,-185.016f,-29.1542f,0.356943f,12 },//10990 - Alterac Ram
+    {252.449f,-422.313f,35.1404f,4.53771f,12 },//10990 - Alterac Ram
+    {358.882f,-118.061f,-24.9119f,2.29257f,12 },//10990 - Alterac Ram
+    {487.151f,-174.229f,14.7558f,4.73192f,12 },//10990 - Alterac Ram
+    {449.652f,-123.561f,6.14273f,6.12029f,12 },//10990 - Alterac Ram
+    {272.419f,-261.802f,-41.8835f,3.66559f,12 },//10990 - Alterac Ram
+    {359.021f,-210.954f,-29.3483f,4.31339f,12 },//10990 - Alterac Ram
+    {450.598f,-318.048f,-37.7548f,0.655219f,12 },//10990 - Alterac Ram
+    {509.333f,-218.2f,3.05439f,3.66292f,12 },//10990 - Alterac Ram
+    {485.771f,-223.613f,-1.53f,2.04862f,12 },//10990 - Alterac Ram
+    {486.636f,-452.172f,39.6592f,2.3341f,12 },//10990 - Alterac Ram
+    {702.783f,-257.494f,25.9777f,1.68329f,12 },//10990 - Alterac Ram
+    {460.942f,-199.263f,-6.0149f,0.380506f,12 },//10990 - Alterac Ram
+    {483.108f,-115.307f,10.1056f,3.69701f,12 },//10990 - Alterac Ram
+    {471.601f,-154.174f,14.0702f,5.5807f,12 },//10990 - Alterac Ram
+    {213.938f,-420.793f,41.2549f,5.71394f,12 },//10990 - Alterac Ram
+    {289.387f,-294.685f,-33.9073f,0.555494f,12 },//10990 - Alterac Ram
+    {155.649f,-402.891f,43.3915f,5.94838f,12 },//10990 - Alterac Ram
+    {517.184f,-295.105f,-9.78195f,6.05668f,12 },//10990 - Alterac Ram
+    {102.334f,-332.165f,38.9812f,3.31445f,12 },//10990 - Alterac Ram
+    {320.244f,-107.793f,-42.6357f,-1.00311f,12 },//10990 - Alterac Ram
+    {217.976f,110.774f,15.7603f,4.56793f,13 },//11675 - Snowblind Windcaller
+    {269.872f,6.66684f,20.7592f,0.381212f,13 },//11675 - Snowblind Windcaller
+    {313.528f,-319.041f,-27.2373f,0.554098f,13 },//11675 - Snowblind Windcaller
+    {435.441f,-39.9289f,-0.169651f,0.549454f,13 },//11675 - Snowblind Windcaller
+    {315.115f,-317.62f,-29.1123f,0.90111f,13 },//11675 - Snowblind Windcaller
+    {428.091f,-122.731f,3.40332f,6.05901f,14 },//11678 - Snowblind Ambusher
+    {235.05f,85.5705f,18.3079f,-0.914255f,14 },//11678 - Snowblind Ambusher
+    {-1553.04f,-344.342f,64.4163f,6.09933f,15 },//11839 - Wildpaw Brute
+    {-545.23f,-165.35f,57.7886f,3.01145f,16 },//11947 - Captain Galvangar
+    {722.43f,-10.9982f,50.7046f,3.42085f,17 },//11948 - Vanndar Stormpike
+    {-57.7891f,-286.597f,15.6479f,6.02139f,18 },//11949 - Captain Balinda Stonehearth
+    {930.498f,-520.755f,93.7334f,1.8326f,19 },//11997 - Stormpike Herald
+    {-776.092f,-345.161f,67.4092f,1.89257f,20 },//12051 - Frostwolf Legionnaire
+    {-1224.63f,-308.144f,65.0087f,4.01139f,20 },//12051 - Frostwolf Legionnaire
+    {-713.039f,-442.515f,82.8638f,0.68724f,20 },//12051 - Frostwolf Legionnaire
+    {-711.783f,-444.061f,82.7039f,0.683494f,20 },//12051 - Frostwolf Legionnaire
+    {587.633f,-45.9816f,37.5438f,5.81195f,21 },//12096 - Stormpike Quartermaster
+    {-1293.79f,-194.407f,72.4398f,5.84685f,22 },//12097 - Frostwolf Quartermaster
+    {446.163f,-377.119f,-1.12725f,0.209526f,23 },//12127 - Stormpike Guardsman
+    {549.348f,-399.254f,53.3537f,3.24729f,23 },//12127 - Stormpike Guardsman
+    {549.801f,-401.217f,53.8305f,3.24729f,23 },//12127 - Stormpike Guardsman
+    {192.704f,-406.874f,42.9183f,6.10696f,23 },//12127 - Stormpike Guardsman
+    {441.305f,-435.765f,28.2385f,2.14472f,23 },//12127 - Stormpike Guardsman
+    {192.982f,-404.891f,43.0132f,6.1061f,23 },//12127 - Stormpike Guardsman
+    {355.342f,-391.989f,-0.486707f,3.00643f,23 },//12127 - Stormpike Guardsman
+    {446.035f,-375.104f,-1.12725f,0.21033f,23 },//12127 - Stormpike Guardsman
+    {697.864f,-433.238f,62.7914f,1.65776f,23 },//12127 - Stormpike Guardsman
+    {610.74f,-331.585f,30.8021f,5.14253f,23 },//12127 - Stormpike Guardsman
+    {609.815f,-329.775f,30.9271f,-2.38829f,23 },//12127 - Stormpike Guardsman
+    {695.874f,-433.434f,62.8543f,1.65776f,23 },//12127 - Stormpike Guardsman
+    {443.337f,-435.283f,28.6842f,2.13768f,23 },//12127 - Stormpike Guardsman
+    {-1251.5f,-316.327f,62.6565f,5.02655f,24 },//13176 - Smith Regzar
+    {-1332.0f,-331.243f,91.2631f,1.50098f,25 },//13179 - Wing Commander Guse
+    {569.983f,-94.9992f,38.0325f,1.39626f,26 },//13216 - Gaelden Hammersmith
+    {-1244.92f,-308.916f,63.2525f,1.62316f,27 },//13218 - Grunnda Wolfheart
+    {-1319.56f,-342.675f,60.3404f,1.20428f,28 },//13236 - Primalist Thurloga
+    {647.61f,-61.1548f,41.7405f,4.24115f,29 },//13257 - Murgot Deepforge
+    {-1321.64f,-343.73f,60.4833f,1.01229f,30 },//13284 - Frostwolf Shaman
+    {-1317.61f,-342.853f,60.3726f,2.47837f,30 },//13284 - Frostwolf Shaman
+    {-1319.31f,-344.475f,60.3825f,1.72788f,30 },//13284 - Frostwolf Shaman
+    {569.963f,-42.0218f,37.7581f,4.27606f,31 },//13438 - Wing Commander Slidore
+    {729.2f,-78.812f,51.6335f,3.97935f,32 },//13442 - Arch Druid Renferal
+    {729.118f,-82.8713f,51.6335f,2.53073f,33 },//13443 - Druid of the Grove
+    {725.554f,-79.4973f,51.6335f,5.27089f,33 },//13443 - Druid of the Grove
+    {724.768f,-84.1642f,51.6335f,0.733038f,33 },//13443 - Druid of the Grove
+    {596.68f,-83.0633f,39.0051f,6.24828f,34 },//13447 - Corporal Noreg Stormpike
+    {600.032f,-2.92475f,42.0788f,5.00909f,35 },//13577 - Stormpike Ram Rider Commander
+    {610.239f,-21.8454f,43.272f,4.90438f,36 },//13617 - Stormpike Stable Master
+    {613.422f,-150.764f,33.4517f,5.55015f,37 },//13797 - Mountaineer Boombellow
+    {-1213.91f,-370.619f,56.4455f,0.837758f,38 },//13798 - Jotek
+    {704.35f,-22.9071f,50.2187f,0.785398f,39 },//13816 - Prospector Stonehewer
+    {-1271.24f,-335.766f,62.3971f,5.75959f,40 },//14185 - Najak Hexxen
+    {-1268.64f,-332.688f,62.6171f,5.28835f,41 },//14186 - Ravak Grimtotem
+    {648.363f,-65.2233f,41.7405f,3.12414f,42 },//14187 - Athramanis
+    {648.238f,-67.8931f,41.7405f,2.60054f,43 },//14188 - Dirk Swindle
+    {-1223.44f,-309.833f,64.9331f,4.0131f,44 },//14282 - Frostwolf Bloodhound
+    {-1226.4f,-307.136f,64.9706f,4.0145f,44 },//14282 - Frostwolf Bloodhound
+    {356.001f,-389.969f,-0.438796f,3.0334f,45 },//14283 - Stormpike Owl
+    {355.835f,-394.005f,-0.60149f,3.02498f,45 },//14283 - Stormpike Owl
+    {882.266f,-496.378f,96.7707f,4.83248f,45 },//14283 - Stormpike Owl
+    {878.649f,-495.917f,96.6171f,4.67693f,45 },//14283 - Stormpike Owl
+    {932.851f,-511.017f,93.6748f,3.61004f,45 },//14283 - Stormpike Owl
+    {935.806f,-513.983f,93.7436f,3.61788f,45 },//14283 - Stormpike Owl
+    {947.412f,-509.982f,95.1098f,2.82743f,46 },//14284 - Stormpike Battleguard
+    {934.557f,-512.395f,93.662f,3.61004f,46 },//14284 - Stormpike Battleguard
+    {939.42f,-502.777f,94.5887f,5.14872f,46 },//14284 - Stormpike Battleguard
+    {854.276f,-494.241f,96.8017f,5.44543f,46 },//14284 - Stormpike Battleguard
+    {776.621f,-487.775f,99.4049f,3.50811f,46 },//14284 - Stormpike Battleguard
+    {880.169f,-495.699f,96.6204f,4.8325f,46 },//14284 - Stormpike Battleguard
+    {773.651f,-497.482f,99.0408f,2.11185f,46 },//14284 - Stormpike Battleguard
+    {949.1f,-506.913f,95.4237f,3.31613f,46 },//14284 - Stormpike Battleguard
+    {-1370.9f,-219.793f,98.4258f,5.04381f,47}, //drek thar
+    {722.43f,-10.9982f,50.7046f,3.42085f,48}, //vanndar stormpike
+    {-538.972f,-168.116f,57.0112f,5.83707f,49}, //galv
+    {-54.2655f,-288.492f,15.5646f,5.98551f,50} //balinda
+
+};
+
+const uint32 BG_AV_StaticCreatureInfo[51][4] = {
+    { 2225, 1215, 65, 65 }, //Zora Guthrek
+    { 3343, 1215, 65, 65 }, //Grelkor
+    { 3625, 1215, 65, 65 }, //Rarck
+    { 4255, 1217, 65, 65 }, //Brogus Thunderbrew
+    { 4257, 1217, 65, 65 }, //Lana Thunderbrew
+    { 5134, 1217, 65, 65 }, //Jonivera Farmountain
+    { 5135, 1217, 65, 65 }, //Svalbrad Farmountain
+    { 5139, 1217, 65, 65 }, //Kurdrum Barleybeard
+    { 10364, 1215, 65, 65 }, //Yaelika Farclaw
+    { 10367, 1215, 65, 65 }, //Shrye Ragefist
+    { 10981, 38, 50, 51 }, //Frostwolf
+    { 10986, 514, 62, 63 }, //Snowblind Harpy
+    { 10990, 1274, 60, 61 }, //Alterac Ram
+    { 11675, 514, 63, 63 }, //Snowblind Windcaller
+    { 11678, 14, 52, 53 }, //Snowblind Ambusher
+    { 11839, 39, 66, 66 }, //Wildpaw Brute
+    { 11947, 1214, 61, 61 }, //Captain Galvangar
+    { 11948, 1216, 63, 63 }, //Vanndar Stormpike
+    { 11949, 1216, 61, 61 }, //Captain Balinda Stonehearth
+    { 11997, 1334, 60, 60 }, //Stormpike Herald
+    { 12051, 1214, 67, 67 }, //Frostwolf Legionnaire
+    { 12096, 1217, 65, 65 }, //Stormpike Quartermaster
+    { 12097, 1215, 65, 65 }, //Frostwolf Quartermaster
+    { 12127, 1216, 67, 67 }, //Stormpike Guardsman
+    { 13176, 1215, 60, 60 }, //Smith Regzar
+    { 13179, 1215, 69, 69 }, //Wing Commander Guse
+    { 13216, 1217, 68, 68 }, //Gaelden Hammersmith
+    { 13218, 1215, 68, 68 }, //Grunnda Wolfheart
+    { 13236, 1214, 60, 60 }, //Primalist Thurloga
+    { 13257, 1216, 60, 60 }, //Murgot Deepforge
+    { 13284, 1214, 68, 68 }, //Frostwolf Shaman
+    { 13438, 1217, 68, 68 }, //Wing Commander Slidore
+    { 13442, 1216, 60, 60 }, //Arch Druid Renferal
+    { 13443, 1216, 60, 60 }, //Druid of the Grove
+    { 13447, 1216, 68, 68 }, //Corporal Noreg Stormpike
+    { 13577, 1216, 60, 60 }, //Stormpike Ram Rider Commander
+    { 13617, 1216, 60, 60 }, //Stormpike Stable Master
+    { 13797, 32, 60, 61 }, //Mountaineer Boombellow
+    { 13798, 1214, 60, 61 }, //Jotek
+    { 13816, 1216, 61, 61 }, //Prospector Stonehewer
+    { 14185, 877, 69, 69 }, //Najak Hexxen
+    { 14186, 105, 60, 60 }, //Ravak Grimtotem
+    { 14187, 1594, 60, 60 }, //Athramanis
+    { 14188, 57, 69, 69 }, //Dirk Swindle
+    { 14282, 1214, 53, 54 }, //Frostwolf Bloodhound
+    { 14283, 1216, 53, 54 }, //Stormpike Owl
+    { 14284, 1216, 61, 61 }, //Stormpike Battleguard
+    { 11946, 1214, 63, 63 }, //Drek'Thar //TODO: make the levels right (boss=0 maybe)
+    { 11948, 1216, 63, 63 }, //Vanndar Stormpike
+    { 11947, 1214, 61, 61 }, //Captain Galvangar
+    { 11949, 1216, 61, 61 } //Captain Balinda Stonehearth
 };
 
 enum BG_AV_Graveyards
@@ -645,6 +1028,94 @@ enum BG_AV_QuestIds
 const uint32 BG_AV_State_Auras[5] = { BG_AV_OBJECTID_AURA_N, BG_AV_OBJECTID_AURA_A, BG_AV_OBJECTID_AURA_H, BG_AV_OBJECTID_AURA_N, BG_AV_OBJECTID_AURA_N };
 const uint32 BG_AV_State_Auras_Small[5] = { BG_AV_OBJECTID_AURA_N,BG_AV_OBJECTID_AURA_A_S,BG_AV_OBJECTID_AURA_H_S,BG_AV_OBJECTID_AURA_N_S,BG_AV_OBJECTID_AURA_N_S };
 
+const float BG_AV_StaticObjectPos[93][5] = {
+    {-1423.16f,-318.436f,89.1136f,2.35619f,2061 },//2061 - Campfire
+    {-1290.27f,-172.471f,72.1853f,3.06305f,2061 },//2061 - Campfire
+    {-1286.25f,-184.48f,71.8334f,-2.05076f,2061 },//2061 - Campfire
+    {-1282.21f,-284.083f,87.256f,-0.0610855f,2061 },//2061 - Campfire
+    {-1280.17f,-220.537f,72.2686f,1.62316f,2061 },//2061 - Campfire
+    {-1256.55f,-280.278f,73.9473f,-0.0610855f,2061 },//2061 - Campfire
+    {-1241.25f,-345.115f,59.6867f,0.357794f,2061 },//2061 - Campfire
+    {-1215.59f,-371.946f,56.5293f,0.357794f,2061 },//2061 - Campfire
+    {-1202.8f,-271.599f,72.5805f,0.357794f,2061 },//2061 - Campfire
+    {-1140.82f,-343.392f,50.9077f,-2.7838f,2061 },//2061 - Campfire
+    {-1139.68f,-356.288f,51.264f,-0.706858f,2061 },//2061 - Campfire
+    {-1099.21f,-266.231f,57.8849f,-2.28638f,2061 },//2061 - Campfire
+    {-1082.6f,-266.681f,57.8575f,2.40855f,2061 },//2061 - Campfire
+    {30.4168f,-428.853f,41.528f,-2.59181f,2061 },//2061 - Campfire
+    {31.2216f,-428.08f,41.528f,0.549779f,2061 },//2061 - Campfire
+    {50.6401f,-421.166f,44.7325f,-0.00875192f,2061 },//2061 - Campfire
+    {-743.427f,-398.242f,76.4266f,0.872664f,2066 },//2066 - Bonfire Damage
+    {-1235.57f,-241.478f,73.4377f,1.48353f,3832 },//3832 - Burning Embers
+    {-1248.85f,-254.06f,73.4377f,1.48353f,3833 },//3833 - Burning Embers
+    {-1248.15f,-245.599f,73.4377f,-0.0523605f,3834 },//3834 - Burning Embers
+    {-1237.21f,-260.168f,73.4377f,1.48353f,3835 },//3835 - Burning Embers
+    {-1260.37f,-248.767f,77.9454f,1.48353f,3836 },//3836 - Burning Embers
+    {-1249.32f,-244.907f,92.3372f,0.401426f,3837 },//3837 - Burning Embers
+    {-1250.09f,-254.604f,92.3015f,0.148352f,3838 },//3838 - Burning Embers
+    {50.6401f,-421.166f,44.7325f,-0.00875192f,22205 },//22205 - Dwarven Fire
+    {30.4168f,-428.853f,41.528f,-2.59181f,22207 },//22207 - Dwarven Fire
+    {31.2216f,-428.08f,41.528f,0.549779f,22208 },//22208 - Dwarven Fire
+    {41.1672f,-426.866f,44.6828f,2.7838f,28048 },//28048 - Wooden Chair
+    {39.0988f,-425.746f,44.688f,-0.619592f,28049 },//28049 - Wooden Chair
+    {25.2482f,-433.104f,47.6369f,2.38237f,28605 },//28605 - Wooden Chair
+    {25.758f,-425.837f,47.6369f,-1.98095f,28606 },//28606 - Wooden Chair
+    {27.6786f,-427.69f,47.6369f,-2.67908f,28607 },//28607 - Wooden Chair
+    {-1338.28f,-297.628f,91.4867f,0.248971f,29784 },//29784 - Basic Campfire
+    {-1338.28f,-297.628f,91.4867f,0.248971f,31442 },//31442 - Basic Campfire
+    {-1250.39f,-310.191f,61.185f,-1.10828f,50984 },//50984 - Heated Forge
+    {-1245.2f,-307.059f,63.3199f,3.07959f,51704 },//51704 - Anvil
+    {-1258.23f,-310.977f,63.2015f,0.862906f,51705 },//51705 - Anvil
+    {-1290.27f,-172.471f,72.1853f,3.06305f,177261 },//177261 - Brazier
+    {-1286.25f,-184.48f,71.8334f,-2.05076f,177262 },//177262 - Campfire
+    {-1280.17f,-220.537f,72.2686f,1.62316f,177263 },//177263 - Campfire
+    {-1099.21f,-266.231f,57.8849f,-2.28638f,177292 },//177292 - Brazier
+    {-1082.6f,-266.681f,57.8575f,2.40855f,177293 },//177293 - Brazier
+    {-1140.82f,-343.392f,50.9077f,-2.7838f,177405 },//177405 - Brazier
+    {-1139.68f,-356.288f,51.264f,-0.706858f,177406 },//177406 - Brazier
+    {-743.427f,-398.242f,76.4266f,0.872664f,177408 },//177408 - Bonfire
+    {-1215.59f,-371.946f,56.5293f,0.357794f,177409 },//177409 - Brazier
+    {-1241.25f,-345.115f,59.6867f,0.357794f,177410 },//177410 - Brazier
+    {-1202.8f,-271.599f,72.5805f,0.357794f,177411 },//177411 - Brazier
+    {-1282.21f,-284.083f,87.256f,-0.0610855f,177412 },//177412 - Brazier
+    {-1256.55f,-280.278f,73.9473f,-0.0610855f,177413 },//177413 - Brazier
+    {649.265f,-59.1102f,41.5476f,-2.68781f,178684 },//178684 - Forge
+    {646.207f,-57.2428f,41.6587f,-0.157079f,178685 },//178685 - Anvil
+    {-145.341f,-444.846f,26.4163f,-0.0523596f,179384 },//179384 - Chair
+    {560.834f,-75.4266f,37.9558f,0.785398f,179384 },//179384 - Chair
+    {-155.405f,-440.24f,33.2862f,2.34747f,179385 },//179385 - Chair
+    {550.678f,-79.8234f,44.8257f,-3.09796f,179385 },//179385 - Chair
+    {-150.787f,-459.829f,26.4163f,0.558507f,179386 },//179386 - Chair
+    {568.326f,-89.4992f,37.9558f,1.39626f,179386 },//179386 - Chair
+    {-153.748f,-438.639f,33.2862f,-2.88852f,179387 },//179387 - Chair
+    {550.597f,-77.5213f,44.8257f,-2.05076f,179387 },//179387 - Chair
+    {-149.057f,-461.089f,26.4163f,1.38754f,179388 },//179388 - Chair
+    {570.419f,-89.0567f,37.9558f,2.2253f,179388 },//179388 - Chair
+    {-168.342f,-458.4f,33.2862f,-0.445059f,179389 },//179389 - Chair
+    {555.517f,-101.589f,44.8257f,0.392699f,179389 },//179389 - Chair
+    {-142.968f,-444.076f,26.4163f,-2.23402f,179390 },//179390 - Chair
+    {561.851f,-73.1481f,37.9558f,-1.39626f,179390 },//179390 - Chair
+    {-172.363f,-452.824f,33.2796f,0.62832f,179391 },//179391 - Anvil
+    {548.682f,-100.846f,44.8191f,1.46608f,179391 },//179391 - Anvil
+    {-171.282f,-456.892f,33.2796f,1.63188f,179392 },//179392 - Anvil
+    {552.429f,-102.764f,44.8191f,2.46964f,179392 },//179392 - Anvil
+    {-172.356f,-453.88f,33.2796f,0.322886f,179393 },//179393 - Anvil
+    {549.472f,-101.547f,44.8191f,1.16064f,179393 },//179393 - Anvil
+    {-171.882f,-454.632f,33.2796f,0.759218f,179394 },//179394 - Anvil
+    {550.347f,-101.698f,44.8191f,1.59698f,179394 },//179394 - Anvil
+    {-171.656f,-455.671f,33.2796f,0.0610861f,179395 },//179395 - Anvil
+    {551.271f,-102.226f,44.8191f,0.898843f,179395 },//179395 - Anvil
+    {-170.699f,-458.41f,33.2796f,-1.02974f,179396 },//179396 - Anvil
+    {553.947f,-103.347f,44.8191f,-0.191986f,179396 },//179396 - Anvil
+    {-170.14f,-457.609f,33.2796f,-0.680678f,179397 },//179397 - Anvil
+    {553.725f,-102.396f,44.8191f,0.15708f,179397 },//179397 - Anvil
+    {-1423.16f,-318.436f,89.1136f,2.35619f,179419 },//179419 - Brazier
+    {618.748f,-52.1126f,42.1122f,-0.0698131f,179437 },//179437 - Wanted: ORCS!
+    {-1181.1f,-370.747f,53.6246f,2.68781f,179438 },//179438 - Wanted: DWARVES!
+    {-612.914f,-396.838f,60.8584f,3.10669f,179481 },//179481 - Alliance Banner
+};
+
+
 class BattleGroundAVScore : public BattleGroundScore
 {
     public:
@@ -662,6 +1133,7 @@ class BattleGroundAVScore : public BattleGroundScore
 class BattleGroundAV : public BattleGround
 {
     friend class BattleGroundMgr;
+
     public:
         BattleGroundAV();
         ~BattleGroundAV();
@@ -683,10 +1155,11 @@ class BattleGroundAV : public BattleGround
         void UpdatePointsIcons(uint8 node);
         void UpdateScore(uint8 team, int16 points);
         void UpdateNode(uint32 type, uint32 state);
+        void PopulateMine(uint8 mine);
         void PopulateNode(uint32 node);
         void DePopulateNode(uint32 node);
-        const uint8 GetNodePlace(uint16 guid);
-        const uint16 GetPlaceNode(uint8 node);
+        const uint8 GetNodePlace(uint32 guid);
+        const uint32 GetPlaceNode(uint8 node);
         const char* GetNodeName(uint8 node);
         const bool IsTower(uint8 node);
         const uint16 GetBonusHonor(uint8 kills);
@@ -701,7 +1174,7 @@ class BattleGroundAV : public BattleGround
     private:
         void FillInitialWorldStates(WorldPacket& data);
         const uint8 GetWorldStateType(uint8 state, uint16 team);
-        Creature* AddAVCreature(uint8 cinfoid, uint16 type);
+        bool AddAVCreature(uint8 cinfoid, uint16 type);
         int32 m_Team_Scores[2];
         uint32 m_Team_QuestStatus[2][9]; //[x][y] x=team y=questcounter
         uint32 m_Points_Owner[BG_AV_NODES_MAX];
@@ -709,9 +1182,13 @@ class BattleGroundAV : public BattleGround
         uint32 m_Points_State[BG_AV_NODES_MAX];
         uint32 m_Points_PrevState[BG_AV_NODES_MAX];
         int32  m_Points_Timer[BG_AV_NODES_MAX];
+
+        uint32 m_Mine_Owner[2];
+
         uint8 m_MaxLevel; //TODO remove this when battlegroundmgr provides a function for this..
         bool m_Snowfall_Capped;
         bool m_IsInformedNearVictory;
 
 };
+
 #endif

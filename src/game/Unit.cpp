@@ -634,9 +634,9 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
                 killer = ((Player*)this);
             else if(GetTypeId() == TYPEID_UNIT && ((Creature*)this)->isPet())
             {
-                Unit *owner = GetOwner();
-                if(owner && owner->GetTypeId() == TYPEID_PLAYER)
-                    killer = ((Player*)owner);
+                if(Unit *owner = GetOwner())
+                    if(owner->GetTypeId() == TYPEID_PLAYER)
+                        killer = ((Player*)owner);
             }
             if(killer)
             {

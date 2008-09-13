@@ -251,6 +251,8 @@ class BattleGround
         uint32 GetMinLevel() const          { return m_LevelMin; }
         uint32 GetMaxLevel() const          { return m_LevelMax; }
 
+        uint32 GetMinLevelPerTeam()   const { return m_MinLevelPerTeam; }
+        uint32 GetMaxLevelPerTeam()   const { return m_MaxLevelPerTeam; }
         uint32 GetMaxPlayersPerTeam() const { return m_MaxPlayersPerTeam; }
         uint32 GetMinPlayersPerTeam() const { return m_MinPlayersPerTeam; }
 
@@ -279,6 +281,8 @@ class BattleGround
         void ModifyStartDelayTime(int diff) { m_StartDelayTime -= diff; }
         void SetStartDelayTime(int Time)    { m_StartDelayTime = Time; }
 
+
+        void SetMaxLevelRangePerTeam(uint32 MinLevel, uint32 MaxLevel){  m_MinLevelPerTeam = MinLevel; m_MaxLevelPerTeam = MaxLevel; }
         void SetMaxPlayersPerTeam(uint32 MaxPlayers) { m_MaxPlayersPerTeam = MaxPlayers; }
         void SetMinPlayersPerTeam(uint32 MinPlayers) { m_MinPlayersPerTeam = MinPlayers; }
 
@@ -407,7 +411,7 @@ class BattleGround
         bool DelCreature(uint32 type);
         bool DelObject(uint32 type);
         bool AddSpiritGuide(uint32 type, float x, float y, float z, float o, uint32 team);
-        int32 GetBGObjectId(uint64 guid);
+        int32 GetObjectType(uint64 guid);
 
         void DoorOpen(uint32 type);
         void DoorClose(uint32 type);
@@ -472,7 +476,9 @@ class BattleGround
 
         /* Limits */
         uint32 m_LevelMin;
+        uint32 m_MinLevelPerTeam;
         uint32 m_LevelMax;
+        uint32 m_MaxLevelPerTeam;
         uint32 m_MaxPlayersPerTeam;
         uint32 m_MaxPlayers;
         uint32 m_MinPlayersPerTeam;
