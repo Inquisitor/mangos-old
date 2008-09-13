@@ -23,6 +23,7 @@
 #include "Creature.h"
 #include "Chat.h"
 #include "ObjectMgr.h"
+#include "ObjectAccessor.h"
 #include "MapManager.h"
 #include "Language.h"
 #include "SpellAuras.h"
@@ -58,6 +59,7 @@ void BattleGroundAV::HandleKillPlayer(Player *player, Player *killer)
 
 void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
 {
+    sLog.outDebug("bg_av HandleKillUnit %i",unit->GetEntry());
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
     uint32 entry = unit->GetEntry();
@@ -91,22 +93,18 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
         for(uint8 i=0; i<=9; i++)
             SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_HORDE+i,RESPAWN_IMMEDIATELY);
     }
-    else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][0] )
+    else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_H_4][0])
     {
+        DePopulateMine(AV_NORTH_MINE);
         m_Mine_Owner[AV_NORTH_MINE] = killer->GetTeam();
         PopulateMine(AV_NORTH_MINE);
     }
-    else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_A_4][0] )
+    else if ( entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_H_4][0])
     {
-        m_Mine_Owner[AV_NORTH_MINE] = killer->GetTeam();
-        PopulateMine(AV_NORTH_MINE);
+        DePopulateMine(AV_SOUTH_MINE);
+        m_Mine_Owner[AV_SOUTH_MINE] = killer->GetTeam();
+        PopulateMine(AV_SOUTH_MINE);
     }
-    else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_H_4][0] )
-    {
-        m_Mine_Owner[AV_NORTH_MINE] = killer->GetTeam();
-        PopulateMine(AV_NORTH_MINE);
-    }
-//TODO add both mine bosses here.. (and for this "killer" is needed)
 }
 
 void BattleGroundAV::UpdateQuest(uint32 questid, Player *player)
@@ -358,9 +356,6 @@ void BattleGroundAV::Update(time_t diff)
             for(i=AV_NPC_A_MARSHAL_SOUTH; i<= AV_NPC_H_MARSHAL_WTOWER; i++)
                 AddAVCreature(i,AV_CPLACE_A_MARSHAL_SOUTH+(i-AV_NPC_A_MARSHAL_SOUTH));
 
-            sLog.outDebug("BG_AV: start spawning mine creatures");
-            PopulateMine(AV_NORTH_MINE);
-            PopulateMine(AV_SOUTH_MINE);
             DoorClose(BG_AV_OBJECT_DOOR_A);
             DoorClose(BG_AV_OBJECT_DOOR_H);
 
@@ -386,6 +381,13 @@ void BattleGroundAV::Update(time_t diff)
             m_Events |= 0x10;
             SendMessageToAll(LANG_BG_AV_STARTED);
 
+            sLog.outDebug("BG_AV: start spawning mine stuff");
+            for(uint16 i= BG_AV_OBJECT_MINE_SUPPLY_N_MIN; i<=BG_AV_OBJECT_MINE_SUPPLY_N_MAX;i++)
+                SpawnBGObject(i,RESPAWN_IMMEDIATELY);
+            for(uint16 i= BG_AV_OBJECT_MINE_SUPPLY_S_MIN; i<=BG_AV_OBJECT_MINE_SUPPLY_S_MAX;i++)
+                SpawnBGObject(i,RESPAWN_IMMEDIATELY);
+            PopulateMine(AV_NORTH_MINE);
+            PopulateMine(AV_SOUTH_MINE);
             DoorOpen(BG_AV_OBJECT_DOOR_H);
             DoorOpen(BG_AV_OBJECT_DOOR_A);
 
@@ -613,64 +615,84 @@ void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
     SendPacketToAll(&data);
 }
 
+void BattleGroundAV::DePopulateMine(uint8 mine)
+{ //mine=0 northmine mine=1 southmin
+    sLog.outDebug("bg_av depopulating mine %i (0=north,1=south)",mine);
+    if(mine==AV_SOUTH_MINE)
+        for(uint16 i=AV_CPLACE_MINE_S_S_MIN; i <= AV_CPLACE_MINE_S_S_MAX; i++)
+            if( m_BgCreatures[i] )
+                DelCreature(i);
+    for(uint16 i=((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_1_MIN:AV_CPLACE_MINE_S_1_MIN); i <= ((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3); i++)
+        if( m_BgCreatures[i] )
+            DelCreature(i);
+    return;
+}
 //depopulate is not needed.. (afaik)
 void BattleGroundAV::PopulateMine(uint8 mine)
 { //mine=0 northmine mine=1 southmin
+    sLog.outDebug("bg_av populating mine %i (0=north,1=south)",mine);
     uint32 team = m_Mine_Owner[mine];
-    uint16 cinfo;
+    uint16 miner;
     //also neutral team exists.. after a big time, the neutral team tries to conquer the mine
     SendMineWorldStates(mine);
     if(mine==AV_NORTH_MINE)
     {
         if(team == ALLIANCE)
-            cinfo = AV_NPC_N_MINE_A_1;
+            miner = AV_NPC_N_MINE_A_1;
         else if (team == HORDE)
-            cinfo = AV_NPC_N_MINE_H_1;
+            miner = AV_NPC_N_MINE_H_1;
         else
-            cinfo = AV_NPC_N_MINE_N_1;
+            miner = AV_NPC_N_MINE_N_1;
     }
     else
     {
-        return;
-        //TODO:...
-        /*if(team == ALLIANCE)
-            cinfo = AV_NPC_N_MINE_A_1;
+        uint16 cinfo;
+        if(team == ALLIANCE)
+            miner = AV_NPC_S_MINE_A_1;
         else if (team == HORDE)
-            cinfo = AV_NPC_N_MINE_H_1;
+            miner = AV_NPC_S_MINE_H_1;
         else
-            cinfo = AV_NPC_N_MINE_N_1;*/
+            miner = AV_NPC_S_MINE_N_1;
+       //vermin
+        sLog.outDebug("spawning vermin");
+        if(team == ALLIANCE)
+            cinfo = AV_NPC_S_MINE_A_3;
+        else if (team == HORDE)
+            cinfo = AV_NPC_S_MINE_H_3;
+        else
+            cinfo = AV_NPC_S_MINE_N_S;
+        for(uint16 i=AV_CPLACE_MINE_S_S_MIN; i <= AV_CPLACE_MINE_S_S_MAX; i++)
+            AddAVCreature(cinfo,i);
     }
-    //all spawns (except boss) are at the same place
-    for(uint16 i=AV_CPLACE_N_S_1_MIN; i <= AV_CPLACE_N_S_1_MAX; i++)
-        if( BG_AV_CreaturePos[i][0] != 0)
-            AddAVCreature(cinfo,i);
-    cinfo++;
-    for(uint16 i=AV_CPLACE_N_S_2_MIN; i <= AV_CPLACE_N_S_2_MAX; i++)
-        if( BG_AV_CreaturePos[i][0] != 0)
-            AddAVCreature(cinfo,i);
-    cinfo++;
-    for(uint16 i=AV_CPLACE_N_S_3_MIN; i <= AV_CPLACE_N_S_3_MAX; i++)
-        if( BG_AV_CreaturePos[i][0] != 0)
-            AddAVCreature(cinfo,i);
-    //change cinfo with care.. following stuff depends on it
-    //the moving group:
-    AddAVCreature(cinfo-2,AV_CPLACE_N_M_1_1);
-    AddAVCreature(cinfo-2,AV_CPLACE_N_M_1_2);
-    AddAVCreature(cinfo-2,AV_CPLACE_N_M_1_3);
-    AddAVCreature(cinfo-1,AV_CPLACE_N_M_2);
-    AddAVCreature(cinfo,AV_CPLACE_N_M_3);
-    //boss with surrounding group:
-    //actually neutral and alliance spawns are different
-    //TODO find the different spawnpoints and implement them.. currently all spawns are like the neutral one
-    AddAVCreature(cinfo+1,AV_CPLACE_N_B_4);
-    AddAVCreature(cinfo-1,AV_CPLACE_N_B_2_1);
-    AddAVCreature(cinfo-1,AV_CPLACE_N_B_2_2);
+    for(uint16 i=( (mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_1_MIN:AV_CPLACE_MINE_S_1_MIN ); i <= ((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_1_MAX:AV_CPLACE_MINE_S_1_MAX); i++)
+        AddAVCreature(miner,i);
+    //the next chooses randomly between 2 cretures
+    for(uint16 i=((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_2_MIN:AV_CPLACE_MINE_S_2_MIN); i <= ((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_2_MAX:AV_CPLACE_MINE_S_2_MAX); i++)
+        AddAVCreature(miner+(urand(1,2)),i);
+    AddAVCreature(miner+3,(mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3);
+    //set the gameobjects so that the current owning team is the only one who can loot
+    for(uint16 i = ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MIN:BG_AV_OBJECT_MINE_SUPPLY_N_MIN); i <= ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MAX:BG_AV_OBJECT_MINE_SUPPLY_N_MAX); i++)
+    {
+        GameObject *go = GetBGObject(i);
+        if(!go)
+            sLog.outError("error in getting gameobject %i %i for mine %i",((m_BgObjects[i])),i,mine);
+        else
+        {
+            uint8 faction;
+            if(team==HORDE)
+                faction = 84;
+            else if(team==ALLIANCE)
+                faction = 83;
+            else
+                faction = 73;
+            go->SetUInt32Value(GAMEOBJECT_FACTION, faction);
+            sLog.outDebug("gameobjects get now faction %i",faction);
+        }
+    }
 
-    if(mine == AV_SOUTH_MINE && m_Mine_Owner[mine] != BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][1])
+
+    if(m_Mine_Owner[mine] != ALLIANCE && m_Mine_Owner[mine] != HORDE)
         m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
-    if(mine == AV_NORTH_MINE && m_Mine_Owner[mine] != BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][1])
-        m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
-    //TODO: i think the gameobjects (those crates which are needed for a quest) have to be spawned + despawned..
     return;
 }
 
@@ -1223,6 +1245,23 @@ bool BattleGroundAV::SetupBattleGround()
                     return false;
                 }
             }
+        }
+    }
+    for(uint16 i= 0; i<=1+(BG_AV_OBJECT_MINE_SUPPLY_N_MAX-BG_AV_OBJECT_MINE_SUPPLY_N_MIN);i++)
+    {
+        if(!AddObject(BG_AV_OBJECT_MINE_SUPPLY_N_MIN+i,BG_AV_OBJECTID_MINE_N,BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_N_MIN+i][0],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_N_MIN+i][1],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_N_MIN+i][2],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_N_MIN+i][3], 0, 0, sin(BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_N_MIN+i][3]/2), cos(BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_N_MIN+i][3]/2),RESPAWN_ONE_DAY))
+        {
+            sLog.outError("BatteGroundAV: Failed to spawn some mine supplies BattleGround not created!7.5.%i",i);
+            return false;
+        }
+    }
+    for(uint16 i= 0 ; i<=1+(BG_AV_OBJECT_MINE_SUPPLY_S_MAX-BG_AV_OBJECT_MINE_SUPPLY_S_MIN);i++)
+    {
+        sLog.outError("muhkuh %i %i",i,(AV_OPLACE_MINE_SUPPLY_S_MIN+i));
+        if(!AddObject(BG_AV_OBJECT_MINE_SUPPLY_S_MIN+i,BG_AV_OBJECTID_MINE_S,BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][0],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][1],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][2],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][3], 0, 0, sin(BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][3]/2), cos(BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][3]/2),RESPAWN_ONE_DAY))
+        {
+            sLog.outError("BatteGroundAV: Failed to spawn some mine supplies BattleGround not created!7.6.%i",i);
+            return false;
         }
     }
 

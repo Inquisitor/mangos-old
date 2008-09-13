@@ -321,6 +321,7 @@ class BattleGround
 
         void StartBattleGround();
 
+        GameObject* GetBGObject(uint32 type);
         /* Location */
         void SetMapId(uint32 MapID) { m_MapId = MapID; }
         uint32 GetMapId() const { return m_MapId; }
