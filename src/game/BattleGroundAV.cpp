@@ -41,7 +41,7 @@ void BattleGroundAV::HandleKillPlayer(Player *player, Player *killer)
 {
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
-	UpdateScore((player-GetTeam() == ALLIANCE) ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE,-1);
+	UpdateScore((player->GetTeam() == ALLIANCE) ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE,-1);
 }
 
 void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
@@ -78,7 +78,7 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
 
 void BattleGroundAV::UpdateQuest(uint32 questid, Player *player)
 {
-    if (GetStatus() != STATUS_WAIT_JOIN)
+    if (GetStatus() != STATUS_IN_PROGRESS)
         return;//maybe we should log this, cause this must be a cheater or a big bug
     uint8 team = (player->GetTeam() == ALLIANCE)? 0 : 1;
     //TODO add reputation, events (including quest not available anymore, next quest availabe, go/npc de/spawning)and maybe honor
@@ -102,18 +102,21 @@ void BattleGroundAV::UpdateQuest(uint32 questid, Player *player)
         case AV_QUEST_A_COMMANDER1:
         case AV_QUEST_H_COMMANDER1:
             m_Team_QuestStatus[team][1]++;
+            RewardReputationToTeam(team,1,player->GetTeam());
             if(m_Team_QuestStatus[team][1] == 30)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
         case AV_QUEST_A_COMMANDER2:
         case AV_QUEST_H_COMMANDER2:
             m_Team_QuestStatus[team][2]++;
+            RewardReputationToTeam(team,1,player->GetTeam());
             if(m_Team_QuestStatus[team][2] == 60)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
         case AV_QUEST_A_COMMANDER3:
         case AV_QUEST_H_COMMANDER3:
             m_Team_QuestStatus[team][3]++;
+            RewardReputationToTeam(team,1,player->GetTeam());
             if(m_Team_QuestStatus[team][1] == 120)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
@@ -178,18 +181,23 @@ void BattleGroundAV::UpdateScore(uint8 team, int16 points )
 {
     if( team == BG_TEAM_ALLIANCE )
     {
-        TAScore += points;
-	    uint32 TAScore = (m_Team_Scores[0] < 0)?0:m_Team_Scores[0];
-	    UpdateWorldState(AV_Alliance_Score, TAScore);
-        if(TAScore==0)
+        m_Team_Scores[0] += points;
+        if( m_Team_Scores[0] < 0)
+        {
+            m_Team_Scores[0]=0;
             EndBattleGround(HORDE);
+        }
+	    UpdateWorldState(AV_Alliance_Score, m_Team_Scores[0]);
     }
     else if ( team == BG_TEAM_HORDE )
     {
-        uint32 THScore = (m_Team_Scores[1] < 0)?0:m_Team_Scores[1];
-        UpdateWorldState(AV_Horde_Score, THScore);
-        if(THScore==0)
+        m_Team_Scores[1] += points;
+        if( m_Team_Scores[1] < 0)
+        {
+            m_Team_Scores[1]=0;
             EndBattleGround(ALLIANCE);
+        }
+	    UpdateWorldState(AV_Horde_Score, m_Team_Scores[1]);
     }
     else
         sLog.outError("BG_AV unknown team %i in updatescore",team);
@@ -223,12 +231,12 @@ void BattleGroundAV::InitWorldStates()
 
 Creature* BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type)
 {
-    if(m_BgCreatures[type]) // in v13 of this patch this is not needed, but i think later its not bad..
+    if(m_BgCreatures[type])
             DelCreature(type);
     Creature* creature = AddCreature(BG_AV_CreatureInfo[cinfoid][0],type,BG_AV_CreatureInfo[cinfoid][1],BG_AV_CreaturePos[type][0],BG_AV_CreaturePos[type][1],BG_AV_CreaturePos[type][2],BG_AV_CreaturePos[type][3]);
     uint8 level = ( BG_AV_CreatureInfo[cinfoid][2] == BG_AV_CreatureInfo[cinfoid][3] ) ? BG_AV_CreatureInfo[cinfoid][2] : urand(BG_AV_CreatureInfo[cinfoid][2],BG_AV_CreatureInfo[cinfoid][3]);
-    level += GetMinLevel()-51; //maybe we can do this more generic for custom level-range.. actually it's blizzlike
-    sLog.outError("BG_AV minlevel %i",GetMinLevel());
+    if(level != 0)
+        level += m_MaxLevel-60; //maybe we can do this more generic for custom level-range.. actually it's blizzlike
     creature->SetLevel(level);
     //if is bowman, make unit stand still <--this must be added here..(TODO)
     return creature;
@@ -274,6 +282,9 @@ void BattleGroundAV::Update(time_t diff)
 		AddAVCreature(AV_NPC_A_BOSS,AV_CPLACE_A_BOSS);
 		AddAVCreature(AV_NPC_H_CAPTAIN,AV_CPLACE_H_CAPTAIN);
 		AddAVCreature(AV_NPC_A_CAPTAIN,AV_CPLACE_A_CAPTAIN);
+		AddAVCreature(AV_NPC_A_SMITH,AV_CPLACE_A_SMITH);
+		AddAVCreature(AV_NPC_H_SMITH,AV_CPLACE_H_SMITH);
+
 		//mainspiritguides:
             //if a player can ressurect before the bg starts, this must stay here...
 	        AddSpiritGuide(7, BG_AV_CreaturePos[7][0], BG_AV_CreaturePos[7][1], BG_AV_CreaturePos[7][2], BG_AV_CreaturePos[7][3], ALLIANCE);
@@ -328,15 +339,29 @@ void BattleGroundAV::AddPlayer(Player *plr)
 {
     BattleGround::AddPlayer(plr);
     //create score and add it to map, default values are set in constructor
-    //TODO:update the players map, so he can see which nodes are occupied
+    //TODO:update the players map, so he can see which nodes are occupied (in ab this is done in fillinitialworldstates)
     BattleGroundAVScore* sc = new BattleGroundAVScore;
-
     m_PlayerScores[plr->GetGUID()] = sc;
+    if(m_MaxLevel==0)
+        m_MaxLevel=(plr->getLevel()%10 == 0)? plr->getLevel() : (plr->getLevel()-(plr->getLevel()%10))+10; //TODO: just look at the code \^_^/ --but queue-info should provide this information..
+
+
     InitWorldStates();
 }
 
 void BattleGroundAV::RemovePlayer(Player* /*plr*/,uint64 /*guid*/)
 {
+    plr->RemoveAurasDueToSpell(AV_BUFF_ARMOR); // i think those buffs were removed at the end..
+    //TODO add the iteams in the header-file (so it'll be easier to change this later)
+    plr->DestroyItemCount( 17306, 99999, true, false);
+    plr->DestroyItemCount( 17422, 99999, true, false);
+    plr->DestroyItemCount( 17423, 99999, true, false);
+    plr->DestroyItemCount( 17502, 99999, true, false);
+    plr->DestroyItemCount( 17503, 99999, true, false);
+    plr->DestroyItemCount( 17504, 99999, true, false);
+    plr->DestroyItemCount( 17326, 99999, true, false);
+    plr->DestroyItemCount( 17327, 99999, true, false);
+    plr->DestroyItemCount( 17328, 99999, true, false);
 }
 
 void BattleGroundAV::HandleAreaTrigger(Player *Source, uint32 Trigger)
@@ -421,9 +446,7 @@ void BattleGroundAV::UpdatePlayerScore(Player* Source, uint32 type, uint32 value
 
 void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
 {
-    if(GetStatus() != STATUS_IN_PROGRESS)
-        return;
-    uint32 team = m_Points_Owner[GetNodePlace(node)];
+    uint16 team = m_Points_Owner[GetNodePlace(node)];
 
     //despawn banner
     SpawnBGObject(node, RESPAWN_ONE_DAY);
@@ -459,9 +482,8 @@ void BattleGroundAV::EventPlayerDestroyedPoint(uint32 node)
     WorldPacket data;
     ChatHandler::FillMessageData(&data, NULL, type, LANG_UNIVERSAL, NULL, 0, buf, NULL);
     SendPacketToAll(&data);
-
-
 }
+
 
 void BattleGroundAV::PopulateNode(uint32 node)
 {
@@ -590,80 +612,45 @@ void BattleGroundAV::EventPlayerClaimsPoint(Player *player, uint64 guid, uint32 
         return;
     if(GetBGObjectId(guid) < 0)
         return;
-
+    sLog.outDebug("BG_AV: EventPlayerClaimsPoint with guid %i",guid);
     switch(entry)
     {
         case BG_AV_OBJECTID_BANNER_A:
-            if(player->GetTeam() == ALLIANCE)
-                return;
-            EventPlayerAssaultsPoint(player, GetBGObjectId(guid));
-            break;
-        case BG_AV_OBJECTID_BANNER_H:
-            if(player->GetTeam() == HORDE)
-                return;
-            EventPlayerAssaultsPoint(player, GetBGObjectId(guid));
-            break;
         case BG_AV_OBJECTID_BANNER_A_B:
-            if(player->GetTeam() == ALLIANCE)
-                return;
-            EventPlayerAssaultsPoint(player, GetBGObjectId(guid));
-            break;
+        case BG_AV_OBJECTID_BANNER_H:
         case BG_AV_OBJECTID_BANNER_H_B:
-            if(player->GetTeam() == HORDE)
-                return;
+        case BG_AV_OBJECTID_BANNER_SNOWFALL_N:
             EventPlayerAssaultsPoint(player, GetBGObjectId(guid));
             break;
         case BG_AV_OBJECTID_BANNER_CONT_A:
-            if(player->GetTeam() == ALLIANCE)
-                return;
-            EventPlayerDefendsPoint(player, GetBGObjectId(guid));
-            break;
-        case BG_AV_OBJECTID_BANNER_CONT_H:
-            if(player->GetTeam() == HORDE)
-                return;
-            EventPlayerDefendsPoint(player, GetBGObjectId(guid));
-            break;
         case BG_AV_OBJECTID_BANNER_CONT_A_B:
-            if(player->GetTeam() == ALLIANCE)
-                return;
-            EventPlayerDefendsPoint(player, GetBGObjectId(guid));
-            break;
+        case BG_AV_OBJECTID_BANNER_CONT_H:
         case BG_AV_OBJECTID_BANNER_CONT_H_B:
-            if(player->GetTeam() == HORDE)
-                return;
             EventPlayerDefendsPoint(player, GetBGObjectId(guid));
-            break;
-        case BG_AV_OBJECTID_BANNER_SNOWFALL_N:
-            EventPlayerAssaultsPoint(player, GetBGObjectId(guid));
             break;
         default:
             break;
     }
-
 }
 
 void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 node)
 {
-    if((m_Points_PrevOwner[GetNodePlace(node)] != player->GetTeam() || m_Points_PrevOwner[GetNodePlace(node)] == 0) || m_Points_State[GetNodePlace(node)] != POINT_ASSAULTED)
-    {
-        sLog.outError("BG_AV wrong node in EventPlayerDefendsPoint (cheater,bug or gm) with node %i and player-guid: %i",node,player->GetGUID());
+    if(m_Points_Owner[GetNodePlace(node)] == player->GetTeam() || m_Points_State[GetNodePlace(node)] != POINT_ASSAULTED)
         return;
-    }
-
-    //spawn new go :)
-	if(GetNodePlace(node) == BG_AV_NODES_SNOWFALL_GRAVE && !m_Snowfall_Capped)
-    { //WARNING watch out that the cheating protection at the top of this function doesn't block this..
+    if(GetNodePlace(node) == BG_AV_NODES_SNOWFALL_GRAVE && !m_Snowfall_Capped)
+    {
         EventPlayerAssaultsPoint(player,node);
         return;
     }
+    if(m_Points_PrevOwner[GetNodePlace(node)] != player->GetTeam())
+        return;
+   //spawn new go :)
+    if(m_Points_Owner[GetNodePlace(node)] == ALLIANCE)
+        SpawnBGObject(node+22, RESPAWN_IMMEDIATELY); //spawn horde banner
     else
-    {
-        if(m_Points_Owner[GetNodePlace(node)] == ALLIANCE)
-            SpawnBGObject(node+22, RESPAWN_IMMEDIATELY); //spawn horde banner
-        else
-            SpawnBGObject(node-22, RESPAWN_IMMEDIATELY); //spawn alliance banner
-        m_Points_State[GetNodePlace(node)] = POINT_CONTROLED;
-    }
+        SpawnBGObject(node-22, RESPAWN_IMMEDIATELY); //spawn alliance banner
+    m_Points_State[GetNodePlace(node)] = POINT_CONTROLED;
+
     if(!IsTower(GetNodePlace(node)))
     {
         SpawnBGObject(BG_AV_OBJECT_AURA_N_FIRSTAID_STATION+3*GetNodePlace(node),RESPAWN_ONE_DAY);
@@ -689,48 +676,45 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 node)
 
 void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 node)
 {
-    if(m_Points_Owner[GetNodePlace(node)] == player->GetTeam())//no idea if someone want's to assault it's own points (:
+    if(m_Points_Owner[GetNodePlace(node)] == player->GetTeam())
         return;
 
     SpawnBGObject(node, RESPAWN_ONE_DAY);
-	if(GetNodePlace(node) == BG_AV_NODES_SNOWFALL_GRAVE && m_Points_Owner[BG_AV_NODES_SNOWFALL_GRAVE] == 0)
+    if(node == BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE && m_Points_Owner[BG_AV_NODES_SNOWFALL_GRAVE] == 0)
     {
         if( player->GetTeam() == ALLIANCE )
             SpawnBGObject(BG_AV_OBJECT_FLAG_C_A_SNOWFALL_GRAVE, RESPAWN_IMMEDIATELY);
         else
             SpawnBGObject(BG_AV_OBJECT_FLAG_C_H_SNOWFALL_GRAVE, RESPAWN_IMMEDIATELY);
          m_Points_Timer[GetNodePlace(node)] = BG_AV_SNOWFALL_FIRSTCAP; //it seems that the timer is randomly 4.00,4.05, 5.00 and 5.05
-         m_Points_State[GetNodePlace(node)] = POINT_ASSAULTED;
     }
     else
     {
-        if(m_Points_Owner[GetNodePlace(node)] == HORDE){
-            SpawnBGObject(node-22, RESPAWN_IMMEDIATELY);
-        }else if(m_Points_Owner[GetNodePlace(node)] == ALLIANCE){
-            SpawnBGObject(node+22, RESPAWN_IMMEDIATELY);
-        }else{ //snowfall
-            if( player->GetTeam() == ALLIANCE )
-                SpawnBGObject(BG_AV_OBJECT_FLAG_C_A_SNOWFALL_GRAVE, RESPAWN_IMMEDIATELY);
+        if(GetNodePlace(node) == BG_AV_NODES_SNOWFALL_GRAVE && !m_Snowfall_Capped)
+            if(m_Points_Owner[GetNodePlace(node)] == HORDE)
+                SpawnBGObject(node-11, RESPAWN_IMMEDIATELY);
             else
-                SpawnBGObject(BG_AV_OBJECT_FLAG_C_H_SNOWFALL_GRAVE, RESPAWN_IMMEDIATELY);
-             m_Points_Timer[GetNodePlace(node)] = BG_AV_SNOWFALL_FIRSTCAP;
-        }
-
-        if(!IsTower(GetNodePlace(node)) &&  m_Points_Timer[GetNodePlace(node)] != BG_AV_SNOWFALL_FIRSTCAP )
+                SpawnBGObject(node+11, RESPAWN_IMMEDIATELY);
+        else
         {
-            //the aura doesn't change at snowfall_firstcap (neutral->neutral)
-            SpawnBGObject(BG_AV_OBJECT_AURA_N_FIRSTAID_STATION+3*GetNodePlace(node),RESPAWN_IMMEDIATELY);
-            SpawnBGObject(BG_AV_OBJECT_AURA_A_FIRSTAID_STATION+GetTeamIndexByTeamId(m_Points_Owner[GetNodePlace(node)])+3*GetNodePlace(node),RESPAWN_ONE_DAY);
+            if(m_Points_Owner[GetNodePlace(node)] == HORDE)
+                SpawnBGObject(node-22, RESPAWN_IMMEDIATELY);
+            else
+                SpawnBGObject(node+22, RESPAWN_IMMEDIATELY);
+            if(!IsTower(GetNodePlace(node)))
+            {
+                SpawnBGObject(BG_AV_OBJECT_AURA_N_FIRSTAID_STATION+3*GetNodePlace(node),RESPAWN_IMMEDIATELY);
+                SpawnBGObject(BG_AV_OBJECT_AURA_A_FIRSTAID_STATION+GetTeamIndexByTeamId(m_Points_Owner[GetNodePlace(node)])+3*GetNodePlace(node),RESPAWN_ONE_DAY);
+            }
+            DePopulateNode(GetNodePlace(node));//also moves ressurecting players to next graveyard
         }
-        DePopulateNode(GetNodePlace(node));//also moves ressurecting players to next graveyard
+        m_Points_Timer[GetNodePlace(node)] = BG_AV_CAPTIME;
     }
     m_Points_PrevOwner[GetNodePlace(node)] = m_Points_Owner[GetNodePlace(node)];
     m_Points_Owner[GetNodePlace(node)] = player->GetTeam();
     m_Points_State[GetNodePlace(node)] = POINT_ASSAULTED;
 
     UpdatePointsIcons(GetNodePlace(node));
-    if( GetNodePlace(node) != BG_AV_NODES_SNOWFALL_GRAVE )
-        m_Points_Timer[GetNodePlace(node)] = BG_AV_CAPTIME;
 
     //send a nice message to all :)
     char buf[256];
@@ -1272,6 +1256,7 @@ const char* BattleGroundAV::GetNodeName(uint32 node)
 
 void BattleGroundAV::ResetBGSubclass()
 {
+    m_MaxLevel=0;
     for(uint8 i=0; i<2; i++)
     {
         for(uint8 j=0; j<9; j++)

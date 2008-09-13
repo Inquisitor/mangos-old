@@ -11953,7 +11953,6 @@ void Player::CompleteQuest( uint32 quest_id )
     if( quest_id )
     {
         SetQuestStatus( quest_id, QUEST_STATUS_COMPLETE );
-
         uint16 log_slot = FindQuestSlot( quest_id );
         if( log_slot < MAX_QUEST_LOG_SIZE)
             SetQuestSlotState(log_slot,QUEST_STATE_COMPLETE);

@@ -133,7 +133,7 @@ enum BG_AV_ObjectTypes
     BG_AV_OBJECT_AURA_A_FROSTWOLF_HUT       = 66,
     BG_AV_OBJECT_AURA_H_FROSTWOLF_HUT       = 67,
 
-    BG_AV_OBJECT_MAX                        = 68
+    BG_AV_OBJECT_MAX                          = 68
 };
 
 enum BG_AV_ObjectIds
@@ -211,7 +211,7 @@ const float BG_AV_DoorPositons[2][4] = {
 //creaturestuff starts here
 
 //x, y, z, o
-const float BG_AV_CreaturePos[73][4] = {
+const float BG_AV_CreaturePos[75][4] = {
     {643.000000f,44.000000f,69.740196f,-0.001854f},
     {676.000000f,-374.000000f,30.000000f,-0.001854f},
     {73.417755f,-496.433105f,48.731918f,-0.001854f},
@@ -306,10 +306,11 @@ const float BG_AV_CreaturePos[73][4] = {
     //garni
     {-538.972f,-168.116f,57.0112f,5.83707f},
     //balinda
-    {-54.2655f,-288.492f,15.5646f,5.98551f}
+    {-54.2655f,-288.492f,15.5646f,5.98551f},
     //73 till now
-
-
+    //both smiths
+    {642.863f,-57.4503f,41.6571f,4.26077f},
+    {-1253.88f,-317.969f,62.6003f,1.20972f}
 
 
 };
@@ -348,40 +349,11 @@ enum BG_AV_CreaturePlace
     AV_CPLACE_H_CAPTAIN              = 71,
     AV_CPLACE_A_CAPTAIN              = 72,
 
-    AV_CPLACE_MAX = 73
+    AV_CPLACE_A_SMITH                = 73,
+    AV_CPLACE_H_SMITH                = 74,
+    AV_CPLACE_MAX = 75
 };
 
-
-
-//cause i can spawn them while the bg is running, i only have to note the position-ids
-enum BG_AV_Creatures
-{
-/*    AV_SPIRIT_A_STORM_AID        = 0,
-    AV_SPIRIT_A_STORM_GRAVE      = 1,
-    AV_SPIRIT_A_STONE_GRAVE      = 2,
-    AV_SPIRIT_A_SNOWFALL         = 3,
-    AV_SPIRIT_A_ICE_GRAVE        = 4,
-    AV_SPIRIT_A_FROSTWOLF        = 5,
-    AV_SPIRIT_A_FROST_HUT        = 6,
-    AV_SPIRIT_A_MAIN		     = 7,
-    AV_SPIRIT_H_MAIN	         = 8,
-
-    AV_NPC_A_STORM_AID0          = 9,
-    AV_NPC_A_STORM_AID1          = 10,
-    AV_NPC_A_STORM_AID2          = 11,
-    AV_NPC_A_STORM_AID3          = 12,
-//and all other graveyards are similar.. ( so it is 9+(4*node_pos) for every grave
-//there are 6 graveyards, so the last posid is: 36)
-
-	AV_NPC_H_STORM_AID0 = 100, // i hope this value is correct
-
-  */
-//6*2+2 spiritguides=14
-//7graves+8towers -> 15*4 = 60 -> 60*4 (cause 4 different creatures) = 240
-//2boss+2captain = 4
-    //AV_CREATURES_MAX        = 259
-    //but it seems like we also don't need this ^^
-};
 
 enum BG_AV_CreatureIds
 {
@@ -400,11 +372,14 @@ enum BG_AV_CreatureIds
     AV_NPC_H_GRAVEDEFENSE3 = 10,     // champion guardian
     AV_NPC_H_TOWERDEFENSE  = 11,     // frostwolf bowman
     AV_NPC_H_CAPTAIN       = 12,     // galvangar
-    AV_NPC_H_BOSS          = 13      // drek thar
+    AV_NPC_H_BOSS          = 13,      // drek thar
+
+    AV_NPC_A_SMITH         = 14,     // murgot
+    AV_NPC_H_SMITH         = 15     // regzar
 };
 
 //entry, team, minlevel, maxlevel
-const uint32 BG_AV_CreatureInfo[14][4] = {
+const uint32 BG_AV_CreatureInfo[16][4] = {
 	{ 12050,469,58,58 },
 	{ 13326,469,59,59},
 	{ 13331,469,60,60},
@@ -419,7 +394,9 @@ const uint32 BG_AV_CreatureInfo[14][4] = {
     { 13421,67,61,61},
     { 13359,67,60,61},
     { 11947,67,0,0},
-    { 11946,67,0,0}
+    { 11946,67,0,0},
+    { 13257,469,60,60},
+    { 13176,67,60,60}
 };
 
 enum BG_AV_Graveyards
@@ -449,6 +426,10 @@ const uint32 BG_AV_GraveyardIds[9]= {
   AV_GRAVE_MAIN_HORDE
 };
 
+enum BG_AV_BUFF
+{ //TODO add all other buffs here
+    AV_BUFF_ARMOR = 21163
+};
 enum BG_AV_States
 {
     POINT_NEUTRAL              =  0,
@@ -604,8 +585,8 @@ class BattleGroundAV : public BattleGround
 
         /* Nodes occupying */
         void EventPlayerClaimsPoint(Player *player, uint64 guid, uint32 entry);
-        void EventPlayerAssaultsPoint(Player* player, uint32 node);
-        void EventPlayerDefendsPoint(Player* player, uint32 node);
+        void EventPlayerAssaultsPoint(Player* player, uint32 type);
+        void EventPlayerDefendsPoint(Player* player, uint32 type);
         void EventPlayerDestroyedPoint(uint32 node);
         void UpdatePointsIcons(uint32 node);
         void UpdateScore(uint8 team, int16 points);
@@ -613,7 +594,7 @@ class BattleGroundAV : public BattleGround
         void UpdateNode(uint32 type, uint32 state);
         void PopulateNode(uint32 node);
         void DePopulateNode(uint32 node);
-        //int32 GetNode(uint64 guid);
+        int32 GetNode(uint64 guid);
         uint32 GetNodePlace(uint32 guid);
         uint32 GetPlaceNode(uint32 node);
         const char* GetNodeName(uint32 node);
@@ -634,6 +615,7 @@ class BattleGroundAV : public BattleGround
         uint32 m_Points_PrevOwner[BG_AV_NODES_MAX];
         uint32 m_Points_State[BG_AV_NODES_MAX];
         int32  m_Points_Timer[BG_AV_NODES_MAX];
+        uint8 m_MaxLevel; //TODO remove this when battlegroundmgr provides a function for this..
         bool m_Snowfall_Capped;
         bool m_IsInformedNearVictory;
 
