@@ -749,20 +749,14 @@ bool GameObject::ActivateToQuest( Player *pTarget)const
         // scan GO chest with loot including quest items
         case GAMEOBJECT_TYPE_CHEST:
         {
-            sLog.outDebug("muh looks if player can click on the stuff around entry %i",GetEntry());
             if(LootTemplates_Gameobject.HaveQuestLootForPlayer(GetLootId(), pTarget))
             {
-                sLog.outDebug("muh looks if player can click on the stuff around2 entry %i",GetEntry());
-                if(BattleGround *bg = pTarget->GetBattleGround())
-                    if(bg->GetTypeID() == BATTLEGROUND_AV)
-                        if(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(GetEntry(),pTarget->GetTeam()))
-                            return true;
-                        else
-                            return false;
-                    else
-                        return true;
-                else
-                    return true;
+                //look for battlegroundAV for some objects which are only activated after mine gots captured by own team
+                if(GetEntry() == BG_AV_OBJECTID_MINE_N || GetEntry() == BG_AV_OBJECTID_MINE_S)
+                    if(BattleGround *bg = pTarget->GetBattleGround())
+                        if(bg->GetTypeID() == BATTLEGROUND_AV)
+                            if(!(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(GetEntry(),pTarget->GetTeam())))
+                                return false;
                 return true;
             }
             break;

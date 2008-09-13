@@ -254,6 +254,7 @@ void BattleGround::PlaySoundToAll(uint32 SoundID)
 void BattleGround::PlaySoundToTeam(uint32 SoundID, uint32 TeamID)
 {
     WorldPacket data;
+    sBattleGroundMgr.BuildPlaySoundPacket(&data, SoundID);
 
     for(std::map<uint64, BattleGroundPlayer>::iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
     {
@@ -266,10 +267,7 @@ void BattleGround::PlaySoundToTeam(uint32 SoundID, uint32 TeamID)
         }
 
         if(plr->GetTeam() == TeamID)
-        {
-            sBattleGroundMgr.BuildPlaySoundPacket(&data, SoundID);
             plr->GetSession()->SendPacket(&data);
-        }
     }
 }
 
@@ -856,7 +854,6 @@ void BattleGround::AddPlayerToResurrectQueue(uint64 npc_guid, uint64 player_guid
 
 void BattleGround::RemovePlayerFromResurrectQueue(uint64 player_guid)
 {
-    std::vector<uint64>::iterator itr2;
     for(std::map<uint64, std::vector<uint64> >::iterator itr = m_ReviveQueue.begin(); itr != m_ReviveQueue.end(); ++itr)
     {
         for(std::vector<uint64>::iterator itr2 =(itr->second).begin(); itr2 != (itr->second).end(); ++itr2)
@@ -949,15 +946,9 @@ void BattleGround::DoorOpen(uint32 type)
 GameObject* BattleGround::GetBGObject(uint32 type)
 {
     GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
-    if(obj)
-    {
-        return obj;
-    }
-    else
-    {
+    if(!obj)
         sLog.outError("couldn't get gameobject %i");
-        return NULL;
-    }
+    return obj;
 }
 void BattleGround::SpawnBGObject(uint32 type, uint32 respawntime)
 {

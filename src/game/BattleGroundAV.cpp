@@ -16,12 +16,12 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "Object.h"
 #include "Player.h"
 #include "BattleGround.h"
 #include "BattleGroundAV.h"
 #include "Creature.h"
 #include "Chat.h"
+#include "Object.h"
 #include "ObjectMgr.h"
 #include "ObjectAccessor.h"
 #include "MapManager.h"
@@ -670,28 +670,63 @@ void BattleGroundAV::PopulateMine(uint8 mine)
     for(uint16 i=((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_2_MIN:AV_CPLACE_MINE_S_2_MIN); i <= ((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_2_MAX:AV_CPLACE_MINE_S_2_MAX); i++)
         AddAVCreature(miner+(urand(1,2)),i);
     AddAVCreature(miner+3,(mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3);
-    //set the gameobjects so that the current owning team is the only one who can loot
-/*    for(uint16 i = ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MIN:BG_AV_OBJECT_MINE_SUPPLY_N_MIN); i <= ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MAX:BG_AV_OBJECT_MINE_SUPPLY_N_MAX); i++)
+    //because the gameobjects in this mine have changed, update all surrounding players:
+/*
+ * there is something wrong with plr-GetPetGUID or even with getting the right players, i don't know
+ * without this code the player must force a gameobject update (walking out of the mine and back)
+ * but i don't know if this code can help.. maybe someone knows an "resend_go_stuff()" function :)
+    UpdateData transDataA, transDataH;
+    bool gotData=false;;
+    Player* plrA = NULL;
+    Player* plrH = NULL;
+    //cause i need a player to build the packets i make the first loop to get one(after that one the loop should be left)  player, if i got one, i make a loop where i get the objects in the mine and update those
+    for(BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
     {
-        GameObject *go = GetBGObject(i);
-        if(!go)
-            sLog.outError("error in getting gameobject %i %i for mine %i",((m_BgObjects[i])),i,mine);
-        else
+        if(Player* plr = objmgr.GetPlayer(itr->first))
         {
-            uint8 faction;
-            if(team==HORDE)
-                faction = 84;
-            else if(team==ALLIANCE)
-                faction = 83;
-            else
-                faction = 73;
-            //go->SetUInt32Value(GAMEOBJECT_FACTION, faction);
-            sLog.outDebug("gameobjects get now faction %i",faction);
+            if(plr->GetTeam() == ALLIANCE && !plrA)
+                plrA = plr;
+            if(plr->GetTeam() == HORDE && !plrH)
+                plrH = plr;
+            if(plrA && plrH)
+                break; //get out of the loop
         }
     }
-    */
-
-
+    if( plrA || plrH )
+    {
+        for(uint16 i = ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MIN:BG_AV_OBJECT_MINE_SUPPLY_N_MIN); i <= ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MAX:BG_AV_OBJECT_MINE_SUPPLY_N_MAX); i++)
+        {
+            GameObject *go = GetBGObject(i);
+            if(!go)
+                sLog.outError("error in getting gameobject %i %i for mine %i",((m_BgObjects[i])),i,mine);
+            else
+            {
+                //sLog.outError("starting updating objects in av");
+                if(plrA)
+                {
+                //    sLog.outError("update alliance gos in av");
+                    go->BuildCreateUpdateBlockForPlayer(&transDataA, plrA); //i get a segfault in this function with target->GetPetGUID()
+                }
+                if(plrH)
+                {
+                //    sLog.outError("update horde gos in av");
+                    go->BuildCreateUpdateBlockForPlayer(&transDataH, plrH);
+                }
+            }
+        }
+    }
+    WorldPacket data;
+    if(plrA->GetPetGUID())
+    {
+        transDataA.BuildPacket(&data);
+        SendPacketToTeam(plrA->GetTeam(), &data, plrA, true);
+    }
+    if(plrH->GetPetGUID())
+    {
+        transDataH.BuildPacket(&data);
+        SendPacketToTeam(plrH->GetTeam(), &data, plrH, true);
+    }
+*/
     if(m_Mine_Owner[mine] != ALLIANCE && m_Mine_Owner[mine] != HORDE)
         m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
     return;
@@ -699,12 +734,10 @@ void BattleGroundAV::PopulateMine(uint8 mine)
 
 bool BattleGroundAV::PlayerCanDoMineQuest(int32 GOId,uint32 team)
 {
-    sLog.outDebug("muh looking for playermine for entry %i",GOId);
     if(GOId != BG_AV_OBJECTID_MINE_N)
         if(GOId != BG_AV_OBJECTID_MINE_S)
             return true; //cause it's no mine'object it is ok if this is true
     uint8 mine = (GOId==BG_AV_OBJECTID_MINE_N)?AV_NORTH_MINE:AV_SOUTH_MINE;
-    sLog.outDebug("returns team %i mine owner %i",team,(m_Mine_Owner[mine]));
     return (m_Mine_Owner[mine]==team);
 }
 
