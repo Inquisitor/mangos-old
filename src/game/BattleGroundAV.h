@@ -76,7 +76,7 @@ enum BG_AV_OTHER_VALUES
     AV_NORTH_MINE              = 0,
     AV_SOUTH_MINE              = 1,
     AV_MINE_TICK_TIMER         = 45,
-    AV_MINE_RECLAIM_TIMER      = 900, //TODO: get the right value.. 15 minutes are maybe to short..
+    AV_MINE_RECLAIM_TIMER      = 1200000, //TODO: get the right value.. this is currently 20 minutes
     AV_NEUTRAL_TEAM            = 0 //this is the neutral owner of snowfall
 };
 enum BG_AV_ObjectIds
@@ -1236,7 +1236,9 @@ const uint32 BG_AV_GraveyardIds[9]= {
 
 enum BG_AV_BUFF
 { //TODO add all other buffs here
-    AV_BUFF_ARMOR = 21163
+    AV_BUFF_ARMOR = 21163,
+    AV_BUFF_A_CAPTAIN = 23693, //the buff which the alliance captain does
+    AV_BUFF_H_CAPTAIN = 22751 //the buff which the horde captain does
 };
 enum BG_AV_States
 {
@@ -1254,8 +1256,9 @@ enum BG_AV_WorldStates
     AV_SHOW_A_SCORE                 = 3134,
 
 /*
-    //the comments behind the state shows which icon overlaps the other.. but is, until now, unused
-    // Graves
+    //the comments behind the state shows which icon overlaps the other.. but is, until now, unused and maybe not a good solution (but give few performance (: )
+
+// Graves
 
     // Alliance
     //Stormpike first aid station
@@ -1299,7 +1302,8 @@ enum BG_AV_WorldStates
     AV_FROSTWOLFHUT_H_C             = 1330,
     AV_FROSTWOLFHUT_H_A             = 1332, //over ac
 
-    //Towers
+
+//Towers
     //Alliance
     //Dunbaldar South Bunker
     AV_DUNS_CONTROLLED              = 1361,
@@ -1334,8 +1338,9 @@ enum BG_AV_WorldStates
     AV_FROSTWOLFE_CONTROLLED        = 1383,
     AV_FROSTWOLFE_DESTROYED         = 1366,
     AV_FROSTWOLFE_ASSAULTED         = 1388,
-*/
-    //mines
+
+//mines
+
     AV_N_MINE_N              = 1360,
     AV_N_MINE_A              = 1358,
     AV_N_MINE_H              = 1359,
@@ -1344,8 +1349,7 @@ enum BG_AV_WorldStates
     AV_S_MINE_A                     = 1355,
     AV_S_MINE_H                     = 1356,
 
-/*
-    //towers assaulted by own team (unused)
+//towers assaulted by own team (unused)
     AV_STONEH_UNUSED                = 1377,
     AV_ICEWING_UNUSED               = 1376,
     AV_DUNS_UNUSED                  = 1375,
@@ -1359,8 +1363,15 @@ enum BG_AV_WorldStates
 
 };
 
-//a_c a_a h_c h_a
-const uint32 BG_AV_WorldStates[16][4] = {
+//alliance_control neutral_control horde_control
+const uint32 BG_AV_MineWorldStates[2][3] = {
+    {1358, 1360,1359},
+    {1355, 1357,1356}
+};
+
+
+//alliance_control alliance_assault h_control h_assault
+const uint32 BG_AV_NodeWorldStates[16][4] = {
     //Stormpike first aid station
     {1325, 1326,1327,1328},
     //Stormpike Graveyard
@@ -1540,11 +1551,15 @@ class BattleGroundAV : public BattleGround
         BG_AV_NodeInfo m_Nodes[BG_AV_NODES_MAX];
 
         uint32 m_Mine_Owner[2];
-        uint32 m_Mine_Timer; //ticks for both teams
-        uint32 m_Mine_Reclaim_Timer[2];
+        uint32 m_Mine_PrevOwner[2]; //only for worldstates needed
+        int32 m_Mine_Timer; //ticks for both teams
+        int32 m_Mine_Reclaim_Timer[2];
+        int32 m_CaptainBuffTimer[2];
+        bool m_CaptainAlive[2];
 
         uint8 m_MaxLevel; //TODO remove this when battlegroundmgr provides a function for this..
         bool m_IsInformedNearVictory[2];
+
 
 };
 

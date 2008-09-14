@@ -61,21 +61,24 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
     uint32 entry = unit->GetEntry();
-    //TODO cast quest-complete-spell when boss gots killed see here http://www.mangosproject.org/forum/index.php?showtopic=29220
     if(entry == BG_AV_CreatureInfo[AV_NPC_A_BOSS][0])
     {
+        CastSpellOnTeam(23658,HORDE); //this is a spell which finishes a quest where a player has to kill the boss
         RewardReputationToTeam(729,BG_AV_REP_BOSS,HORDE);
         RewardHonorToTeam(BG_AV_HONOR_BOSS,HORDE);
         EndBattleGround(HORDE);
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_H_BOSS][0] )
     {
+        CastSpellOnTeam(23658,ALLIANCE); //this is a spell which finishes a quest where a player has to kill the boss
+        m_CaptainAlive[1]=false;
         RewardReputationToTeam(730,BG_AV_REP_BOSS,ALLIANCE);
         RewardHonorToTeam(BG_AV_HONOR_BOSS,ALLIANCE);
         EndBattleGround(ALLIANCE);
     }
     else if(entry == BG_AV_CreatureInfo[AV_NPC_A_CAPTAIN][0])
     {
+        m_CaptainAlive[0]=false;
         RewardReputationToTeam(729,BG_AV_REP_CAPTAIN,HORDE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),HORDE);
 	    UpdateScore(ALLIANCE,(-1)*BG_AV_RES_CAPTAIN);
@@ -95,12 +98,14 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_H_4][0])
     {
         DePopulateMine(AV_NORTH_MINE);
+        m_Mine_PrevOwner[AV_NORTH_MINE] = m_Mine_Owner[AV_NORTH_MINE];
         m_Mine_Owner[AV_NORTH_MINE] = killer->GetTeam();
         PopulateMine(AV_NORTH_MINE);
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_H_4][0])
     {
         DePopulateMine(AV_SOUTH_MINE);
+        m_Mine_PrevOwner[AV_SOUTH_MINE] = m_Mine_Owner[AV_SOUTH_MINE];
         m_Mine_Owner[AV_SOUTH_MINE] = killer->GetTeam();
         PopulateMine(AV_SOUTH_MINE);
     }
@@ -216,15 +221,14 @@ void BattleGroundAV::UpdateScore(uint16 team, int16 points )
     uint8 teamindex = GetTeamIndexByTeamId(team); //0=ally 1=horde
     m_Team_Scores[teamindex] += points;
 
-//TODO:get out at which point this message comes and which text will be displayed and also find out, if this can be displayed 2 times in a bg (for both teams)
-//and surely it's better to add this code abovee
     if( points < 0)
     {
         if( m_Team_Scores[teamindex] < 0)
         {
             m_Team_Scores[teamindex]=0;
             EndBattleGround(((teamindex==BG_TEAM_HORDE)?ALLIANCE:HORDE));
-        }else if(!m_IsInformedNearVictory[teamindex] && m_Team_Scores[teamindex] < SEND_MSG_NEAR_LOSE)
+        }
+        else if(!m_IsInformedNearVictory[teamindex] && m_Team_Scores[teamindex] < SEND_MSG_NEAR_LOSE)
         {
             SendMessageToAll((teamindex==BG_TEAM_HORDE)?LANG_BG_AV_H_NEAR_LOSE:LANG_BG_AV_A_NEAR_LOSE);
             PlaySoundToAll(AV_SOUND_NEAR_VICTORY);
@@ -278,6 +282,13 @@ void BattleGroundAV::Update(time_t diff)
         if (!(m_Events & 0x01))
         {
             m_Events |= 0x01;
+            #ifdef BATTLEGROUND_ARENA_POINT_DISTRIBUTION_DAY
+            if(!SetupBattleGround()) //the above ifdef is for arenapatch, please report, if this doesn't work
+            {
+                EndNow();
+                return;
+            }
+            #endif
             uint16 i;
             sLog.outDebug("Alterac Valley: entering state STATUS_WAIT_JOIN ...");
             // Initial Nodes
@@ -375,6 +386,30 @@ void BattleGroundAV::Update(time_t diff)
     }
     else if(GetStatus() == STATUS_IN_PROGRESS)
     {
+        for(uint8 i=0; i<=1;i++)//0=alliance, 1=horde
+        {
+            if(!m_CaptainAlive[i])
+                continue;
+            m_CaptainBuffTimer[i] -= diff;
+            if(m_CaptainBuffTimer[i]<=0)
+            {
+                sLog.outError("muh buff %i",i);
+                if(i==0)
+                {
+                    CastSpellOnTeam(AV_BUFF_A_CAPTAIN,ALLIANCE);
+                    Creature* creature = GetBGCreature(AV_CPLACE_MAX + AV_NPC_A_CAPTAIN);
+                    creature->Yell("Take heart, Alliance! Throw these villains from Alterac Valley!",LANG_COMMON,0); //TODO write the text into the headerfile (and later sql) , look if this position here is right or if this is sd2 stuff
+                }
+                else
+                {
+                    CastSpellOnTeam(AV_BUFF_H_CAPTAIN,HORDE);
+                    Creature* creature = GetBGCreature(AV_CPLACE_MAX + AV_NPC_H_CAPTAIN); //TODO: make the captains a dynamic creature
+                    if(creature)
+                        creature->Yell("Now is the timeNow is the time to attack! For the Horde!",LANG_ORCISH,0); //TODO write the text into the headerfile (and later sql) , look if this position here is right or if this is sd2 stuff
+                }
+                m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60000; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
+            }
+        }
         //add points from mine owning, and look if he neutral team wanrts to reclaim the mine
         m_Mine_Timer -=diff;
         if(m_Mine_Owner[AV_SOUTH_MINE] != BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][1])
@@ -384,6 +419,7 @@ void BattleGroundAV::Update(time_t diff)
                 UpdateScore(m_Mine_Owner[AV_SOUTH_MINE],1);
             if( m_Mine_Reclaim_Timer[AV_SOUTH_MINE] <= 0)
             {
+                m_Mine_PrevOwner[AV_SOUTH_MINE] = m_Mine_Owner[AV_SOUTH_MINE];
                 m_Mine_Owner[AV_SOUTH_MINE] = BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][1];
                 PopulateMine(AV_SOUTH_MINE);
             }
@@ -395,6 +431,7 @@ void BattleGroundAV::Update(time_t diff)
                 UpdateScore(m_Mine_Owner[AV_NORTH_MINE],1);
             if( m_Mine_Reclaim_Timer[AV_NORTH_MINE] <= 0)
             {
+                m_Mine_PrevOwner[AV_NORTH_MINE] = m_Mine_Owner[AV_NORTH_MINE];
                 m_Mine_Owner[AV_NORTH_MINE] = BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][1];
                 PopulateMine(AV_NORTH_MINE);
             }
@@ -427,29 +464,15 @@ void BattleGroundAV::AddPlayer(Player *plr)
 
 void BattleGroundAV::RemovePlayer(Player* /*plr*/,uint64 /*guid*/)
 {
-   /*if(!plr)
+   if(!plr)
     {
         sLog.outError("bg_AV no player at remove");
         return;
-    }*/
+    }
     //TODO search more buffs
     plr->RemoveAurasDueToSpell(AV_BUFF_ARMOR);
-
-    //all items found :)
-    plr->DestroyItemCount( AV_ITEM_BLOOD, 99999, true, false);
-    plr->DestroyItemCount( AV_ITEM_SCRAPS, 99999, true, false);
-    plr->DestroyItemCount( AV_ITEM_CRYSTAL, 99999, true, false);
-    plr->DestroyItemCount( AV_ITEM_A_SOLDIER, 99999, true, false);
-    plr->DestroyItemCount( AV_ITEM_A_LIEUTNANT, 99999, true, false);
-    plr->DestroyItemCount( AV_ITEM_A_COMMANDER, 99999, true, false);
-    plr->DestroyItemCount( AV_ITEM_H_SOLDIER, 99999, true, false);
-    plr->DestroyItemCount( AV_ITEM_H_LIEUTNANT, 99999, true, false);
-    plr->DestroyItemCount( AV_ITEM_H_COMMANDER, 99999, true, false);
-    plr->DestroyItemCount( AV_ITEM_A_HIDE, 99999, true, false);
-    plr->DestroyItemCount( AV_ITEM_H_HIDE, 99999, true, false);
-    plr->DestroyItemCount( AV_ITEM_IRONDEEP, 99999, true, false);
-    plr->DestroyItemCount( AV_ITEM_COLDTOOTH, 99999, true, false);
-
+    plr->RemoveAurasDueToSpell(AV_BUFF_A_CAPTAIN);
+    plr->RemoveAurasDueToSpell(AV_BUFF_H_CAPTAIN);
 }
 
 
@@ -481,7 +504,6 @@ void BattleGroundAV::HandleAreaTrigger(Player *Source, uint32 Trigger)
         case 3329:
         case 3330:
         case 3331:
-			Source->GetSession()->SendAreaTriggerMessage("Warning: Unhandled AreaTrigger in Battleground: %u", Trigger);
 			//Source->Unmount();
             break;
         default:
@@ -650,74 +672,23 @@ void BattleGroundAV::PopulateMine(uint8 mine)
         AddAVCreature(miner+(urand(1,2)),i);
     AddAVCreature(miner+3,(mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3);
     //because the gameobjects in this mine have changed, update all surrounding players:
-/*
- * there is something wrong with plr-GetPetGUID or even with getting the right players, i don't know
- * without this code the player must force a gameobject update (walking out of the mine and back)
- * but i don't know if this code can help.. maybe someone knows an "resend_go_stuff()" function :)
-    UpdateData transDataA, transDataH;
-    bool gotData=false;;
-    Player* plrA = NULL;
-    Player* plrH = NULL;
-    //cause i need a player to build the packets i make the first loop to get one(after that one the loop should be left)  player, if i got one, i make a loop where i get the objects in the mine and update those
-    for(BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
+    for(uint16 i = ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MIN:BG_AV_OBJECT_MINE_SUPPLY_N_MIN); i <= ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MAX:BG_AV_OBJECT_MINE_SUPPLY_N_MAX); i++)
     {
-        if(Player* plr = objmgr.GetPlayer(itr->first))
-        {
-            if(plr->GetTeam() == ALLIANCE && !plrA)
-                plrA = plr;
-            if(plr->GetTeam() == HORDE && !plrH)
-                plrH = plr;
-            if(plrA && plrH)
-                break; //get out of the loop
-        }
+        //TODO: add gameobject-update code
+        assert(true); //very usefull function
     }
-    if( plrA || plrH )
-    {
-        for(uint16 i = ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MIN:BG_AV_OBJECT_MINE_SUPPLY_N_MIN); i <= ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MAX:BG_AV_OBJECT_MINE_SUPPLY_N_MAX); i++)
-        {
-            GameObject *go = GetBGObject(i);
-            if(!go)
-                sLog.outError("error in getting gameobject %i %i for mine %i",((m_BgObjects[i])),i,mine);
-            else
-            {
-                //sLog.outError("starting updating objects in av");
-                if(plrA)
-                {
-                //    sLog.outError("update alliance gos in av");
-                    go->BuildCreateUpdateBlockForPlayer(&transDataA, plrA); //i get a segfault in this function with target->GetPetGUID()
-                }
-                if(plrH)
-                {
-                //    sLog.outError("update horde gos in av");
-                    go->BuildCreateUpdateBlockForPlayer(&transDataH, plrH);
-                }
-            }
-        }
-    }
-    WorldPacket data;
-    if(plrA->GetPetGUID())
-    {
-        transDataA.BuildPacket(&data);
-        SendPacketToTeam(plrA->GetTeam(), &data, plrA, true);
-    }
-    if(plrH->GetPetGUID())
-    {
-        transDataH.BuildPacket(&data);
-        SendPacketToTeam(plrH->GetTeam(), &data, plrH, true);
-    }
-*/
-    if(m_Mine_Owner[mine] != ALLIANCE && m_Mine_Owner[mine] != HORDE)
+    if(team == ALLIANCE || team == HORDE)
         m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
     return;
 }
 
 bool BattleGroundAV::PlayerCanDoMineQuest(int32 GOId,uint32 team)
 {
-    if(GOId != BG_AV_OBJECTID_MINE_N)
-        if(GOId != BG_AV_OBJECTID_MINE_S)
-            return true; //cause it's no mine'object it is ok if this is true
-    uint8 mine = (GOId==BG_AV_OBJECTID_MINE_N)?AV_NORTH_MINE:AV_SOUTH_MINE;
-    return (m_Mine_Owner[mine]==team);
+    if(GOId == BG_AV_OBJECTID_MINE_N)
+         return (m_Mine_Owner[AV_NORTH_MINE]==team);
+    if(GOId == BG_AV_OBJECTID_MINE_S)
+         return (m_Mine_Owner[AV_SOUTH_MINE]==team);
+    return true; //cause it's no mine'object it is ok if this is true
 }
 
 void BattleGroundAV::PopulateNode(BG_AV_Nodes node)
@@ -1031,58 +1002,29 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
     UpdatePlayerScore(player, ( IsTower(node) ) ? SCORE_TOWERS_ASSAULTED : SCORE_GRAVEYARDS_ASSAULTED, 1);
 }
 
-const uint8 BattleGroundAV::GetWorldStateType(uint8 state, uint16 team)
-{
-//a_c a_a h_c h_a the positions in worldstate-array
-    if(team == ALLIANCE)
-    {
-        if(state==POINT_CONTROLED || state==POINT_DESTROYED)
-            return 0;
-        if(state==POINT_ASSAULTED)
-            return 1;
-    }
-    if(team == HORDE)
-    {
-        if(state==POINT_DESTROYED || state==POINT_CONTROLED)
-            return 2;
-        if(state==POINT_ASSAULTED)
-            return 3;
-    }
-    //neutral stuff cant get handled (currently its only snowfall)
-    assert(team != AV_NEUTRAL_TEAM);
-    sLog.outError("BG_AV: should update a strange worldstate state:%i team:%i",state,team);
-}
-
-
-void BattleGroundAV::UpdateNodeWorldState(BG_AV_Nodes node)
-{
-    UpdateWorldState(BG_AV_WorldStates[node][GetWorldStateType(m_Nodes[node].State,m_Nodes[node].Owner)],1);
-    if(m_Nodes[node].PrevOwner == AV_NEUTRAL_TEAM) //currently only snowfall is supported as neutral node (i don't want to make an extra row (neutral states) in worldstatesarray just for one node
-        UpdateWorldState(AV_SNOWFALL_N,0);
-    else
-        UpdateWorldState(BG_AV_WorldStates[node][GetWorldStateType(m_Nodes[node].PrevState,m_Nodes[node].PrevOwner)],0);
-}
-
 void BattleGroundAV::FillInitialWorldStates(WorldPacket& data)
 {
     bool stateok;
     //graveyards
     for (uint8 i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_HUT; i++)
+    {
         for (uint8 j =1; j <= 3; j+=2)
         {//j=1=assaulted j=3=controled
             stateok = (m_Nodes[i].State == j);
-            data << uint32(BG_AV_WorldStates[i][GetWorldStateType(j,ALLIANCE)]) << uint32((m_Nodes[i].Owner == ALLIANCE && stateok)?1:0);
-            data << uint32(BG_AV_WorldStates[i][GetWorldStateType(j,HORDE)]) << uint32((m_Nodes[i].Owner == HORDE && stateok)?1:0);
+            data << uint32(BG_AV_NodeWorldStates[i][GetWorldStateType(j,ALLIANCE)]) << uint32((m_Nodes[i].Owner == ALLIANCE && stateok)?1:0);
+            data << uint32(BG_AV_NodeWorldStates[i][GetWorldStateType(j,HORDE)]) << uint32((m_Nodes[i].Owner == HORDE && stateok)?1:0);
         }
+    }
+
     //towers
     for (uint8 i = BG_AV_NODES_DUNBALDAR_SOUTH; i <= BG_AV_NODES_MAX; i++)
         for (uint8 j =1; j <= 3; j+=2)
         {//j=1=assaulted j=3=controled //i dont have j=2=destroyed cause destroyed is the same like enemy-team controll
             stateok = (m_Nodes[i].State == j || (m_Nodes[i].State == POINT_DESTROYED && j==3));
-            data << uint32(BG_AV_WorldStates[i][GetWorldStateType(j,ALLIANCE)]) << uint32((m_Nodes[i].Owner == ALLIANCE && stateok)?1:0);
-            data << uint32(BG_AV_WorldStates[i][GetWorldStateType(j,HORDE)]) << uint32((m_Nodes[i].Owner == HORDE && stateok)?1:0);
+            data << uint32(BG_AV_NodeWorldStates[i][GetWorldStateType(j,ALLIANCE)]) << uint32((m_Nodes[i].Owner == ALLIANCE && stateok)?1:0);
+            data << uint32(BG_AV_NodeWorldStates[i][GetWorldStateType(j,HORDE)]) << uint32((m_Nodes[i].Owner == HORDE && stateok)?1:0);
         }
-    if(m_Nodes[BG_AV_NODES_SNOWFALL_GRAVE].TotalOwner == AV_NEUTRAL_TEAM) //cause this doesn't get handled in the for-loop above
+    if(m_Nodes[BG_AV_NODES_SNOWFALL_GRAVE].Owner == AV_NEUTRAL_TEAM) //cause neutral teams aren't handled generic
         data << uint32(AV_SNOWFALL_N) << uint32(1);
     data << uint32(AV_Alliance_Score)  << uint32(m_Team_Scores[0]);
     data << uint32(AV_Horde_Score) << uint32(m_Team_Scores[1]);
@@ -1099,62 +1041,65 @@ void BattleGroundAV::FillInitialWorldStates(WorldPacket& data)
     SendMineWorldStates(AV_SOUTH_MINE);
 }
 
-void BattleGroundAV::SendMineWorldStates(uint32 mine) //TODO: don't send so much sensless stuff (just make one state true and one state false, currently i make two false
+const uint8 BattleGroundAV::GetWorldStateType(uint8 state, uint16 team) //this is used for node worldstates and returns values which fit good into the worldstatesarray
 {
-    assert(mine == AV_NORTH_MINE || mine==AV_SOUTH_MINE);
-    if(mine == AV_NORTH_MINE)
+    //neutral stuff cant get handled (currently its only snowfall)
+    assert(team != AV_NEUTRAL_TEAM);
+//a_c a_a h_c h_a the positions in worldstate-array
+    if(team == ALLIANCE)
     {
-        if(m_Mine_Owner[AV_NORTH_MINE] == ALLIANCE)
-        {
-            UpdateWorldState(AV_N_MINE_A,1);
-            UpdateWorldState(AV_N_MINE_N,0);
-            UpdateWorldState(AV_N_MINE_H,0);
-        }
-        else if(m_Mine_Owner[AV_NORTH_MINE] == HORDE)
-        {
-            UpdateWorldState(AV_N_MINE_A,0);
-            UpdateWorldState(AV_N_MINE_N,0);
-            UpdateWorldState(AV_N_MINE_H,1);
-        }
-        else
-        {
-            UpdateWorldState(AV_N_MINE_A,0);
-            UpdateWorldState(AV_N_MINE_N,1);
-            UpdateWorldState(AV_N_MINE_H,0);
-        }
+        if(state==POINT_CONTROLED || state==POINT_DESTROYED)
+            return 0;
+        if(state==POINT_ASSAULTED)
+            return 1;
     }
-    else
+    if(team == HORDE)
     {
-        if(m_Mine_Owner[AV_SOUTH_MINE] == ALLIANCE)
-        {
-            UpdateWorldState(AV_S_MINE_A,1);
-            UpdateWorldState(AV_S_MINE_N,0);
-            UpdateWorldState(AV_S_MINE_H,0);
-        }
-        else if(m_Mine_Owner[AV_SOUTH_MINE] == HORDE)
-        {
-            UpdateWorldState(AV_S_MINE_A,0);
-            UpdateWorldState(AV_S_MINE_N,0);
-            UpdateWorldState(AV_S_MINE_H,1);
-        }
-        else
-        {
-            UpdateWorldState(AV_S_MINE_A,0);
-            UpdateWorldState(AV_S_MINE_N,1);
-            UpdateWorldState(AV_S_MINE_H,0);
-        }
+        if(state==POINT_DESTROYED || state==POINT_CONTROLED)
+            return 2;
+        if(state==POINT_ASSAULTED)
+            return 3;
     }
+    sLog.outError("BG_AV: should update a strange worldstate state:%i team:%i",state,team);
 }
 
+void BattleGroundAV::UpdateNodeWorldState(BG_AV_Nodes node)
+{
+    UpdateWorldState(BG_AV_NodeWorldStates[node][GetWorldStateType(m_Nodes[node].State,m_Nodes[node].Owner)],1);
+    if(m_Nodes[node].PrevOwner == AV_NEUTRAL_TEAM) //currently only snowfall is supported as neutral node (i don't want to make an extra row (neutral states) in worldstatesarray just for one node
+        UpdateWorldState(AV_SNOWFALL_N,0);
+    else
+        UpdateWorldState(BG_AV_NodeWorldStates[node][GetWorldStateType(m_Nodes[node].PrevState,m_Nodes[node].PrevOwner)],0);
+}
 
+void BattleGroundAV::SendMineWorldStates(uint32 mine)
+{
+    assert(mine == AV_NORTH_MINE || mine==AV_SOUTH_MINE);
 
+    uint8 owner,prevowner,mine2; //those variables are needed to access the right worldstate in the BG_AV_MineWorldStates array
+    mine2 = (mine==AV_NORTH_MINE)?0:1;
+    if(m_Mine_PrevOwner[mine] == ALLIANCE)
+        prevowner = 0;
+    else if(m_Mine_PrevOwner[mine] == HORDE)
+        prevowner = 2;
+    else
+        prevowner = 1;
+    if(m_Mine_Owner[mine] == ALLIANCE)
+        owner = 0;
+    else if(m_Mine_Owner[mine] == HORDE)
+        owner = 2;
+    else
+        owner = 1;
 
+    UpdateWorldState(BG_AV_MineWorldStates[mine2][owner],1);
+    UpdateWorldState(BG_AV_MineWorldStates[mine2][prevowner],0);
+}
 
 
 WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(float x, float y, float z, uint32 MapId, uint32 team)
 {
     WorldSafeLocsEntry const* good_entry = NULL;
-    if( GetStatus() == STATUS_IN_PROGRESS) //TODO: get out, if this is right (if a player dies before game starts and gets ressurected in main graveyard)
+    if( GetStatus() == STATUS_IN_PROGRESS)
     {
         // Is there any occupied node for this team?
         float mindist = 9999999.0f;
@@ -1394,6 +1339,8 @@ void BattleGroundAV::ResetBGSubclass()
             m_Team_QuestStatus[i][j]=0;
 	m_Team_Scores[i]=BG_AV_SCORE_INITIAL_POINTS;
         m_IsInformedNearVictory[i]=false;
+        m_CaptainAlive[i] = true;
+        m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
     }
     for(BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_STONEHEART_GRAVE; ++i) //alliance graves
         InitNode(i,ALLIANCE,false);
@@ -1407,6 +1354,9 @@ void BattleGroundAV::ResetBGSubclass()
 
     m_Mine_Owner[AV_NORTH_MINE] = BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][1];
     m_Mine_Owner[AV_SOUTH_MINE] = BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][1];
+    m_Mine_PrevOwner[AV_NORTH_MINE] = m_Mine_Owner[AV_NORTH_MINE];
+    m_Mine_PrevOwner[AV_SOUTH_MINE] = m_Mine_Owner[AV_SOUTH_MINE];
+
     for(uint16 i = 0; i < AV_CPLACE_MAX+AV_STATICCPLACE_MAX; i++)
         if(m_BgCreatures[i])
             DelCreature(i);

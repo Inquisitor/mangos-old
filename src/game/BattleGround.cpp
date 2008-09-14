@@ -945,13 +945,24 @@ void BattleGround::DoorOpen(uint32 type)
         sLog.outError("BattleGround: Door object not found! - doors will be closed.");
     }
 }
+
 GameObject* BattleGround::GetBGObject(uint32 type)
 {
     GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
     if(!obj)
-        sLog.outError("couldn't get gameobject %i");
+        sLog.outError("couldn't get gameobject %i",type);
     return obj;
 }
+
+Creature* BattleGround::GetBGCreature(uint32 type)
+{
+    sLog.outError("muh get creature %i",type);
+    Creature *creature = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
+    if(!creature)
+        sLog.outError("couldn't get creature %i",type);
+    return creature;
+}
+
 void BattleGround::SpawnBGObject(uint32 type, uint32 respawntime)
 {
     if( respawntime == 0 )
