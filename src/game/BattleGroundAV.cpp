@@ -296,7 +296,7 @@ void BattleGroundAV::Update(time_t diff)
             // Initial Nodes
             for(i = 0; i < BG_AV_OBJECT_MAX; i++)
                 SpawnBGObject(i, RESPAWN_ONE_DAY);
-            for(uint8 i = BG_AV_OBJECT_FLAG_A_FIRSTAID_STATION; i <= BG_AV_OBJECT_FLAG_A_STONEHEART_GRAVE ; i++){
+            for(i = BG_AV_OBJECT_FLAG_A_FIRSTAID_STATION; i <= BG_AV_OBJECT_FLAG_A_STONEHEART_GRAVE ; i++){
                 SpawnBGObject(BG_AV_OBJECT_AURA_A_FIRSTAID_STATION+3*i,RESPAWN_IMMEDIATELY);
                 SpawnBGObject(i, RESPAWN_IMMEDIATELY);
             }
