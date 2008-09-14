@@ -254,6 +254,7 @@ void BattleGround::PlaySoundToAll(uint32 SoundID)
 void BattleGround::PlaySoundToTeam(uint32 SoundID, uint32 TeamID)
 {
     WorldPacket data;
+    sBattleGroundMgr.BuildPlaySoundPacket(&data, SoundID);
 
     for(std::map<uint64, BattleGroundPlayer>::iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
     {
@@ -266,10 +267,7 @@ void BattleGround::PlaySoundToTeam(uint32 SoundID, uint32 TeamID)
         }
 
         if(plr->GetTeam() == TeamID)
-        {
-            sBattleGroundMgr.BuildPlaySoundPacket(&data, SoundID);
             plr->GetSession()->SendPacket(&data);
-        }
     }
 }
 
@@ -1174,13 +1172,9 @@ void BattleGround::HandleKillPlayer( Player *player, Player *killer )
 
 int32 BattleGround::GetObjectType(uint64 guid)
 {
-    uint32 i = 0;
-    while(i <= m_BgObjects.size())
-    {
+    for(uint32 i = 0;i <= m_BgObjects.size(); i++)
         if(m_BgObjects[i] == guid)
             return i;
-        else i++;
-    }
     sLog.outError("BattleGround: cheating? a player used a gameobject which isnt supposed to be a usable object!");
     return -1;
 }

@@ -58,6 +58,18 @@ class BattleGround;
 //bonushonor at the end
 #define BG_AV_SURVIVING_TOWER           2
 #define BG_AV_SURVIVING_CAPTAIN         2
+
+
+enum BG_AV_Sounds
+{ //stolen from battlegroundAB.h TODO: implement them + look for the right ids
+    //SOUND_NODE_CLAIMED                  = 8192,
+    //SOUND_NODE_CAPTURED_ALLIANCE        = 8173,
+    //SOUND_NODE_CAPTURED_HORDE           = 8213,
+    //SOUND_NODE_ASSAULTED_ALLIANCE       = 8174,
+    //SOUND_NODE_ASSAULTED_HORDE          = 8212,
+    AV_SOUND_NEAR_VICTORY                  = 8456
+};
+
 enum BG_AV_OTHER_VALUES
 {
     AV_STATICCPLACE_MAX        = 128,
@@ -65,13 +77,14 @@ enum BG_AV_OTHER_VALUES
     AV_NORTH_MINE              = 0,
     AV_SOUTH_MINE              = 1,
     AV_MINE_TICK_TIMER         = 45,
-    AV_MINE_RECLAIM_TIMER      = 900 //TODO: get the right value.. 15 minutes are maybe to short..
+    AV_MINE_RECLAIM_TIMER      = 900, //TODO: get the right value.. 15 minutes are maybe to short..
+    AV_NEUTRAL_TEAM            = 0 //this is the neutral owner of snowfall
 };
 enum BG_AV_ObjectIds
 {
     //cause the mangos-system is a bit different, we don't use the right go-ids for every node.. if we want to be 100% like another big server, we must take one object for every node
     //snowfall 4flags as eyecandy 179424 (alliance neutral)
-    //Banners
+    //Banners - stolen from battleground_AB.h ;-)
     BG_AV_OBJECTID_BANNER_A             = 178925, // can only be used by horde
     BG_AV_OBJECTID_BANNER_H             = 178943, // can only be used by alliance
     BG_AV_OBJECTID_BANNER_CONT_A        = 178940, // can only be used by horde
@@ -82,7 +95,6 @@ enum BG_AV_ObjectIds
     BG_AV_OBJECTID_BANNER_CONT_A_B      = 179286,
     BG_AV_OBJECTID_BANNER_CONT_H_B      = 179287,
     BG_AV_OBJECTID_BANNER_SNOWFALL_N    = 180418,
-
 
     //snowfall eyecandy banner:
     BG_AV_OBJECTID_SNOWFALL_CANDY_A     = 179044,
@@ -320,22 +332,22 @@ enum BG_AV_OBJECTS
     AV_OPLACE_MAX                         = 149
 };
 const float BG_AV_ObjectPos[AV_OPLACE_MAX][4] = {
-    {638.592f,-32.422f,46.0608f,-1.62316f },//firstaid station - OK
-    {669.007f,-294.078f,30.2909f,2.77507f },//stormpike -OK
-    {77.8013f,-404.7f,46.7549f,-0.872665f },//stone grave - OK
-    {-202.581f,-112.73f,78.4876f,-0.715585f },//snowfall - OK
+    {638.592f,-32.422f,46.0608f,-1.62316f },//firstaid station
+    {669.007f,-294.078f,30.2909f,2.77507f },//stormpike
+    {77.8013f,-404.7f,46.7549f,-0.872665f },//stone grave
+    {-202.581f,-112.73f,78.4876f,-0.715585f },//snowfall
     {-611.962f,-396.17f,60.8351f,2.53682f},  //ice grave
-    {-1082.45f,-346.823f,54.9219f,-1.53589f },//frostwolf grave - OK
-    {-1402.21f,-307.431f,89.4424f,0.191986f },//frostwolf hut - OK
-    {553.779f,-78.6566f,51.9378f,-1.22173f }, //dunnbaldar south - OK
-    {674.001f,-143.125f,63.6615f,0.994838f }, //dunbaldar north - OK
-    {203.281f,-360.366f,56.3869f,-0.925024f }, //icew - OK
-    {-152.437f,-441.758f,40.3982f,-1.95477f }, //stone - OK
-    {-571.88f,-262.777f,75.0087f,-0.802851f }, //ice tower - OK
+    {-1082.45f,-346.823f,54.9219f,-1.53589f },//frostwolf grave
+    {-1402.21f,-307.431f,89.4424f,0.191986f },//frostwolf hut
+    {553.779f,-78.6566f,51.9378f,-1.22173f }, //dunnbaldar south
+    {674.001f,-143.125f,63.6615f,0.994838f }, //dunbaldar north
+    {203.281f,-360.366f,56.3869f,-0.925024f }, //icew
+    {-152.437f,-441.758f,40.3982f,-1.95477f }, //stone
+    {-571.88f,-262.777f,75.0087f,-0.802851f }, //ice tower
     {-768.907f,-363.71f,90.8949f,1.07991f},  //tower point
-    {-1302.9f,-316.981f,113.867f,2.00713f }, //frostwolf etower - OK
+    {-1302.9f,-316.981f,113.867f,2.00713f }, //frostwolf etower
     {-1297.5f,-266.767f,114.15f,3.31044f},   //frostwolf wtower
-    //bigbanner: all ok
+    //bigbanner:
     {555.848f,-84.4151f,64.4397f,3.12414f }, //duns
     {679.339f,-136.468f,73.9626f,-2.16421f }, //dunn
     {208.973f,-365.971f,66.7409f,-0.244346f }, //icew
@@ -1231,50 +1243,50 @@ const float BG_AV_StaticCreaturePos[AV_STATICCPLACE_MAX][5] = { //static creatur
 };
 
 const uint32 BG_AV_StaticCreatureInfo[51][4] = {
-    { 2225, 1215, 65, 65 }, //Zora Guthrek
-    { 3343, 1215, 65, 65 }, //Grelkor
-    { 3625, 1215, 65, 65 }, //Rarck
-    { 4255, 1217, 65, 65 }, //Brogus Thunderbrew
-    { 4257, 1217, 65, 65 }, //Lana Thunderbrew
-    { 5134, 1217, 65, 65 }, //Jonivera Farmountain
-    { 5135, 1217, 65, 65 }, //Svalbrad Farmountain
-    { 5139, 1217, 65, 65 }, //Kurdrum Barleybeard
-    { 10364, 1215, 65, 65 }, //Yaelika Farclaw
-    { 10367, 1215, 65, 65 }, //Shrye Ragefist
+    { 2225, 1215, 55, 55 }, //Zora Guthrek
+    { 3343, 1215, 55, 55 }, //Grelkor
+    { 3625, 1215, 55, 55 }, //Rarck
+    { 4255, 1217, 55, 55 }, //Brogus Thunderbrew
+    { 4257, 1217, 55, 55 }, //Lana Thunderbrew
+    { 5134, 1217, 55, 55 }, //Jonivera Farmountain
+    { 5135, 1217, 55, 55 }, //Svalbrad Farmountain
+    { 5139, 1217, 55, 55 }, //Kurdrum Barleybeard
+    { 10364, 1215, 55, 55 }, //Yaelika Farclaw
+    { 10367, 1215, 55, 55 }, //Shrye Ragefist
     { 10981, 38, 50, 51 }, //Frostwolf
-    { 10986, 514, 62, 63 }, //Snowblind Harpy
-    { 10990, 1274, 60, 61 }, //Alterac Ram
-    { 11675, 514, 63, 63 }, //Snowblind Windcaller
+    { 10986, 514, 52, 53 }, //Snowblind Harpy
+    { 10990, 1274, 50, 51 }, //Alterac Ram
+    { 11675, 514, 53, 53 }, //Snowblind Windcaller
     { 11678, 14, 52, 53 }, //Snowblind Ambusher
-    { 11839, 39, 66, 66 }, //Wildpaw Brute
+    { 11839, 39, 56, 56 }, //Wildpaw Brute
     { 11947, 1214, 61, 61 }, //Captain Galvangar
     { 11948, 1216, 63, 63 }, //Vanndar Stormpike
     { 11949, 1216, 61, 61 }, //Captain Balinda Stonehearth
     { 11997, 1334, 60, 60 }, //Stormpike Herald
-    { 12051, 1214, 67, 67 }, //Frostwolf Legionnaire
-    { 12096, 1217, 65, 65 }, //Stormpike Quartermaster
-    { 12097, 1215, 65, 65 }, //Frostwolf Quartermaster
-    { 12127, 1216, 67, 67 }, //Stormpike Guardsman
+    { 12051, 1214, 57, 57 }, //Frostwolf Legionnaire
+    { 12096, 1217, 55, 55 }, //Stormpike Quartermaster
+    { 12097, 1215, 55, 55 }, //Frostwolf Quartermaster
+    { 12127, 1216, 57, 57 }, //Stormpike Guardsman
     { 13176, 1215, 60, 60 }, //Smith Regzar
-    { 13179, 1215, 69, 69 }, //Wing Commander Guse
-    { 13216, 1217, 68, 68 }, //Gaelden Hammersmith
-    { 13218, 1215, 68, 68 }, //Grunnda Wolfheart
+    { 13179, 1215, 59, 59 }, //Wing Commander Guse
+    { 13216, 1217, 58, 58 }, //Gaelden Hammersmith
+    { 13218, 1215, 58, 58 }, //Grunnda Wolfheart
     { 13236, 1214, 60, 60 }, //Primalist Thurloga
     { 13257, 1216, 60, 60 }, //Murgot Deepforge
-    { 13284, 1214, 68, 68 }, //Frostwolf Shaman
-    { 13438, 1217, 68, 68 }, //Wing Commander Slidore
+    { 13284, 1214, 58, 58 }, //Frostwolf Shaman
+    { 13438, 1217, 58, 58 }, //Wing Commander Slidore
     { 13442, 1216, 60, 60 }, //Arch Druid Renferal
     { 13443, 1216, 60, 60 }, //Druid of the Grove
-    { 13447, 1216, 68, 68 }, //Corporal Noreg Stormpike
+    { 13447, 1216, 58, 58 }, //Corporal Noreg Stormpike
     { 13577, 1216, 60, 60 }, //Stormpike Ram Rider Commander
     { 13617, 1216, 60, 60 }, //Stormpike Stable Master
     { 13797, 32, 60, 61 }, //Mountaineer Boombellow
     { 13798, 1214, 60, 61 }, //Jotek
     { 13816, 1216, 61, 61 }, //Prospector Stonehewer
-    { 14185, 877, 69, 69 }, //Najak Hexxen
+    { 14185, 877, 59, 59 }, //Najak Hexxen
     { 14186, 105, 60, 60 }, //Ravak Grimtotem
     { 14187, 1594, 60, 60 }, //Athramanis
-    { 14188, 57, 69, 69 }, //Dirk Swindle
+    { 14188, 57, 59, 59 }, //Dirk Swindle
     { 14282, 1214, 53, 54 }, //Frostwolf Bloodhound
     { 14283, 1216, 53, 54 }, //Stormpike Owl
     { 14284, 1216, 61, 61 }, //Stormpike Battleguard
@@ -1517,6 +1529,19 @@ enum BG_AV_QuestIds
     AV_QUEST_H_RIDER_TAME   = 7001
 };
 
+struct BG_AV_NodeInfo
+{
+    uint16       TotalOwner;
+    uint16       Owner;
+    uint16       PrevOwner;
+    BG_AV_States State;
+    BG_AV_States PrevState;
+    int          Timer;
+    bool         Tower;
+};
+
+inline BG_AV_Nodes &operator++(BG_AV_Nodes &i){ return i = BG_AV_Nodes(i + 1); }
+
 class BattleGroundAVScore : public BattleGroundScore
 {
     public:
@@ -1548,52 +1573,67 @@ class BattleGroundAV : public BattleGround
         bool SetupBattleGround();
         virtual void ResetBGSubclass();
 
-        /* Nodes occupying */
-        void EventPlayerClaimsPoint(Player *player, uint64 guid, uint32 entry);
-        void EventPlayerAssaultsPoint(Player* player, uint32 type);
-        void EventPlayerDefendsPoint(Player* player, uint32 type);
-        void EventPlayerDestroyedPoint(uint32 node);
-        void UpdatePointsIcons(uint8 node);
+        /*general stuff*/
         void UpdateScore(uint16 team, int16 points);
-        void UpdateNode(uint32 type, uint32 state);
-        void DePopulateMine(uint8 mine);
-        void PopulateMine(uint8 mine);
-        void PopulateNode(uint32 node);
-        void DePopulateNode(uint32 node);
-        const uint8 GetNodePlace(uint32 guid);
-        const uint32 GetPlaceNode(uint8 node);
-        const char* GetNodeName(uint8 node);
-        const bool IsTower(uint8 node);
-        const uint16 GetBonusHonor(uint8 kills);
+       void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
 
-        /* Scorekeeping */
-        void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
+        /*handlestuff*/ //these are functions which get called from extern
+        virtual void EventPlayerClickedOnFlag(Player *source, GameObject* target_obj);
         void HandleKillPlayer(Player* player, Player *killer);
         void HandleKillUnit(Creature *unit, Player *killer);
-        virtual WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 MapId, uint32 team);
-        void UpdateQuest(uint32 questid, Player *player);
-        void SendMineWorldStates(uint32 mine);
+        void UpdateQuest(uint32 questid, Player *player); //todo rename this
         bool PlayerCanDoMineQuest(int32 GOId,uint32 team);
 
+
+
+        virtual WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 MapId, uint32 team);
+
     private:
+        /* Nodes occupying */
+        void EventPlayerAssaultsPoint(Player* player, uint32 object);
+        void EventPlayerDefendsPoint(Player* player, uint32 object);
+        void EventPlayerDestroyedPoint(BG_AV_Nodes node);
+
+        void AssaultNode(BG_AV_Nodes node,uint16 team);
+        void DestroyNode(BG_AV_Nodes node);
+        void InitNode(BG_AV_Nodes node, uint16 team, bool tower);
+        void DefendNode(BG_AV_Nodes node, uint16 team);
+
+        void PopulateNode(BG_AV_Nodes node);
+        void DePopulateNode(BG_AV_Nodes node);
+
+        const BG_AV_Nodes GetNodeThroughObject(uint32 object);
+        const uint32 GetObjectThroughNode(BG_AV_Nodes node);
+        const char* GetNodeName(BG_AV_Nodes node);
+        const bool IsTower(BG_AV_Nodes node) {   return m_Nodes[node].Tower; }
+
+
+        /*mine stuff */
+        void DePopulateMine(uint8 mine);
+        void PopulateMine(uint8 mine);
+
+        /*worldstates*/
         void FillInitialWorldStates(WorldPacket& data);
         const uint8 GetWorldStateType(uint8 state, uint16 team);
+        void SendMineWorldStates(uint32 mine);
+        void UpdateNodeWorldState(BG_AV_Nodes node);
+
+        /*general */
         bool AddAVCreature(uint8 cinfoid, uint16 type);
+        const uint16 GetBonusHonor(uint8 kills); //TODO remove this when mangos handles this right (patch in forum exists already)
+
+        /*variables */
         int32 m_Team_Scores[2];
         uint32 m_Team_QuestStatus[2][9]; //[x][y] x=team y=questcounter
-        uint32 m_Points_Owner[BG_AV_NODES_MAX];
-        uint32 m_Points_PrevOwner[BG_AV_NODES_MAX];
-        uint32 m_Points_State[BG_AV_NODES_MAX];
-        uint32 m_Points_PrevState[BG_AV_NODES_MAX];
-        int32  m_Points_Timer[BG_AV_NODES_MAX];
+
+        BG_AV_NodeInfo m_Nodes[BG_AV_NODES_MAX];
 
         uint32 m_Mine_Owner[2];
-        uint32 m_Mine_Timer;
+        uint32 m_Mine_Timer; //ticks for both teams
         uint32 m_Mine_Reclaim_Timer[2];
 
         uint8 m_MaxLevel; //TODO remove this when battlegroundmgr provides a function for this..
-        bool m_Snowfall_Capped;
-        bool m_IsInformedNearVictory;
+        bool m_IsInformedNearVictory[2];
 
 };
 
