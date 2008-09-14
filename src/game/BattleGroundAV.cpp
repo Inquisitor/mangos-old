@@ -54,7 +54,7 @@ void BattleGroundAV::HandleKillPlayer(Player *player, Player *killer)
 {
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
-	UpdateScore((player->GetTeam() == ALLIANCE) ? HORDE : ALLIANCE,-1);
+	UpdateScore(player->GetTeam(),-1);
 }
 
 void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
@@ -234,11 +234,14 @@ void BattleGroundAV::UpdateScore(uint16 team, int16 points )
 	    UpdateWorldState(AV_Horde_Score, m_Team_Scores[1]);
     }
     else
+    {
         sLog.outError("BG_AV unknown team %i in updatescore",team);
+        return;
+    }
 
 //TODO:get out at which point this message comes and which text will be displayed and also find out, if this can be displayed 2 times in a bg (for both teams)
 //and surely it's better to add this code abovee
-    if( !m_IsInformedNearVictory && points<0)
+    if( points < 0 && !m_IsInformedNearVictory)
     {
         for(uint8 i=0; i<2; i++)
         {
