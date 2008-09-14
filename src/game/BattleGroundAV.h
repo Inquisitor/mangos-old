@@ -1492,7 +1492,7 @@ class BattleGroundAV : public BattleGround
         virtual void EventPlayerClickedOnFlag(Player *source, GameObject* target_obj);
         void HandleKillPlayer(Player* player, Player *killer);
         void HandleKillUnit(Creature *unit, Player *killer);
-        void UpdateQuest(uint32 questid, Player *player); //todo rename this
+        void HandleQuestComplete(uint32 questid, Player *player); //todo rename this
         bool PlayerCanDoMineQuest(int32 GOId,uint32 team);
 
 
@@ -1530,7 +1530,7 @@ class BattleGroundAV : public BattleGround
         void UpdateNodeWorldState(BG_AV_Nodes node);
 
         /*general */
-        bool AddAVCreature(uint8 cinfoid, uint16 type);
+        Creature* AddAVCreature(uint8 cinfoid, uint16 type);
         const uint16 GetBonusHonor(uint8 kills); //TODO remove this when mangos handles this right (patch in forum exists already)
 
         /*variables */

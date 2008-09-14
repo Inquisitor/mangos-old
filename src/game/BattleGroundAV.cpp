@@ -106,7 +106,7 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     }
 }
 
-void BattleGroundAV::UpdateQuest(uint32 questid, Player *player)
+void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;//maybe we should log this, cause this must be a cheater or a big bug
@@ -235,22 +235,16 @@ void BattleGroundAV::UpdateScore(uint16 team, int16 points )
 }
 
 
-bool BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type )
+Creature* BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type )
 {
     uint32 level;
-    Creature* creature;
-    if(type > AV_CPLACE_MAX + AV_STATICCPLACE_MAX)
-    {
-        sLog.outError("BG_AV: addavcreature received strange type %i",type); //hopefully everything works..
-        return false;
-    }
+    Creature* creature = NULL;
+    assert(type <= AV_CPLACE_MAX + AV_STATICCPLACE_MAX);
     if(type>=AV_CPLACE_MAX) //static
     {
         type-=(AV_CPLACE_MAX);
         cinfoid=int(BG_AV_StaticCreaturePos[type][4]);
 
-        if(cinfoid==25 || cinfoid==31) //TODO: remove this (but don't forget to remove this from the header-file
-            return true;
         creature = AddCreature(BG_AV_StaticCreatureInfo[cinfoid][0],(type+AV_CPLACE_MAX),BG_AV_StaticCreatureInfo[cinfoid][1],BG_AV_StaticCreaturePos[type][0],BG_AV_StaticCreaturePos[type][1],BG_AV_StaticCreaturePos[type][2],BG_AV_StaticCreaturePos[type][3]);
         level = ( BG_AV_StaticCreatureInfo[cinfoid][2] == BG_AV_StaticCreatureInfo[cinfoid][3] ) ? BG_AV_StaticCreatureInfo[cinfoid][2] : urand(BG_AV_StaticCreatureInfo[cinfoid][2],BG_AV_StaticCreatureInfo[cinfoid][3]);
         CreatureData &data = objmgr.NewOrExistCreatureData(creature->GetDBTableGUIDLow());
@@ -271,7 +265,7 @@ bool BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type )
     if(level != 0)
         level += m_MaxLevel-60; //maybe we can do this more generic for custom level-range.. actually it's blizzlike
     creature->SetLevel(level);
-    return true;
+    return creature;
 }
 
 void BattleGroundAV::Update(time_t diff)

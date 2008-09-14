@@ -392,7 +392,6 @@ void WorldSession::HandleQuestComplete(WorldPacket& recv_data)
     uint64 guid;
     recv_data >> guid >> quest;
 
-    BattleGround* bg;
     if(!GetPlayer()->isAlive())
         return;
 
@@ -403,9 +402,9 @@ void WorldSession::HandleQuestComplete(WorldPacket& recv_data)
     if( pQuest )
     {
         if(GetPlayer()->InBattleGround())
-            if(bg = GetPlayer()->GetBattleGround())
+            if(BattleGround* bg = GetPlayer()->GetBattleGround())
                 if(bg->GetTypeID() == BATTLEGROUND_AV)
-                    ((BattleGroundAV*)bg)->UpdateQuest(quest, GetPlayer());
+                    ((BattleGroundAV*)bg)->HandleQuestComplete(quest, GetPlayer());
 
         if( _player->GetQuestStatus( quest ) != QUEST_STATUS_COMPLETE )
         {
