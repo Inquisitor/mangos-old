@@ -31,7 +31,7 @@
 BattleGroundAV::BattleGroundAV()
 {
 
-    m_BgObjects.resize(BG_AV_OBJECT_MAX+AV_STATICOPLACE_MAX);
+    m_BgObjects.resize(BG_AV_OBJECT_MAX);
     m_BgCreatures.resize(AV_CPLACE_MAX+AV_STATICCPLACE_MAX);
 }
 
@@ -326,9 +326,6 @@ void BattleGroundAV::Update(time_t diff)
             sLog.outDebug("BG_AV: start spawning static creatures");
             for(i=0; i < AV_STATICCPLACE_MAX; i++ )
                 AddAVCreature(0,i+AV_CPLACE_MAX);
-            //the same for gameobjects:
-            for(i=0; i < AV_STATICOPLACE_MAX; i++)
-                SpawnBGObject(BG_AV_OBJECT_MAX+i,RESPAWN_IMMEDIATELY);
 		//mainspiritguides:
             sLog.outDebug("BG_AV: start spawning spiritguides creatures");
 	        AddSpiritGuide(7, BG_AV_CreaturePos[7][0], BG_AV_CreaturePos[7][1], BG_AV_CreaturePos[7][2], BG_AV_CreaturePos[7][3], ALLIANCE);
@@ -1312,14 +1309,6 @@ bool BattleGroundAV::SetupBattleGround()
             || !AddObject(BG_AV_OBJECT_SNOW_EYECANDY_PH+i, BG_AV_OBJECTID_SNOWFALL_CANDY_PH ,BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][0],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][1],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][2],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3],0,0,sin(BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3]/2), cos(BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3]/2), RESPAWN_ONE_DAY))
         {
             sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!9.%i",i);
-            return false;
-        }
-    }
-    for(uint8 i = 0; i< AV_STATICOPLACE_MAX; i++)
-    {
-        if(!AddObject(BG_AV_OBJECT_MAX+i,int(BG_AV_StaticObjectPos[i][4]) ,BG_AV_StaticObjectPos[i][0],BG_AV_StaticObjectPos[i][1],BG_AV_StaticObjectPos[i][2],BG_AV_StaticObjectPos[i][3],0,0,sin(BG_AV_StaticObjectPos[i][3]/2), cos(BG_AV_StaticObjectPos[i][3]/2), RESPAWN_ONE_DAY))
-        {
-            sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!10.%i",i);
             return false;
         }
     }
