@@ -282,13 +282,15 @@ void BattleGroundAV::Update(time_t diff)
         if (!(m_Events & 0x01))
         {
             m_Events |= 0x01;
-            #ifdef BATTLEGROUND_ARENA_POINT_DISTRIBUTION_DAY
+            //comment this out if you are running with arenapatch
+            /*
             if(!SetupBattleGround()) //the above ifdef is for arenapatch, please report, if this doesn't work
             {
                 EndNow();
                 return;
             }
-            #endif
+            */
+
             uint16 i;
             sLog.outDebug("Alterac Valley: entering state STATUS_WAIT_JOIN ...");
             // Initial Nodes
@@ -1061,6 +1063,7 @@ const uint8 BattleGroundAV::GetWorldStateType(uint8 state, uint16 team) //this i
             return 3;
     }
     sLog.outError("BG_AV: should update a strange worldstate state:%i team:%i",state,team);
+    return 5; //this will crash the game, but i want to know if something is wrong here
 }
 
 void BattleGroundAV::UpdateNodeWorldState(BG_AV_Nodes node)

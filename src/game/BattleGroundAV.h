@@ -278,7 +278,7 @@ enum BG_AV_ObjectTypes
     BG_AV_OBJECT_MINE_SUPPLY_S_MIN           = 225,
     BG_AV_OBJECT_MINE_SUPPLY_S_MAX           = 236,
 
-    BG_AV_OBJECT_MAX                          = 235
+    BG_AV_OBJECT_MAX                          = 237
 };
 
 
