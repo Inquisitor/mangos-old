@@ -509,8 +509,8 @@ void BattleGroundAV::HandleAreaTrigger(Player *Source, uint32 Trigger)
 			//Source->Unmount();
             break;
         default:
-            sLog.outError("WARNING: Unhandled AreaTrigger in Battleground: %u", Trigger);
-            Source->GetSession()->SendAreaTriggerMessage("Warning: Unhandled AreaTrigger in Battleground: %u", Trigger);
+            sLog.outDebug("WARNING: Unhandled AreaTrigger in Battleground: %u", Trigger);
+//            Source->GetSession()->SendAreaTriggerMessage("Warning: Unhandled AreaTrigger in Battleground: %u", Trigger);
             break;
     }
 
