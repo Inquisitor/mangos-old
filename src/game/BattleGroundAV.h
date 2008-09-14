@@ -987,10 +987,10 @@ const uint32 BG_AV_CreatureInfo[AV_NPC_INFO_MAX][4] = {
     { 14764, 1534, 60, 60 }, //Icewing Marshal
     { 14765, 1534, 60, 60 }, //Stonehearth Marshal
 
-    { 14773, 1214, 70, 70 }, //Iceblood Warmaster
-    { 14776, 1214, 70, 70 }, //Tower Point Warmaster
-    { 14772, 1214, 70, 70 }, //East Frostwolf Warmaster
-    { 14777, 1214, 70, 70 }, //West Frostwolf Warmaster
+    { 14773, 1214, 60, 60 }, //Iceblood Warmaster
+    { 14776, 1214, 60, 60 }, //Tower Point Warmaster
+    { 14772, 1214, 60, 60 }, //East Frostwolf Warmaster
+    { 14777, 1214, 60, 60 }, //West Frostwolf Warmaster
 
     { 10987, 59, 52, 53 }, //Irondeep Trogg
     { 11600, 59, 53, 54 }, //Irondeep Shaman
@@ -1170,7 +1170,7 @@ const uint32 BG_AV_StaticCreatureInfo[51][4] = {
     { 11675, 514, 53, 53 }, //Snowblind Windcaller
     { 11678, 14, 52, 53 }, //Snowblind Ambusher
     { 11839, 39, 56, 56 }, //Wildpaw Brute
-    { 11947, 1214, 61, 61 }, //Captain Galvangar
+    { 11947, 1214, 61, 61 }, //Captain Galvangar --TODO: doubled
     { 11948, 1216, 63, 63 }, //Vanndar Stormpike
     { 11949, 1216, 61, 61 }, //Captain Balinda Stonehearth
     { 11997, 1334, 60, 60 }, //Stormpike Herald
