@@ -358,7 +358,7 @@ void WorldSession::HandleCancelAuraOpcode( WorldPacket& recvPacket)
 
     _player->RemoveAurasDueToSpellByCancel(spellId);
 
-    if (spellId == SPELL_WAITING_FOR_RESURRECT)                                    // Waiting to resurrect spell cancel, we must remove player from resurrect queue
+    if (spellId == 2584)                                    // Waiting to resurrect spell cancel, we must remove player from resurrect queue
     {
         BattleGround *bg = _player->GetBattleGround();
         if(!bg)

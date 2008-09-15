@@ -706,8 +706,6 @@ void BattleGround::AddPlayer(Player *plr)
 
     if(isArena())
     {
-<<<<<<< HEAD:src/game/BattleGround.cpp
-<<<<<<< HEAD:src/game/BattleGround.cpp
         plr->RemoveArenaSpellCooldowns();
         //plr->RemoveArenaAuras();
         plr->RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
@@ -722,18 +720,6 @@ void BattleGround::AddPlayer(Player *plr)
         plr->DestroyConjuredItems(true);
 
         if(GetStatus() == STATUS_WAIT_JOIN)                 // not started yet
-=======
-        if(!plr->isAlive())                              // resurrect on exit
-        {
-            plr->ResurrectPlayer(1.0f);
-            plr->SpawnCorpseBones();
-        }
-        RemovePlayer(plr, guid);                                // BG subclass specific code
-
-=======
->>>>>>> 13.6.9:src/game/BattleGround.cpp
-        if(isArena())
->>>>>>> 13.6.5:src/game/BattleGround.cpp
         {
             plr->CastSpell(plr, SPELL_ARENA_PREPARATION, true);
 
