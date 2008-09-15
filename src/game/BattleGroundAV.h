@@ -1551,9 +1551,9 @@ class BattleGroundAV : public BattleGround
 
         uint32 m_Mine_Owner[2];
         uint32 m_Mine_PrevOwner[2]; //only for worldstates needed
-        int32 m_Mine_Timer; //ticks for both teams
-        int32 m_Mine_Reclaim_Timer[2];
-        int32 m_CaptainBuffTimer[2];
+        int m_Mine_Timer; //ticks for both teams
+        int m_Mine_Reclaim_Timer[2];
+        uint m_CaptainBuffTimer[2];
         bool m_CaptainAlive[2];
 
         uint8 m_MaxLevel; //TODO remove this when battleground-getmaxlevel() returns something usefull

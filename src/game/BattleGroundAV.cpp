@@ -115,7 +115,7 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;//maybe we should log this, cause this must be a cheater or a big bug
-    uint8 team = (player->GetTeam() == ALLIANCE)? 0 : 1;
+    uint8 team = GetTeamIndexByTeamId(player->GetTeam());
     //TODO add reputation, events (including quest not available anymore, next quest availabe, go/npc de/spawning)and maybe honor
     sLog.outError("BG_AV Quest %i completed",questid);
     switch(questid)
