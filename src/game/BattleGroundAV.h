@@ -1426,7 +1426,6 @@ enum BG_AV_ItemIds
 
 enum BG_AV_QuestIds
 {
-    //TODO search and add the questids (and also search and add the first for example 6781 has 7223 first)
     AV_QUEST_A_SCRAPS1      = 7223,
     AV_QUEST_A_SCRAPS2      = 6781,
     AV_QUEST_H_SCRAPS1      = 7224,
@@ -1503,7 +1502,7 @@ class BattleGroundAV : public BattleGround
         virtual void EventPlayerClickedOnFlag(Player *source, GameObject* target_obj);
         void HandleKillPlayer(Player* player, Player *killer);
         void HandleKillUnit(Creature *unit, Player *killer);
-        void HandleQuestComplete(uint32 questid, Player *player); //todo rename this
+        void HandleQuestComplete(uint32 questid, Player *player);
         bool PlayerCanDoMineQuest(int32 GOId,uint32 team);
 
 
@@ -1542,7 +1541,7 @@ class BattleGroundAV : public BattleGround
 
         /*general */
         Creature* AddAVCreature(uint8 cinfoid, uint16 type);
-        const uint16 GetBonusHonor(uint8 kills); //TODO remove this when mangos handles this right (patch in forum exists already)
+        const uint16 GetBonusHonor(uint8 kills); //TODO remove this when mangos handles this right
 
         /*variables */
         int32 m_Team_Scores[2];
@@ -1557,7 +1556,7 @@ class BattleGroundAV : public BattleGround
         int32 m_CaptainBuffTimer[2];
         bool m_CaptainAlive[2];
 
-        uint8 m_MaxLevel; //TODO remove this when battlegroundmgr provides a function for this..
+        uint8 m_MaxLevel; //TODO remove this when battleground-getmaxlevel() returns something usefull
         bool m_IsInformedNearVictory[2];
 
 
