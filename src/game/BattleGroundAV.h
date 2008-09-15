@@ -39,6 +39,11 @@ class BattleGround;
 #define LANG_BG_AV_A_NEAR_LOSE           "The Alliance has only few Points left!" //TODO: look for the right sentence
 #define LANG_BG_AV_H_NEAR_LOSE           "The Horde has only few Points left!"      //TODO: here also..
 
+#define LANG_BG_AV_A_CAPTAIN_BUFF       "Take heart, Alliance! Throw these villains from Alterac Valley!"
+#define LANG_BG_AV_H_CAPTAIN_BUFF       "Now is the time to attack! For the Horde!"
+
+#define LANG_BG_AV_S_MINE_BOSS_CLAIMS   "Snivvle is here! Snivvle claims the Coldtooth Mine!"
+
 #define SEND_MSG_NEAR_LOSE               120
 #define BG_AV_SPIRITGUIDE_ENTRY_A        13116
 #define BG_AV_CAPTIME                    240000  //4:00
@@ -61,12 +66,7 @@ class BattleGround;
 
 
 enum BG_AV_Sounds
-{ //stolen from battlegroundAB.h TODO: implement them + look for the right ids
-    //SOUND_NODE_CLAIMED                  = 8192,
-    //SOUND_NODE_CAPTURED_ALLIANCE        = 8173,
-    //SOUND_NODE_CAPTURED_HORDE           = 8213,
-    //SOUND_NODE_ASSAULTED_ALLIANCE       = 8174,
-    //SOUND_NODE_ASSAULTED_HORDE          = 8212,
+{
     AV_SOUND_NEAR_VICTORY                  = 8456
 };
 
@@ -75,7 +75,7 @@ enum BG_AV_OTHER_VALUES
     AV_STATICCPLACE_MAX        = 128,
     AV_NORTH_MINE              = 0,
     AV_SOUTH_MINE              = 1,
-    AV_MINE_TICK_TIMER         = 45,
+    AV_MINE_TICK_TIMER         = 45000,
     AV_MINE_RECLAIM_TIMER      = 1200000, //TODO: get the right value.. this is currently 20 minutes
     AV_NEUTRAL_TEAM            = 0 //this is the neutral owner of snowfall
 };
@@ -1404,26 +1404,6 @@ const uint32 BG_AV_NodeWorldStates[16][4] = {
     {1365,1387,1382,1392},
 };
 
-
-
-enum BG_AV_ItemIds
-{
-    AV_ITEM_BLOOD  = 17306,
-    AV_ITEM_SCRAPS = 17422,
-    AV_ITEM_CRYSTAL= 17423,
-    AV_ITEM_A_SOLDIER = 17502,
-    AV_ITEM_A_LIEUTNANT = 17503,
-    AV_ITEM_A_COMMANDER = 17504,
-    AV_ITEM_H_SOLDIER = 17326,
-    AV_ITEM_H_LIEUTNANT = 17327,
-    AV_ITEM_H_COMMANDER =17328,
-    AV_ITEM_A_HIDE      = 17643,
-    AV_ITEM_H_HIDE      = 17642,
-    AV_ITEM_IRONDEEP = 17522,
-    AV_ITEM_COLDTOOTH = 17542
-
-};
-
 enum BG_AV_QuestIds
 {
     AV_QUEST_A_SCRAPS1      = 7223,
@@ -1551,9 +1531,9 @@ class BattleGroundAV : public BattleGround
 
         uint32 m_Mine_Owner[2];
         uint32 m_Mine_PrevOwner[2]; //only for worldstates needed
-        int m_Mine_Timer; //ticks for both teams
-        int m_Mine_Reclaim_Timer[2];
-        uint m_CaptainBuffTimer[2];
+        int32 m_Mine_Timer; //ticks for both teams
+        uint32 m_Mine_Reclaim_Timer[2];
+        uint32 m_CaptainBuffTimer[2];
         bool m_CaptainAlive[2];
 
         uint8 m_MaxLevel; //TODO remove this when battleground-getmaxlevel() returns something usefull

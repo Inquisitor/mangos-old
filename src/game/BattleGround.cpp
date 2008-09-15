@@ -956,7 +956,6 @@ GameObject* BattleGround::GetBGObject(uint32 type)
 
 Creature* BattleGround::GetBGCreature(uint32 type)
 {
-    sLog.outError("muh get creature %i",type);
     Creature *creature = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
     if(!creature)
         sLog.outError("couldn't get creature %i",type);

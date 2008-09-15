@@ -97,6 +97,8 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_H_4][0])
     {
+        if(m_Mine_Owner[AV_NORTH_MINE] == killer->GetTeam())
+            return;
         DePopulateMine(AV_NORTH_MINE);
         m_Mine_PrevOwner[AV_NORTH_MINE] = m_Mine_Owner[AV_NORTH_MINE];
         m_Mine_Owner[AV_NORTH_MINE] = killer->GetTeam();
@@ -104,6 +106,8 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_H_4][0])
     {
+        if(m_Mine_Owner[AV_SOUTH_MINE] == killer->GetTeam())
+            return;
         DePopulateMine(AV_SOUTH_MINE);
         m_Mine_PrevOwner[AV_SOUTH_MINE] = m_Mine_Owner[AV_SOUTH_MINE];
         m_Mine_Owner[AV_SOUTH_MINE] = killer->GetTeam();
@@ -346,7 +350,7 @@ void BattleGroundAV::Update(time_t diff)
             DoorClose(BG_AV_OBJECT_DOOR_H);
 
             SetStartDelayTime(START_DELAY0);
-//           SetStartDelayTime(10);
+//          SetStartDelayTime(10);
         }
         // After 1 minute, warning is signalled
         else if (GetStartDelayTime() <= START_DELAY1 && !(m_Events & 0x04))
@@ -392,61 +396,54 @@ void BattleGroundAV::Update(time_t diff)
         {
             if(!m_CaptainAlive[i])
                 continue;
-            m_CaptainBuffTimer[i] -= diff;
-            if(m_CaptainBuffTimer[i]<=0)
+            if(m_CaptainBuffTimer[i] > diff)
+                m_CaptainBuffTimer[i] -= diff;
+            else
             {
-                sLog.outError("muh buff %i",i);
                 if(i==0)
                 {
                     CastSpellOnTeam(AV_BUFF_A_CAPTAIN,ALLIANCE);
                     Creature* creature = GetBGCreature(AV_CPLACE_MAX + AV_NPC_A_CAPTAIN);
-                    creature->Yell("Take heart, Alliance! Throw these villains from Alterac Valley!",LANG_COMMON,0); //TODO write the text into the headerfile (and later sql) , look if this position here is right or if this is sd2 stuff
+                    creature->Yell(LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON,0); //TODO write the text into the headerfile (and later sql) , look if this position here is right or if this is sd2 stuff
                 }
                 else
                 {
                     CastSpellOnTeam(AV_BUFF_H_CAPTAIN,HORDE);
                     Creature* creature = GetBGCreature(AV_CPLACE_MAX + AV_NPC_H_CAPTAIN); //TODO: make the captains a dynamic creature
                     if(creature)
-                        creature->Yell("Now is the timeNow is the time to attack! For the Horde!",LANG_ORCISH,0); //TODO write the text into the headerfile (and later sql) , look if this position here is right or if this is sd2 stuff
+                        creature->Yell(LANG_BG_AV_H_CAPTAIN_BUFF,LANG_ORCISH,0); //TODO look if this position here is right or if this is sd2 stuff
                 }
                 m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60000; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
             }
         }
         //add points from mine owning, and look if he neutral team wanrts to reclaim the mine
         m_Mine_Timer -=diff;
-        if(m_Mine_Owner[AV_SOUTH_MINE] != BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][1])
+        for(uint8 mine=0; mine <2; mine++)
         {
-            m_Mine_Reclaim_Timer[AV_SOUTH_MINE] -= diff;
-            if( m_Mine_Timer <= 0)
-                UpdateScore(m_Mine_Owner[AV_SOUTH_MINE],1);
-            if( m_Mine_Reclaim_Timer[AV_SOUTH_MINE] <= 0)
+            if(m_Mine_Owner[mine] == ALLIANCE || m_Mine_Owner[mine] == HORDE)
             {
-                m_Mine_PrevOwner[AV_SOUTH_MINE] = m_Mine_Owner[AV_SOUTH_MINE];
-                m_Mine_Owner[AV_SOUTH_MINE] = BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][1];
-                PopulateMine(AV_SOUTH_MINE);
-            }
-        }
-        if(m_Mine_Owner[AV_NORTH_MINE] != BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][1])
-        {
-            m_Mine_Reclaim_Timer[AV_NORTH_MINE] -= diff;
-            if( m_Mine_Timer <= 0)
-                UpdateScore(m_Mine_Owner[AV_NORTH_MINE],1);
-            if( m_Mine_Reclaim_Timer[AV_NORTH_MINE] <= 0)
-            {
-                m_Mine_PrevOwner[AV_NORTH_MINE] = m_Mine_Owner[AV_NORTH_MINE];
-                m_Mine_Owner[AV_NORTH_MINE] = BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][1];
-                PopulateMine(AV_NORTH_MINE);
+                if( m_Mine_Timer <= 0)
+                    UpdateScore(m_Mine_Owner[mine],1);
+                if(m_Mine_Reclaim_Timer[mine] > diff)
+                    m_Mine_Reclaim_Timer[mine] -= diff;
+                else{ //we don't need to set this timer to 0 cause this codepart wont get called when this thing is 0
+                    m_Mine_PrevOwner[mine] = m_Mine_Owner[mine];
+                    DePopulateMine(mine);
+                    m_Mine_Owner[mine] = BG_AV_CreatureInfo[(mine==0)?AV_NPC_N_MINE_N_4:AV_NPC_S_MINE_N_4][1];
+                    PopulateMine(mine);
+                }
             }
         }
         if( m_Mine_Timer <= 0)
-            m_Mine_Timer=AV_MINE_TICK_TIMER;
+            m_Mine_Timer=AV_MINE_TICK_TIMER; //this is at the end, cause we need to update both mines
 
         //looks for all timers of the nodes and destroy the building (for graveyards the building wont get destroyed, it goes just to the other team
         for(BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; ++i)
-            if(m_Nodes[i].State == POINT_ASSAULTED)
+            if(m_Nodes[i].State == POINT_ASSAULTED) //maybe remove this
             {
-                m_Nodes[i].Timer -= diff;
-                if(m_Nodes[i].Timer <= 0)
+                if(m_Nodes[i].Timer > diff)
+                    m_Nodes[i].Timer -= diff;
+                else
                      EventPlayerDestroyedPoint( i);
             }
     }
@@ -461,7 +458,6 @@ void BattleGroundAV::AddPlayer(Player *plr)
     if(m_MaxLevel==0)
         m_MaxLevel=(plr->getLevel()%10 == 0)? plr->getLevel() : (plr->getLevel()-(plr->getLevel()%10))+10; //TODO: just look at the code \^_^/ --but queue-info should provide this information..
 
-    m_PlayerScores[plr->GetGUID()] = sc;
 }
 
 void BattleGroundAV::RemovePlayer(Player* /*plr*/,uint64 /*guid*/)
@@ -681,6 +677,14 @@ void BattleGroundAV::PopulateMine(uint8 mine)
     }
     if(team == ALLIANCE || team == HORDE)
         m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
+    else
+    {
+        if(mine==AV_SOUTH_MINE) //i think this gets called all the time
+        {
+            Creature* creature = GetBGCreature(AV_NPC_S_MINE_N_4);
+            creature->Yell(LANG_BG_AV_S_MINE_BOSS_CLAIMS,LANG_UNIVERSAL,0); //TODO let the alliance, at their starting position, hear this
+        }
+    }
     return;
 }
 
@@ -1336,7 +1340,7 @@ void BattleGroundAV::DefendNode(BG_AV_Nodes node, uint16 team)
 void BattleGroundAV::ResetBGSubclass()
 {
     m_MaxLevel=0;
-    for(uint8 i=0; i<2; i++) //forloop for both teams (it just make 0==alliance and 1==horde
+    for(uint8 i=0; i<2; i++) //forloop for both teams (it just make 0==alliance and 1==horde also for both mines 0=north 1=south
     {
         for(uint8 j=0; j<9; j++)
             m_Team_QuestStatus[i][j]=0;
@@ -1344,6 +1348,8 @@ void BattleGroundAV::ResetBGSubclass()
         m_IsInformedNearVictory[i]=false;
         m_CaptainAlive[i] = true;
         m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
+        m_Mine_Owner[i] = BG_AV_CreatureInfo[(i==0)?AV_NPC_N_MINE_N_4:AV_NPC_S_MINE_N_4][1];
+        m_Mine_PrevOwner[i] = m_Mine_Owner[i];
     }
     for(BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_STONEHEART_GRAVE; ++i) //alliance graves
         InitNode(i,ALLIANCE,false);
@@ -1353,13 +1359,9 @@ void BattleGroundAV::ResetBGSubclass()
         InitNode(i,HORDE,false);
     for(BG_AV_Nodes i = BG_AV_NODES_ICEBLOOD_TOWER; i <= BG_AV_NODES_FROSTWOLF_WTOWER; ++i) //horde towers
         InitNode(i,HORDE,true);
-    InitNode(BG_AV_NODES_SNOWFALL_GRAVE,0,false); //give snowfall neutral owner
+    InitNode(BG_AV_NODES_SNOWFALL_GRAVE,AV_NEUTRAL_TEAM,false); //give snowfall neutral owner
 
-    m_Mine_Owner[AV_NORTH_MINE] = BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][1];
-    m_Mine_Owner[AV_SOUTH_MINE] = BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][1];
-    m_Mine_PrevOwner[AV_NORTH_MINE] = m_Mine_Owner[AV_NORTH_MINE];
-    m_Mine_PrevOwner[AV_SOUTH_MINE] = m_Mine_Owner[AV_SOUTH_MINE];
-
+    m_Mine_Timer=AV_MINE_TICK_TIMER;
     for(uint16 i = 0; i < AV_CPLACE_MAX+AV_STATICCPLACE_MAX; i++)
         if(m_BgCreatures[i])
             DelCreature(i);
