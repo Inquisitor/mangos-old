@@ -37,7 +37,6 @@ BattleGroundAV::BattleGroundAV()
 
 BattleGroundAV::~BattleGroundAV()
 {
-
 }
 
 const uint16 BattleGroundAV::GetBonusHonor(uint8 kills) //TODO: move this function to Battleground.cpp (needs to find a way to get m_MaxLevel)
