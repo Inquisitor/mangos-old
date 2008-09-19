@@ -287,7 +287,7 @@ void BattleGroundAV::Update(time_t diff)
             m_Events |= 0x01;
             //comment this out if you are running with arenapatch
             /*
-            if(!SetupBattleGround()) //the above ifdef is for arenapatch, please report, if this doesn't work
+            if(!SetupBattleGround())
             {
                 EndNow();
                 return;
