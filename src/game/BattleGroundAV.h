@@ -1509,9 +1509,8 @@ class BattleGroundAV : public BattleGround
         const bool IsTower(BG_AV_Nodes node) {   return m_Nodes[node].Tower; }
 
 
-        /*mine stuff */
-        void DePopulateMine(uint8 mine);
-        void PopulateMine(uint8 mine);
+        /*mine*/
+        void ChangeMineOwner(uint8 mine, uint32 team);
 
         /*worldstates*/
         void FillInitialWorldStates(WorldPacket& data);

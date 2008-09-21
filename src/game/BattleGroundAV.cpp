@@ -97,23 +97,9 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
             SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_HORDE+i,RESPAWN_IMMEDIATELY);
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_H_4][0])
-    {
-        if(m_Mine_Owner[AV_NORTH_MINE] == killer->GetTeam())
-            return;
-        DePopulateMine(AV_NORTH_MINE);
-        m_Mine_PrevOwner[AV_NORTH_MINE] = m_Mine_Owner[AV_NORTH_MINE];
-        m_Mine_Owner[AV_NORTH_MINE] = killer->GetTeam();
-        PopulateMine(AV_NORTH_MINE);
-    }
+        ChangeMineOwner(AV_NORTH_MINE,killer->GetTeam());
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_H_4][0])
-    {
-        if(m_Mine_Owner[AV_SOUTH_MINE] == killer->GetTeam())
-            return;
-        DePopulateMine(AV_SOUTH_MINE);
-        m_Mine_PrevOwner[AV_SOUTH_MINE] = m_Mine_Owner[AV_SOUTH_MINE];
-        m_Mine_Owner[AV_SOUTH_MINE] = killer->GetTeam();
-        PopulateMine(AV_SOUTH_MINE);
-    }
+        ChangeMineOwner(AV_SOUTH_MINE,killer->GetTeam());
 }
 
 void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
@@ -378,8 +364,8 @@ void BattleGroundAV::Update(time_t diff)
                 SpawnBGObject(i,RESPAWN_IMMEDIATELY);
             for(uint16 i= BG_AV_OBJECT_MINE_SUPPLY_S_MIN; i<=BG_AV_OBJECT_MINE_SUPPLY_S_MAX;i++)
                 SpawnBGObject(i,RESPAWN_IMMEDIATELY);
-            PopulateMine(AV_NORTH_MINE);
-            PopulateMine(AV_SOUTH_MINE);
+            for(uint8 mine = AV_NORTH_MINE; mine <= AV_SOUTH_MINE; mine++) //mine population
+                ChangeMineOwner(mine, AV_NEUTRAL_TEAM);
             DoorOpen(BG_AV_OBJECT_DOOR_H);
             DoorOpen(BG_AV_OBJECT_DOOR_A);
 
@@ -425,13 +411,11 @@ void BattleGroundAV::Update(time_t diff)
             {
                 if( m_Mine_Timer <= 0)
                     UpdateScore(m_Mine_Owner[mine],1);
+
                 if(m_Mine_Reclaim_Timer[mine] > diff)
                     m_Mine_Reclaim_Timer[mine] -= diff;
                 else{ //we don't need to set this timer to 0 cause this codepart wont get called when this thing is 0
-                    m_Mine_PrevOwner[mine] = m_Mine_Owner[mine];
-                    DePopulateMine(mine);
-                    m_Mine_Owner[mine] = BG_AV_CreatureInfo[(mine==0)?AV_NPC_N_MINE_N_4:AV_NPC_S_MINE_N_4][1];
-                    PopulateMine(mine);
+                    ChangeMineOwner(mine,AV_NEUTRAL_TEAM);
                 }
             }
         }
@@ -615,23 +599,27 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
     SendPacketToAll(&data);
 }
 
-void BattleGroundAV::DePopulateMine(uint8 mine)
+void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
 { //mine=0 northmine mine=1 southmin
+//changing the owner results in setting respawntim to infinite for current creatures, spawning new mine owners creatures and changing the chest-objects so that the current owning team can use them
+    assert(mine == AV_NORTH_MINE || mine == AV_SOUTH_MINE);
+    if(team != ALLIANCE && team != HORDE)
+        team = AV_NEUTRAL_TEAM;
+    if(m_Mine_Owner[mine] == team)
+        return;
+    m_Mine_PrevOwner[mine] = m_Mine_Owner[mine];
+    m_Mine_Owner[mine] = team;
+
     sLog.outDebug("bg_av depopulating mine %i (0=north,1=south)",mine);
     if(mine==AV_SOUTH_MINE)
         for(uint16 i=AV_CPLACE_MINE_S_S_MIN; i <= AV_CPLACE_MINE_S_S_MAX; i++)
             if( m_BgCreatures[i] )
-                DelCreature(i);
+                DelCreature(i); //TODO just set the respawntime to 999999
     for(uint16 i=((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_1_MIN:AV_CPLACE_MINE_S_1_MIN); i <= ((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3); i++)
         if( m_BgCreatures[i] )
-            DelCreature(i);
-    return;
-}
-//depopulate is not needed.. (afaik)
-void BattleGroundAV::PopulateMine(uint8 mine)
-{ //mine=0 northmine mine=1 southmin
+            DelCreature(i); //TODO here also
+
     sLog.outDebug("bg_av populating mine %i (0=north,1=south)",mine);
-    uint32 team = m_Mine_Owner[mine];
     uint16 miner;
     //also neutral team exists.. after a big time, the neutral team tries to conquer the mine
     SendMineWorldStates(mine);
@@ -1083,6 +1071,9 @@ void BattleGroundAV::UpdateNodeWorldState(BG_AV_Nodes node)
 void BattleGroundAV::SendMineWorldStates(uint32 mine)
 {
     assert(mine == AV_NORTH_MINE || mine==AV_SOUTH_MINE);
+// currently i'm sure, that this works (:
+//    assert(m_Mine_PrevOwner[mine] == ALLIANCE || m_Mine_PrevOwner[mine] == HORDE || m_Mine_PrevOwner[mine] == AV_NEUTRAL_TEAM);
+//    assert(m_Mine_Owner[mine] == ALLIANCE || m_Mine_Owner[mine] == HORDE || m_Mine_Owner[mine] == AV_NEUTRAL_TEAM);
 
     uint8 owner,prevowner,mine2; //those variables are needed to access the right worldstate in the BG_AV_MineWorldStates array
     mine2 = (mine==AV_NORTH_MINE)?0:1;
@@ -1349,7 +1340,7 @@ void BattleGroundAV::ResetBGSubclass()
         m_IsInformedNearVictory[i]=false;
         m_CaptainAlive[i] = true;
         m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
-        m_Mine_Owner[i] = BG_AV_CreatureInfo[(i==0)?AV_NPC_N_MINE_N_4:AV_NPC_S_MINE_N_4][1];
+        m_Mine_Owner[i] = AV_NEUTRAL_TEAM;
         m_Mine_PrevOwner[i] = m_Mine_Owner[i];
     }
     for(BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_STONEHEART_GRAVE; ++i) //alliance graves
