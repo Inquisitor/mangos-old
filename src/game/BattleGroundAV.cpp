@@ -207,7 +207,7 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
 
 
 void BattleGroundAV::UpdateScore(uint16 team, int16 points )
-{
+{ //note: to remove reinforcementpoints points must be negative, for adding reinforcements points must be positive
     assert( team == ALLIANCE || team == HORDE);
     uint8 teamindex = GetTeamIndexByTeamId(team); //0=ally 1=horde
     m_Team_Scores[teamindex] += points;
