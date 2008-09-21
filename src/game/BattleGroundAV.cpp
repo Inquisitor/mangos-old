@@ -51,6 +51,8 @@ void BattleGroundAV::HandleKillPlayer(Player *player, Player *killer)
 {
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
+
+    BattleGround::HandleKillPlayer(player, killer);
 	UpdateScore(player->GetTeam(),-1);
 }
 
