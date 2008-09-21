@@ -967,6 +967,7 @@ enum BG_AV_CreatureIds
 };
 
 //entry, team, minlevel, maxlevel
+//TODO this array should be removed, the only needed things are the entrys (for spawning(?) and handlekillunit)
 const uint32 BG_AV_CreatureInfo[AV_NPC_INFO_MAX][4] = {
     { 12050, 1216, 58, 58 }, //Stormpike Defender
     { 13326, 1216, 59, 59 }, //Seasoned Defender
@@ -1507,7 +1508,10 @@ class BattleGroundAV : public BattleGround
         const uint32 GetObjectThroughNode(BG_AV_Nodes node);
         const char* GetNodeName(BG_AV_Nodes node);
         const bool IsTower(BG_AV_Nodes node) {   return m_Nodes[node].Tower; }
+        const bool GetOwner(BG_AV_Nodes node) {   return m_Nodes[node].Owner; }
+        const bool GetPrevOwner(BG_AV_Nodes node) {   return m_Nodes[node].PrevOwner; }
 
+        void NodeGameobjectsEyecandy(BG_AV_Nodes node);
 
         /*mine*/
         void ChangeMineOwner(uint8 mine, uint32 team);

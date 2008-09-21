@@ -391,7 +391,7 @@ void BattleGroundAV::Update(time_t diff)
                 {
                     CastSpellOnTeam(AV_BUFF_A_CAPTAIN,ALLIANCE);
                     Creature* creature = GetBGCreature(AV_CPLACE_MAX + AV_NPC_A_CAPTAIN);
-                    creature->Yell(LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON,0); //TODO write the text into the headerfile (and later sql) , look if this position here is right or if this is sd2 stuff
+                    creature->Yell(LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON,0); //TODO look if this position here is right or if this is sd2 stuff
                 }
                 else
                 {
@@ -566,7 +566,7 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
         RewardReputationToTeam((owner == ALLIANCE)?730:729,BG_AV_REP_TOWER,owner);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_TOWER),owner);
 
-        //despawn big banner+aura on top of tower TODO: look if this works (i think it doesn't)
+        //despawn big banner+aura on top of tower
         SpawnBGObject(BG_AV_OBJECT_TAURA_A_DUNBALDAR_SOUTH+GetTeamIndexByTeamId(owner)+(2*tmp),RESPAWN_ONE_DAY);
         SpawnBGObject(BG_AV_OBJECT_TFLAG_A_DUNBALDAR_SOUTH+GetTeamIndexByTeamId(owner)+(2*tmp),RESPAWN_ONE_DAY);
     }
@@ -580,13 +580,7 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
         SpawnBGObject(BG_AV_OBJECT_AURA_A_FIRSTAID_STATION+GetTeamIndexByTeamId(owner)+3*node,RESPAWN_IMMEDIATELY);
         PopulateNode(node);
         if(node == BG_AV_NODES_SNOWFALL_GRAVE) //snowfall eyecandy
-        {
-            for(uint8 i = 0; i < 4; i++)
-            {
-                SpawnBGObject(((owner==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_ONE_DAY);
-                SpawnBGObject(((owner==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_A  : BG_AV_OBJECT_SNOW_EYECANDY_H )+i,RESPAWN_IMMEDIATELY);
-            }
-        }
+            NodeGameobjectsEyecandy(node);
     }
     //send a nice message to all :)
     char buf[256];
@@ -597,6 +591,17 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
     WorldPacket data;
     ChatHandler::FillMessageData(&data, NULL,( owner == ALLIANCE ) ? CHAT_MSG_BG_SYSTEM_ALLIANCE : CHAT_MSG_BG_SYSTEM_HORDE, LANG_UNIVERSAL, NULL, 0, buf, NULL);
     SendPacketToAll(&data);
+}
+
+void BattleGroundAV::NodeGameobjectsEyecandy(BG_AV_Nodes node)
+{
+    assert(node == BG_AV_NODES_SNOWFALL_GRAVE); //only snowfall supported
+    uint32 owner = GetOwner(node);
+    for(uint8 i = 0; i < 4; i++)
+    {
+        SpawnBGObject(((owner==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_ONE_DAY);
+        SpawnBGObject(((owner==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_A  : BG_AV_OBJECT_SNOW_EYECANDY_H )+i,RESPAWN_IMMEDIATELY);
+    }
 }
 
 void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
@@ -873,13 +878,8 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 object)
         SpawnBGObject(BG_AV_OBJECT_TFLAG_H_DUNBALDAR_SOUTH+(2*(node-BG_AV_NODES_DUNBALDAR_SOUTH)),(team == HORDE)? RESPAWN_IMMEDIATELY : RESPAWN_ONE_DAY);
     }
     else if(node == BG_AV_NODES_SNOWFALL_GRAVE) //snowfall eyecandy
-    {
-        for(uint8 i = 0; i < 4; i++)
-        {
-            SpawnBGObject(((owner==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_ONE_DAY);
-            SpawnBGObject(((team==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_A : BG_AV_OBJECT_SNOW_EYECANDY_H)+i,RESPAWN_IMMEDIATELY);
-        }
-    }
+        NodeGameobjectsEyecandy(node);
+
 	//send a nice message to all :)
 	char buf[256];
 	sprintf(buf, ( IsTower(node) ) ? LANG_BG_AV_TOWER_DEFENDED : LANG_BG_AV_GRAVE_DEFENDED, GetNodeName(node));
@@ -923,23 +923,7 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
                 SpawnBGObject(object+11, RESPAWN_IMMEDIATELY);
         }
 
-        //eyecandy
-        uint32 spawn,despawn;
-        if(team == ALLIANCE)
-        {
-            despawn = ( m_Nodes[node].State == POINT_ASSAULTED )?BG_AV_OBJECT_SNOW_EYECANDY_PH : BG_AV_OBJECT_SNOW_EYECANDY_H;
-            spawn = BG_AV_OBJECT_SNOW_EYECANDY_PA;
-        }
-        else
-        {
-            despawn = ( m_Nodes[node].State == POINT_ASSAULTED )?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_A;
-            spawn = BG_AV_OBJECT_SNOW_EYECANDY_PH;
-        }
-        for(uint8 i = 0; i < 4; i++)
-        {
-            SpawnBGObject(despawn+i,RESPAWN_ONE_DAY);
-            SpawnBGObject(spawn+i,RESPAWN_IMMEDIATELY);
-        }
+        NodeGameobjectsEyecandy(node);
     }
 
     //if snowfall gots capped it can be handled like all other graveyards
