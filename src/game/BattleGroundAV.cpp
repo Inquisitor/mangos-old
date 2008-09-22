@@ -1284,6 +1284,7 @@ void BattleGroundAV::DestroyNode(BG_AV_Nodes node)
     assert(m_Nodes[node].State == POINT_ASSAULTED);
 
     m_Nodes[node].TotalOwner = m_Nodes[node].Owner;
+    m_Nodes[node].PrevOwner  = m_Nodes[node].Owner;
     m_Nodes[node].PrevState  = m_Nodes[node].State;
     m_Nodes[node].State      = (m_Nodes[node].Tower)? POINT_DESTROYED : POINT_CONTROLED;
     m_Nodes[node].Timer      = 0;
