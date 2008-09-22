@@ -35,11 +35,8 @@
 #include "CellImpl.h"
 #include "InstanceData.h"
 #include "BattleGround.h"
-<<<<<<< HEAD:src/game/GameObject.cpp
-#include "Util.h"
-=======
 #include "BattleGroundAV.h"
->>>>>>> 13.9.4:src/game/GameObject.cpp
+#include "Util.h"
 
 GameObject::GameObject() : WorldObject()
 {
