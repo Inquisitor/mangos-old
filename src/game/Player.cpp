@@ -7480,12 +7480,12 @@ void Player::SendInitWorldStates()
                 data << uint32(0x55f) << uint32(0x0);           // 38 dunbaldar south alliance assaulted - unused
                 data << uint32(0x55e) << uint32(0x0);           // 39 dunbaldar north alliance assaulted - unused
                 data << uint32(0x55d) << uint32(0x0);           // 40 stone tower d
-                data << uint32(0x3c6) << uint32(0x4);           // 41 966 unk
-                data << uint32(0x3c4) << uint32(0x6);           // 42 964 unk
-                data << uint32(0x3c2) << uint32(0x4);           // 43 962 unk
+                data << uint32(0x3c6) << uint32(0x0);           // 41 966 unk
+                data << uint32(0x3c4) << uint32(0x0);           // 42 964 unk
+                data << uint32(0x3c2) << uint32(0x0);           // 43 962 unk
                 data << uint32(0x516) << uint32(0x1);           // 44 stoneheart grave a_c
                 data << uint32(0x515) << uint32(0x0);           // 45 stonheart grave h_c
-                data << uint32(0x3b6) << uint32(0x6);           // 46 950 unk
+                data << uint32(0x3b6) << uint32(0x0);           // 46 950 unk
                 data << uint32(0x55c) << uint32(0x0);           // 47 icewing tower d
                 data << uint32(0x55b) << uint32(0x0);           // 48 dunn d
                 data << uint32(0x55a) << uint32(0x0);           // 49 duns d

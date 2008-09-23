@@ -66,8 +66,16 @@ class BattleGround;
 
 
 enum BG_AV_Sounds
-{
-    AV_SOUND_NEAR_VICTORY                  = 8456
+{ //TODO: get out if there comes a sound when neutral team captures mine
+    AV_SOUND_NEAR_VICTORY                  = 8456,
+    AV_SOUND_ALLIANCE_ASSAULTS             = 8212, //2014 -grave+tower  - unk maybe buffs
+    AV_SOUND_ALLIANCE_CAPTURES             = 8173, //1fed - also for mines - unk maybe captain
+    AV_SOUND_HORDE_CAPTURES                = 8213, //2015 - also for mines and towers - unk maybe captain
+    AV_SOUND_HORDE_ASSAULTS                = 8174, //1fee - unk maybe buffs
+
+    AV_SOUND_ALLIANCE_DEFENDS_TOWER        = 8192, //2000
+    //208d 8333 unk
+    //208c 8332 unk
 };
 
 enum BG_AV_OTHER_VALUES
