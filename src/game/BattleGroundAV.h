@@ -72,7 +72,7 @@ enum BG_AV_Sounds
 8212:
     alliance grave assault
     alliance tower assault
-    drek "mlanzenabschaum! In meiner Burg?! T\xc3\xb6tet sie all" - nicht immer der sound
+    drek "mlanzenabschaum! In meiner Burg?! Toetet sie all" - nicht immer der sound
 8333:
     galv "sterbt fuer euch ist kein platz hier"
 
@@ -81,7 +81,7 @@ enum BG_AV_Sounds
 8174:
     horde tower assault
     horde grave assault
-    van "es Sturmlanzenklans, euer General wird angegriffen! Ich fordere Unterst\xc3\xbct"
+    van "es Sturmlanzenklans, euer General wird angegriffen! Ich fordere Unterst"
 8173:
     ally grave capture/defend
     tower destroy

@@ -610,6 +610,9 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
     assert(mine == AV_NORTH_MINE || mine == AV_SOUTH_MINE);
     if(team != ALLIANCE && team != HORDE)
         team = AV_NEUTRAL_TEAM;
+    else
+        PlaySoundToAll((team==ALLIANCE)?AV_SOUND_ALLIANCE_GOOD:AV_SOUND_HORDE_GOOD);
+
     if(m_Mine_Owner[mine] == team)
         return;
     m_Mine_PrevOwner[mine] = m_Mine_Owner[mine];
@@ -889,6 +892,10 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 object)
 	SendPacketToAll(&data);
 	//update the statistic for the defending player
 	UpdatePlayerScore(player, ( IsTower(node) ) ? SCORE_TOWERS_DEFENDED : SCORE_GRAVEYARDS_DEFENDED, 1);
+    if(IsTower(node))
+        PlaySoundToAll(AV_SOUND_BOTH_TOWER_DEFEND);
+    else
+        PlaySoundToAll((team==ALLIANCE)?AV_SOUND_ALLIANCE_GOOD:AV_SOUND_HORDE_GOOD);
 }
 
 void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
@@ -979,6 +986,7 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
     SendPacketToAll(&data);
     //update the statistic for the assaulting player
     UpdatePlayerScore(player, ( IsTower(node) ) ? SCORE_TOWERS_ASSAULTED : SCORE_GRAVEYARDS_ASSAULTED, 1);
+    PlaySoundToAll((team==ALLIANCE)AV_SOUND_ALLIANCE_ASSAULTS:AV_SOUND_HORDE_ASSAULTS);
 }
 
 void BattleGroundAV::FillInitialWorldStates(WorldPacket& data)
