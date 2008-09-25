@@ -1010,6 +1010,7 @@ enum BG_AV_CreatureIds
 };
 
 //entry, team, minlevel, maxlevel
+//TODO this array should be removed, the only needed things are the entrys (for spawning(?) and handlekillunit)
 const uint32 BG_AV_CreatureInfo[AV_NPC_INFO_MAX][4] = {
     { 12050, 1216, 58, 58 }, //Stormpike Defender
     { 13326, 1216, 59, 59 }, //Seasoned Defender

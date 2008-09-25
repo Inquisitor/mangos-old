@@ -391,7 +391,7 @@ void BattleGroundAV::Update(time_t diff)
                 {
                     CastSpellOnTeam(AV_BUFF_A_CAPTAIN,ALLIANCE);
                     Creature* creature = GetBGCreature(AV_CPLACE_MAX + AV_NPC_A_CAPTAIN);
-                    creature->Yell(LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON,0); //TODO write the text into the headerfile (and later sql) , look if this position here is right or if this is sd2 stuff
+                    creature->Yell(LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON,0); //TODO look if this position here is right or if this is sd2 stuff
                 }
                 else
                 {
@@ -929,11 +929,6 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
             else
                 SpawnBGObject(object+11, RESPAWN_IMMEDIATELY);
         }
-<<<<<<< HEAD:src/game/BattleGroundAV.cpp
-
-        NodeGameobjectsEyecandy(node);
-=======
-
         //eyecandy
         uint32 spawn,despawn;
         if(team == ALLIANCE)
@@ -951,7 +946,6 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
             SpawnBGObject(despawn+i,RESPAWN_ONE_DAY);
             SpawnBGObject(spawn+i,RESPAWN_IMMEDIATELY);
         }
->>>>>>> c62a514... removed old todos and added a new todo:src/game/BattleGroundAV.cpp
     }
 
     //if snowfall gots capped it can be handled like all other graveyards
