@@ -445,7 +445,7 @@ void BattleGroundAV::AddPlayer(Player *plr)
 
 }
 
-void BattleGroundAV::RemovePlayer(Player* /*plr*/,uint64 /*guid*/)
+void BattleGroundAV::RemovePlayer(Player* plr,uint64 /*guid*/)
 {
    if(!plr)
     {
@@ -980,7 +980,7 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
                     if( !plr )
                         continue;
                     if(!ClosestGrave)
-                        ClosestGrave = GetClosestGraveYard(plr->GetPositionX(), plr->GetPositionY(), plr->GetPositionZ(), plr->GetMapId(), team);
+                        ClosestGrave = GetClosestGraveYard(plr->GetPositionX(), plr->GetPositionY(), plr->GetPositionZ(), team);
                     plr->TeleportTo(GetMapId(), ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, plr->GetOrientation());
                 }
             }
@@ -1102,7 +1102,7 @@ void BattleGroundAV::SendMineWorldStates(uint32 mine)
 }
 
 
-WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(float x, float y, float z, uint32 MapId, uint32 team)
+WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(float x, float y, float z, uint32 team)
 {
     WorldSafeLocsEntry const* good_entry = NULL;
     if( GetStatus() == STATUS_IN_PROGRESS)

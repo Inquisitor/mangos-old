@@ -1531,7 +1531,7 @@ class BattleGroundAV : public BattleGround
 
 
 
-        virtual WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 MapId, uint32 team);
+        virtual WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 team);
 
     private:
         /* Nodes occupying */

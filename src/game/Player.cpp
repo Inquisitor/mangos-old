@@ -4052,7 +4052,7 @@ void Player::RepopAtGraveyard()
     BattleGround *bg = sBattleGroundMgr.GetBattleGround(GetBattleGroundId());
 
     if(bg && (bg->GetTypeID() == BATTLEGROUND_AB || bg->GetTypeID() == BATTLEGROUND_EY || bg->GetTypeID() == BATTLEGROUND_AV))
-        ClosestGrave = bg->GetClosestGraveYard(GetPositionX(), GetPositionY(), GetPositionZ(), GetMapId(), GetTeam());
+        ClosestGrave = bg->GetClosestGraveYard(GetPositionX(), GetPositionY(), GetPositionZ(), GetTeam());
     else
         ClosestGrave = objmgr.GetClosestGraveYard( GetPositionX(), GetPositionY(), GetPositionZ(), GetMapId(), GetTeam() );
 
@@ -17495,7 +17495,6 @@ bool Player::GetBGAccessByLevel(uint32 bgTypeId) const
     return true;
 }
 
-<<<<<<< HEAD:src/game/Player.cpp
 uint32 Player::GetMinLevelForBattleGroundQueueId(uint32 queue_id)
 {
     if(queue_id < 1)
@@ -17515,9 +17514,7 @@ uint32 Player::GetMaxLevelForBattleGroundQueueId(uint32 queue_id)
     return 10*(queue_id+2)-1;
 }
 
-=======
-//TODO make this more generic or add av-support
->>>>>>> 13.6.5:src/game/Player.cpp
+//TODO make this more generic - current implementation is wrong
 uint32 Player::GetBattleGroundQueueIdFromLevel() const
 {
     uint32 level = getLevel();
