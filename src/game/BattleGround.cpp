@@ -290,6 +290,13 @@ void BattleGround::CastSpellOnTeam(uint32 SpellID, uint32 TeamID)
     }
 }
 
+void BattleGround::YellToAll(Creature* creature, const char* text, uint32 language)
+{
+    for(std::map<uint64, BattleGroundPlayer>::iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
+        creature->Yell(text,language,itr->first);
+}
+
+
 void BattleGround::RewardHonorToTeam(uint32 Honor, uint32 TeamID)
 {
     for(std::map<uint64, BattleGroundPlayer>::iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
