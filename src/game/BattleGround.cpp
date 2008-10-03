@@ -293,7 +293,17 @@ void BattleGround::CastSpellOnTeam(uint32 SpellID, uint32 TeamID)
 void BattleGround::YellToAll(Creature* creature, const char* text, uint32 language)
 {
     for(std::map<uint64, BattleGroundPlayer>::iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
-        creature->Yell(text,language,itr->first);
+    {
+        WorldPacket data(SMSG_MESSAGECHAT, 200);
+        Player *plr = objmgr.GetPlayer(itr->first);
+        if(!plr)
+        {
+            sLog.outError("BattleGround: Player " I64FMTD " not found!", itr->first);
+            continue;
+        }
+        creature->BuildMonsterChat(&data,CHAT_MSG_MONSTER_YELL,text,language,creature->GetName(),itr->first);
+        plr->GetSession()->SendPacket(&data);
+    }
 }
 
 

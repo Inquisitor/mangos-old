@@ -611,7 +611,10 @@ enum BG_AV_CreaturePlace
     //boss
     AV_CPLACE_MINE_S_3          = 300,
 
-    AV_CPLACE_MAX = 301
+    //herald
+    AV_CPLACE_HERALD          = 301,
+
+    AV_CPLACE_MAX = 302
 };
 
 //x, y, z, o
@@ -948,7 +951,9 @@ const float BG_AV_CreaturePos[AV_CPLACE_MAX][4] = {
     {-910.14f,-229.959f,72.9279f,0.27677f},
     {-851.563f,-88.6527f,68.5983f,3.61896f},
     //boss
-    {-848.902f,-92.931f,68.6325f,3.33358f}
+    {-848.902f,-92.931f,68.6325f,3.33350},
+    //herald
+    {-48.459f,-288.802f,55.47f,1.0}
 
 };
 
@@ -1005,7 +1010,8 @@ enum BG_AV_CreatureIds
     AV_NPC_S_MINE_H_2           = 44,
     AV_NPC_S_MINE_H_3           = 45,
     AV_NPC_S_MINE_H_4           = 46,
-    AV_NPC_INFO_MAX              = 47
+    AV_NPC_HERALD               = 47,
+    AV_NPC_INFO_MAX              = 48
 
 };
 
@@ -1065,7 +1071,8 @@ const uint32 BG_AV_CreatureInfo[AV_NPC_INFO_MAX][4] = {
     {13316,67,52,53}, //horde
     {13097,67,54,55}, //surveypr
     {13089,67,54,55}, //guard
-    {13088,67,58,58}
+    {13088,67,58,58},
+    {14848,67,58,58} //Herald
 
 };
 

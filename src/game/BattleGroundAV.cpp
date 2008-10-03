@@ -333,6 +333,7 @@ void BattleGroundAV::Update(time_t diff)
             for(i=AV_NPC_A_MARSHAL_SOUTH; i<= AV_NPC_H_MARSHAL_WTOWER; i++)
                 AddAVCreature(i,AV_CPLACE_A_MARSHAL_SOUTH+(i-AV_NPC_A_MARSHAL_SOUTH));
 
+            AddAVCreature(AV_NPC_HERALD,AV_CPLACE_HERALD);
             DoorClose(BG_AV_OBJECT_DOOR_A);
             DoorClose(BG_AV_OBJECT_DOOR_H);
 
@@ -390,15 +391,18 @@ void BattleGroundAV::Update(time_t diff)
                 if(i==0)
                 {
                     CastSpellOnTeam(AV_BUFF_A_CAPTAIN,ALLIANCE);
-                    Creature* creature = GetBGCreature(AV_CPLACE_MAX + AV_NPC_A_CAPTAIN);
-                    creature->Yell(LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON,0); //TODO look if this position here is right or if this is sd2 stuff
+                    Creature* creature = GetBGCreature(AV_CPLACE_MAX + 61);
+                    if(creature)
+                        YellToAll(creature,LANG_BG_AV_A_CAPTAIN_BUFF,LANG_UNIVERSAL);
+//                    creature->Yell(LANG_BG_AV_A_CAPTAIN_BUFF,LANG_UNIVERSAL,0); //TODO look if this position here is right or if this is sd2 stuff
                 }
                 else
                 {
                     CastSpellOnTeam(AV_BUFF_H_CAPTAIN,HORDE);
-                    Creature* creature = GetBGCreature(AV_CPLACE_MAX + AV_NPC_H_CAPTAIN); //TODO: make the captains a dynamic creature
+                    Creature* creature = GetBGCreature(AV_CPLACE_MAX + 59); //TODO: make the captains a dynamic creature
                     if(creature)
-                        creature->Yell(LANG_BG_AV_H_CAPTAIN_BUFF,LANG_ORCISH,0); //TODO look if this position here is right or if this is sd2 stuff
+                        YellToAll(creature,LANG_BG_AV_H_CAPTAIN_BUFF,LANG_UNIVERSAL);
+                        //creature->Yell(LANG_BG_AV_H_CAPTAIN_BUFF,LANG_UNIVERSAL,0); //TODO look if this position here is right or if this is sd2 stuff
                 }
                 m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60000; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
             }
@@ -594,9 +598,10 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
         sprintf(buf, LANG_BG_AV_TOWER_TAKEN , GetNodeName(node));
     else
         sprintf(buf, LANG_BG_AV_GRAVE_TAKEN, GetNodeName(node), ( owner == ALLIANCE ) ?  LANG_BG_AV_ALLY : LANG_BG_AV_HORDE  );
-    WorldPacket data;
-    ChatHandler::FillMessageData(&data, NULL,( owner == ALLIANCE ) ? CHAT_MSG_BG_SYSTEM_ALLIANCE : CHAT_MSG_BG_SYSTEM_HORDE, LANG_UNIVERSAL, NULL, 0, buf, NULL);
-    SendPacketToAll(&data);
+
+    Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
+    if(creature)
+        YellToAll(creature,buf,LANG_UNIVERSAL);
 }
 
 void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
@@ -674,7 +679,7 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
         if(mine==AV_SOUTH_MINE) //i think this gets called all the time
         {
             Creature* creature = GetBGCreature(AV_NPC_S_MINE_N_4);
-            creature->Yell(LANG_BG_AV_S_MINE_BOSS_CLAIMS,LANG_UNIVERSAL,0); //TODO let the alliance, at their starting position, hear this
+            YellToAll(creature,LANG_BG_AV_S_MINE_BOSS_CLAIMS,LANG_UNIVERSAL);
         }
     }
     return;
@@ -886,10 +891,9 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 object)
 	//send a nice message to all :)
 	char buf[256];
 	sprintf(buf, ( IsTower(node) ) ? LANG_BG_AV_TOWER_DEFENDED : LANG_BG_AV_GRAVE_DEFENDED, GetNodeName(node));
-	uint8 type = ( team == ALLIANCE ) ? CHAT_MSG_BG_SYSTEM_ALLIANCE : CHAT_MSG_BG_SYSTEM_HORDE;
-	WorldPacket data;
-	ChatHandler::FillMessageData(&data, player->GetSession(), type, LANG_UNIVERSAL, NULL, player->GetGUID(), buf, NULL);
-	SendPacketToAll(&data);
+    Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
+    if(creature)
+        YellToAll(creature,buf,LANG_UNIVERSAL);
 	//update the statistic for the defending player
 	UpdatePlayerScore(player, ( IsTower(node) ) ? SCORE_TOWERS_DEFENDED : SCORE_GRAVEYARDS_DEFENDED, 1);
     if(IsTower(node))
@@ -995,10 +999,9 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
     //send a nice message to all :)
     char buf[256];
     sprintf(buf, ( IsTower(node) ) ? LANG_BG_AV_TOWER_ASSAULTED : LANG_BG_AV_GRAVE_ASSAULTED, GetNodeName(node),  ( team == ALLIANCE ) ?  LANG_BG_AV_ALLY : LANG_BG_AV_HORDE );
-    uint8 type = ( team == ALLIANCE ) ? CHAT_MSG_BG_SYSTEM_ALLIANCE : CHAT_MSG_BG_SYSTEM_HORDE;
-    WorldPacket data;
-    ChatHandler::FillMessageData(&data, player->GetSession(), type, LANG_UNIVERSAL, NULL, player->GetGUID(), buf, NULL);
-    SendPacketToAll(&data);
+    Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
+    if(creature)
+        YellToAll(creature,buf,LANG_UNIVERSAL);
     //update the statistic for the assaulting player
     UpdatePlayerScore(player, ( IsTower(node) ) ? SCORE_TOWERS_ASSAULTED : SCORE_GRAVEYARDS_ASSAULTED, 1);
     PlaySoundToAll((team==ALLIANCE)?AV_SOUND_ALLIANCE_ASSAULTS:AV_SOUND_HORDE_ASSAULTS);
