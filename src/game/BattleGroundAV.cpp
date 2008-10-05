@@ -393,7 +393,7 @@ void BattleGroundAV::Update(time_t diff)
                     CastSpellOnTeam(AV_BUFF_A_CAPTAIN,ALLIANCE);
                     Creature* creature = GetBGCreature(AV_CPLACE_MAX + 61);
                     if(creature)
-                        YellToAll(creature,LANG_BG_AV_A_CAPTAIN_BUFF,LANG_UNIVERSAL);
+                        YellToAll(creature,LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON);
 //                    creature->Yell(LANG_BG_AV_A_CAPTAIN_BUFF,LANG_UNIVERSAL,0); //TODO look if this position here is right or if this is sd2 stuff
                 }
                 else
@@ -401,7 +401,7 @@ void BattleGroundAV::Update(time_t diff)
                     CastSpellOnTeam(AV_BUFF_H_CAPTAIN,HORDE);
                     Creature* creature = GetBGCreature(AV_CPLACE_MAX + 59); //TODO: make the captains a dynamic creature
                     if(creature)
-                        YellToAll(creature,LANG_BG_AV_H_CAPTAIN_BUFF,LANG_UNIVERSAL);
+                        YellToAll(creature,LANG_BG_AV_H_CAPTAIN_BUFF,LANG_ORCISH);
                         //creature->Yell(LANG_BG_AV_H_CAPTAIN_BUFF,LANG_UNIVERSAL,0); //TODO look if this position here is right or if this is sd2 stuff
                 }
                 m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60000; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
@@ -594,10 +594,7 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
     }
     //send a nice message to all :)
     char buf[256];
-    if( IsTower(node) )
-        sprintf(buf, LANG_BG_AV_TOWER_TAKEN , GetNodeName(node));
-    else
-        sprintf(buf, LANG_BG_AV_GRAVE_TAKEN, GetNodeName(node), ( owner == ALLIANCE ) ?  LANG_BG_AV_ALLY : LANG_BG_AV_HORDE  );
+    sprintf(buf, (IsTower(node))?LANG_BG_AV_TOWER_TAKEN:LANG_BG_AV_GRAVE_TAKEN , GetNodeName(node),( owner == ALLIANCE ) ?  LANG_BG_AV_ALLY : LANG_BG_AV_HORDE  );
 
     Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
     if(creature)
@@ -667,13 +664,19 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
         AddAVCreature(miner+(urand(1,2)),i);
     AddAVCreature(miner+3,(mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3);
     //because the gameobjects in this mine have changed, update all surrounding players:
-    for(uint16 i = ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MIN:BG_AV_OBJECT_MINE_SUPPLY_N_MIN); i <= ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MAX:BG_AV_OBJECT_MINE_SUPPLY_N_MAX); i++)
-    {
+//    for(uint16 i = ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MIN:BG_AV_OBJECT_MINE_SUPPLY_N_MIN); i <= ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MAX:BG_AV_OBJECT_MINE_SUPPLY_N_MAX); i++)
+//    {
         //TODO: add gameobject-update code
-        assert(true); //very usefull function
-    }
+//    }
     if(team == ALLIANCE || team == HORDE)
+    {
         m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
+	char buf[256];
+	    sprintf(buf, LANG_BG_AV_MINE_TAKEN, ( mine == AV_NORTH_MINE ) ? LANG_BG_AV_MINE_NORTH : LANG_BG_AV_MINE_SOUTH, ( team == ALLIANCE ) ?  LANG_BG_AV_ALLY : LANG_BG_AV_HORDE);
+        Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
+        if(creature)
+            YellToAll(creature,buf,LANG_UNIVERSAL);
+    }
     else
     {
         if(mine==AV_SOUTH_MINE) //i think this gets called all the time
@@ -890,7 +893,7 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 object)
     }
 	//send a nice message to all :)
 	char buf[256];
-	sprintf(buf, ( IsTower(node) ) ? LANG_BG_AV_TOWER_DEFENDED : LANG_BG_AV_GRAVE_DEFENDED, GetNodeName(node));
+	sprintf(buf, ( IsTower(node) ) ? LANG_BG_AV_TOWER_DEFENDED : LANG_BG_AV_GRAVE_DEFENDED, GetNodeName(node),( team == ALLIANCE ) ?  LANG_BG_AV_ALLY : LANG_BG_AV_HORDE);
     Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
     if(creature)
         YellToAll(creature,buf,LANG_UNIVERSAL);

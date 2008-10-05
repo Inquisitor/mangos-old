@@ -21,23 +21,28 @@
 
 class BattleGround;
 
-#define LANG_BG_AV_ALLY                  "Alliance"
-#define LANG_BG_AV_HORDE                 "Horde"
+#define LANG_BG_AV_ALLY                 "Alliance"
+#define LANG_BG_AV_HORDE                "Horde"
 
-#define LANG_BG_AV_TOWER_TAKEN           "%s was destroyed."
-#define LANG_BG_AV_TOWER_ASSAULTED       "%s is under attack! If left unchecked, the %s will destroy it!"
-#define LANG_BG_AV_TOWER_DEFENDED        "$n has defended the %s"
+#define LANG_BG_AV_TOWER_TAKEN          "The %s was taken by the %s!"
+#define LANG_BG_AV_TOWER_ASSAULTED      "The %s is under attack! If left unchecked, the %s will destroy it!"
+#define LANG_BG_AV_TOWER_DEFENDED       "The %s was taken by the %s!"
 
-#define LANG_BG_AV_GRAVE_TAKEN           "The %s was taken by the %s"
-#define LANG_BG_AV_GRAVE_DEFENDED        "$n has defended the %s"
-#define LANG_BG_AV_GRAVE_ASSAULTED       "The %s is under attack! If left unchecked, the %s will control it!"
-#define LANG_BG_AV_GRAVE_CLAIMED         "$n claims the %s! If left unchallenged, the %s will control it!"
+#define LANG_BG_AV_GRAVE_TAKEN          "The %s was taken by the %s!"
+#define LANG_BG_AV_GRAVE_DEFENDED       "The %s was taken by the %s!"
+#define LANG_BG_AV_GRAVE_ASSAULTED      "The %s is under attack! If left unchecked, the %s will capture it!"
 
-#define LANG_BG_AV_ONEMINTOSTART         "The Battle for Alterac Valley begins in 1 minute."
-#define LANG_BG_AV_HALFMINTOSTART        "The Battle for Alterac Valley begins in 30 seconds. Prepare yourselves!"
-#define LANG_BG_AV_STARTED               "The Battle for Alterac Valley has begun!"
-#define LANG_BG_AV_A_NEAR_LOSE           "The Alliance has only few Points left!" //TODO: look for the right sentence
-#define LANG_BG_AV_H_NEAR_LOSE           "The Horde has only few Points left!"      //TODO: here also..
+#define LANG_BG_AV_MINE_TAKEN           "The %s has taken the %s! Its supplies will now be used for reinforcements!"
+
+#define LANG_BG_AV_MINE_NORTH           "Irondeep Mine"
+#define LANG_BG_AV_MINE_SOUTH           "Coldtooth Mine"
+
+
+#define LANG_BG_AV_ONEMINTOSTART        "The Battle for Alterac Valley begins in 1 minute."
+#define LANG_BG_AV_HALFMINTOSTART       "The Battle for Alterac Valley begins in 30 seconds. Prepare yourselves!"
+#define LANG_BG_AV_STARTED              "The Battle for Alterac Valley has begun!"
+#define LANG_BG_AV_A_NEAR_LOSE          "The Alliance has only few Points left!" //TODO: look for the right sentence
+#define LANG_BG_AV_H_NEAR_LOSE          "The Horde has only few Points left!"      //TODO: here also..
 
 #define LANG_BG_AV_A_CAPTAIN_BUFF       "Take heart, Alliance! Throw these villains from Alterac Valley!"
 #define LANG_BG_AV_H_CAPTAIN_BUFF       "Now is the time to attack! For the Horde!"
