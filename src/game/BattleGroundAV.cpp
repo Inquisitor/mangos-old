@@ -1270,21 +1270,21 @@ const char* BattleGroundAV::GetNodeName(BG_AV_Nodes node)
 {
     switch (node)
     {
-	case BG_AV_NODES_FIRSTAID_STATION: return "Stormpike Aid Station";
-	case BG_AV_NODES_DUNBALDAR_SOUTH: return "Dun Baldar South Bunker";
-	case BG_AV_NODES_DUNBALDAR_NORTH: return "Dun Baldar North Bunker";
-	case BG_AV_NODES_STORMPIKE_GRAVE: return "Stormpike Graveyard";
-	case BG_AV_NODES_ICEWING_BUNKER: return "Icewing Bunker";
-	case BG_AV_NODES_STONEHEART_GRAVE: return "Stonehearth Graveyard";
-	case BG_AV_NODES_STONEHEART_BUNKER: return "Stonehearth Bunker";
-	case BG_AV_NODES_SNOWFALL_GRAVE: return "Snowfall Graveyard";
-	case BG_AV_NODES_ICEBLOOD_TOWER: return "Iceblood Tower";
-	case BG_AV_NODES_ICEBLOOD_GRAVE: return "Iceblood Graveyard";
-	case BG_AV_NODES_TOWER_POINT: return "Tower Point";
-	case BG_AV_NODES_FROSTWOLF_GRAVE: return "Frostwolf Graveyard";
-	case BG_AV_NODES_FROSTWOLF_ETOWER: return "East Frostwolf Tower";
-	case BG_AV_NODES_FROSTWOLF_WTOWER: return "West Frostwolf Tower";
-	case BG_AV_NODES_FROSTWOLF_HUT: return "Frostwolf Relief Hut";
+        case BG_AV_NODES_FIRSTAID_STATION: return LANG_BG_AV_NODE_GRAVE_STORM_AID;
+        case BG_AV_NODES_DUNBALDAR_SOUTH: return LANG_BG_AV_NODE_TOWER_DUN_S;
+        case BG_AV_NODES_DUNBALDAR_NORTH: return LANG_BG_AV_NODE_TOWER_DUN_N;
+        case BG_AV_NODES_STORMPIKE_GRAVE: return LANG_BG_AV_NODE_GRAVE_STORMPIKE;
+        case BG_AV_NODES_ICEWING_BUNKER: return  LANG_BG_AV_NODE_TOWER_ICEWING;
+        case BG_AV_NODES_STONEHEART_GRAVE: return LANG_BG_AV_NODE_GRAVE_STONE;
+        case BG_AV_NODES_STONEHEART_BUNKER: return LANG_BG_AV_NODE_TOWER_STONE;
+        case BG_AV_NODES_SNOWFALL_GRAVE: return LANG_BG_AV_NODE_GRAVE_SNOW;
+        case BG_AV_NODES_ICEBLOOD_TOWER: return LANG_BG_AV_NODE_TOWER_ICE;
+        case BG_AV_NODES_ICEBLOOD_GRAVE: return LANG_BG_AV_NODE_GRAVE_ICE;
+        case BG_AV_NODES_TOWER_POINT: return LANG_BG_AV_NODE_TOWER_POINT;
+        case BG_AV_NODES_FROSTWOLF_GRAVE: return LANG_BG_AV_NODE_GRAVE_FROST;
+        case BG_AV_NODES_FROSTWOLF_ETOWER: return LANG_BG_AV_NODE_TOWER_FROST_E;
+        case BG_AV_NODES_FROSTWOLF_WTOWER: return LANG_BG_AV_NODE_TOWER_FROST_W;
+        case BG_AV_NODES_FROSTWOLF_HUT: return LANG_BG_AV_NODE_GRAVE_FROST_HUT;
         default:
             {
             sLog.outError("tried to get name for node %u%",node);

@@ -37,6 +37,22 @@ class BattleGround;
 #define LANG_BG_AV_MINE_NORTH           "Irondeep Mine"
 #define LANG_BG_AV_MINE_SOUTH           "Coldtooth Mine"
 
+#define LANG_BG_AV_NODE_GRAVE_STORM_AID "Stormpike Aid Station";
+#define LANG_BG_AV_NODE_TOWER_DUN_S     "Dun Baldar South Bunker";
+#define LANG_BG_AV_NODE_TOWER_DUN_N     "Dun Baldar North Bunker";
+#define LANG_BG_AV_NODE_GRAVE_STORMPIKE "Stormpike Graveyard";
+#define LANG_BG_AV_NODE_TOWER_ICEWING   "Icewing Bunker";
+#define LANG_BG_AV_NODE_GRAVE_STONE     "Stonehearth Graveyard";
+#define LANG_BG_AV_NODE_TOWER_STONE     "Stonehearth Bunker";
+#define LANG_BG_AV_NODE_GRAVE_SNOW      "Snowfall Graveyard";
+#define LANG_BG_AV_NODE_TOWER_ICE       "Iceblood Tower";
+#define LANG_BG_AV_NODE_GRAVE_ICE       "Iceblood Graveyard";
+#define LANG_BG_AV_NODE_TOWER_POINT     "Tower Point";
+#define LANG_BG_AV_NODE_GRAVE_FROST     "Frostwolf Graveyard";
+#define LANG_BG_AV_NODE_TOWER_FROST_E   "East Frostwolf Tower";
+#define LANG_BG_AV_NODE_TOWER_FROST_W   "West Frostwolf Tower";
+#define LANG_BG_AV_NODE_GRAVE_FROST_HUT "Frostwolf Relief Hut";
+
 
 #define LANG_BG_AV_ONEMINTOSTART        "The Battle for Alterac Valley begins in 1 minute."
 #define LANG_BG_AV_HALFMINTOSTART       "The Battle for Alterac Valley begins in 30 seconds. Prepare yourselves!"
