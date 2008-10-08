@@ -221,7 +221,7 @@ void BattleGroundAV::UpdateScore(uint16 team, int16 points )
         }
         else if(!m_IsInformedNearVictory[teamindex] && m_Team_Scores[teamindex] < SEND_MSG_NEAR_LOSE)
         {
-            SendMessageToAll((teamindex==BG_TEAM_HORDE)?LANG_BG_AV_H_NEAR_LOSE:LANG_BG_AV_A_NEAR_LOSE);
+            SendMessageToAll(GetMangosString((teamindex==BG_TEAM_HORDE)?LANG_BG_AV_H_NEAR_LOSE:LANG_BG_AV_A_NEAR_LOSE));
             PlaySoundToAll(AV_SOUND_NEAR_VICTORY);
             m_IsInformedNearVictory[teamindex] = true;
         }
@@ -344,13 +344,13 @@ void BattleGroundAV::Update(time_t diff)
         else if (GetStartDelayTime() <= START_DELAY1 && !(m_Events & 0x04))
         {
             m_Events |= 0x04;
-            SendMessageToAll(LANG_BG_AV_ONEMINTOSTART);
+            SendMessageToAll(GetMangosString(LANG_BG_AV_ONEMINTOSTART));
         }
         // After 1,5 minute, warning is signalled
         else if (GetStartDelayTime() <= START_DELAY2 && !(m_Events & 0x08))
         {
             m_Events |= 0x08;
-            SendMessageToAll(LANG_BG_AV_HALFMINTOSTART);
+            SendMessageToAll(GetMangosString(LANG_BG_AV_HALFMINTOSTART));
         }
         // After 2 minutes, gates OPEN ! x)
         else if (GetStartDelayTime() <= 0 && !(m_Events & 0x10))
@@ -358,7 +358,7 @@ void BattleGroundAV::Update(time_t diff)
             UpdateWorldState(AV_SHOW_H_SCORE, 1);
             UpdateWorldState(AV_SHOW_A_SCORE, 1);
             m_Events |= 0x10;
-            SendMessageToAll(LANG_BG_AV_STARTED);
+            SendMessageToAll(GetMangosString(LANG_BG_AV_STARTED));
 
             sLog.outDebug("BG_AV: start spawning mine stuff");
             for(uint16 i= BG_AV_OBJECT_MINE_SUPPLY_N_MIN; i<=BG_AV_OBJECT_MINE_SUPPLY_N_MAX;i++)
@@ -594,7 +594,10 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
     }
     //send a nice message to all :)
     char buf[256];
-    sprintf(buf, (IsTower(node))?LANG_BG_AV_TOWER_TAKEN:LANG_BG_AV_GRAVE_TAKEN , GetNodeName(node),( owner == ALLIANCE ) ?  LANG_BG_AV_ALLY : LANG_BG_AV_HORDE  );
+    if(IsTower(node))
+        sprintf(buf, GetMangosString(LANG_BG_AV_TOWER_TAKEN) , GetNodeName(node),( owner == ALLIANCE ) ? GetMangosString(LANG_BG_AV_ALLY) : GetMangosString(LANG_BG_AV_HORDE)  );
+    else
+        sprintf(buf, GetMangosString(LANG_BG_AV_GRAVE_TAKEN) , GetNodeName(node),( owner == ALLIANCE ) ? GetMangosString(LANG_BG_AV_ALLY) :GetMangosString(LANG_BG_AV_HORDE)  );
 
     Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
     if(creature)
@@ -672,7 +675,7 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
     {
         m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
 	char buf[256];
-	    sprintf(buf, LANG_BG_AV_MINE_TAKEN, ( mine == AV_NORTH_MINE ) ? LANG_BG_AV_MINE_NORTH : LANG_BG_AV_MINE_SOUTH, ( team == ALLIANCE ) ?  LANG_BG_AV_ALLY : LANG_BG_AV_HORDE);
+	    sprintf(buf, GetMangosString(LANG_BG_AV_MINE_TAKEN), GetMangosString(( mine == AV_NORTH_MINE ) ? LANG_BG_AV_MINE_NORTH : LANG_BG_AV_MINE_SOUTH), ( team == ALLIANCE ) ?  GetMangosString(LANG_BG_AV_ALLY) : GetMangosString(LANG_BG_AV_HORDE));
         Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
         if(creature)
             YellToAll(creature,buf,LANG_UNIVERSAL);
@@ -893,7 +896,7 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 object)
     }
 	//send a nice message to all :)
 	char buf[256];
-	sprintf(buf, ( IsTower(node) ) ? LANG_BG_AV_TOWER_DEFENDED : LANG_BG_AV_GRAVE_DEFENDED, GetNodeName(node),( team == ALLIANCE ) ?  LANG_BG_AV_ALLY : LANG_BG_AV_HORDE);
+	sprintf(buf, GetMangosString(( IsTower(node) ) ? LANG_BG_AV_TOWER_DEFENDED : LANG_BG_AV_GRAVE_DEFENDED), GetNodeName(node),( team == ALLIANCE ) ?  GetMangosString(LANG_BG_AV_ALLY) : GetMangosString(LANG_BG_AV_HORDE));
     Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
     if(creature)
         YellToAll(creature,buf,LANG_UNIVERSAL);
@@ -1001,7 +1004,7 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
 
     //send a nice message to all :)
     char buf[256];
-    sprintf(buf, ( IsTower(node) ) ? LANG_BG_AV_TOWER_ASSAULTED : LANG_BG_AV_GRAVE_ASSAULTED, GetNodeName(node),  ( team == ALLIANCE ) ?  LANG_BG_AV_ALLY : LANG_BG_AV_HORDE );
+    sprintf(buf, ( IsTower(node) ) ? GetMangosString(LANG_BG_AV_TOWER_ASSAULTED) : GetMangosString(LANG_BG_AV_GRAVE_ASSAULTED), GetNodeName(node),  ( team == ALLIANCE ) ?  GetMangosString(LANG_BG_AV_ALLY) : GetMangosString(LANG_BG_AV_HORDE ));
     Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
     if(creature)
         YellToAll(creature,buf,LANG_UNIVERSAL);
@@ -1270,21 +1273,21 @@ const char* BattleGroundAV::GetNodeName(BG_AV_Nodes node)
 {
     switch (node)
     {
-        case BG_AV_NODES_FIRSTAID_STATION: return LANG_BG_AV_NODE_GRAVE_STORM_AID;
-        case BG_AV_NODES_DUNBALDAR_SOUTH: return LANG_BG_AV_NODE_TOWER_DUN_S;
-        case BG_AV_NODES_DUNBALDAR_NORTH: return LANG_BG_AV_NODE_TOWER_DUN_N;
-        case BG_AV_NODES_STORMPIKE_GRAVE: return LANG_BG_AV_NODE_GRAVE_STORMPIKE;
-        case BG_AV_NODES_ICEWING_BUNKER: return  LANG_BG_AV_NODE_TOWER_ICEWING;
-        case BG_AV_NODES_STONEHEART_GRAVE: return LANG_BG_AV_NODE_GRAVE_STONE;
-        case BG_AV_NODES_STONEHEART_BUNKER: return LANG_BG_AV_NODE_TOWER_STONE;
-        case BG_AV_NODES_SNOWFALL_GRAVE: return LANG_BG_AV_NODE_GRAVE_SNOW;
-        case BG_AV_NODES_ICEBLOOD_TOWER: return LANG_BG_AV_NODE_TOWER_ICE;
-        case BG_AV_NODES_ICEBLOOD_GRAVE: return LANG_BG_AV_NODE_GRAVE_ICE;
-        case BG_AV_NODES_TOWER_POINT: return LANG_BG_AV_NODE_TOWER_POINT;
-        case BG_AV_NODES_FROSTWOLF_GRAVE: return LANG_BG_AV_NODE_GRAVE_FROST;
-        case BG_AV_NODES_FROSTWOLF_ETOWER: return LANG_BG_AV_NODE_TOWER_FROST_E;
-        case BG_AV_NODES_FROSTWOLF_WTOWER: return LANG_BG_AV_NODE_TOWER_FROST_W;
-        case BG_AV_NODES_FROSTWOLF_HUT: return LANG_BG_AV_NODE_GRAVE_FROST_HUT;
+        case BG_AV_NODES_FIRSTAID_STATION:  return GetMangosString(LANG_BG_AV_NODE_GRAVE_STORM_AID);
+        case BG_AV_NODES_DUNBALDAR_SOUTH:   return GetMangosString(LANG_BG_AV_NODE_TOWER_DUN_S);
+        case BG_AV_NODES_DUNBALDAR_NORTH:   return GetMangosString(LANG_BG_AV_NODE_TOWER_DUN_N);
+        case BG_AV_NODES_STORMPIKE_GRAVE:   return GetMangosString(LANG_BG_AV_NODE_GRAVE_STORMPIKE);
+        case BG_AV_NODES_ICEWING_BUNKER:    return GetMangosString(LANG_BG_AV_NODE_TOWER_ICEWING);
+        case BG_AV_NODES_STONEHEART_GRAVE:  return GetMangosString(LANG_BG_AV_NODE_GRAVE_STONE);
+        case BG_AV_NODES_STONEHEART_BUNKER: return GetMangosString(LANG_BG_AV_NODE_TOWER_STONE);
+        case BG_AV_NODES_SNOWFALL_GRAVE:    return GetMangosString(LANG_BG_AV_NODE_GRAVE_SNOW);
+        case BG_AV_NODES_ICEBLOOD_TOWER:    return GetMangosString(LANG_BG_AV_NODE_TOWER_ICE);
+        case BG_AV_NODES_ICEBLOOD_GRAVE:    return GetMangosString(LANG_BG_AV_NODE_GRAVE_ICE);
+        case BG_AV_NODES_TOWER_POINT:       return GetMangosString(LANG_BG_AV_NODE_TOWER_POINT);
+        case BG_AV_NODES_FROSTWOLF_GRAVE:   return GetMangosString(LANG_BG_AV_NODE_GRAVE_FROST);
+        case BG_AV_NODES_FROSTWOLF_ETOWER:  return GetMangosString(LANG_BG_AV_NODE_TOWER_FROST_E);
+        case BG_AV_NODES_FROSTWOLF_WTOWER:  return GetMangosString(LANG_BG_AV_NODE_TOWER_FROST_W);
+        case BG_AV_NODES_FROSTWOLF_HUT:     return GetMangosString(LANG_BG_AV_NODE_GRAVE_FROST_HUT);
         default:
             {
             sLog.outError("tried to get name for node %u%",node);
