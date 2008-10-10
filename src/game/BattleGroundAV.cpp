@@ -338,7 +338,6 @@ void BattleGroundAV::Update(time_t diff)
             DoorClose(BG_AV_OBJECT_DOOR_H);
 
             SetStartDelayTime(START_DELAY0);
-//          SetStartDelayTime(10);
         }
         // After 1 minute, warning is signalled
         else if (GetStartDelayTime() <= START_DELAY1 && !(m_Events & 0x04))

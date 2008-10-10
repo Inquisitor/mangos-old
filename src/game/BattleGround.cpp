@@ -370,7 +370,6 @@ void BattleGround::EndBattleGround(uint32 winner)
     {
         winmsg = GetMangosString(LANG_BG_A_WINS);
 
-    //TODO: look if every battleground has different sounds for alterac i got: AV_SOUND_HORDE/ALLIANCE_GOOD  = 8213 8713
         PlaySoundToAll(SOUND_ALLIANCE_WINS);                // alliance wins sound
 
         SetWinner(WINNER_ALLIANCE);
@@ -379,7 +378,6 @@ void BattleGround::EndBattleGround(uint32 winner)
     {
         winmsg = GetMangosString(LANG_BG_H_WINS);
 
-    //TODO: look if every battleground has different sounds for alterac i got: AV_SOUND_HORDE/ALLIANCE_GOOD  = 8213 8713
         PlaySoundToAll(SOUND_HORDE_WINS);                   // horde wins sound
 
         SetWinner(WINNER_HORDE);
