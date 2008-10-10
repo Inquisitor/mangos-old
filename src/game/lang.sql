@@ -1,3 +1,4 @@
+delete from mangos_string where entry>716 and entry<747;
 INSERT INTO mangos_string VALUES
 (717,'Alliance',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (718,'Horde',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
