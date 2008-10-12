@@ -617,19 +617,22 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial)
     m_Mine_PrevOwner[mine] = m_Mine_Owner[mine];
     m_Mine_Owner[mine] = team;
 
-    sLog.outDebug("bg_av depopulating mine %i (0=north,1=south)",mine);
-    if(mine==AV_SOUTH_MINE)
-        for(uint16 i=AV_CPLACE_MINE_S_S_MIN; i <= AV_CPLACE_MINE_S_S_MAX; i++)
+    if(!initial)
+    {
+        sLog.outDebug("bg_av depopulating mine %i (0=north,1=south)",mine);
+        if(mine==AV_SOUTH_MINE)
+            for(uint16 i=AV_CPLACE_MINE_S_S_MIN; i <= AV_CPLACE_MINE_S_S_MAX; i++)
+                if( m_BgCreatures[i] )
+                    DelCreature(i); //TODO just set the respawntime to 999999
+        for(uint16 i=((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_1_MIN:AV_CPLACE_MINE_S_1_MIN); i <= ((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3); i++)
             if( m_BgCreatures[i] )
-                DelCreature(i); //TODO just set the respawntime to 999999
-    for(uint16 i=((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_1_MIN:AV_CPLACE_MINE_S_1_MIN); i <= ((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3); i++)
-        if( m_BgCreatures[i] )
-            DelCreature(i); //TODO here also
+                DelCreature(i); //TODO here also
+        SendMineWorldStates(mine);
+    }
 
     sLog.outDebug("bg_av populating mine %i (0=north,1=south)",mine);
     uint16 miner;
     //also neutral team exists.. after a big time, the neutral team tries to conquer the mine
-    SendMineWorldStates(mine);
     if(mine==AV_NORTH_MINE)
     {
         if(team == ALLIANCE)
