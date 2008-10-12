@@ -731,17 +731,12 @@ void BattleGroundAV::PopulateNode(BG_AV_Nodes node)
 }
 void BattleGroundAV::DePopulateNode(BG_AV_Nodes node)
 {
-    uint32 owner = m_Nodes[node].Owner;
-	assert(owner != AV_NEUTRAL_TEAM);
-
 	uint32 c_place = AV_CPLACE_DEFENSE_STORM_AID + ( 4 * node );
     for(uint8 i=0; i<4; i++)
         if( m_BgCreatures[c_place+i] )
             DelCreature(c_place+i);
-    if(IsTower(node))
-        return;
     //spiritguide
-    if( m_BgCreatures[node] )
+    if( !IsTower(node) && m_BgCreatures[node] )
         DelCreature(node);
 }
 
