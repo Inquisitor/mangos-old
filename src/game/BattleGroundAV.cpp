@@ -365,7 +365,7 @@ void BattleGroundAV::Update(time_t diff)
             for(uint16 i= BG_AV_OBJECT_MINE_SUPPLY_S_MIN; i<=BG_AV_OBJECT_MINE_SUPPLY_S_MAX;i++)
                 SpawnBGObject(i,RESPAWN_IMMEDIATELY);
             for(uint8 mine = AV_NORTH_MINE; mine <= AV_SOUTH_MINE; mine++) //mine population
-                ChangeMineOwner(mine, AV_NEUTRAL_TEAM);
+                ChangeMineOwner(mine, AV_NEUTRAL_TEAM,true);
             DoorOpen(BG_AV_OBJECT_DOOR_H);
             DoorOpen(BG_AV_OBJECT_DOOR_A);
 
@@ -603,7 +603,7 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
         YellToAll(creature,buf,LANG_UNIVERSAL);
 }
 
-void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
+void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial = false)
 { //mine=0 northmine mine=1 southmin
 //changing the owner results in setting respawntim to infinite for current creatures, spawning new mine owners creatures and changing the chest-objects so that the current owning team can use them
     assert(mine == AV_NORTH_MINE || mine == AV_SOUTH_MINE);
@@ -612,7 +612,7 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
     else
         PlaySoundToAll((team==ALLIANCE)?AV_SOUND_ALLIANCE_GOOD:AV_SOUND_HORDE_GOOD);
 
-    if(m_Mine_Owner[mine] == team)
+    if(m_Mine_Owner[mine] == team && !initial)
         return;
     m_Mine_PrevOwner[mine] = m_Mine_Owner[mine];
     m_Mine_Owner[mine] = team;
