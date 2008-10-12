@@ -168,11 +168,9 @@ void BattleGround::Update(time_t diff)
             }
 
             m_ReviveQueue.clear();
-            m_LastResurrectTime = 0;
         }
-        else
-            // queue is clear and time passed, just update last resurrection time
-            m_LastResurrectTime = 0;
+        // queue is clear and time passed, just update last resurrection time
+        m_LastResurrectTime = 0;
     }
     else if (m_LastResurrectTime > 500)    // Resurrect players only half a second later, to see spirit heal effect on NPC
     {
