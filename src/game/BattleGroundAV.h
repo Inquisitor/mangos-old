@@ -1543,7 +1543,7 @@ class BattleGroundAV : public BattleGround
 
 
         /*mine*/
-        void ChangeMineOwner(uint8 mine, uint32 team, initial=false);
+        void ChangeMineOwner(uint8 mine, uint32 team, bool initial=false);
 
         /*worldstates*/
         void FillInitialWorldStates(WorldPacket& data);

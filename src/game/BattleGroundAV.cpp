@@ -212,9 +212,9 @@ void BattleGroundAV::UpdateScore(uint16 team, int16 points )
     uint8 teamindex = GetTeamIndexByTeamId(team); //0=ally 1=horde
     m_Team_Scores[teamindex] += points;
 
-    if( points < 1)
+    if( points < 0)
     {
-        if( m_Team_Scores[teamindex] < 0)
+        if( m_Team_Scores[teamindex] < 1)
         {
             m_Team_Scores[teamindex]=0;
             EndBattleGround(((teamindex==BG_TEAM_HORDE)?ALLIANCE:HORDE));
@@ -603,7 +603,7 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
         YellToAll(creature,buf,LANG_UNIVERSAL);
 }
 
-void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial = false)
+void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial)
 { //mine=0 northmine mine=1 southmin
 //changing the owner results in setting respawntim to infinite for current creatures, spawning new mine owners creatures and changing the chest-objects so that the current owning team can use them
     assert(mine == AV_NORTH_MINE || mine == AV_SOUTH_MINE);
@@ -1121,17 +1121,16 @@ WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(float x, float y, 
         float mindist = 9999999.0f;
         for (uint8 i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i)
         {
-            if (m_Nodes[i].Owner == team && m_Nodes[i].State == POINT_CONTROLED)
+            if (m_Nodes[i].Owner != team || m_Nodes[i].State != POINT_CONTROLED)
+                continue;
+            WorldSafeLocsEntry const*entry = sWorldSafeLocsStore.LookupEntry( BG_AV_GraveyardIds[i] );
+            if( !entry )
+                continue;
+            float dist = (entry->x - x)*(entry->x - x)+(entry->y - y)*(entry->y - y);
+            if( mindist > dist )
             {
-                WorldSafeLocsEntry const*entry = sWorldSafeLocsStore.LookupEntry( BG_AV_GraveyardIds[i] );
-                if( !entry )
-                    continue;
-                float dist = (entry->x - x)*(entry->x - x)+(entry->y - y)*(entry->y - y);
-                if( mindist > dist )
-                {
-                    mindist = dist;
-                    good_entry = entry;
-                }
+                mindist = dist;
+                good_entry = entry;
             }
         }
     }
