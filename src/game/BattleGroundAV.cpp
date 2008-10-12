@@ -990,7 +990,8 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
                         continue;
                     if(!ClosestGrave)
                         ClosestGrave = GetClosestGraveYard(plr->GetPositionX(), plr->GetPositionY(), plr->GetPositionZ(), team);
-                    plr->TeleportTo(GetMapId(), ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, plr->GetOrientation());
+                    else
+                        plr->TeleportTo(GetMapId(), ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, plr->GetOrientation());
                 }
             }
         }
