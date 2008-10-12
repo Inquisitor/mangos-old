@@ -212,6 +212,7 @@ void BattleGroundAV::UpdateScore(uint16 team, int16 points )
     uint8 teamindex = GetTeamIndexByTeamId(team); //0=ally 1=horde
     m_Team_Scores[teamindex] += points;
 
+    UpdateWorldState(((teamindex==BG_TEAM_HORDE)?AV_Horde_Score:AV_Alliance_Score), m_Team_Scores[teamindex]);
     if( points < 0)
     {
         if( m_Team_Scores[teamindex] < 1)
@@ -226,7 +227,6 @@ void BattleGroundAV::UpdateScore(uint16 team, int16 points )
             m_IsInformedNearVictory[teamindex] = true;
         }
     }
-    UpdateWorldState(((teamindex==BG_TEAM_HORDE)?AV_Horde_Score:AV_Alliance_Score), m_Team_Scores[teamindex]);
 }
 
 
