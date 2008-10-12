@@ -993,6 +993,7 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
                     else
                         plr->TeleportTo(GetMapId(), ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, plr->GetOrientation());
                 }
+                m_ReviveQueue[m_BgCreatures[node]].clear();
             }
         }
         DePopulateNode(node);
