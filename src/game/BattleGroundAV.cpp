@@ -212,7 +212,7 @@ void BattleGroundAV::UpdateScore(uint16 team, int16 points )
     uint8 teamindex = GetTeamIndexByTeamId(team); //0=ally 1=horde
     m_Team_Scores[teamindex] += points;
 
-    if( points < 0)
+    if( points < 1)
     {
         if( m_Team_Scores[teamindex] < 0)
         {
