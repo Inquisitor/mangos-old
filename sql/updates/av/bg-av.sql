@@ -1,7 +1,7 @@
 -- people with custom content now have a problem
 -- all creatures and gameobjects where removed from alterac, cause udb have wrong spawns..
-delete from creature_template where map=30;
-delete from gameobject_template where map=30;
+delete from creature where map=30;
+delete from gameobject where map=30;
 
 REPLACE INTO gameobject_template VALUES (178364,1,5773,"Horde Banner","",84,0,1,0,1479,196608,180101,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"");
 REPLACE INTO gameobject_template VALUES (178365,1,5771,"Alliance Banner","",83,0,1,0,1479,196608,180100,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"");

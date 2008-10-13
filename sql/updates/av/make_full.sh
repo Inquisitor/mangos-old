@@ -12,10 +12,10 @@ echo "
 " >> full.sql
 cat "creature_template.sql" >> full.sql
 echo "
-gameobject-spawns
+-- gameobject-spawns
 " >> full.sql
 cat "gameobjects.sql" >> full.sql
 echo "
-eventai
+-- eventai
 " >> full.sql
 cat "eventai.sql" >> full.sql

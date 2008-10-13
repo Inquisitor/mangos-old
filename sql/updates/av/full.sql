@@ -3,8 +3,8 @@
 
 -- people with custom content now have a problem
 -- all creatures and gameobjects where removed from alterac, cause udb have wrong spawns..
-delete from creature_template where map=30;
-delete from gameobject_template where map=30;
+delete from creature where map=30;
+delete from gameobject where map=30;
 
 REPLACE INTO gameobject_template VALUES (178364,1,5773,"Horde Banner","",84,0,1,0,1479,196608,180101,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"");
 REPLACE INTO gameobject_template VALUES (178365,1,5771,"Alliance Banner","",83,0,1,0,1479,196608,180100,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"");
@@ -163,7 +163,7 @@ VALUES
    (25040, 0, 4606, 0, 4606, 0, 'Greater Water Elemental', '', '', 1, 1, 1, 1, 0, 0, 0, 35, 35, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 0, 3, 0, 1, 0, 0, 0, 'mob_eventai');
 
 
-gameobject-spawns
+-- gameobject-spawns
 
 -- following gameobjects are static
 INSERT INTO `mangos`.`gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (2061,30,-1423.16,-318.436,89.1136,2.35619,60);
@@ -250,7 +250,7 @@ INSERT INTO `mangos`.`gameobject` (`id` ,`map`,position_x,position_y,position_z,
 INSERT INTO `mangos`.`gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (179437,30,618.748,-52.1126,42.1122,-0.0698131,60);
 INSERT INTO `mangos`.`gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (179438,30,-1181.1,-370.747,53.6246,2.68781,60);
 
-eventai
+-- eventai
 
 REPLACE INTO eventai_scripts
    (`id`, `creature_id`, `event_type`, `event_inverse_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `action1_type`, `action1_param1`, `action1_param2`, `action1_param3`, `action2_type`, `action2_param1`, `action2_param2`, `action2_param3`, `action3_type`, `action3_param1`, `action3_param2`, `action3_param3`, `comment`)
