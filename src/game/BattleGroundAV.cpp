@@ -357,7 +357,10 @@ void BattleGroundAV::Update(time_t diff)
             UpdateWorldState(AV_SHOW_H_SCORE, 1);
             UpdateWorldState(AV_SHOW_A_SCORE, 1);
             m_Events |= 0x10;
+
             SendMessageToAll(GetMangosString(LANG_BG_AV_STARTED));
+            PlaySoundToAll(SOUND_BG_START);
+            SetStatus(STATUS_IN_PROGRESS);
 
             sLog.outDebug("BG_AV: start spawning mine stuff");
             for(uint16 i= BG_AV_OBJECT_MINE_SUPPLY_N_MIN; i<=BG_AV_OBJECT_MINE_SUPPLY_N_MAX;i++)
@@ -369,8 +372,6 @@ void BattleGroundAV::Update(time_t diff)
             DoorOpen(BG_AV_OBJECT_DOOR_H);
             DoorOpen(BG_AV_OBJECT_DOOR_A);
 
-            PlaySoundToAll(SOUND_BG_START);
-            SetStatus(STATUS_IN_PROGRESS);
 
             for(BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
                 if(Player* plr = objmgr.GetPlayer(itr->first))
@@ -627,8 +628,8 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial)
         for(uint16 i=((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_1_MIN:AV_CPLACE_MINE_S_1_MIN); i <= ((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3); i++)
             if( m_BgCreatures[i] )
                 DelCreature(i); //TODO here also
-        SendMineWorldStates(mine);
     }
+    SendMineWorldStates(mine);
 
     sLog.outDebug("bg_av populating mine %i (0=north,1=south)",mine);
     uint16 miner;
@@ -686,7 +687,7 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial)
     {
         if(mine==AV_SOUTH_MINE) //i think this gets called all the time
         {
-            Creature* creature = GetBGCreature(AV_NPC_S_MINE_N_4);
+            Creature* creature = GetBGCreature(AV_CPLACE_MINE_S_3);
             YellToAll(creature,LANG_BG_AV_S_MINE_BOSS_CLAIMS,LANG_UNIVERSAL);
         }
     }
@@ -1106,7 +1107,8 @@ void BattleGroundAV::SendMineWorldStates(uint32 mine)
         owner = 1;
 
     UpdateWorldState(BG_AV_MineWorldStates[mine2][owner],1);
-    UpdateWorldState(BG_AV_MineWorldStates[mine2][prevowner],0);
+    if( prevowner != owner)
+        UpdateWorldState(BG_AV_MineWorldStates[mine2][prevowner],0);
 }
 
 
