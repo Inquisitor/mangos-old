@@ -51,7 +51,7 @@ VALUES ('1', '17306', '33', '0', '5', '15',  '6', '67', '0'),
 
 -- language
 
-delete from mangos_string where entry>716 and entry<747;
+delete from mangos_string where entry>716 and entry<748;
 INSERT INTO mangos_string VALUES
 (717,'Alliance',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (718,'Horde',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -78,11 +78,12 @@ INSERT INTO mangos_string VALUES
 (739,'Frostwolf Graveyard',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (740,'East Frostwolf Tower',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (741,'West Frostwolf Tower',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(742,'The Battle for Alterac Valley begins in 1 minute.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(743,'The Battle for Alterac Valley begins in 30 seconds. Prepare yourselves!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(744,'The Battle for Alterac Valley has begun!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(745,'The Alliance has only few Points left!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(746,'The Horde has only few Points left!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+(742,'Frostwolf Relief Hut',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(743,'The Battle for Alterac Valley begins in 1 minute.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(744,'The Battle for Alterac Valley begins in 30 seconds. Prepare yourselves!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(745,'The Battle for Alterac Valley has begun!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(746,'The Alliance has only few Points left!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(747,'The Horde has only few Points left!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
 ;
 
 -- creature stats

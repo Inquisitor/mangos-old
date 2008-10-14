@@ -174,7 +174,6 @@ enum BG_AV_Nodes
 
 enum BG_AV_ObjectTypes
 {
-    //Initial setup
     BG_AV_OBJECT_FLAG_A_FIRSTAID_STATION    = 0,
     BG_AV_OBJECT_FLAG_A_STORMPIKE_GRAVE     = 1,
     BG_AV_OBJECT_FLAG_A_STONEHEART_GRAVE    = 2,
@@ -360,8 +359,8 @@ const float BG_AV_ObjectPos[AV_OPLACE_MAX][4] = {
     {669.007f,-294.078f,30.2909f,2.77507f },//stormpike
     {77.8013f,-404.7f,46.7549f,-0.872665f },//stone grave
     {-202.581f,-112.73f,78.4876f,-0.715585f },//snowfall
-    {-1082.45f,-346.823f,54.9219f,-1.53589f },//iceblood grave
-    {-611.962f,-396.17f,60.8351f,2.53682f},  //frostwolf grave
+    {-611.962f,-396.17f,60.8351f,2.53682f},  //iceblood grave
+    {-1082.45f,-346.823f,54.9219f,-1.53589f },//frostwolf grave
     {-1402.21f,-307.431f,89.4424f,0.191986f },//frostwolf hut
     {553.779f,-78.6566f,51.9378f,-1.22173f }, //dunnbaldar south
     {674.001f,-143.125f,63.6615f,0.994838f }, //dunbaldar north
@@ -606,14 +605,13 @@ const float BG_AV_CreaturePos[AV_CPLACE_MAX][4] = {
     {676.000000f,-374.000000f,30.000000f,-0.001854f},
     {73.417755f,-496.433105f,48.731918f,-0.001854f},
     {-157.409195f,31.206272f,77.050598f,-0.001854f},
-    {-1090.476807f,-253.308670f,57.672371f,-0.001854f},
     {-531.217834f,-405.231384f,49.551376f,-0.001854f},
+    {-1090.476807f,-253.308670f,57.672371f,-0.001854f},
     {-1496.065063f,-333.338409f,101.134804f,-0.001854f},
     {873.001770f,-491.283630f,96.541931f,-0.001854f},
     {-1437.670044f,-610.088989f,51.161900f,-0.001854f},
-//alliance
  //grave
- //firstaid - OK
+ //firstaid
     {635.17f,-29.5594f,46.5056f,4.81711f},
     {642.488f,-32.9437f,46.365f,4.67748f},
     {642.326f,-27.9442f,46.9211f,4.59022f},
@@ -634,15 +632,15 @@ const float BG_AV_CreaturePos[AV_CPLACE_MAX][4] = {
     {-202.709f,-116.829f,78.4358f,5.13742f},
     {-202.059f,-108.314f,78.5783f,5.91968f},
   //ice
-    {-1077.7f,-340.21f,55.4682f,6.25569f},
-    {-1082.74f,-333.821f,54.7962f,2.05459f},
-    {-1090.66f,-341.267f,54.6768f,3.27746f},
-    {-1081.58f,-344.63f,55.256f,4.75636f},
-  //frost
     {-615.501f,-393.802f,60.4299f,3.06147f},
     {-608.513f,-392.717f,62.5724f,2.06323f},
     {-609.769f,-400.072f,60.7174f,5.22367f},
     {-616.093f,-398.293f,60.5628f,3.73613f},
+  //frost
+    {-1077.7f,-340.21f,55.4682f,6.25569f},
+    {-1082.74f,-333.821f,54.7962f,2.05459f},
+    {-1090.66f,-341.267f,54.6768f,3.27746f},
+    {-1081.58f,-344.63f,55.256f,4.75636f},
   //frost hut
     {-1408.95f,-311.69f,89.2536f,4.49954f},
     {-1407.15f,-305.323f,89.1993f,2.86827f},
@@ -1246,8 +1244,8 @@ enum BG_AV_Graveyards
     AV_GRAVE_STORM_GRAVE       = 689,
     AV_GRAVE_STONE_GRAVE       = 729,
     AV_GRAVE_SNOWFALL          = 169,
-    AV_GRAVE_FROSTWOLF         = 749,
-    AV_GRAVE_ICE_GRAVE         = 690,
+    AV_GRAVE_ICE_GRAVE         = 749,
+    AV_GRAVE_FROSTWOLF         = 690,
     AV_GRAVE_FROST_HUT         = 750,
     AV_GRAVE_MAIN_ALLIANCE     = 611,
     AV_GRAVE_MAIN_HORDE        = 610
@@ -1414,9 +1412,9 @@ const uint32 BG_AV_NodeWorldStates[16][4] = {
     //Snowfall Grave
     {1341,1343,1342,1344},
     //Iceblood grave
-    {1337,1339,1338,1340},
-    //Frostwolf Grave
     {1346,1348,1347,1349},
+    //Frostwolf Grave
+    {1337,1339,1338,1340},
     //Frostwolf Hut
     {1329,1331,1330,1332},
     //Dunbaldar South Bunker
