@@ -91,7 +91,7 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     {
         RewardReputationToTeam(730,BG_AV_REP_CAPTAIN,ALLIANCE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),ALLIANCE);
-	UpdateScore(HORDE,(-1)*BG_AV_RES_CAPTAIN);
+    	UpdateScore(HORDE,(-1)*BG_AV_RES_CAPTAIN);
         //spawn destroyed aura
         for(uint8 i=0; i<=9; i++)
             SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_HORDE+i,RESPAWN_IMMEDIATELY);
