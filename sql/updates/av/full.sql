@@ -55,7 +55,7 @@ delete from mangos_string where entry>716 and entry<748;
 INSERT INTO mangos_string VALUES
 (717,'Alliance',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (718,'Horde',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(719,'The %s was taken by the %s!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(719,'%s was destroyed by the %s!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (720,'The %s is under attack! If left unchecked, the %s will destroy it!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (721,'The %s was taken by the %s!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (722,'The %s was taken by the %s!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -82,8 +82,10 @@ INSERT INTO mangos_string VALUES
 (743,'The Battle for Alterac Valley begins in 1 minute.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (744,'The Battle for Alterac Valley begins in 30 seconds. Prepare yourselves!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (745,'The Battle for Alterac Valley has begun!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(746,'The Alliance has only few Points left!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(747,'The Horde has only few Points left!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+(746,'The Alliance Team is running out of reinforcements!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(747,'The Horde Team is running out of reinforcements!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(748,'The Frostwolf General is Dead!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(749,'The Stormpike General is Dead!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
 ;
 
 -- creature stats

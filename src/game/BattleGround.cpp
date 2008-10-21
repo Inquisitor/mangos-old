@@ -368,7 +368,7 @@ void BattleGround::EndBattleGround(uint32 winner)
 
     if(winner == ALLIANCE)
     {
-        winmsg = GetMangosString(LANG_BG_A_WINS);
+        winmsg = GetMangosString(LANG_BG_A_WINS); //TODO herald yells this.. (at least in bg_av)
 
         PlaySoundToAll(SOUND_ALLIANCE_WINS);                // alliance wins sound
 

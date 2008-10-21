@@ -86,6 +86,10 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
         //spawn destroyed aura
         for(uint8 i=0; i<=9; i++)
             SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_ALLIANCE+i,RESPAWN_IMMEDIATELY);
+        Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
+        if(creature)
+            YellToAll(creature,LANG_BG_AV_A_CAPTAIN_DEAD,LANG_UNIVERSAL);
+
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_H_CAPTAIN][0] )
     {
@@ -95,6 +99,9 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
         //spawn destroyed aura
         for(uint8 i=0; i<=9; i++)
             SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_HORDE+i,RESPAWN_IMMEDIATELY);
+        Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
+        if(creature)
+            YellToAll(creature,LANG_BG_AV_H_CAPTAIN_DEAD,LANG_UNIVERSAL);
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_H_4][0])
         ChangeMineOwner(AV_NORTH_MINE,killer->GetTeam());
