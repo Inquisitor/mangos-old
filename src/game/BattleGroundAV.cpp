@@ -273,14 +273,6 @@ void BattleGroundAV::Update(time_t diff)
         if (!(m_Events & 0x01))
         {
             m_Events |= 0x01;
-            //comment this out if you are running with arenapatch
-            /*
-            if(!SetupBattleGround())
-            {
-                EndNow();
-                return;
-            }
-            */
 
             uint16 i;
             sLog.outDebug("Alterac Valley: entering state STATUS_WAIT_JOIN ...");
@@ -327,7 +319,7 @@ void BattleGroundAV::Update(time_t diff)
 		//mainspiritguides:
             sLog.outDebug("BG_AV: start spawning spiritguides creatures");
 	        AddSpiritGuide(7, BG_AV_CreaturePos[7][0], BG_AV_CreaturePos[7][1], BG_AV_CreaturePos[7][2], BG_AV_CreaturePos[7][3], ALLIANCE);
-		AddSpiritGuide(8, BG_AV_CreaturePos[8][0], BG_AV_CreaturePos[8][1], BG_AV_CreaturePos[8][2], BG_AV_CreaturePos[8][3], HORDE);
+    		AddSpiritGuide(8, BG_AV_CreaturePos[8][0], BG_AV_CreaturePos[8][1], BG_AV_CreaturePos[8][2], BG_AV_CreaturePos[8][3], HORDE);
             //spawn the marshals (those who get deleted, if a tower gets destroyed)
             sLog.outDebug("BG_AV: start spawning marshal creatures");
             for(i=AV_NPC_A_MARSHAL_SOUTH; i<= AV_NPC_H_MARSHAL_WTOWER; i++)
@@ -394,7 +386,6 @@ void BattleGroundAV::Update(time_t diff)
                     Creature* creature = GetBGCreature(AV_CPLACE_MAX + 61);
                     if(creature)
                         YellToAll(creature,LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON);
-//                    creature->Yell(LANG_BG_AV_A_CAPTAIN_BUFF,LANG_UNIVERSAL,0); //TODO look if this position here is right or if this is sd2 stuff
                 }
                 else
                 {
@@ -402,7 +393,6 @@ void BattleGroundAV::Update(time_t diff)
                     Creature* creature = GetBGCreature(AV_CPLACE_MAX + 59); //TODO: make the captains a dynamic creature
                     if(creature)
                         YellToAll(creature,LANG_BG_AV_H_CAPTAIN_BUFF,LANG_ORCISH);
-                        //creature->Yell(LANG_BG_AV_H_CAPTAIN_BUFF,LANG_UNIVERSAL,0); //TODO look if this position here is right or if this is sd2 stuff
                 }
                 m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60000; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
             }
@@ -570,7 +560,6 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
         RewardReputationToTeam((owner == ALLIANCE)?730:729,BG_AV_REP_TOWER,owner);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_TOWER),owner);
 
-        //despawn big banner+aura on top of tower TODO: look if this works (i think it doesn't)
         SpawnBGObject(BG_AV_OBJECT_TAURA_A_DUNBALDAR_SOUTH+GetTeamIndexByTeamId(owner)+(2*tmp),RESPAWN_ONE_DAY);
         SpawnBGObject(BG_AV_OBJECT_TFLAG_A_DUNBALDAR_SOUTH+GetTeamIndexByTeamId(owner)+(2*tmp),RESPAWN_ONE_DAY);
     }
@@ -800,7 +789,7 @@ const uint32 BattleGroundAV::GetObjectThroughNode(BG_AV_Nodes node)
         return BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE;
     sLog.outError("BattleGroundAV: Error! GetPlaceNode couldn't resolve node %i",node);
     assert(false);
-    return 0; //i don't know what i should return, maybe I should crash the server at this point :>
+    return 0;
 }
 
 
