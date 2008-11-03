@@ -36,7 +36,7 @@
 #include "VMapFactory.h"
 #endif
 
-bool ChatHandler::HandleSayCommand(const char* args)
+bool ChatHandler::HandleNpcSayCommand(const char* args)
 {
     if(!*args)
         return false;
@@ -54,7 +54,7 @@ bool ChatHandler::HandleSayCommand(const char* args)
     return true;
 }
 
-bool ChatHandler::HandleYellCommand(const char* args)
+bool ChatHandler::HandleNpcYellCommand(const char* args)
 {
     if(!*args)
         return false;
@@ -73,7 +73,7 @@ bool ChatHandler::HandleYellCommand(const char* args)
 }
 
 //show text emote by creature in chat
-bool ChatHandler::HandleTextEmoteCommand(const char* args)
+bool ChatHandler::HandleNpcTextEmoteCommand(const char* args)
 {
     if(!*args)
         return false;
@@ -309,9 +309,10 @@ bool ChatHandler::HandleGPSCommand(const char* args)
         zone_x, zone_y, ground_z, floor_z, have_map, have_vmap );
 
     sLog.outDebug("Player %s GPS call for %s '%s' (%s: %u):",
-        m_session->GetPlayer()->GetName(),
+        GetName(),
         (obj->GetTypeId() == TYPEID_PLAYER ? "player" : "creature"), obj->GetName(),
         (obj->GetTypeId() == TYPEID_PLAYER ? "GUID" : "Entry"), (obj->GetTypeId() == TYPEID_PLAYER ? obj->GetGUIDLow(): obj->GetEntry()) );
+
     sLog.outDebug(GetMangosString(LANG_MAP_POSITION),
         obj->GetMapId(), (mapEntry ? mapEntry->name[sWorld.GetDefaultDbcLocale()] : "<unknown>" ),
         zone_id, (zoneEntry ? zoneEntry->area_name[sWorld.GetDefaultDbcLocale()] : "<unknown>" ),
@@ -374,9 +375,8 @@ bool ChatHandler::HandleNamegoCommand(const char* args)
         }
 
         PSendSysMessage(LANG_SUMMONING, chr->GetName(),"");
-
-        if (m_session->GetPlayer()->IsVisibleGloballyFor(chr))
-            ChatHandler(chr).PSendSysMessage(LANG_SUMMONED_BY, m_session->GetPlayer()->GetName());
+        if (needReportToTarget(chr))
+            ChatHandler(chr).PSendSysMessage(LANG_SUMMONED_BY, GetName());
 
         // stop flight if need
         if(chr->isInFlight())
@@ -655,7 +655,8 @@ bool ChatHandler::HandleModifyHPCommand(const char* args)
     }
 
     PSendSysMessage(LANG_YOU_CHANGE_HP, chr->GetName(), hp, hpm);
-    ChatHandler(chr).PSendSysMessage(LANG_YOURS_HP_CHANGED, m_session->GetPlayer()->GetName(), hp, hpm);
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_YOURS_HP_CHANGED, GetName(), hp, hpm);
 
     chr->SetMaxHealth( hpm );
     chr->SetHealth( hp );
@@ -698,7 +699,8 @@ bool ChatHandler::HandleModifyManaCommand(const char* args)
     }
 
     PSendSysMessage(LANG_YOU_CHANGE_MANA, chr->GetName(), mana, manam);
-    ChatHandler(chr).PSendSysMessage(LANG_YOURS_MANA_CHANGED, m_session->GetPlayer()->GetName(), mana, manam);
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_YOURS_MANA_CHANGED, GetName(), mana, manam);
 
     chr->SetMaxPower(POWER_MANA,manam );
     chr->SetPower(POWER_MANA, mana );
@@ -742,7 +744,8 @@ bool ChatHandler::HandleModifyEnergyCommand(const char* args)
     }
 
     PSendSysMessage(LANG_YOU_CHANGE_ENERGY, chr->GetName(), energy/10, energym/10);
-    ChatHandler(chr).PSendSysMessage(LANG_YOURS_ENERGY_CHANGED, m_session->GetPlayer()->GetName(), energy/10, energym/10);
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_YOURS_ENERGY_CHANGED, GetName(), energy/10, energym/10);
 
     chr->SetMaxPower(POWER_ENERGY,energym );
     chr->SetPower(POWER_ENERGY, energy );
@@ -788,8 +791,8 @@ bool ChatHandler::HandleModifyRageCommand(const char* args)
     }
 
     PSendSysMessage(LANG_YOU_CHANGE_RAGE, chr->GetName(), rage/10, ragem/10);
-                                                            // Special case: I use GetMangosString here to get local of destination char ;)
-    ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_YOURS_RAGE_CHANGED), m_session->GetPlayer()->GetName(), rage/10, ragem/10);
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_YOURS_RAGE_CHANGED, GetName(), rage/10, ragem/10);
 
     chr->SetMaxPower(POWER_RAGE,ragem );
     chr->SetPower(POWER_RAGE, rage );
@@ -867,11 +870,6 @@ bool ChatHandler::HandleModifyFactionCommand(const char* args)
 
     PSendSysMessage(LANG_YOU_CHANGE_FACTION, chr->GetGUIDLow(),factionid,flag,npcflag,dyflag);
 
-    //sprintf((char*)buf,"%s changed your Faction to %i.", m_session->GetPlayer()->GetName(), factionid);
-    //FillSystemMessageData(&data, m_session, buf);
-
-    //chr->GetSession()->SendPacket(&data);
-
     chr->setFaction(factionid);
     chr->SetUInt32Value(UNIT_FIELD_FLAGS,flag);
     chr->SetUInt32Value(UNIT_NPC_FLAGS,npcflag);
@@ -917,8 +915,8 @@ bool ChatHandler::HandleModifySpellCommand(const char* args)
     }
 
     PSendSysMessage(LANG_YOU_CHANGE_SPELLFLATID, spellflatid, val, mark, chr->GetName());
-    if(chr != m_session->GetPlayer())
-        ChatHandler(chr).PSendSysMessage(LANG_YOURS_SPELLFLATID_CHANGED, m_session->GetPlayer()->GetName(), spellflatid, val, mark);
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_YOURS_SPELLFLATID_CHANGED, GetName(), spellflatid, val, mark);
 
     WorldPacket data(SMSG_SET_FLAT_SPELL_MODIFIER, (1+1+2+2));
     data << uint8(spellflatid);
@@ -974,10 +972,8 @@ bool ChatHandler::HandleTaxiCheatCommand(const char* args)
     {
         chr->SetTaxiCheater(true);
         PSendSysMessage(LANG_YOU_GIVE_TAXIS, chr->GetName());
-
-        if(chr != m_session->GetPlayer())
-            // to send localized data to target
-            ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_YOURS_TAXIS_ADDED), m_session->GetPlayer()->GetName());
+        if (needReportToTarget(chr))
+            ChatHandler(chr).PSendSysMessage(LANG_YOURS_TAXIS_ADDED, GetName());
         return true;
     }
 
@@ -985,9 +981,8 @@ bool ChatHandler::HandleTaxiCheatCommand(const char* args)
     {
         chr->SetTaxiCheater(false);
         PSendSysMessage(LANG_YOU_REMOVE_TAXIS, chr->GetName());
-
-        if(chr != m_session->GetPlayer())
-            ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_YOURS_TAXIS_REMOVED), m_session->GetPlayer()->GetName());
+        if (needReportToTarget(chr))
+            ChatHandler(chr).PSendSysMessage(LANG_YOURS_TAXIS_REMOVED, GetName());
 
         return true;
     }
@@ -1028,9 +1023,8 @@ bool ChatHandler::HandleModifyASpeedCommand(const char* args)
     }
 
     PSendSysMessage(LANG_YOU_CHANGE_ASPEED, ASpeed, chr->GetName());
-
-    if(chr != m_session->GetPlayer())
-        ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_YOURS_ASPEED_CHANGED), m_session->GetPlayer()->GetName(), ASpeed);
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_YOURS_ASPEED_CHANGED, GetName(), ASpeed);
 
     chr->SetSpeed(MOVE_WALK,    ASpeed,true);
     chr->SetSpeed(MOVE_RUN,     ASpeed,true);
@@ -1071,9 +1065,8 @@ bool ChatHandler::HandleModifySpeedCommand(const char* args)
     }
 
     PSendSysMessage(LANG_YOU_CHANGE_SPEED, Speed, chr->GetName());
-
-    if(chr != m_session->GetPlayer())
-        ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_YOURS_SPEED_CHANGED), m_session->GetPlayer()->GetName(), Speed);
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_YOURS_SPEED_CHANGED, GetName(), Speed);
 
     chr->SetSpeed(MOVE_RUN,Speed,true);
 
@@ -1111,9 +1104,8 @@ bool ChatHandler::HandleModifySwimCommand(const char* args)
     }
 
     PSendSysMessage(LANG_YOU_CHANGE_SWIM_SPEED, Swim, chr->GetName());
-
-    if(chr != m_session->GetPlayer())
-        ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_YOURS_SWIM_SPEED_CHANGED), m_session->GetPlayer()->GetName(), Swim);
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_YOURS_SWIM_SPEED_CHANGED, GetName(), Swim);
 
     chr->SetSpeed(MOVE_SWIM,Swim,true);
 
@@ -1151,9 +1143,8 @@ bool ChatHandler::HandleModifyBWalkCommand(const char* args)
     }
 
     PSendSysMessage(LANG_YOU_CHANGE_BACK_SPEED, BSpeed, chr->GetName());
-
-    if(chr != m_session->GetPlayer())
-        ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_YOURS_BACK_SPEED_CHANGED), m_session->GetPlayer()->GetName(), BSpeed);
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_YOURS_BACK_SPEED_CHANGED, GetName(), BSpeed);
 
     chr->SetSpeed(MOVE_WALKBACK,BSpeed,true);
 
@@ -1184,9 +1175,8 @@ bool ChatHandler::HandleModifyFlyCommand(const char* args)
     }
 
     PSendSysMessage(LANG_YOU_CHANGE_FLY_SPEED, FSpeed, chr->GetName());
-
-    if(chr != m_session->GetPlayer())
-        ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_YOURS_FLY_SPEED_CHANGED), m_session->GetPlayer()->GetName(), FSpeed);
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_YOURS_FLY_SPEED_CHANGED, GetName(), FSpeed);
 
     chr->SetSpeed(MOVE_FLY,FSpeed,true);
 
@@ -1216,9 +1206,8 @@ bool ChatHandler::HandleModifyScaleCommand(const char* args)
     }
 
     PSendSysMessage(LANG_YOU_CHANGE_SIZE, Scale, chr->GetName());
-
-    if(chr != m_session->GetPlayer())
-        ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_YOURS_SIZE_CHANGED), m_session->GetPlayer()->GetName(), Scale);
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_YOURS_SIZE_CHANGED, GetName(), Scale);
 
     chr->SetFloatValue(OBJECT_FIELD_SCALE_X, Scale);
 
@@ -1460,9 +1449,8 @@ bool ChatHandler::HandleModifyMountCommand(const char* args)
     }
 
     PSendSysMessage(LANG_YOU_GIVE_MOUNT, chr->GetName());
-
-    if(chr != m_session->GetPlayer())
-        ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_MOUNT_GIVED), m_session->GetPlayer()->GetName());
+    if (needReportToTarget(chr))
+        ChatHandler(chr).PSendSysMessage(LANG_MOUNT_GIVED, GetName());
 
     chr->SetUInt32Value( UNIT_FIELD_FLAGS , 0x001000 );
     chr->Mount(mId);
@@ -1509,25 +1497,24 @@ bool ChatHandler::HandleModifyMoneyCommand(const char* args)
         if(newmoney <= 0 )
         {
             PSendSysMessage(LANG_YOU_TAKE_ALL_MONEY, chr->GetName());
-
-            if(chr != m_session->GetPlayer())
-                ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_YOURS_ALL_MONEY_GONE), m_session->GetPlayer()->GetName());
+            if (needReportToTarget(chr))
+                ChatHandler(chr).PSendSysMessage(LANG_YOURS_ALL_MONEY_GONE, GetName());
 
             chr->SetMoney(0);
         }
         else
         {
             PSendSysMessage(LANG_YOU_TAKE_MONEY, abs(addmoney), chr->GetName());
-            if(chr != m_session->GetPlayer())
-                ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_YOURS_MONEY_TAKEN), m_session->GetPlayer()->GetName(), abs(addmoney));
+            if (needReportToTarget(chr))
+                ChatHandler(chr).PSendSysMessage(LANG_YOURS_MONEY_TAKEN, GetName(), abs(addmoney));
             chr->SetMoney( newmoney );
         }
     }
     else
     {
         PSendSysMessage(LANG_YOU_GIVE_MONEY, addmoney, chr->GetName());
-        if(chr != m_session->GetPlayer())
-            ChatHandler(chr).PSendSysMessage(ChatHandler(chr).GetMangosString(LANG_YOURS_MONEY_GIVEN), m_session->GetPlayer()->GetName(), addmoney);
+        if (needReportToTarget(chr))
+            ChatHandler(chr).PSendSysMessage(LANG_YOURS_MONEY_GIVEN, GetName(), addmoney);
         chr->ModifyMoney( addmoney );
     }
 
@@ -1644,62 +1631,67 @@ bool ChatHandler::HandleTeleCommand(const char * args)
 
 bool ChatHandler::HandleLookupAreaCommand(const char* args)
 {
-    if(!*args)
+    if (!*args)
         return false;
 
     std::string namepart = args;
     std::wstring wnamepart;
 
-    if(!Utf8toWStr(namepart,wnamepart))
+    if (!Utf8toWStr (namepart,wnamepart))
         return false;
 
     uint32 counter = 0;                                     // Counter for figure out that we found smth.
 
     // converting string that we try to find to lower case
-    wstrToLower( wnamepart );
+    wstrToLower (wnamepart);
 
     // Search in AreaTable.dbc
-    for (uint32 areaflag = 0; areaflag < sAreaStore.GetNumRows(); ++areaflag)
+    for (uint32 areaflag = 0; areaflag < sAreaStore.GetNumRows (); ++areaflag)
     {
-        AreaTableEntry const *areaEntry = sAreaStore.LookupEntry(areaflag);
-        if(areaEntry)
+        AreaTableEntry const *areaEntry = sAreaStore.LookupEntry (areaflag);
+        if (areaEntry)
         {
-            int loc = m_session->GetSessionDbcLocale();
+            int loc = m_session ? m_session->GetSessionDbcLocale () : sWorld.GetDefaultDbcLocale();
             std::string name = areaEntry->area_name[loc];
-            if(name.empty())
+            if (name.empty())
                 continue;
 
-            if(!Utf8FitTo(name, wnamepart))
+            if (!Utf8FitTo (name, wnamepart))
             {
                 loc = 0;
                 for(; loc < MAX_LOCALE; ++loc)
                 {
-                    if(loc==m_session->GetSessionDbcLocale())
+                    if (m_session && loc==m_session->GetSessionDbcLocale ())
                         continue;
 
                     name = areaEntry->area_name[loc];
-                    if(name.empty())
+                    if (name.empty ())
                         continue;
 
-                    if (Utf8FitTo(name, wnamepart))
+                    if (Utf8FitTo (name, wnamepart))
                         break;
                 }
             }
 
-            if(loc < MAX_LOCALE)
+            if (loc < MAX_LOCALE)
             {
                 // send area in "id - [name]" format
                 std::ostringstream ss;
-                ss << areaEntry->ID << " - |cffffffff|Harea:" << areaEntry->ID << "|h[" << name << " " << localeNames[loc]<< "]|h|r";
+                if (m_session)
+                    ss << areaEntry->ID << " - |cffffffff|Harea:" << areaEntry->ID << "|h[" << name << " " << localeNames[loc]<< "]|h|r";
+                else
+                    ss << areaEntry->ID << " - " << name << " " << localeNames[loc];
 
-                SendSysMessage(ss.str().c_str());
+                SendSysMessage (ss.str ().c_str());
 
                 ++counter;
             }
         }
     }
-    if (counter == 0)                                       // if counter == 0 then we found nth
-        SendSysMessage(LANG_COMMAND_NOAREAFOUND);
+
+    if (counter == 0)                                      // if counter == 0 then we found nth
+        SendSysMessage (LANG_COMMAND_NOAREAFOUND);
+
     return true;
 }
 
@@ -1712,6 +1704,7 @@ bool ChatHandler::HandleLookupTeleCommand(const char * args)
         SetSentErrorMessage(true);
         return false;
     }
+
     char const* str = strtok((char*)args, " ");
     if(!str)
         return false;
@@ -1725,9 +1718,9 @@ bool ChatHandler::HandleLookupTeleCommand(const char * args)
     // converting string that we try to find to lower case
     wstrToLower( wnamepart );
 
-    GameTeleMap const & teleMap = objmgr.GetGameTeleMap();
-
     std::ostringstream reply;
+
+    GameTeleMap const & teleMap = objmgr.GetGameTeleMap();
     for(GameTeleMap::const_iterator itr = teleMap.begin(); itr != teleMap.end(); ++itr)
     {
         GameTele const* tele = &itr->second;
@@ -1735,11 +1728,10 @@ bool ChatHandler::HandleLookupTeleCommand(const char * args)
         if(tele->wnameLow.find(wnamepart) == std::wstring::npos)
             continue;
 
-        reply << "  |cffffffff|Htele:";
-        reply << itr->first;
-        reply << "|h[";
-        reply << tele->name;
-        reply << "]|h|r\n";
+        if (m_session)
+            reply << "  |cffffffff|Htele:" << itr->first << "|h[" << tele->name << "]|h|r\n";
+        else
+            reply << "  " << itr->first << " " << tele->name << "\n";
     }
 
     if(reply.str().empty())
@@ -2015,14 +2007,8 @@ bool ChatHandler::HandleNameTeleCommand(const char * args)
         }
 
         PSendSysMessage(LANG_TELEPORTING_TO, chr->GetName(),"", tele->name.c_str());
-
-        if (m_session)
-        {
-            if(m_session->GetPlayer()->IsVisibleGloballyFor(chr))
-                ChatHandler(chr).PSendSysMessage(LANG_TELEPORTED_TO_BY, m_session->GetPlayer()->GetName());
-        }
-        else
-            ChatHandler(chr).SendSysMessage(LANG_TELEPORTED_TO_BY_CONSOLE);
+        if (needReportToTarget(chr))
+            ChatHandler(chr).PSendSysMessage(LANG_TELEPORTED_TO_BY, GetName());
 
         // stop flight if need
         if(chr->isInFlight())
@@ -2092,9 +2078,8 @@ bool ChatHandler::HandleGroupTeleCommand(const char * args)
         }
 
         PSendSysMessage(LANG_TELEPORTING_TO, pl->GetName(),"", tele->name.c_str());
-
-        if (m_session->GetPlayer() != pl && m_session->GetPlayer()->IsVisibleGloballyFor(pl))
-            ChatHandler(pl).PSendSysMessage(LANG_TELEPORTED_TO_BY, m_session->GetPlayer()->GetName());
+        if (needReportToTarget(pl))
+            ChatHandler(pl).PSendSysMessage(LANG_TELEPORTED_TO_BY, GetName());
 
         // stop flight if need
         if(pl->isInFlight())
@@ -2186,9 +2171,8 @@ bool ChatHandler::HandleGroupgoCommand(const char* args)
         }
 
         PSendSysMessage(LANG_SUMMONING, pl->GetName(),"");
-
-        if (m_session->GetPlayer()->IsVisibleGloballyFor(pl))
-            ChatHandler(pl).PSendSysMessage(LANG_SUMMONED_BY, m_session->GetPlayer()->GetName());
+        if (needReportToTarget(pl))
+            ChatHandler(pl).PSendSysMessage(LANG_SUMMONED_BY, GetName());
 
         // stop flight if need
         if(pl->isInFlight())

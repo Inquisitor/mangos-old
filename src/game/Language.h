@@ -80,7 +80,9 @@ enum MangosStrings
     LANG_NEW_PASSWORDS_NOT_MATCH        = 54,
     LANG_PASSWORD_TOO_LONG              = 55,
     LANG_MOTD_CURRENT                   = 56,
-    // Room for more level 0              57-99 not used
+    LANG_USING_WORLD_DB                 = 57,
+    LANG_USING_SCRIPT_LIB               = 58,
+    // Room for more level 0              59-99 not used
 
     // level 1 chat
     LANG_GLOBAL_NOTIFY                  = 100,
@@ -164,8 +166,9 @@ enum MangosStrings
 
     LANG_MAIL_SENT                      = 169,
     LANG_SOUND_NOT_EXIST                = 170,
-    LANG_TELEPORTED_TO_BY_CONSOLE       = 171,
-    // Room for more level 1              172-199 not used
+    //                                    171,              // not used
+    LANG_CONSOLE_COMMAND                = 172,
+    // Room for more level 1              173-199 not used
 
     // level 2 chat
     LANG_NO_SELECTION                   = 200,
@@ -314,7 +317,16 @@ enum MangosStrings
     LANG_GM_OFF                         = 333,
     LANG_GM_CHAT_ON                     = 334,
     LANG_GM_CHAT_OFF                    = 335,
-    // Room for more level 2              336-399 not used
+    LANG_YOU_REPAIR_ITEMS               = 336,
+    LANG_YOUR_ITEMS_REPAIRED            = 337,
+    LANG_YOU_SET_WATERWALK              = 338,
+    LANG_YOUR_WATERWALK_SET             = 339,
+    LANG_CREATURE_FOLLOW_YOU_NOW        = 340,
+    LANG_CREATURE_NOT_FOLLOW_YOU        = 341,
+    LANG_CREATURE_NOT_FOLLOW_YOU_NOW    = 342,
+    LANG_CREATURE_NON_TAMEABLE          = 343,
+    LANG_YOU_ALREADY_HAVE_PET           = 344,
+    // Room for more level 2              345-399 not used
 
     // level 3 chat
     LANG_SCRIPTS_RELOADED               = 400,
@@ -447,16 +459,16 @@ enum MangosStrings
     LANG_ITEMLIST_AUCTION               = 510,
 
     LANG_WRONG_LINK_TYPE                = 511,
-    LANG_ITEM_LIST                      = 512,
-    LANG_QUEST_LIST                     = 513,
-    LANG_CREATURE_ENTRY_LIST            = 514,
-    LANG_CREATURE_LIST                  = 515,
-    LANG_GO_ENTRY_LIST                  = 516,
-    LANG_GO_LIST                        = 517,
-    LANG_ITEMSET_LIST                   = 518,
+    LANG_ITEM_LIST_CHAT                 = 512,
+    LANG_QUEST_LIST_CHAT                = 513,
+    LANG_CREATURE_ENTRY_LIST_CHAT       = 514,
+    LANG_CREATURE_LIST_CHAT             = 515,
+    LANG_GO_ENTRY_LIST_CHAT             = 516,
+    LANG_GO_LIST_CHAT                   = 517,
+    LANG_ITEMSET_LIST_CHAT              = 518,
     LANG_TELE_LIST                      = 519,
     LANG_SPELL_LIST                     = 520,
-    LANG_SKILL_LIST                     = 521,
+    LANG_SKILL_LIST_CHAT                = 521,
 
     LANG_GAMEOBJECT_NOT_EXIST           = 522,
 
@@ -529,7 +541,7 @@ enum MangosStrings
     LANG_COMMAND_NEAROBJMESSAGE         = 581,
     LANG_COMMAND_RAWPAWNTIMES           = 582,
 
-    LANG_EVENT_ENTRY_LIST               = 583,
+    LANG_EVENT_ENTRY_LIST_CHAT          = 583,
     LANG_NOEVENTFOUND                   = 584,
     LANG_EVENT_NOT_EXIST                = 585,
     LANG_EVENT_INFO                     = 586,
@@ -702,14 +714,35 @@ enum MangosStrings
     // Room for more level 4              1012-1099 not used
 
     // Level 3 (continue)
-    LANG_MOTD_NEW                       = 1100,
-    LANG_ACCOUNT_SETADDON               = 1101,
+    LANG_ACCOUNT_SETADDON               = 1100,
+    LANG_MOTD_NEW                       = 1101,
     LANG_SENDMESSAGE                    = 1102,
-    // Room for more level 3              1103-1199 not used
+    LANG_EVENT_ENTRY_LIST_CONSOLE       = 1103,
+    LANG_CREATURE_ENTRY_LIST_CONSOLE    = 1104,
+    LANG_ITEM_LIST_CONSOLE              = 1105,
+    LANG_ITEMSET_LIST_CONSOLE           = 1106,
+    LANG_GO_ENTRY_LIST_CONSOLE          = 1107,
+    LANG_QUEST_LIST_CONSOLE             = 1108,
+    LANG_SKILL_LIST_CONSOLE             = 1109,
+    LANG_CREATURE_LIST_CONSOLE          = 1110,
+    LANG_GO_LIST_CONSOLE                = 1111,
+    LANG_FILE_OPEN_FAIL                 = 1112,
+    LANG_ACCOUNT_CHARACTER_LIST_FULL    = 1113,
+    LANG_DUMP_BROKEN                    = 1114,
+    LANG_INVALID_CHARACTER_NAME         = 1115,
+    LANG_INVALID_CHARACTER_GUID         = 1116,
+    LANG_CHARACTER_GUID_IN_USE          = 1117,
+    LANG_ITEMLIST_GUILD                 = 1118,
+    LANG_MUST_MALE_OR_FEMALE            = 1119,
+    LANG_YOU_CHANGE_GENDER              = 1120,
+    LANG_YOUR_GENDER_CHANGED            = 1121,
+    // Room for more level 3              1122-1199 not used
 
     // FREE IDS                           1200-9999
 
-    // Use for not-in-svn patches         10000-10999
+    // Use for not-in-offcial-sources patches
+    //                                    10000-10999
+
     // Use for custom patches             11000-11999
 
     // NOT RESERVED IDS                   12000-

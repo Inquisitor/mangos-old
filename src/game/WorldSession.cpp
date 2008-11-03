@@ -58,25 +58,23 @@ _logoutTime(0), m_playerLoading(false), m_playerLogout(false), m_playerRecentlyL
 WorldSession::~WorldSession()
 {
     ///- unload player if not unloaded
-    if(_player)
-        LogoutPlayer(true);
+    if (_player)
+        LogoutPlayer (true);
 
     /// - If have unclosed socket, close it
-  if (m_Socket)
+    if (m_Socket)
     {
-      m_Socket->CloseSocket ();
-      m_Socket->RemoveReference ();
-      m_Socket = NULL;
+        m_Socket->CloseSocket ();
+        m_Socket->RemoveReference ();
+        m_Socket = NULL;
     }
 
     ///- empty incoming packet queue
     while(!_recvQueue.empty())
     {
-        WorldPacket *packet = _recvQueue.next();
+        WorldPacket *packet = _recvQueue.next ();
         delete packet;
     }
-
-    sWorld.RemoveQueuedPlayer(this);
 }
 
 void WorldSession::SizeError(WorldPacket const& packet, uint32 size) const
@@ -243,6 +241,9 @@ void WorldSession::LogoutPlayer(bool Save)
 
     if (_player)
     {
+        if (uint64 lguid = GetPlayer()->GetLootGUID())
+            DoLootRelease(lguid);
+
         ///- If the player just died before logging out, make him appear as a ghost
         //FIXME: logout must be delayed in case lost connection with client in time of combat
         if (_player->GetDeathTimer())
@@ -377,6 +378,7 @@ void WorldSession::LogoutPlayer(bool Save)
         ///- Delete the player object
         _player->CleanupsBeforeDelete();                    // do some cleanup before deleting to prevent crash at crossreferences to already deleted data
 
+        sSocialMgr.RemovePlayerSocial (_player->GetGUIDLow ());
         delete _player;
         _player = NULL;
 

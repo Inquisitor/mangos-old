@@ -29,19 +29,22 @@
 #include "Language.h"
 #include "AccountMgr.h"
 #include "SystemConfig.h"
+#include "revision.h"
 #include "Util.h"
 
 bool ChatHandler::HandleHelpCommand(const char* args)
 {
-    if(!*args)
-        return false;
-
     char* cmd = strtok((char*)args, " ");
     if(!cmd)
-        return false;
-
-    if(!ShowHelpForCommand(getCommandTable(), cmd))
-        SendSysMessage(LANG_NO_HELP_CMD);
+    {
+        ShowHelpForCommand(getCommandTable(), "help");
+        ShowHelpForCommand(getCommandTable(), "");
+    }
+    else
+    {
+        if(!ShowHelpForCommand(getCommandTable(), cmd))
+            SendSysMessage(LANG_NO_HELP_CMD);
+    }
 
     return true;
 }
@@ -82,7 +85,7 @@ bool ChatHandler::HandleStartCommand(const char* /*args*/)
     return true;
 }
 
-bool ChatHandler::HandleInfoCommand(const char* /*args*/)
+bool ChatHandler::HandleServerInfoCommand(const char* /*args*/)
 {
     uint32 activeClientsNum = sWorld.GetActiveSessionCount();
     uint32 queuedClientsNum = sWorld.GetQueuedSessionCount();
@@ -90,7 +93,15 @@ bool ChatHandler::HandleInfoCommand(const char* /*args*/)
     uint32 maxQueuedClientsNum = sWorld.GetMaxQueuedSessionCount();
     std::string str = secsToTimeString(sWorld.GetUptime());
 
-    PSendSysMessage(_FULLVERSION);
+    char const* full;
+    if(m_session)
+        full = _FULLVERSION(REVISION_DATE,REVISION_TIME,"|cffffffff|Hurl:" REVISION_ID "|h" REVISION_ID "|h|r");
+    else
+        full = _FULLVERSION(REVISION_DATE,REVISION_TIME,REVISION_ID);
+
+    SendSysMessage(full);
+    PSendSysMessage(LANG_USING_SCRIPT_LIB,sWorld.GetScriptsVersion());
+    PSendSysMessage(LANG_USING_WORLD_DB,sWorld.GetDBVersion());
     PSendSysMessage(LANG_CONNECTED_USERS, activeClientsNum, maxActiveClientsNum, queuedClientsNum, maxQueuedClientsNum);
     PSendSysMessage(LANG_UPTIME, str.c_str());
 
@@ -139,7 +150,7 @@ bool ChatHandler::HandleSaveCommand(const char* /*args*/)
     return true;
 }
 
-bool ChatHandler::HandleGMListOnlineCommand(const char* /*args*/)
+bool ChatHandler::HandleGMListIngameCommand(const char* /*args*/)
 {
     bool first = true;
 

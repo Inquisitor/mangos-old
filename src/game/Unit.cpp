@@ -9824,7 +9824,7 @@ CharmInfo* Unit::InitCharmInfo(Unit *charm)
 }
 
 CharmInfo::CharmInfo(Unit* unit)
-: m_unit(unit), m_CommandState(COMMAND_FOLLOW), m_ReactSate(REACT_PASSIVE), m_petnumber(0)
+: m_unit(unit), m_CommandState(COMMAND_FOLLOW), m_reactState(REACT_PASSIVE), m_petnumber(0)
 {
     for(int i =0; i<4; ++i)
     {
@@ -10832,4 +10832,35 @@ void Unit::RemovePetAura(PetAura const* petSpell)
     m_petAuras.erase(petSpell);
     if(Pet* pet = GetPet())
         pet->RemoveAurasDueToSpell(petSpell->GetAura(pet->GetEntry()));
+}
+
+Pet* Unit::CreateTamedPetFrom(Creature* creatureTarget,uint32 spell_id)
+{
+    Pet* pet = new Pet(HUNTER_PET);
+
+    if(!pet->CreateBaseAtCreature(creatureTarget))
+    {
+        delete pet;
+        return NULL;
+    }
+
+    pet->SetUInt64Value(UNIT_FIELD_SUMMONEDBY, this->GetGUID());
+    pet->SetUInt64Value(UNIT_FIELD_CREATEDBY, this->GetGUID());
+    pet->SetUInt32Value(UNIT_FIELD_FACTIONTEMPLATE,this->getFaction());
+    pet->SetUInt32Value(UNIT_CREATED_BY_SPELL, spell_id);
+
+    if(!pet->InitStatsForLevel(creatureTarget->getLevel()))
+    {
+        sLog.outError("ERROR: Pet::InitStatsForLevel() failed for creature (Entry: %u)!",creatureTarget->GetEntry());
+        delete pet;
+        return NULL;
+    }
+
+    pet->GetCharmInfo()->SetPetNumber(objmgr.GeneratePetNumber(), true);
+    // this enables pet details window (Shift+P)
+    pet->AIM_Initialize();
+    pet->InitPetCreateSpells();
+    pet->SetHealth(pet->GetMaxHealth());
+
+    return pet;
 }

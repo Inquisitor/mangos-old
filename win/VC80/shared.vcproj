@@ -49,7 +49,7 @@
 				AdditionalIncludeDirectories="..\..\dep\include;..\..\dep\include\g3dlite;..\..\src\framework;..\..\src\shared;..\..\dep\ACE_wrappers"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				EnableEnhancedInstructionSet="1"
 				RuntimeTypeInfo="true"
@@ -131,7 +131,7 @@
 				AdditionalIncludeDirectories="..\..\dep\include;..\..\dep\include\g3dlite;..\..\src\framework;..\..\src\shared;..\..\dep\ACE_wrappers"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				EnableEnhancedInstructionSet="0"
 				RuntimeTypeInfo="true"
@@ -211,7 +211,7 @@
 				AdditionalIncludeDirectories="..\..\dep\include;..\..\dep\include\g3dlite;..\..\src\framework;..\..\src\shared;..\..\dep\ACE_wrappers"
 				PreprocessorDefinitions="WIN32;_DEBUG;MANGOS_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\shared__$(PlatformName)_$(ConfigurationName)\shared.pch"
@@ -291,7 +291,7 @@
 				AdditionalIncludeDirectories="..\..\dep\include;..\..\dep\include\g3dlite;..\..\src\framework;..\..\src\shared;..\..\dep\ACE_wrappers"
 				PreprocessorDefinitions="WIN32;_DEBUG;MANGOS_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\shared__$(PlatformName)_$(ConfigurationName)\shared.pch"
@@ -762,17 +762,17 @@
 			>
 		</File>
 		<File
-			RelativePath="..\..\src\shared\svn_revision.h"
+			RelativePath="..\..\src\shared\revision.h"
 			>
 			<FileConfiguration
 				Name="Release|Win32"
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					Description="Extract SVN revision"
-					CommandLine="cd &quot;$(SolutionDir)..\src\shared&quot;&#x0D;&#x0A;&quot;$(TargetDir)\..\gensvnrevision__$(PlatformName)_$(ConfigurationName)\gensvnrevision.exe&quot; &quot;..\..&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(SolutionDir)../.svn/entries"
-					Outputs="svn_revision.h"
+					Description="Extract revision"
+					CommandLine="cd &quot;$(SolutionDir)..\src\shared&quot;&#x0D;&#x0A;&quot;$(TargetDir)\..\genrevision__$(PlatformName)_$(ConfigurationName)\genrevision.exe&quot; &quot;..\..&quot;&#x0D;&#x0A;"
+					AdditionalDependencies="$(SolutionDir)../.svn/entries;$(SolutionDir)../_svn/entries;$(SolutionDir)../.git/FETCH_HEAD"
+					Outputs="revision.h"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -780,10 +780,10 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					Description="Extract SVN revision"
-					CommandLine="cd &quot;$(SolutionDir)..\src\shared&quot;&#x0D;&#x0A;&quot;$(TargetDir)\..\gensvnrevision__$(PlatformName)_$(ConfigurationName)\gensvnrevision.exe&quot; &quot;..\..&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(SolutionDir)../.svn/entries"
-					Outputs="svn_revision.h"
+					Description="Extract revision"
+					CommandLine="cd &quot;$(SolutionDir)..\src\shared&quot;&#x0D;&#x0A;&quot;$(TargetDir)\..\genrevision__$(PlatformName)_$(ConfigurationName)\genrevision.exe&quot; &quot;..\..&quot;&#x0D;&#x0A;"
+					AdditionalDependencies="$(SolutionDir)../.svn/entries;$(SolutionDir)../_svn/entries;$(SolutionDir)../.git/FETCH_HEAD"
+					Outputs="revision.h"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -791,10 +791,10 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					Description="Extract SVN revision"
-					CommandLine="cd &quot;$(SolutionDir)..\src\shared&quot;&#x0D;&#x0A;&quot;$(TargetDir)\..\gensvnrevision__$(PlatformName)_$(ConfigurationName)\gensvnrevision.exe&quot; &quot;..\..&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(SolutionDir)../.svn/entries"
-					Outputs="svn_revision.h"
+					Description="Extract revision"
+					CommandLine="cd &quot;$(SolutionDir)..\src\shared&quot;&#x0D;&#x0A;&quot;$(TargetDir)\..\genrevision__$(PlatformName)_$(ConfigurationName)\genrevision.exe&quot; &quot;..\..&quot;&#x0D;&#x0A;"
+					AdditionalDependencies="$(SolutionDir)../.svn/entries;$(SolutionDir)../_svn/entries;$(SolutionDir)../.git/FETCH_HEAD"
+					Outputs="revision.h"
 				/>
 			</FileConfiguration>
 			<FileConfiguration
@@ -802,10 +802,10 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					Description="Extract SVN revision"
-					CommandLine="cd &quot;$(SolutionDir)..\src\shared&quot;&#x0D;&#x0A;&quot;$(TargetDir)\..\gensvnrevision__$(PlatformName)_$(ConfigurationName)\gensvnrevision.exe&quot; &quot;..\..&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(SolutionDir)../.svn/entries"
-					Outputs="svn_revision.h"
+					Description="Extract revision"
+					CommandLine="cd &quot;$(SolutionDir)..\src\shared&quot;&#x0D;&#x0A;&quot;$(TargetDir)\..\genrevision__$(PlatformName)_$(ConfigurationName)\genrevision.exe&quot; &quot;..\..&quot;&#x0D;&#x0A;"
+					AdditionalDependencies="$(SolutionDir)../.svn/entries;$(SolutionDir)../_svn/entries;$(SolutionDir)../.git/FETCH_HEAD"
+					Outputs="revision.h"
 				/>
 			</FileConfiguration>
 		</File>
