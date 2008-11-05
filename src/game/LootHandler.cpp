@@ -29,7 +29,6 @@
 #include "Group.h"
 #include "World.h"
 #include "Util.h"
-#include "ObjectAccessor.h"
 
 void WorldSession::HandleAutostoreLootItemOpcode( WorldPacket & recv_data )
 {
