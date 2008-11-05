@@ -479,6 +479,8 @@ void Player::CleanupsBeforeDelete()
 
 bool Player::Create( uint32 guidlow, std::string name, uint8 race, uint8 class_, uint8 gender, uint8 skin, uint8 face, uint8 hairStyle, uint8 hairColor, uint8 facialHair, uint8 outfitId )
 {
+    //FIXME: outfitId not used in player creating
+
     Object::_Create(guidlow, 0, HIGHGUID_PLAYER);
 
     m_name = name;
@@ -1475,7 +1477,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
     // The player was ported to another map and looses the duel immediatly.
     // We have to perform this check before the teleport, otherwise the
     // ObjectAccessor won't find the flag.
-    if (duel && this->GetMapId()!=mapid)
+    if (duel && GetMapId()!=mapid)
     {
         GameObject* obj = ObjectAccessor::GetGameObject(*this, GetUInt64Value(PLAYER_DUEL_ARBITER));
         if (obj)
@@ -1485,7 +1487,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
     // reset movement flags at teleport, because player will continue move with these flags after teleport
     SetUnitMovementFlags(0);
 
-    if ((this->GetMapId() == mapid) && (!m_transport))
+    if ((GetMapId() == mapid) && (!m_transport))
     {
         // prepare zone change detect
         uint32 old_zone = GetZoneId();
@@ -3504,7 +3506,7 @@ void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmC
 
             uint32 pl_account = objmgr.GetPlayerAccountIdByGUID(MAKE_NEW_GUID(guid, 0, HIGHGUID_PLAYER));
 
-            WorldSession::SendReturnToSender(MAIL_NORMAL, pl_account, guid, sender, subject, itemTextId, &mi, money, 0, mailTemplateId);
+            WorldSession::SendReturnToSender(MAIL_NORMAL, pl_account, guid, sender, subject, itemTextId, &mi, money, mailTemplateId);
         }
         while (resultMail->NextRow());
 
@@ -3627,13 +3629,14 @@ void Player::BuildPlayerRepop()
 
 void Player::SendDelayResponse(const uint32 ml_seconds)
 {
+    //FIXME: is this delay time arg really need? 50msec by default in code
     WorldPacket data( SMSG_QUERY_TIME_RESPONSE, 4+4 );
     data << (uint32)time(NULL);
     data << (uint32)0;
     GetSession()->SendPacket( &data );
 }
 
-void Player::ResurrectPlayer(float restore_percent, bool updateToWorld, bool applySickness)
+void Player::ResurrectPlayer(float restore_percent, bool applySickness)
 {
     WorldPacket data(SMSG_DEATH_RELEASE_LOC, 4*4);          // remove spirit healer position
     data << uint32(-1);
@@ -3947,24 +3950,20 @@ uint32 Player::DurabilityRepair(uint16 pos, bool cost, float discountMod, bool g
         uint32 LostDurability = maxDurability - curDurability;
         if(LostDurability>0)
         {
-            ItemPrototype const *ditemProto = sItemStorage.LookupEntry<ItemPrototype>(item->GetEntry());
-            if(!ditemProto)
-            {
-                sLog.outError("ERROR: RepairDurability: Unknown item id %u", ditemProto);
-                return TotalCost;
-            }
+            ItemPrototype const *ditemProto = item->GetProto();
 
             DurabilityCostsEntry const *dcost = sDurabilityCostsStore.LookupEntry(ditemProto->ItemLevel);
             if(!dcost)
             {
-                sLog.outError("ERROR: RepairDurability: Wrong item lvl %u", dcost);
+                sLog.outError("ERROR: RepairDurability: Wrong item lvl %u", ditemProto->ItemLevel);
                 return TotalCost;
             }
 
-            DurabilityQualityEntry const *dQualitymodEntry = sDurabilityQualityStore.LookupEntry((ditemProto->Quality+1)*2);
+            uint32 dQualitymodEntryId = (ditemProto->Quality+1)*2;
+            DurabilityQualityEntry const *dQualitymodEntry = sDurabilityQualityStore.LookupEntry(dQualitymodEntryId);
             if(!dQualitymodEntry)
             {
-                sLog.outError("ERROR: RepairDurability: Wrong dQualityModEntry %u", dQualitymodEntry);
+                sLog.outError("ERROR: RepairDurability: Wrong dQualityModEntry %u", dQualitymodEntryId);
                 return TotalCost;
             }
 
@@ -4168,7 +4167,7 @@ void Player::UpdateDefense()
     }
 }
 
-void Player::HandleBaseModValue(BaseModGroup modGroup, BaseModType modType, float amount, bool apply, bool affectStats)
+void Player::HandleBaseModValue(BaseModGroup modGroup, BaseModType modType, float amount, bool apply)
 {
     if(modGroup >= BASEMOD_END || modType >= MOD_END)
     {
@@ -5849,7 +5848,6 @@ bool Player::RewardHonor(Unit *uVictim, uint32 groupsize, float honor)
 
     uint64 victim_guid = 0;
     uint32 victim_rank = 0;
-    time_t now = time(NULL);
 
     // need call before fields update to have chance move yesterday data to appropriate fields before today data change.
     UpdateHonorFields();
@@ -6017,32 +6015,13 @@ uint32 Player::GetRankFromDB(uint64 guid)
 
 uint32 Player::GetArenaTeamIdFromDB(uint64 guid, uint8 type)
 {
-    // need fix it!
-    QueryResult *result = CharacterDatabase.PQuery("SELECT arenateamid FROM arena_team_member WHERE guid='%u'", GUID_LOPART(guid));
-    if(result)
-    {
-        // init id to 0, check the arena type before assigning a value to id
-        uint32 id = 0;
-        do
-        {
-            QueryResult *result2 = CharacterDatabase.PQuery("SELECT type FROM arena_team WHERE arenateamid='%u'", id);
-            if(result2)
-            {
-                uint8 dbtype = (*result2)[0].GetUInt32();
-                delete result2;
-                if(dbtype == type)
-                {
-                    // if the type matches, we've found the id
-                    id = (*result)[0].GetUInt32();
-                    break;
-                }
-            }
-        } while(result->NextRow());
-        delete result;
-        return id;
-    }
-    // no arenateam for the specified guid, return 0
-    return 0;
+    QueryResult *result = CharacterDatabase.PQuery("SELECT arena_team_member.arenateamid FROM arena_team_member JOIN arena_team ON arena_team_member.arenateamid = arena_team.arenateamid WHERE guid='%u' AND type='%u' LIMIT 1", GUID_LOPART(guid), type);
+    if(!result)
+        return 0;
+
+    uint32 id = (*result)[0].GetUInt32();
+    delete result;
+    return id;
 }
 
 uint32 Player::GetZoneIdFromDB(uint64 guid)
@@ -6801,7 +6780,7 @@ void Player::CastItemCombatSpell(Item *item,Unit* Target, WeaponAttackType attTy
         }
 
         if (roll_chance_f(chance))
-            this->CastSpell(Target, spellInfo->Id, true, item);
+            CastSpell(Target, spellInfo->Id, true, item);
     }
 
     // item combat enchantments
@@ -10227,8 +10206,6 @@ void Player::DestroyItem( uint8 bag, uint8 slot, bool update )
 
         if(pItem->HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAGS_WRAPPED))
             CharacterDatabase.PExecute("DELETE FROM character_gifts WHERE item_guid = '%u'", pItem->GetGUIDLow());
-
-        ItemPrototype const *pProto = pItem->GetProto();
 
         RemoveEnchantmentDurations(pItem);
         RemoveItemDurations(pItem);
@@ -17419,7 +17396,7 @@ void Player::learnSkillRewardedSpells(uint32 skill_id )
         if (pAbility->classmask && !(pAbility->classmask & classMask))
             continue;
 
-        if (SpellEntry const* spellentry = sSpellStore.LookupEntry(pAbility->spellId))
+        if (sSpellStore.LookupEntry(pAbility->spellId))
         {
             // Ok need learn spell
             learnSpell(pAbility->spellId);
@@ -18165,7 +18142,7 @@ void Player::SetCanBlock( bool value )
 bool ItemPosCount::isContainedIn(ItemPosCountVec const& vec) const
 {
     for(ItemPosCountVec::const_iterator itr = vec.begin(); itr != vec.end();++itr)
-        if(itr->pos == this->pos)
+        if(itr->pos == pos)
             return true;
 
     return false;

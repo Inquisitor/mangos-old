@@ -56,6 +56,7 @@
 #include "CellImpl.h"
 #include "InstanceSaveMgr.h"
 #include "WaypointManager.h"
+#include "GMTicketMgr.h"
 #include "Util.h"
 
 INSTANTIATE_SINGLETON_1( World );
@@ -208,7 +209,6 @@ World::AddSession_ (WorldSession* s)
     uint32 Sessions = GetActiveAndQueuedSessionCount ();
     uint32 pLimit = GetPlayerAmountLimit ();
     uint32 QueueSize = GetQueueSize (); //number of players in the queue
-    bool inQueue = false;
     //so we don't count the user trying to
     //login as a session and queue the socket that we are using
     --Sessions;
@@ -480,7 +480,8 @@ void World::LoadConfigSettings(bool reload)
     }
     else if(rate_values[RATE_TARGET_POS_RECALCULATION_RANGE] > ATTACK_DISTANCE)
     {
-        sLog.outError("TargetPosRecalculateRange (%f) must be <= %f. Using %f instead.",rate_values[RATE_TARGET_POS_RECALCULATION_RANGE],ATTACK_DISTANCE,ATTACK_DISTANCE);
+        sLog.outError("TargetPosRecalculateRange (%f) must be <= %f. Using %f instead.",
+            rate_values[RATE_TARGET_POS_RECALCULATION_RANGE],ATTACK_DISTANCE,ATTACK_DISTANCE);
         rate_values[RATE_TARGET_POS_RECALCULATION_RANGE] = ATTACK_DISTANCE;
     }
 
@@ -1124,6 +1125,9 @@ void World::SetInitialWorldSettings()
     sLog.outString( "Loading Waypoints..." );
     WaypointMgr.Load();
 
+    sLog.outString( "Loading GM tickets...");
+    ticketmgr.LoadGMTickets();
+
     ///- Handle outdated emails (delete/return)
     sLog.outString( "Returning old mails..." );
     objmgr.ReturnOrDeleteOldMails(false);
@@ -1153,7 +1157,8 @@ void World::SetInitialWorldSettings()
     sprintf( isoDate, "%04d-%02d-%02d %02d:%02d:%02d",
         local.tm_year+1900, local.tm_mon+1, local.tm_mday, local.tm_hour, local.tm_min, local.tm_sec);
 
-    WorldDatabase.PExecute("INSERT INTO uptime (startstring, starttime, uptime) VALUES('%s', %ld, 0)", isoDate, m_startTime );
+    WorldDatabase.PExecute("INSERT INTO uptime (startstring, starttime, uptime) VALUES('%s', " I64FMTD ", 0)",
+        isoDate, uint64(m_startTime));
 
     m_timers[WUPDATE_OBJECTS].SetInterval(0);
     m_timers[WUPDATE_SESSIONS].SetInterval(0);

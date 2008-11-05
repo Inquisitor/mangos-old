@@ -233,9 +233,11 @@ Unit::~Unit()
     // set current spells as deletable
     for (uint32 i = 0; i < CURRENT_MAX_SPELL; i++)
     {
-                                                            // spell may be safely deleted now
-        if (m_currentSpells[i]) m_currentSpells[i]->SetDeletable(true);
-        m_currentSpells[i] = NULL;
+        if (m_currentSpells[i])
+        {
+            m_currentSpells[i]->SetReferencedFromCurrent(false);
+            m_currentSpells[i] = NULL;
+        }
     }
 
     RemoveAllGameObjects();
@@ -1104,8 +1106,6 @@ void Unit::DealFlatDamage(Unit *pVictim, SpellEntry const *spellInfo, uint32 *da
             // Physical Damage
             if ( GetSpellSchoolMask(spellInfo) & SPELL_SCHOOL_MASK_NORMAL )
             {
-                uint32 modDamage=*damage;
-
                 // apply spellmod to Done damage
                 if(Player* modOwner = GetSpellModOwner())
                     modOwner->ApplySpellMod(spellInfo->Id, SPELLMOD_DAMAGE, *damage);
@@ -1390,7 +1390,7 @@ uint32 Unit::SpellNonMeleeDamageLog(Unit *pVictim, uint32 spellID, uint32 damage
 {
     if(!this || !pVictim)
         return 0;
-    if(!this->isAlive() || !pVictim->isAlive())
+    if(!isAlive() || !pVictim->isAlive())
         return 0;
 
     SpellEntry const *spellInfo = sSpellStore.LookupEntry(spellID);
@@ -1668,56 +1668,60 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
         RemainingDamage -= currentAbsorb;
     }
 
-    AuraList const& vSplitDamageFlat = pVictim->GetAurasByType(SPELL_AURA_SPLIT_DAMAGE_FLAT);
-    for(AuraList::const_iterator i = vSplitDamageFlat.begin(), next; i != vSplitDamageFlat.end() && RemainingDamage >= 0; i = next)
+    // only split damage if not damaing yourself
+    if(pVictim != this)
     {
-        next = i; ++next;
+        AuraList const& vSplitDamageFlat = pVictim->GetAurasByType(SPELL_AURA_SPLIT_DAMAGE_FLAT);
+        for(AuraList::const_iterator i = vSplitDamageFlat.begin(), next; i != vSplitDamageFlat.end() && RemainingDamage >= 0; i = next)
+        {
+            next = i; ++next;
 
-        // check damage school mask
-        if(((*i)->GetModifier()->m_miscvalue & schoolMask)==0)
-            continue;
+            // check damage school mask
+            if(((*i)->GetModifier()->m_miscvalue & schoolMask)==0)
+                continue;
 
-        // Damage can be splitted only if aura has an alive caster
-        Unit *caster = (*i)->GetCaster();
-        if(!caster || caster == pVictim || !caster->IsInWorld() || !caster->isAlive())
-            continue;
+            // Damage can be splitted only if aura has an alive caster
+            Unit *caster = (*i)->GetCaster();
+            if(!caster || caster == pVictim || !caster->IsInWorld() || !caster->isAlive())
+                continue;
 
-        int32 currentAbsorb;
-        if (RemainingDamage >= (*i)->GetModifier()->m_amount)
-            currentAbsorb = (*i)->GetModifier()->m_amount;
-        else
-            currentAbsorb = RemainingDamage;
+            int32 currentAbsorb;
+            if (RemainingDamage >= (*i)->GetModifier()->m_amount)
+                currentAbsorb = (*i)->GetModifier()->m_amount;
+            else
+                currentAbsorb = RemainingDamage;
 
-        RemainingDamage -= currentAbsorb;
+            RemainingDamage -= currentAbsorb;
 
-        SendSpellNonMeleeDamageLog(caster, (*i)->GetSpellProto()->Id, currentAbsorb, schoolMask, 0, 0, false, 0, false);
+            SendSpellNonMeleeDamageLog(caster, (*i)->GetSpellProto()->Id, currentAbsorb, schoolMask, 0, 0, false, 0, false);
 
-        CleanDamage cleanDamage = CleanDamage(currentAbsorb, BASE_ATTACK, MELEE_HIT_NORMAL);
-        DealDamage(caster, currentAbsorb, &cleanDamage, DIRECT_DAMAGE, schoolMask, (*i)->GetSpellProto(), false);
-    }
+            CleanDamage cleanDamage = CleanDamage(currentAbsorb, BASE_ATTACK, MELEE_HIT_NORMAL);
+            DealDamage(caster, currentAbsorb, &cleanDamage, DIRECT_DAMAGE, schoolMask, (*i)->GetSpellProto(), false);
+        }
 
-    AuraList const& vSplitDamagePct = pVictim->GetAurasByType(SPELL_AURA_SPLIT_DAMAGE_PCT);
-    for(AuraList::const_iterator i = vSplitDamagePct.begin(), next; i != vSplitDamagePct.end() && RemainingDamage >= 0; i = next)
-    {
-        next = i; ++next;
+        AuraList const& vSplitDamagePct = pVictim->GetAurasByType(SPELL_AURA_SPLIT_DAMAGE_PCT);
+        for(AuraList::const_iterator i = vSplitDamagePct.begin(), next; i != vSplitDamagePct.end() && RemainingDamage >= 0; i = next)
+        {
+            next = i; ++next;
 
-        // check damage school mask
-        if(((*i)->GetModifier()->m_miscvalue & schoolMask)==0)
-            continue;
+            // check damage school mask
+            if(((*i)->GetModifier()->m_miscvalue & schoolMask)==0)
+                continue;
 
-        // Damage can be splitted only if aura has an alive caster
-        Unit *caster = (*i)->GetCaster();
-        if(!caster || caster == pVictim || !caster->IsInWorld() || !caster->isAlive())
-            continue;
+            // Damage can be splitted only if aura has an alive caster
+            Unit *caster = (*i)->GetCaster();
+            if(!caster || caster == pVictim || !caster->IsInWorld() || !caster->isAlive())
+                continue;
 
-        int32 splitted = int32(RemainingDamage * (*i)->GetModifier()->m_amount / 100.0f);
+            int32 splitted = int32(RemainingDamage * (*i)->GetModifier()->m_amount / 100.0f);
 
-        RemainingDamage -= splitted;
+            RemainingDamage -= splitted;
 
-        SendSpellNonMeleeDamageLog(caster, (*i)->GetSpellProto()->Id, splitted, schoolMask, 0, 0, false, 0, false);
+            SendSpellNonMeleeDamageLog(caster, (*i)->GetSpellProto()->Id, splitted, schoolMask, 0, 0, false, 0, false);
 
-        CleanDamage cleanDamage = CleanDamage(splitted, BASE_ATTACK, MELEE_HIT_NORMAL);
-        DealDamage(caster, splitted, &cleanDamage, DIRECT_DAMAGE, schoolMask, (*i)->GetSpellProto(), false);
+            CleanDamage cleanDamage = CleanDamage(splitted, BASE_ATTACK, MELEE_HIT_NORMAL);
+            DealDamage(caster, splitted, &cleanDamage, DIRECT_DAMAGE, schoolMask, (*i)->GetSpellProto(), false);
+        }
     }
 
     *absorb = damage - RemainingDamage - *resist;
@@ -3157,7 +3161,7 @@ void Unit::_UpdateSpells( uint32 time )
     {
         if (m_currentSpells[i] && m_currentSpells[i]->getState() == SPELL_STATE_FINISHED)
         {
-            m_currentSpells[i]->SetDeletable(true);         // spell may be safely deleted now
+            m_currentSpells[i]->SetReferencedFromCurrent(false);
             m_currentSpells[i] = NULL;                      // remove pointer
         }
     }
@@ -3270,7 +3274,6 @@ void Unit::SetCurrentCastedSpell( Spell * pSpell )
 
     uint32 CSpellType = pSpell->GetCurrentContainer();
 
-    pSpell->SetDeletable(false);                            // spell will not be deleted until gone from current pointers
     if (pSpell == m_currentSpells[CSpellType]) return;      // avoid breaking self
 
     // break same type spell if it is not delayed
@@ -3327,10 +3330,11 @@ void Unit::SetCurrentCastedSpell( Spell * pSpell )
 
     // current spell (if it is still here) may be safely deleted now
     if (m_currentSpells[CSpellType])
-        m_currentSpells[CSpellType]->SetDeletable(true);
+        m_currentSpells[CSpellType]->SetReferencedFromCurrent(false);
 
     // set new current spell
     m_currentSpells[CSpellType] = pSpell;
+    pSpell->SetReferencedFromCurrent(true);
 }
 
 void Unit::InterruptSpell(uint32 spellType, bool withDelayed)
@@ -3348,7 +3352,7 @@ void Unit::InterruptSpell(uint32 spellType, bool withDelayed)
 
         if (m_currentSpells[spellType]->getState() != SPELL_STATE_FINISHED)
             m_currentSpells[spellType]->cancel();
-        m_currentSpells[spellType]->SetDeletable(true);
+        m_currentSpells[spellType]->SetReferencedFromCurrent(false);
         m_currentSpells[spellType] = NULL;
     }
 }
@@ -3384,7 +3388,7 @@ void Unit::InterruptNonMeleeSpells(bool withDelayed, uint32 spell_id)
         if  ( (m_currentSpells[CURRENT_GENERIC_SPELL]->getState() != SPELL_STATE_FINISHED) &&
             (withDelayed || m_currentSpells[CURRENT_GENERIC_SPELL]->getState() != SPELL_STATE_DELAYED) )
             m_currentSpells[CURRENT_GENERIC_SPELL]->cancel();
-        m_currentSpells[CURRENT_GENERIC_SPELL]->SetDeletable(true);
+        m_currentSpells[CURRENT_GENERIC_SPELL]->SetReferencedFromCurrent(false);
         m_currentSpells[CURRENT_GENERIC_SPELL] = NULL;
     }
 
@@ -3398,7 +3402,7 @@ void Unit::InterruptNonMeleeSpells(bool withDelayed, uint32 spell_id)
         if ( (m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->getState() != SPELL_STATE_FINISHED) &&
             (withDelayed || m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->getState() != SPELL_STATE_DELAYED) )
             m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->cancel();
-        m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->SetDeletable(true);
+        m_currentSpells[CURRENT_AUTOREPEAT_SPELL]->SetReferencedFromCurrent(false);
         m_currentSpells[CURRENT_AUTOREPEAT_SPELL] = NULL;
     }
 
@@ -3407,7 +3411,7 @@ void Unit::InterruptNonMeleeSpells(bool withDelayed, uint32 spell_id)
     {
         if (m_currentSpells[CURRENT_CHANNELED_SPELL]->getState() != SPELL_STATE_FINISHED)
             m_currentSpells[CURRENT_CHANNELED_SPELL]->cancel();
-        m_currentSpells[CURRENT_CHANNELED_SPELL]->SetDeletable(true);
+        m_currentSpells[CURRENT_CHANNELED_SPELL]->SetReferencedFromCurrent(false);
         m_currentSpells[CURRENT_CHANNELED_SPELL] = NULL;
     }
 }
@@ -4554,7 +4558,7 @@ void Unit::CastMeleeProcDamageAndSpell(Unit* pVictim, uint32 damage, SpellSchool
         ProcDamageAndSpell(pVictim, procAttacker, procVictim, damage, damageSchoolMask, spellCasted, isTriggeredSpell, attType);
 }
 
-bool Unit::HandleHasteAuraProc(Unit *pVictim, SpellEntry const *hasteSpell, uint32 /*effIndex*/, uint32 damage, Aura* triggeredByAura, SpellEntry const * procSpell, uint32 /*procFlag*/, uint32 cooldown)
+bool Unit::HandleHasteAuraProc(Unit *pVictim, SpellEntry const *hasteSpell, uint32 /*effIndex*/, uint32 damage, Aura* triggeredByAura, SpellEntry const * /*procSpell*/, uint32 /*procFlag*/, uint32 cooldown)
 {
     Item* castItem = triggeredByAura->GetCastItemGUID() && GetTypeId()==TYPEID_PLAYER
         ? ((Player*)this)->GetItemByGuid(triggeredByAura->GetCastItemGUID()) : NULL;
@@ -6202,7 +6206,6 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                         if(!pVictim || !pVictim->isAlive())
                             return false;
 
-                        uint32 spell = 0;
                         switch(triggeredByAura->GetSpellProto()->Id)
                         {
                             case 20186:
@@ -6232,7 +6235,6 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                             return false;
 
                         // overwrite non existing triggered spell call in spell.dbc
-                        uint32 spell = 0;
                         switch(triggeredByAura->GetSpellProto()->Id)
                         {
                             case 20185:
@@ -6432,7 +6434,7 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
     return true;
 }
 
-bool Unit::HandleOverrideClassScriptAuraProc(Unit *pVictim, int32 scriptId, uint32 damage, Aura *triggeredByAura, SpellEntry const *procSpell, uint32 cooldown)
+bool Unit::HandleOverrideClassScriptAuraProc(Unit *pVictim, int32 scriptId, uint32 /*damage*/, Aura *triggeredByAura, SpellEntry const *procSpell, uint32 cooldown)
 {
     if(!pVictim || !pVictim->isAlive())
         return false;
@@ -7144,7 +7146,7 @@ void Unit::SendHealSpellLog(Unit *pVictim, uint32 SpellID, uint32 Damage, bool c
     SendMessageToSet(&data, true);
 }
 
-void Unit::SendEnergizeSpellLog(Unit *pVictim, uint32 SpellID, uint32 Damage, Powers powertype, bool critical)
+void Unit::SendEnergizeSpellLog(Unit *pVictim, uint32 SpellID, uint32 Damage, Powers powertype)
 {
     WorldPacket data(SMSG_SPELLENERGIZELOG, (8+8+4+4+4+1));
     data.append(pVictim->GetPackGUID());
@@ -8090,7 +8092,7 @@ void Unit::MeleeDamageBonus(Unit *pVictim, uint32 *pdamage,WeaponAttackType attT
     int32 TakenFlatBenefit = 0;
 
     // ..done (for creature type by mask) in taken
-    AuraList const& mDamageDoneCreature = this->GetAurasByType(SPELL_AURA_MOD_DAMAGE_DONE_CREATURE);
+    AuraList const& mDamageDoneCreature = GetAurasByType(SPELL_AURA_MOD_DAMAGE_DONE_CREATURE);
     for(AuraList::const_iterator i = mDamageDoneCreature.begin();i != mDamageDoneCreature.end(); ++i)
         if(creatureTypeMask & uint32((*i)->GetModifier()->m_miscvalue))
             DoneFlatBenefit += (*i)->GetModifier()->m_amount;
@@ -8158,7 +8160,7 @@ void Unit::MeleeDamageBonus(Unit *pVictim, uint32 *pdamage,WeaponAttackType attT
     // SPELL_AURA_MOD_DAMAGE_PERCENT_DONE included in weapon damage
     // SPELL_AURA_MOD_OFFHAND_DAMAGE_PCT  included in weapon damage
 
-    AuraList const& mDamageDoneVersus = this->GetAurasByType(SPELL_AURA_MOD_DAMAGE_DONE_VERSUS);
+    AuraList const& mDamageDoneVersus = GetAurasByType(SPELL_AURA_MOD_DAMAGE_DONE_VERSUS);
     for(AuraList::const_iterator i = mDamageDoneVersus.begin();i != mDamageDoneVersus.end(); ++i)
         if(creatureTypeMask & uint32((*i)->GetModifier()->m_miscvalue))
             DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f)/100.0f;
@@ -8698,7 +8700,7 @@ bool Unit::isVisibleForOrDetect(Unit const* u, bool detect, bool inVisibleList) 
 
         //Visible distance is modified by
         //-Level Diff (every level diff = 1.0f in visible distance)
-        visibleDistance += int32(u->getLevelForTarget(this)) - int32(this->getLevelForTarget(u));
+        visibleDistance += int32(u->getLevelForTarget(this)) - int32(getLevelForTarget(u));
 
         //This allows to check talent tree and will add addition stealth dependent on used points)
         int32 stealthMod = GetTotalAuraModifier(SPELL_AURA_MOD_STEALTH_LEVEL);
@@ -9803,7 +9805,7 @@ void Unit::CleanupsBeforeDelete()
     if(m_uint32Values)                                      // only for fully created object
     {
         InterruptNonMeleeSpells(true);
-        m_Events.KillAllEvents();
+        m_Events.KillAllEvents(false);                      // non-delatable (currently casted spells) will not deleted ans will deleated at call in Map::RemoveAllObjectsInRemoveList
         CombatStop();
         ClearComboPointHolders();
         DeleteThreatList();
@@ -10362,7 +10364,7 @@ void Unit::StopMoving()
 
     // send explicit stop packet
     // rely on vmaps here because for exemple stormwind is in air
-    float z = MapManager::Instance().GetBaseMap(GetMapId())->GetHeight(GetPositionX(), GetPositionY(), GetPositionZ(), true);
+    //float z = MapManager::Instance().GetBaseMap(GetMapId())->GetHeight(GetPositionX(), GetPositionY(), GetPositionZ(), true);
     //if (fabs(GetPositionZ() - z) < 2.0f)
     //    Relocate(GetPositionX(), GetPositionY(), z);
     Relocate(GetPositionX(), GetPositionY(),GetPositionZ());
@@ -10844,9 +10846,9 @@ Pet* Unit::CreateTamedPetFrom(Creature* creatureTarget,uint32 spell_id)
         return NULL;
     }
 
-    pet->SetUInt64Value(UNIT_FIELD_SUMMONEDBY, this->GetGUID());
-    pet->SetUInt64Value(UNIT_FIELD_CREATEDBY, this->GetGUID());
-    pet->SetUInt32Value(UNIT_FIELD_FACTIONTEMPLATE,this->getFaction());
+    pet->SetUInt64Value(UNIT_FIELD_SUMMONEDBY, GetGUID());
+    pet->SetUInt64Value(UNIT_FIELD_CREATEDBY, GetGUID());
+    pet->SetUInt32Value(UNIT_FIELD_FACTIONTEMPLATE,getFaction());
     pet->SetUInt32Value(UNIT_CREATED_BY_SPELL, spell_id);
 
     if(!pet->InitStatsForLevel(creatureTarget->getLevel()))

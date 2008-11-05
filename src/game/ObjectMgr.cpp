@@ -355,7 +355,7 @@ void ObjectMgr::SendAuctionWonMail( AuctionEntry *auction )
         sLog.outDebug( "AuctionWon body string : %s", msgAuctionWonBody.str().c_str() );
 
         //prepare mail data... :
-        uint32 itemTextId = this->CreateItemText( msgAuctionWonBody.str() );
+        uint32 itemTextId = CreateItemText( msgAuctionWonBody.str() );
 
         // set owner to bidder (to prevent delete item with sender char deleting)
         // owner in `data` will set at mail receive and item extracting
@@ -406,7 +406,7 @@ void ObjectMgr::SendAuctionSalePendingMail( AuctionEntry * auction )
 
         sLog.outDebug("AuctionSalePending body string : %s", msgAuctionSalePendingBody.str().c_str());
 
-        uint32 itemTextId = this->CreateItemText( msgAuctionSalePendingBody.str() );
+        uint32 itemTextId = CreateItemText( msgAuctionSalePendingBody.str() );
 
         WorldSession::SendMailTo(owner, MAIL_AUCTION, MAIL_STATIONERY_AUCTION, auction->location, auction->owner, msgAuctionSalePendingSubject.str(), itemTextId, NULL, 0, 0, MAIL_CHECK_MASK_AUCTION);
     }
@@ -438,7 +438,7 @@ void ObjectMgr::SendAuctionSuccessfulMail( AuctionEntry * auction )
 
         sLog.outDebug("AuctionSuccessful body string : %s", auctionSuccessfulBody.str().c_str());
 
-        uint32 itemTextId = this->CreateItemText( auctionSuccessfulBody.str() );
+        uint32 itemTextId = CreateItemText( auctionSuccessfulBody.str() );
 
         uint32 profit = auction->bid + auction->deposit - auctionCut;
 
@@ -1418,7 +1418,7 @@ void ObjectMgr::LoadAuctions()
         aItem->deposit = fields[10].GetUInt32();
         aItem->location = fields[11].GetUInt8();
         //check if sold item exists
-        if ( this->GetAItem( aItem->item_guidlow ) )
+        if ( GetAItem( aItem->item_guidlow ) )
         {
             GetAuctionsMap( aItem->location )->AddAuction(aItem);
         }
@@ -2630,7 +2630,7 @@ void ObjectMgr::LoadGroups()
     uint64 leaderGuid = 0;
     uint32 count = 0;
     //                                                     0         1              2           3           4              5      6      7      8      9      10     11     12     13      14          15
-    QueryResult *result = CharacterDatabase.PQuery("SELECT mainTank, mainAssistant, lootMethod, looterGuid, lootThreshold, icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, isRaid, difficulty, leaderGuid FROM groups");
+    QueryResult *result = CharacterDatabase.Query("SELECT mainTank, mainAssistant, lootMethod, looterGuid, lootThreshold, icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, isRaid, difficulty, leaderGuid FROM groups");
 
     if( !result )
     {
@@ -2672,7 +2672,7 @@ void ObjectMgr::LoadGroups()
     group = NULL;
     leaderGuid = 0;
     //                                        0           1          2         3
-    result = CharacterDatabase.PQuery("SELECT memberGuid, assistant, subgroup, leaderGuid FROM group_member ORDER BY leaderGuid");
+    result = CharacterDatabase.Query("SELECT memberGuid, assistant, subgroup, leaderGuid FROM group_member ORDER BY leaderGuid");
     if(!result)
     {
         barGoLink bar( 1 );
@@ -2725,7 +2725,7 @@ void ObjectMgr::LoadGroups()
     count = 0;
     group = NULL;
     leaderGuid = 0;
-    result = CharacterDatabase.PQuery(
+    result = CharacterDatabase.Query(
         //      0           1    2         3          4           5
         "SELECT leaderGuid, map, instance, permanent, difficulty, resettime, "
         // 6
@@ -3593,7 +3593,7 @@ void ObjectMgr::LoadQuestLocales()
 
 void ObjectMgr::LoadPetCreateSpells()
 {
-    QueryResult *result = WorldDatabase.PQuery("SELECT entry, Spell1, Spell2, Spell3, Spell4 FROM petcreateinfo_spell");
+    QueryResult *result = WorldDatabase.Query("SELECT entry, Spell1, Spell2, Spell3, Spell4 FROM petcreateinfo_spell");
     if(!result)
     {
         barGoLink bar( 1 );
@@ -3802,19 +3802,22 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
 
                 if(float(tmp.datalong2) > DEFAULT_VISIBILITY_DISTANCE)
                 {
-                    sLog.outErrorDb("Table `%s` has too large distance (%u) for exploring objective complete in `datalong2` in SCRIPT_COMMAND_QUEST_EXPLORED in `datalong` for script id %u",tablename,tmp.datalong2,tmp.id);
+                    sLog.outErrorDb("Table `%s` has too large distance (%u) for exploring objective complete in `datalong2` in SCRIPT_COMMAND_QUEST_EXPLORED in `datalong` for script id %u",
+                        tablename,tmp.datalong2,tmp.id);
                     continue;
                 }
 
                 if(tmp.datalong2 && float(tmp.datalong2) > DEFAULT_VISIBILITY_DISTANCE)
                 {
-                    sLog.outErrorDb("Table `%s` has too large distance (%u) for exploring objective complete in `datalong2` in SCRIPT_COMMAND_QUEST_EXPLORED in `datalong` for script id %u, max distance is %u or 0 for disable distance check",tablename,tmp.datalong2,tmp.id,uint32(DEFAULT_VISIBILITY_DISTANCE));
+                    sLog.outErrorDb("Table `%s` has too large distance (%u) for exploring objective complete in `datalong2` in SCRIPT_COMMAND_QUEST_EXPLORED in `datalong` for script id %u, max distance is %f or 0 for disable distance check",
+                        tablename,tmp.datalong2,tmp.id,DEFAULT_VISIBILITY_DISTANCE);
                     continue;
                 }
 
                 if(tmp.datalong2 && float(tmp.datalong2) < INTERACTION_DISTANCE)
                 {
-                    sLog.outErrorDb("Table `%s` has too small distance (%u) for exploring objective complete in `datalong2` in SCRIPT_COMMAND_QUEST_EXPLORED in `datalong` for script id %u, min distance is %u or 0 for disable distance check",tablename,tmp.datalong2,tmp.id,uint32(INTERACTION_DISTANCE));
+                    sLog.outErrorDb("Table `%s` has too small distance (%u) for exploring objective complete in `datalong2` in SCRIPT_COMMAND_QUEST_EXPLORED in `datalong` for script id %u, min distance is %f or 0 for disable distance check",
+                        tablename,tmp.datalong2,tmp.id,INTERACTION_DISTANCE);
                     continue;
                 }
 
@@ -3826,7 +3829,8 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
             {
                 if(!sSpellStore.LookupEntry(tmp.datalong))
                 {
-                    sLog.outErrorDb("Table `%s` using non-existent spell (id: %u) in SCRIPT_COMMAND_REMOVE_AURA or SCRIPT_COMMAND_CAST_SPELL for script id %u",tablename,tmp.datalong,tmp.id);
+                    sLog.outErrorDb("Table `%s` using non-existent spell (id: %u) in SCRIPT_COMMAND_REMOVE_AURA or SCRIPT_COMMAND_CAST_SPELL for script id %u",
+                        tablename,tmp.datalong,tmp.id);
                     continue;
                 }
                 break;
@@ -3973,7 +3977,7 @@ void ObjectMgr::LoadEventScripts()
 
 void ObjectMgr::LoadItemTexts()
 {
-    QueryResult *result = CharacterDatabase.PQuery("SELECT id, text FROM item_text");
+    QueryResult *result = CharacterDatabase.Query("SELECT id, text FROM item_text");
 
     uint32 count = 0;
 
@@ -4056,7 +4060,7 @@ void ObjectMgr::LoadPageTextLocales()
 {
     mPageTextLocaleMap.clear();                             // need for reload case
 
-    QueryResult *result = WorldDatabase.PQuery("SELECT entry,text_loc1,text_loc2,text_loc3,text_loc4,text_loc5,text_loc6,text_loc7,text_loc8 FROM locales_page_text");
+    QueryResult *result = WorldDatabase.Query("SELECT entry,text_loc1,text_loc2,text_loc3,text_loc4,text_loc5,text_loc6,text_loc7,text_loc8 FROM locales_page_text");
 
     if(!result)
     {
@@ -5012,13 +5016,8 @@ void ObjectMgr::SetHighestGuids()
         delete result;
     }
 
-    result = CharacterDatabase.Query( "SELECT MAX(id) FROM character_pet" );
-    if( result )
-    {
-        m_hiPetGuid = (*result)[0].GetUInt32()+1;
-
-        delete result;
-    }
+    // pet guids are not saved to DB, set to 0 (pet guid != pet id)
+    m_hiPetGuid = 0;
 
     result = CharacterDatabase.Query( "SELECT MAX(guid) FROM item_instance" );
     if( result )
@@ -5081,6 +5080,44 @@ void ObjectMgr::SetHighestGuids()
 
         delete result;
     }
+
+    result = CharacterDatabase.Query("SELECT MAX(arenateamid) FROM arena_team");
+    if (result)
+    {
+        m_arenaTeamId = (*result)[0].GetUInt32()+1;
+
+        delete result;
+    }
+
+    result = CharacterDatabase.Query( "SELECT MAX(guildid) FROM guild" );
+    if (result)
+    {
+        m_guildId = (*result)[0].GetUInt32()+1;
+
+        delete result;
+    }
+}
+
+uint32 ObjectMgr::GenerateArenaTeamId()
+{
+   ++m_arenaTeamId;
+    if(m_arenaTeamId>=0xFFFFFFFF)
+    {
+        sLog.outError("Arena team ids overflow!! Can't continue, shuting down server. ");
+        sWorld.m_stopEvent = true;
+    }
+    return m_arenaTeamId;
+}
+
+uint32 ObjectMgr::GenerateGuildId()
+{
+   ++m_guildId;
+    if(m_guildId>=0xFFFFFFFF)
+    {
+        sLog.outError("Guild ids overflow!! Can't continue, shuting down server. ");
+        sWorld.m_stopEvent = true;
+    }
+    return m_guildId;
 }
 
 uint32 ObjectMgr::GenerateAuctionID()
@@ -5567,7 +5604,7 @@ void ObjectMgr::LoadCorpses()
 {
     uint32 count = 0;
     //                                                     0           1           2           3            4    5     6     7            8         10
-    QueryResult *result = CharacterDatabase.PQuery("SELECT position_x, position_y, position_z, orientation, map, data, time, corpse_type, instance, guid FROM corpse WHERE corpse_type <> 0");
+    QueryResult *result = CharacterDatabase.Query("SELECT position_x, position_y, position_z, orientation, map, data, time, corpse_type, instance, guid FROM corpse WHERE corpse_type <> 0");
 
     if( !result )
     {
@@ -5931,7 +5968,7 @@ void ObjectMgr::LoadReservedPlayersNames()
 {
     m_ReservedNames.clear();                                // need for reload case
 
-    QueryResult *result = WorldDatabase.PQuery("SELECT name FROM reserved_name");
+    QueryResult *result = WorldDatabase.Query("SELECT name FROM reserved_name");
 
     uint32 count = 0;
 
@@ -6771,7 +6808,7 @@ void ObjectMgr::LoadTrainerSpell()
 
     std::set<uint32> skip_trainers;
 
-    QueryResult *result = WorldDatabase.PQuery("SELECT entry, spell,spellcost,reqskill,reqskillvalue,reqlevel FROM npc_trainer");
+    QueryResult *result = WorldDatabase.Query("SELECT entry, spell,spellcost,reqskill,reqskillvalue,reqlevel FROM npc_trainer");
 
     if( !result )
     {
@@ -6862,7 +6899,7 @@ void ObjectMgr::LoadVendors()
 
     std::set<uint32> skip_vendors;
 
-    QueryResult *result = WorldDatabase.PQuery("SELECT entry, item, maxcount, incrtime, ExtendedCost FROM npc_vendor");
+    QueryResult *result = WorldDatabase.Query("SELECT entry, item, maxcount, incrtime, ExtendedCost FROM npc_vendor");
     if( !result )
     {
         barGoLink bar( 1 );
@@ -6908,7 +6945,7 @@ void ObjectMgr::LoadNpcTextId()
 
     m_mCacheNpcTextIdMap.clear();
 
-    QueryResult* result = WorldDatabase.PQuery("SELECT npc_guid, textid FROM npc_gossip");
+    QueryResult* result = WorldDatabase.Query("SELECT npc_guid, textid FROM npc_gossip");
     if( !result )
     {
         barGoLink bar( 1 );

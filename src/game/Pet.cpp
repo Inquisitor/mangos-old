@@ -476,7 +476,6 @@ void Pet::SavePetToDB(PetSaveMode mode)
         case PET_SAVE_AS_DELETED:
         {
             RemoveAllAuras();
-            uint32 owner = GUID_LOPART(GetOwnerGUID());
             DeleteFromDB(m_charmInfo->GetPetNumber());
             break;
         }
@@ -932,7 +931,8 @@ bool Pet::CreateBaseAtCreature(Creature* creature)
 
     if(!IsPositionValid())
     {
-        sLog.outError("ERROR: Pet (guidlow %d, entry %d) not created base at creature. Suggested coordinates isn't valid (X: %d Y: ^%d)", GetGUIDLow(), GetEntry(), GetPositionX(), GetPositionY());
+        sLog.outError("ERROR: Pet (guidlow %d, entry %d) not created base at creature. Suggested coordinates isn't valid (X: %f Y: %f)",
+            GetGUIDLow(), GetEntry(), GetPositionX(), GetPositionY());
         return false;
     }
 

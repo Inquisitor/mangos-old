@@ -569,6 +569,8 @@ class ObjectMgr
         uint32 GenerateMailID();
         uint32 GenerateItemTextID();
         uint32 GeneratePetNumber();
+        uint32 GenerateArenaTeamId();
+        uint32 GenerateGuildId();
 
         uint32 CreateItemText(std::string text);
         std::string GetItemText( uint32 id )
@@ -700,7 +702,7 @@ class ObjectMgr
         int GetIndexForLocale(LocaleConstant loc);
         LocaleConstant GetLocaleForIndex(int i);
         // guild bank tabs
-        const uint32 GetGuildBankTabPrice(uint8 Index) { return Index < GUILD_BANK_MAX_TABS ? mGuildBankTabPrice[Index] : 0; }
+        uint32 GetGuildBankTabPrice(uint8 Index) const { return Index < GUILD_BANK_MAX_TABS ? mGuildBankTabPrice[Index] : 0; }
 
         uint16 GetConditionId(ConditionType condition, uint32 value1, uint32 value2);
         bool IsPlayerMeetToCondition(Player const* player, uint16 condition_id) const
@@ -758,6 +760,8 @@ class ObjectMgr
         uint32 m_auctionid;
         uint32 m_mailid;
         uint32 m_ItemTextId;
+        uint32 m_arenaTeamId;
+        uint32 m_guildId;
 
         uint32 m_hiCharGuid;
         uint32 m_hiCreatureGuid;
