@@ -1016,6 +1016,16 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
         return NULL;
     }
 
+    CreatureData &data = objmgr.NewOrExistCreatureData(pCreature->GetDBTableGUIDLow());
+    
+    data.id             = entry;
+//    data.mapid          = GetMapId();
+    data.posX           = x;
+    data.posY           = y;
+    data.posZ           = z;
+    data.orientation    = o;
+    data.spawndist      = 15; //rooted creatures or spiritguides can get 0 but i think, this isn't important..
+
     pCreature->AIM_Initialize();
 
     //pCreature->SetDungeonDifficulty(0);
