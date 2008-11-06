@@ -7023,7 +7023,9 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
     sLog.outDebug("Player::SendLoot");
     if (IS_GAMEOBJECT_GUID(guid))
     {
-        GameObject *go = ObjectAccessor::GetGameObject(*this, guid);
+        sLog.outDebug("       IS_GAMEOBJECT_GUID(guid)");
+        GameObject *go =
+            ObjectAccessor::GetGameObject(*this, guid);
 
         // not check distance for GO in case owned GO (fishing bobber case, for example)
         // And permit out of range GO with no owner in case fishing hole
@@ -7037,6 +7039,7 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
 
         if(go->getLootState() == GO_READY)
         {
+            uint32 lootid =  go->GetLootId();
             if((go->GetEntry() == BG_AV_OBJECTID_MINE_N || go->GetEntry() == BG_AV_OBJECTID_MINE_S))
                 if( BattleGround *bg = GetBattleGround())
                     if(bg->GetTypeID() == BATTLEGROUND_AV)
@@ -7046,15 +7049,16 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
                             return;
                         }
 
-            if(uint32 lootid = go->GetLootId())
+            if(lootid)
             {
+                sLog.outDebug("       if(lootid)");
                 loot->clear();
                 loot->FillLoot(lootid, LootTemplates_Gameobject, this);
-                go->SetLootState(GO_ACTIVATED);
             }
 
             if(loot_type == LOOT_FISHING)
                 go->getFishLoot(loot);
+
             go->SetLootState(GO_ACTIVATED);
         }
     }
@@ -7253,27 +7257,32 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
     SetLootGUID(guid);
 
     QuestItemList *q_list = 0;
-    QuestItemList *ffa_list = 0;
-    QuestItemList *conditional_list = 0;
     if (permission != NONE_PERMISSION)
     {
-        QuestItemMap::const_iterator itr;
         QuestItemMap const& lootPlayerQuestItems = loot->GetPlayerQuestItems();
-        itr = lootPlayerQuestItems.find(GetGUIDLow());
+        QuestItemMap::const_iterator itr = lootPlayerQuestItems.find(GetGUIDLow());
         if (itr == lootPlayerQuestItems.end())
             q_list = loot->FillQuestLoot(this);
         else
             q_list = itr->second;
+    }
 
+    QuestItemList *ffa_list = 0;
+    if (permission != NONE_PERMISSION)
+    {
         QuestItemMap const& lootPlayerFFAItems = loot->GetPlayerFFAItems();
-        itr = lootPlayerFFAItems.find(GetGUIDLow());
+        QuestItemMap::const_iterator itr = lootPlayerFFAItems.find(GetGUIDLow());
         if (itr == lootPlayerFFAItems.end())
             ffa_list = loot->FillFFALoot(this);
         else
             ffa_list = itr->second;
+    }
 
+    QuestItemList *conditional_list = 0;
+    if (permission != NONE_PERMISSION)
+    {
         QuestItemMap const& lootPlayerNonQuestNonFFAConditionalItems = loot->GetPlayerNonQuestNonFFAConditionalItems();
-        itr = lootPlayerNonQuestNonFFAConditionalItems.find(GetGUIDLow());
+        QuestItemMap::const_iterator itr = lootPlayerNonQuestNonFFAConditionalItems.find(GetGUIDLow());
         if (itr == lootPlayerNonQuestNonFFAConditionalItems.end())
             conditional_list = loot->FillNonQuestNonFFAConditionalLoot(this);
         else

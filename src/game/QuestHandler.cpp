@@ -398,7 +398,6 @@ void WorldSession::HandleQuestComplete(WorldPacket& recv_data)
 
     sLog.outDebug( "WORLD: Received CMSG_QUESTGIVER_COMPLETE_QUEST npc = %u, quest = %u",uint32(GUID_LOPART(guid)),quest );
 
-
     Quest const *pQuest = objmgr.GetQuestTemplate(quest);
     if( pQuest )
     {
