@@ -249,19 +249,11 @@ Creature* BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type )
 
         creature = AddCreature(BG_AV_StaticCreatureInfo[cinfoid][0],(type+AV_CPLACE_MAX),BG_AV_StaticCreatureInfo[cinfoid][1],BG_AV_StaticCreaturePos[type][0],BG_AV_StaticCreaturePos[type][1],BG_AV_StaticCreaturePos[type][2],BG_AV_StaticCreaturePos[type][3]);
         level = ( BG_AV_StaticCreatureInfo[cinfoid][2] == BG_AV_StaticCreatureInfo[cinfoid][3] ) ? BG_AV_StaticCreatureInfo[cinfoid][2] : urand(BG_AV_StaticCreatureInfo[cinfoid][2],BG_AV_StaticCreatureInfo[cinfoid][3]);
-        CreatureData &data = objmgr.NewOrExistCreatureData(creature->GetDBTableGUIDLow());
-        data.posX = BG_AV_StaticCreaturePos[type][0]; //this is needed, else they have a wrong aggrorange
-        data.posY = BG_AV_StaticCreaturePos[type][1];
-        data.posZ = BG_AV_StaticCreaturePos[type][2];
     }
     else
     {
         creature = AddCreature(BG_AV_CreatureInfo[cinfoid][0],type,BG_AV_CreatureInfo[cinfoid][1],BG_AV_CreaturePos[type][0],BG_AV_CreaturePos[type][1],BG_AV_CreaturePos[type][2],BG_AV_CreaturePos[type][3]);
         level = ( BG_AV_CreatureInfo[cinfoid][2] == BG_AV_CreatureInfo[cinfoid][3] ) ? BG_AV_CreatureInfo[cinfoid][2] : urand(BG_AV_CreatureInfo[cinfoid][2],BG_AV_CreatureInfo[cinfoid][3]);
-        CreatureData &data = objmgr.NewOrExistCreatureData(creature->GetDBTableGUIDLow());
-        data.posX = BG_AV_CreaturePos[type][0]; //this is needed, else they have a wrong aggrorange
-        data.posY = BG_AV_CreaturePos[type][1];
-        data.posZ = BG_AV_CreaturePos[type][2];
     }
     creature->LoadCreaturesAddon(true); //currently it's only for the bowman, so they have the entangling-aura.. but later it's needed for the watchdogs
     if(level != 0)
