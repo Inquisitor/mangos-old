@@ -738,44 +738,42 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
 
             he->DuelComplete(DUEL_INTERUPTED);
         }
-    }
 
-    // battleground things (do this at the end, so the death state flag will be properly set to handle in the bg->handlekill)
-    if(pVictim->GetTypeId() == TYPEID_PLAYER && (((Player*)pVictim)->InBattleGround()))
-    {
-        Player *killed = ((Player*)pVictim);
-        Player *killer = NULL;
-        if(GetTypeId() == TYPEID_PLAYER)
-            killer = ((Player*)this);
-        else if(GetTypeId() == TYPEID_UNIT && ((Creature*)this)->isPet())
+        // battleground things (do this at the end, so the death state flag will be properly set to handle in the bg->handlekill)
+        if(pVictim->GetTypeId() == TYPEID_PLAYER && (((Player*)pVictim)->InBattleGround()))
         {
-            Unit *owner = GetOwner();
-            if(owner && owner->GetTypeId() == TYPEID_PLAYER)
-                killer = ((Player*)owner);
-        }
-
-        if(killer)
-            if(BattleGround *bg = killed->GetBattleGround())
-                bg->HandleKillPlayer(killed, killer);   // drop flags and etc
-    }
-    else if(pVictim->GetTypeId() == TYPEID_UNIT)
-    {
-        Player *killer = NULL;
-        if(GetTypeId() == TYPEID_PLAYER)
-            killer = ((Player*)this);
-        else if(GetTypeId() == TYPEID_UNIT && ((Creature*)this)->isPet())
-        {
-            if(Unit *owner = GetOwner())
-                if(owner->GetTypeId() == TYPEID_PLAYER)
+            Player *killed = ((Player*)pVictim);
+            Player *killer = NULL;
+            if(GetTypeId() == TYPEID_PLAYER)
+                killer = ((Player*)this);
+            else if(GetTypeId() == TYPEID_UNIT && ((Creature*)this)->isPet())
+            {
+                Unit *owner = GetOwner();
+                if(owner && owner->GetTypeId() == TYPEID_PLAYER)
                     killer = ((Player*)owner);
+            }
+
+            if(killer)
+                if(BattleGround *bg = killed->GetBattleGround())
+                    bg->HandleKillPlayer(killed, killer);   // drop flags and etc
         }
+        else if(pVictim->GetTypeId() == TYPEID_UNIT)
+        {
+            Player *killer = NULL;
+            if(GetTypeId() == TYPEID_PLAYER)
+                killer = ((Player*)this);
+            else if(GetTypeId() == TYPEID_UNIT && ((Creature*)this)->isPet())
+            {
+                if(Unit *owner = GetOwner())
+                    if(owner->GetTypeId() == TYPEID_PLAYER)
+                        killer = ((Player*)owner);
+            }
 
-        if(killer)
-            if(BattleGround *bg = killer->GetBattleGround())
-                bg->HandleKillUnit((Creature*)pVictim,killer);
+            if(killer)
+                if(BattleGround *bg = killer->GetBattleGround())
+                    bg->HandleKillUnit((Creature*)pVictim,killer);
+        }
     }
-
-
     else                                                    // if (health <= damage)
     {
         DEBUG_LOG("DealDamageAlive");
