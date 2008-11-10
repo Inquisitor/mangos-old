@@ -66,19 +66,29 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     {
         CastSpellOnTeam(23658,HORDE); //this is a spell which finishes a quest where a player has to kill the boss
         RewardReputationToTeam(729,BG_AV_REP_BOSS,HORDE);
-        RewardHonorToTeam(BG_AV_HONOR_BOSS,HORDE);
+        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),HORDE);
         EndBattleGround(HORDE);
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_H_BOSS][0] )
     {
+        if(!m_CaptainAlive[1])
+        {
+            sLog.outError("Killed a Captain twice, please report this bug, if you haven't done \".respawn\"");
+            return;
+        }
         CastSpellOnTeam(23658,ALLIANCE); //this is a spell which finishes a quest where a player has to kill the boss
         m_CaptainAlive[1]=false;
         RewardReputationToTeam(730,BG_AV_REP_BOSS,ALLIANCE);
-        RewardHonorToTeam(BG_AV_HONOR_BOSS,ALLIANCE);
+        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),ALLIANCE);
         EndBattleGround(ALLIANCE);
     }
     else if(entry == BG_AV_CreatureInfo[AV_NPC_A_CAPTAIN][0])
     {
+        if(!m_CaptainAlive[0])
+        {
+            sLog.outError("Killed a Captain twice, please report this bug, if you haven't done \".respawn\"");
+            return;
+        }
         m_CaptainAlive[0]=false;
         RewardReputationToTeam(729,BG_AV_REP_CAPTAIN,HORDE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),HORDE);
@@ -449,6 +459,11 @@ void BattleGroundAV::AddPlayer(Player *plr)
 
 }
 
+void BattleGroundAV::EndBattleGround(uint32 winner)
+{
+    BattleGround::EndBattleGround(winner);
+}
+ 
 void BattleGroundAV::RemovePlayer(Player* plr,uint64 /*guid*/)
 {
    if(!plr)

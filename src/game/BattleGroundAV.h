@@ -23,28 +23,33 @@ class BattleGround;
 
 #define LANG_BG_AV_A_CAPTAIN_BUFF       "Begone. Uncouth scum! The Alliance shall prevail in Alterac Valley!"
 #define LANG_BG_AV_H_CAPTAIN_BUFF       "Now is the time to attack! For the Horde!"
-
 #define LANG_BG_AV_S_MINE_BOSS_CLAIMS   "Snivvle is here! Snivvle claims the Coldtooth Mine!"
 
-#define SEND_MSG_NEAR_LOSE               120
-#define BG_AV_SPIRITGUIDE_ENTRY_A        13116
 #define BG_AV_CAPTIME                    240000  //4:00
 #define BG_AV_SNOWFALL_FIRSTCAP          300000  //5:00 but i also have seen 4:05
-#define BG_AV_SCORE_INITIAL_POINTS       600
-#define BG_AV_BANNER_RESPAWN_TIMER       3000
 
-#define BG_AV_REP_BOSS                  100 //not sure
-#define BG_AV_HONOR_BOSS                80 //not sure (4kills)
-#define BG_AV_REP_CAPTAIN               125 //not sure
+#define BG_AV_SCORE_INITIAL_POINTS       600
+#define SEND_MSG_NEAR_LOSE               120
+
+#define BG_AV_KILL_BOSS                 4
+#define BG_AV_REP_BOSS                  350
+
 #define BG_AV_KILL_CAPTAIN              3
+#define BG_AV_REP_CAPTAIN               125
 #define BG_AV_RES_CAPTAIN               100
+
+#define BG_AV_KILL_TOWER                3
 #define BG_AV_REP_TOWER                 12
-#define BG_AV_KILL_TOWER                 3
 #define BG_AV_RES_TOWER                 75
+
 #define BG_AV_KILL_COMMANDER            1 //for a safely returned wingcommander
 //bonushonor at the end
-#define BG_AV_SURVIVING_TOWER           2
-#define BG_AV_SURVIVING_CAPTAIN         2
+#define BG_AV_KILL_SURVIVING_TOWER      2
+#define BG_AV_REP_SURVIVING_TOWER       12
+
+#define BG_AV_KILL_SURVIVING_CAPTAIN    2
+#define BG_AV_REP_SURVIVING_CAPTAIN     125
+
 
 
 enum BG_AV_Sounds
@@ -1517,6 +1522,7 @@ class BattleGroundAV : public BattleGround
         bool PlayerCanDoMineQuest(int32 GOId,uint32 team);
 
 
+        void EndBattleGround(uint32 winner);
 
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(float x, float y, float z, uint32 team);
 
