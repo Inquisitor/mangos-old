@@ -50,8 +50,6 @@ class BattleGround;
 #define BG_AV_KILL_SURVIVING_CAPTAIN    2
 #define BG_AV_REP_SURVIVING_CAPTAIN     125
 
-
-
 enum BG_AV_Sounds
 { //TODO: get out if there comes a sound when neutral team captures mine
 

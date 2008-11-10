@@ -71,13 +71,7 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_H_BOSS][0] )
     {
-        if(!m_CaptainAlive[1])
-        {
-            sLog.outError("Killed a Captain twice, please report this bug, if you haven't done \".respawn\"");
-            return;
-        }
         CastSpellOnTeam(23658,ALLIANCE); //this is a spell which finishes a quest where a player has to kill the boss
-        m_CaptainAlive[1]=false;
         RewardReputationToTeam(730,BG_AV_REP_BOSS,ALLIANCE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),ALLIANCE);
         EndBattleGround(ALLIANCE);
@@ -92,7 +86,7 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
         m_CaptainAlive[0]=false;
         RewardReputationToTeam(729,BG_AV_REP_CAPTAIN,HORDE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),HORDE);
-	    UpdateScore(ALLIANCE,(-1)*BG_AV_RES_CAPTAIN);
+        UpdateScore(ALLIANCE,(-1)*BG_AV_RES_CAPTAIN);
         //spawn destroyed aura
         for(uint8 i=0; i<=9; i++)
             SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_ALLIANCE+i,RESPAWN_IMMEDIATELY);
@@ -103,9 +97,15 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_H_CAPTAIN][0] )
     {
+        if(!m_CaptainAlive[1])
+        {
+            sLog.outError("Killed a Captain twice, please report this bug, if you haven't done \".respawn\"");
+            return;
+        }
+        m_CaptainAlive[1]=false;
         RewardReputationToTeam(730,BG_AV_REP_CAPTAIN,ALLIANCE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),ALLIANCE);
-    	UpdateScore(HORDE,(-1)*BG_AV_RES_CAPTAIN);
+        UpdateScore(HORDE,(-1)*BG_AV_RES_CAPTAIN);
         //spawn destroyed aura
         for(uint8 i=0; i<=9; i++)
             SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_HORDE+i,RESPAWN_IMMEDIATELY);
@@ -461,9 +461,43 @@ void BattleGroundAV::AddPlayer(Player *plr)
 
 void BattleGroundAV::EndBattleGround(uint32 winner)
 {
+    //calculate bonuskills for both teams:
+    //first towers:
+    uint8 kills[2]={0,0}; //0=ally 1=horde
+    uint8 rep[2]={0,0}; //0=ally 1=horde
+    for(BG_AV_Nodes i = BG_AV_NODES_DUNBALDAR_SOUTH; i <= BG_AV_NODES_FROSTWOLF_WTOWER; ++i)
+    {
+            if(m_Nodes[i].State == POINT_CONTROLED)
+            {
+                if(m_Nodes[i].Owner == ALLIANCE)
+                {
+                    rep[0]   += BG_AV_REP_SURVIVING_TOWER;
+                    kills[0] += BG_AV_KILL_SURVIVING_TOWER;
+                }
+                else
+                {
+                    rep[0]   += BG_AV_KILL_SURVIVING_TOWER;
+                    kills[1] += BG_AV_KILL_SURVIVING_TOWER;
+                }
+            }
+    }
+
+    for(int i=0; i<=1; i++) //0=ally 1=horde
+    {
+        if(m_CaptainAlive[i])
+        {
+            kills[i] += BG_AV_KILL_SURVIVING_CAPTAIN;
+            rep[i]   += BG_AV_REP_SURVIVING_CAPTAIN;
+        }
+        if(rep[i] != 0)
+            RewardReputationToTeam((i == 0)?730:729,rep[i],(i == 0)?ALLIANCE:HORDE);
+        if(kills[i] != 0)
+            RewardHonorToTeam(GetBonusHonor(kills[i]),(i == 0)?ALLIANCE:HORDE);
+    }
+
     BattleGround::EndBattleGround(winner);
 }
- 
+
 void BattleGroundAV::RemovePlayer(Player* plr,uint64 /*guid*/)
 {
    if(!plr)
