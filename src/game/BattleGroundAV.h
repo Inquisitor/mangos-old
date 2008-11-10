@@ -42,7 +42,7 @@ class BattleGround;
 #define BG_AV_REP_TOWER                 12
 #define BG_AV_RES_TOWER                 75
 
-#define BG_AV_KILL_COMMANDER            1 //for a safely returned wingcommander
+#define BG_AV_GET_COMMANDER            1 //for a safely returned wingcommander
 //bonushonor at the end
 #define BG_AV_KILL_SURVIVING_TOWER      2
 #define BG_AV_REP_SURVIVING_TOWER       12
