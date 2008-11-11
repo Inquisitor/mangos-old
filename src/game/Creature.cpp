@@ -535,7 +535,7 @@ bool Creature::Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, cons
         }
         LoadCreaturesAddon();
     }
-
+    m_deleteAfterNoAggro = false;
     return bResult;
 }
 

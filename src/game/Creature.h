@@ -590,6 +590,17 @@ class MANGOS_DLL_SPEC Creature : public Unit
 
         uint32 GetGlobalCooldown() const { return m_GlobalCooldown; }
 
+       void SetDeleteAfterNoAggro(bool set) {
+           if(set && !m_attacking) //if creature not in fight, delete it now..
+           {
+               CleanupsBeforeDelete();
+               AddObjectToRemoveList();
+           }
+           else if(set)
+               m_deleteAfterNoAggro=set;
+       }
+       bool GetDeleteAfterNoAggro() { return m_deleteAfterNoAggro; }
+
     protected:
         bool CreateFromProto(uint32 guidlow,uint32 Entry,uint32 team, const CreatureData *data = NULL);
         bool InitEntry(uint32 entry, uint32 team=ALLIANCE, const CreatureData* data=NULL);
@@ -637,6 +648,9 @@ class MANGOS_DLL_SPEC Creature : public Unit
         float CombatStartX;
         float CombatStartY;
         float CombatStartZ;
+
+        bool m_deleteAfterNoAggro;
+
     private:
         GridReference<Creature> m_gridRef;
         CreatureInfo const* m_creatureInfo;                 // in heroic mode can different from ObjMgr::GetCreatureTemplate(GetEntry())
