@@ -41,10 +41,7 @@ BattleGroundAV::~BattleGroundAV()
 
 const uint16 BattleGroundAV::GetBonusHonor(uint8 kills) //TODO: move this function to Battleground.cpp (needs to find a way to get m_MaxLevel)
 {
-    if(m_MaxLevel==70)
-        return 21*kills;
-    else
-        return 14*kills;
+    return MaNGOS::Honor::hk_honor_at_level(m_MaxLevel, kills);
 }
 
 void BattleGroundAV::HandleKillPlayer(Player *player, Player *killer)
