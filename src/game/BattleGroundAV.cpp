@@ -263,9 +263,12 @@ Creature* BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type )
         level = ( BG_AV_CreatureInfo[cinfoid][2] == BG_AV_CreatureInfo[cinfoid][3] ) ? BG_AV_CreatureInfo[cinfoid][2] : urand(BG_AV_CreatureInfo[cinfoid][2],BG_AV_CreatureInfo[cinfoid][3]);
     }
     if(!creature)
-        return NULL;
+        return NULL;a
+    if(creature->GetEntry() == BG_AV_CreatureInfo[AV_NPC_A_CAPTAIN][0] || creature->GetEntry() == BG_AV_CreatureInfo[AV_NPC_H_CAPTAIN][0])
+        creature->SetRespawnDelay(RESPAWN_ONE_DAY); // TODO: look if this can be done by database + also add this for the wingcommanders
 
 //    creature->LoadCreaturesAddon(true); //currently it's only for the bowman, so they have the entangling-aura.. but later it's needed for the watchdogs
+
     if(level != 0)
         level += m_MaxLevel-60; //maybe we can do this more generic for custom level-range.. actually it's blizzlike
     creature->SetLevel(level);
