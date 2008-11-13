@@ -944,57 +944,57 @@ const float BG_AV_CreaturePos[AV_CPLACE_MAX][4] = {
 enum BG_AV_CreatureIds
 {
 
-	AV_NPC_A_GRAVEDEFENSE0 = 0,		// stormpike Defender
-	AV_NPC_A_GRAVEDEFENSE1 = 1,		// seasoned defender
-	AV_NPC_A_GRAVEDEFENSE2 = 2,		// veteran defender
-    AV_NPC_A_GRAVEDEFENSE3 = 3,      // champion defender
-    AV_NPC_A_TOWERDEFENSE  = 4,      // stormpike bowman
-    AV_NPC_A_CAPTAIN       = 5,      // balinda
-    AV_NPC_A_BOSS          = 6,      // vanndar
+    AV_NPC_A_GRAVEDEFENSE0 = 0,     // stormpike Defender
+    AV_NPC_A_GRAVEDEFENSE1 = 1,     // seasoned defender
+    AV_NPC_A_GRAVEDEFENSE2 = 2,     // veteran defender
+    AV_NPC_A_GRAVEDEFENSE3 = 3,     // champion defender
+    AV_NPC_A_TOWERDEFENSE  = 4,     // stormpike bowman
+    AV_NPC_A_CAPTAIN       = 5,     // balinda
+    AV_NPC_A_BOSS          = 6,     // vanndar
 
-    AV_NPC_H_GRAVEDEFENSE0 = 7,      // frostwolf guardian
-	AV_NPC_H_GRAVEDEFENSE1 = 8,      // seasoned guardian
-	AV_NPC_H_GRAVEDEFENSE2 = 9,      // veteran guardian
-    AV_NPC_H_GRAVEDEFENSE3 = 10,     // champion guardian
-    AV_NPC_H_TOWERDEFENSE  = 11,     // frostwolf bowman
-    AV_NPC_H_CAPTAIN       = 12,     // galvangar
-    AV_NPC_H_BOSS          = 13,      // drek thar
+    AV_NPC_H_GRAVEDEFENSE0 = 7,     // frostwolf guardian
+    AV_NPC_H_GRAVEDEFENSE1 = 8,     // seasoned guardian
+    AV_NPC_H_GRAVEDEFENSE2 = 9,     // veteran guardian
+    AV_NPC_H_GRAVEDEFENSE3 = 10,    // champion guardian
+    AV_NPC_H_TOWERDEFENSE  = 11,    // frostwolf bowman
+    AV_NPC_H_CAPTAIN       = 12,    // galvangar
+    AV_NPC_H_BOSS          = 13,    // drek thar
 
-    AV_NPC_A_MARSHAL_SOUTH       = 14,
-    AV_NPC_MARSHAL_NORTH       = 15,
-    AV_NPC_A_MARSHAL_ICE         = 16,
-    AV_NPC_A_MARSHAL_STONE       = 17,
-    AV_NPC_H_MARSHAL_ICE         = 18,
-    AV_NPC_H_MARSHAL_TOWER       = 19,
-    AV_NPC_MARSHAL_ETOWER      = 20,
-    AV_NPC_H_MARSHAL_WTOWER      = 21,
-    AV_NPC_N_MINE_N_1           = 22,
-    AV_NPC_N_MINE_N_2           = 23,
-    AV_NPC_N_MINE_N_3           = 24,
-    AV_NPC_N_MINE_N_4           = 25,
-    AV_NPC_N_MINE_A_1           = 26,
-    AV_NPC_N_MINE_A_2           = 27,
-    AV_NPC_N_MINE_A_3           = 28,
-    AV_NPC_N_MINE_A_4           = 29,
-    AV_NPC_N_MINE_H_1           = 30,
-    AV_NPC_N_MINE_H_2           = 31,
-    AV_NPC_N_MINE_H_3           = 32,
-    AV_NPC_N_MINE_H_4           = 33,
-    AV_NPC_S_MINE_N_1           = 34,
-    AV_NPC_S_MINE_N_2           = 35,
-    AV_NPC_S_MINE_N_3           = 36,
-    AV_NPC_S_MINE_N_4           = 37,
-    AV_NPC_S_MINE_N_S           = 38,
-    AV_NPC_S_MINE_A_1           = 39,
-    AV_NPC_S_MINE_A_2           = 40,
-    AV_NPC_S_MINE_A_3           = 41,
-    AV_NPC_S_MINE_A_4           = 42,
-    AV_NPC_S_MINE_H_1           = 43,
-    AV_NPC_S_MINE_H_2           = 44,
-    AV_NPC_S_MINE_H_3           = 45,
-    AV_NPC_S_MINE_H_4           = 46,
-    AV_NPC_HERALD               = 47,
-    AV_NPC_INFO_MAX              = 48
+    AV_NPC_A_MARSHAL_SOUTH = 14,
+    AV_NPC_MARSHAL_NORTH   = 15,
+    AV_NPC_A_MARSHAL_ICE   = 16,
+    AV_NPC_A_MARSHAL_STONE = 17,
+    AV_NPC_H_MARSHAL_ICE   = 18,
+    AV_NPC_H_MARSHAL_TOWER = 19,
+    AV_NPC_MARSHAL_ETOWER  = 20,
+    AV_NPC_H_MARSHAL_WTOWER= 21,
+    AV_NPC_N_MINE_N_1      = 22,
+    AV_NPC_N_MINE_N_2      = 23,
+    AV_NPC_N_MINE_N_3      = 24,
+    AV_NPC_N_MINE_N_4      = 25,
+    AV_NPC_N_MINE_A_1      = 26,
+    AV_NPC_N_MINE_A_2      = 27,
+    AV_NPC_N_MINE_A_3      = 28,
+    AV_NPC_N_MINE_A_4      = 29,
+    AV_NPC_N_MINE_H_1      = 30,
+    AV_NPC_N_MINE_H_2      = 31,
+    AV_NPC_N_MINE_H_3      = 32,
+    AV_NPC_N_MINE_H_4      = 33,
+    AV_NPC_S_MINE_N_1      = 34,
+    AV_NPC_S_MINE_N_2      = 35,
+    AV_NPC_S_MINE_N_3      = 36,
+    AV_NPC_S_MINE_N_4      = 37,
+    AV_NPC_S_MINE_N_S      = 38,
+    AV_NPC_S_MINE_A_1      = 39,
+    AV_NPC_S_MINE_A_2      = 40,
+    AV_NPC_S_MINE_A_3      = 41,
+    AV_NPC_S_MINE_A_4      = 42,
+    AV_NPC_S_MINE_H_1      = 43,
+    AV_NPC_S_MINE_H_2      = 44,
+    AV_NPC_S_MINE_H_3      = 45,
+    AV_NPC_S_MINE_H_4      = 46,
+    AV_NPC_HERALD          = 47,
+    AV_NPC_INFO_MAX        = 48
 
 };
 
@@ -1554,7 +1554,7 @@ class BattleGroundAV : public BattleGround
         void UpdateNodeWorldState(BG_AV_Nodes node);
 
         /*general */
-        Creature* AddAVCreature(uint8 cinfoid, uint16 type);
+        Creature* AddAVCreature(uint16 cinfoid, uint16 type);
         const uint16 GetBonusHonor(uint8 kills); //TODO remove this when mangos handles this right
 
         /*variables */

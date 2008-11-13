@@ -1024,7 +1024,7 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
     data.posY           = y;
     data.posZ           = z;
     data.orientation    = o;
-    data.spawndist      = 15; //rooted creatures or spiritguides can get 0 but i think, this isn't important..
+    data.spawndist      = 15;
 
     pCreature->AIM_Initialize();
 

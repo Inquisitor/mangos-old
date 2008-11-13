@@ -245,18 +245,20 @@ void BattleGroundAV::UpdateScore(uint16 team, int16 points )
 }
 
 
-Creature* BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type )
+Creature* BattleGroundAV::AddAVCreature(uint16 cinfoid, uint16 type )
 {
     uint32 level;
+    bool isStatic=false;
     Creature* creature = NULL;
     assert(type <= AV_CPLACE_MAX + AV_STATICCPLACE_MAX);
     if(type>=AV_CPLACE_MAX) //static
     {
-        type-=(AV_CPLACE_MAX);
+        type-=AV_CPLACE_MAX;
         cinfoid=int(BG_AV_StaticCreaturePos[type][4]);
 
         creature = AddCreature(BG_AV_StaticCreatureInfo[cinfoid][0],(type+AV_CPLACE_MAX),BG_AV_StaticCreatureInfo[cinfoid][1],BG_AV_StaticCreaturePos[type][0],BG_AV_StaticCreaturePos[type][1],BG_AV_StaticCreaturePos[type][2],BG_AV_StaticCreaturePos[type][3]);
         level = ( BG_AV_StaticCreatureInfo[cinfoid][2] == BG_AV_StaticCreatureInfo[cinfoid][3] ) ? BG_AV_StaticCreatureInfo[cinfoid][2] : urand(BG_AV_StaticCreatureInfo[cinfoid][2],BG_AV_StaticCreatureInfo[cinfoid][3]);
+        isStatic=true;
     }
     else
     {
@@ -268,7 +270,23 @@ Creature* BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type )
     if(creature->GetEntry() == BG_AV_CreatureInfo[AV_NPC_A_CAPTAIN][0] || creature->GetEntry() == BG_AV_CreatureInfo[AV_NPC_H_CAPTAIN][0])
         creature->SetRespawnDelay(RESPAWN_ONE_DAY); // TODO: look if this can be done by database + also add this for the wingcommanders
 
-//    creature->LoadCreaturesAddon(true); //currently it's only for the bowman, so they have the entangling-aura.. but later it's needed for the watchdogs
+    if((isStatic && cinfoid>=10 && cinfoid<=14) || (!isStatic && ((cinfoid >= AV_NPC_A_GRAVEDEFENSE0 && cinfoid<=AV_NPC_A_GRAVEDEFENSE3) ||
+        (cinfoid>=AV_NPC_H_GRAVEDEFENSE0 && cinfoid<=AV_NPC_H_GRAVEDEFENSE3))))
+    {
+        if(!isStatic && ((cinfoid>=AV_NPC_A_GRAVEDEFENSE0 && cinfoid<=AV_NPC_A_GRAVEDEFENSE3) 
+            || (cinfoid>=AV_NPC_H_GRAVEDEFENSE0 && cinfoid<=AV_NPC_H_GRAVEDEFENSE3)))
+        {
+            CreatureData &data = objmgr.NewOrExistCreatureData(creature->GetDBTableGUIDLow());
+            data.spawndist      = 5;
+        }
+        //else spawndist will be 15, so creatures move maximum=10
+        creature->SetDefaultMovementType(RANDOM_MOTION_TYPE);
+        creature->GetMotionMaster()->Initialize();
+        creature->setDeathState(JUST_DIED);
+        creature->Respawn();
+        //TODO: find a way to add a motionmaster without killing the creature (i
+        //just copied this code from a gm-command
+    }
 
     if(level != 0)
         level += m_MaxLevel-60; //maybe we can do this more generic for custom level-range.. actually it's blizzlike
@@ -783,15 +801,6 @@ void BattleGroundAV::PopulateNode(BG_AV_Nodes node)
     for(uint8 i=0; i<4; i++)
     {
         Creature* cr = AddAVCreature(creatureid,c_place+i);
-        cr->SetDefaultMovementType(RANDOM_MOTION_TYPE);
-        cr->GetMotionMaster()->Initialize();
-        if(cr->isAlive())                            // dead creature will reset movement generator at respawn
-        {
-            cr->setDeathState(JUST_DIED);
-            cr->Respawn();
-        }
-        //TODO: find a way to add a motionmaster without killing the creature (i
-        //just copied this code from a gm-command
     }
 }
 void BattleGroundAV::DePopulateNode(BG_AV_Nodes node)

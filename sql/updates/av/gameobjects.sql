@@ -82,3 +82,7 @@ INSERT INTO `mangos`.`gameobject` (`id` ,`map`,position_x,position_y,position_z,
 INSERT INTO `mangos`.`gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (179419,30,-1423.16,-318.436,89.1136,2.35619,60);
 INSERT INTO `mangos`.`gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (179437,30,618.748,-52.1126,42.1122,-0.0698131,60);
 INSERT INTO `mangos`.`gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (179438,30,-1181.1,-370.747,53.6246,2.68781,60);
+
+-- nest 2 gos were inserted by hand..
+INSERT INTO `mangos`.`gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (179024,30,40.0913,0.0153897,-4.0962,0.96131,120);
+INSERT INTO `mangos`.`gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (179025,30,-1552.55, -359.738, 66.948,2.8875,120);
