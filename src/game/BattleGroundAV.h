@@ -100,7 +100,7 @@ horde:
 
 enum BG_AV_OTHER_VALUES
 {
-    AV_STATICCPLACE_MAX        = 128,
+    AV_STATICCPLACE_MAX        = 123,
     AV_NORTH_MINE              = 0,
     AV_SOUTH_MINE              = 1,
     AV_MINE_TICK_TIMER         = 45000,

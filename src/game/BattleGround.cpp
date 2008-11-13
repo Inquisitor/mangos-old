@@ -887,6 +887,8 @@ bool BattleGround::AddObject(uint32 type, uint32 entry, float x, float y, float 
         sLog.outErrorDb("Gameobject template %u not found in database! BattleGround not created!", entry);
         return false;
     }
+    if( x==0 && y==0 && z==0 )
+        return true; //0,0,0 is a placeholder in alteracvalley
 
     uint32 guid = objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT);
 
