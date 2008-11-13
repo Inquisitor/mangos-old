@@ -34,3 +34,50 @@ INSERT INTO mangos_string VALUES
 (748,'The Frostwolf General is Dead!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (749,'The Stormpike General is Dead!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
 ;
+
+UPDATE mangos_string SET content_loc3='Allianz' WHERE entry=717;
+UPDATE mangos_string SET content_loc3='Horde' WHERE entry=718;
+
+UPDATE mangos_string SET content_loc3='Der %s wurde von der %s zerstört!' WHERE entry=719;
+-- "Die %s" is also needed
+
+UPDATE mangos_string SET content_loc3='Der %s wird angegriffen! Wenn er unbewacht bleibt, wird die %s ihn zerstören!' WHERE entry=720;
+-- _Die_ Heilerh\xc3\xbctte der Frostw\xc3\xb6lfe wird angegriffen! Wenn _sie_ unbewacht bleibt wird allianz _sie_
+
+UPDATE mangos_string SET content_loc3='Der %s wurde von der %s erobert!' WHERE entry=721;
+-- die %s
+UPDATE mangos_string SET content_loc3='Der %s wurde von der %s erobert!' WHERE entry=722;
+UPDATE mangos_string SET content_loc3='Der %s wurde von der %s erobert!' WHERE entry=723;
+
+UPDATE mangos_string SET content_loc3='Der %s wird angegriffen! Wenn er unbewacht bleibt, wird die %s ihn erobern!' WHERE entry=724;
+-- Die Heilerh\xc3\xbctte der Frostw\xc3\xb6lfe wird angegriffen! Wenn sie unbewacht bleibt
+
+UPDATE mangos_string SET content_loc3='Die %s hat die %s eingenommen! Die dort befindlichen Vorräte werden zur Verstärkung eingesetzt!' WHERE entry=725;
+
+UPDATE mangos_string SET content_loc3='Eisenschachtmine' WHERE entry=726;
+UPDATE mangos_string SET content_loc3='Eisbeißermine' WHERE entry=727;
+UPDATE mangos_string SET content_loc3='Lazarett der Sturmlanzen' WHERE entry=728;
+UPDATE mangos_string SET content_loc3='Südbunker von Dun Baldar' WHERE entry=729;
+UPDATE mangos_string SET content_loc3='Nordbunker von Dun Baldar' WHERE entry=730;
+UPDATE mangos_string SET content_loc3='Friedhof der Sturmlanzen' WHERE entry=731;
+UPDATE mangos_string SET content_loc3='Eisschwingenbunker' WHERE entry=732;
+UPDATE mangos_string SET content_loc3='Steinbruchfriedhof' WHERE entry=733;
+UPDATE mangos_string SET content_loc3='Steinbruchbunker' WHERE entry=734;
+UPDATE mangos_string SET content_loc3='Schneewehenfriedhof' WHERE entry=735;
+UPDATE mangos_string SET content_loc3='Eisblutturm' WHERE entry=736;
+UPDATE mangos_string SET content_loc3='Eisblutfriedhof' WHERE entry=737;
+UPDATE mangos_string SET content_loc3='Turmstellung' WHERE entry=738;
+UPDATE mangos_string SET content_loc3='Friedhof der Frostwölfe' WHERE entry=739;
+UPDATE mangos_string SET content_loc3='östliche Frostwolfturm' WHERE entry=740;
+UPDATE mangos_string SET content_loc3='westliche Frostwolfturm' WHERE entry=741;
+UPDATE mangos_string SET content_loc3='Heilerhütte der Frostwölfe' WHERE entry=742;
+UPDATE mangos_string SET content_loc3='Der Kampf um das Alteractal beginnt in 1 Minute.' WHERE entry=743;
+UPDATE mangos_string SET content_loc3='Der Kampf um das Alteractal beginnt in 30 Sekunden.' WHERE entry=744;
+UPDATE mangos_string SET content_loc3='Der Kampf um das Alteractal hat begonnen!' WHERE entry=745;
+UPDATE mangos_string SET content_loc3='Die Allianz hat nurnoch wenige Verstärkungspunkte' WHERE entry=746; -- TODO find right msg
+UPDATE mangos_string SET content_loc3='Die Horde hat nurnoch wenige Verstärkungspunkte' WHERE entry=747; -- TODO same here
+UPDATE mangos_string SET content_loc3='Der General der Allianz ist tot!' WHERE entry=748;
+UPDATE mangos_string SET content_loc3='Der General der Horde ist tot!' WHERE entry=749;
+
+
+-- CHAT_MSG_BG_SYSTEM_ALLIANCE', 'txt': '$N hat den Schneewehenfriedhof besetzt! Wenn niemand eingreift, erlangt die Allianz die Kontrolle \xc3\xbcber ihn
