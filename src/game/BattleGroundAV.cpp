@@ -27,6 +27,7 @@
 #include "MapManager.h"
 #include "Language.h"
 #include "SpellAuras.h"
+#include "Formulas.h"
 
 BattleGroundAV::BattleGroundAV()
 {
@@ -263,7 +264,7 @@ Creature* BattleGroundAV::AddAVCreature(uint8 cinfoid, uint16 type )
         level = ( BG_AV_CreatureInfo[cinfoid][2] == BG_AV_CreatureInfo[cinfoid][3] ) ? BG_AV_CreatureInfo[cinfoid][2] : urand(BG_AV_CreatureInfo[cinfoid][2],BG_AV_CreatureInfo[cinfoid][3]);
     }
     if(!creature)
-        return NULL;a
+        return NULL;
     if(creature->GetEntry() == BG_AV_CreatureInfo[AV_NPC_A_CAPTAIN][0] || creature->GetEntry() == BG_AV_CreatureInfo[AV_NPC_H_CAPTAIN][0])
         creature->SetRespawnDelay(RESPAWN_ONE_DAY); // TODO: look if this can be done by database + also add this for the wingcommanders
 
@@ -780,7 +781,18 @@ void BattleGroundAV::PopulateNode(BG_AV_Nodes node)
 
     }
     for(uint8 i=0; i<4; i++)
-        AddAVCreature(creatureid,c_place+i);
+    {
+        Creature* cr = AddAVCreature(creatureid,c_place+i);
+        cr->SetDefaultMovementType(RANDOM_MOTION_TYPE);
+        cr->GetMotionMaster()->Initialize();
+        if(cr->isAlive())                            // dead creature will reset movement generator at respawn
+        {
+            cr->setDeathState(JUST_DIED);
+            cr->Respawn();
+        }
+        //TODO: find a way to add a motionmaster without killing the creature (i
+        //just copied this code from a gm-command
+    }
 }
 void BattleGroundAV::DePopulateNode(BG_AV_Nodes node)
 {
