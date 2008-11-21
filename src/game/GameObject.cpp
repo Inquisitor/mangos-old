@@ -259,7 +259,7 @@ void GameObject::Update(uint32 /*p_time*/)
                                 return;
                             }
                                                             // respawn timer
-                            MapManager::Instance().GetMap(GetMapId(), this)->Add(this);
+                            GetMap()->Add(this);
                             break;
                     }
                 }
@@ -310,13 +310,13 @@ void GameObject::Update(uint32 /*p_time*/)
                     CellLock<GridReadGuard> cell_lock(cell, p);
 
                     TypeContainerVisitor<MaNGOS::UnitSearcher<MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck>, GridTypeMapContainer > grid_object_checker(checker);
-                    cell_lock->Visit(cell_lock, grid_object_checker, *MapManager::Instance().GetMap(GetMapId(), this));
+                    cell_lock->Visit(cell_lock, grid_object_checker, *GetMap());
 
                     // or unfriendly player/pet
                     if(!ok)
                     {
                         TypeContainerVisitor<MaNGOS::UnitSearcher<MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck>, WorldTypeMapContainer > world_object_checker(checker);
-                        cell_lock->Visit(cell_lock, world_object_checker, *MapManager::Instance().GetMap(GetMapId(), this));
+                        cell_lock->Visit(cell_lock, world_object_checker, *GetMap());
                     }
                 }
                 else                                        // environmental trap
@@ -331,7 +331,7 @@ void GameObject::Update(uint32 /*p_time*/)
                     CellLock<GridReadGuard> cell_lock(cell, p);
 
                     TypeContainerVisitor<MaNGOS::PlayerSearcher<MaNGOS::AnyPlayerInObjectRangeCheck>, WorldTypeMapContainer > world_object_checker(checker);
-                    cell_lock->Visit(cell_lock, world_object_checker, *MapManager::Instance().GetMap(GetMapId(), this));
+                    cell_lock->Visit(cell_lock, world_object_checker, *GetMap());
                     ok = p_ok;
                 }
 
@@ -445,7 +445,7 @@ void GameObject::Refresh()
         return;
 
     if(isSpawned())
-        MapManager::Instance().GetMap(GetMapId(), this)->Add(this);
+        GetMap()->Add(this);
 }
 
 void GameObject::AddUniqueUse(Player* player)
@@ -795,7 +795,7 @@ void GameObject::TriggeringLinkedGameObject( uint32 trapEntry, Unit* target)
 
         TypeContainerVisitor<MaNGOS::GameObjectLastSearcher<MaNGOS::NearestGameObjectEntryInObjectRangeCheck>, GridTypeMapContainer > object_checker(checker);
         CellLock<GridReadGuard> cell_lock(cell, p);
-        cell_lock->Visit(cell_lock, object_checker, *MapManager::Instance().GetMap(GetMapId(), this));
+        cell_lock->Visit(cell_lock, object_checker, *GetMap());
     }
 
     // found correct GO
@@ -817,7 +817,7 @@ GameObject* GameObject::LookupFishingHoleAround(float range)
     CellLock<GridReadGuard> cell_lock(cell, p);
 
     TypeContainerVisitor<MaNGOS::GameObjectSearcher<MaNGOS::NearestGameObjectFishingHole>, GridTypeMapContainer > grid_object_checker(checker);
-    cell_lock->Visit(cell_lock, grid_object_checker, *MapManager::Instance().GetMap(GetMapId(), this));
+    cell_lock->Visit(cell_lock, grid_object_checker, *GetMap());
 
     return ok;
 }
@@ -1252,4 +1252,20 @@ void GameObject::Use(Unit* user)
     targets.setUnitTarget( user );
 
     spell->prepare(&targets);
+}
+
+// overwrite WorldObject function for proper name localization
+const char* GameObject::GetNameForLocaleIdx(int32 loc_idx) const
+{
+    if (loc_idx >= 0)
+    {
+        GameObjectLocale const *cl = objmgr.GetGameObjectLocale(GetEntry());
+        if (cl)
+        {
+            if (cl->Name.size() > loc_idx && !cl->Name[loc_idx].empty())
+                return cl->Name[loc_idx].c_str();
+        }
+    }
+
+    return GetName();
 }

@@ -31,6 +31,7 @@
 #include "Bag.h"
 #include "WorldSession.h"
 #include "Pet.h"
+#include "MapReference.h"
 #include "Util.h"                                           // for Tokens typedef
 
 #include<string>
@@ -88,7 +89,7 @@ struct SpellModifier
     Spell const* lastAffected;
 };
 
-typedef HM_NAMESPACE::hash_map<uint16, PlayerSpell*> PlayerSpellMap;
+typedef UNORDERED_MAP<uint16, PlayerSpell*> PlayerSpellMap;
 typedef std::list<SpellModifier*> SpellModList;
 
 struct SpellCooldown
@@ -676,12 +677,6 @@ struct ItemPosCount
     uint8 count;
 };
 typedef std::vector<ItemPosCount> ItemPosCountVec;
-
-enum SwitchWeapon
-{
-    DEFAULT_SWITCH_WEAPON       = 1500,                     //cooldown in ms
-    ROGUE_SWITCH_WEAPON         = 1000
-};
 
 enum TradeSlots
 {
@@ -1359,7 +1354,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint8 unReadMails;
         time_t m_nextMailDelivereTime;
 
-        typedef HM_NAMESPACE::hash_map<uint32, Item*> ItemMap;
+        typedef UNORDERED_MAP<uint32, Item*> ItemMap;
 
         ItemMap mMitems;                                    //template defined in objectmgr.cpp
 
@@ -1986,7 +1981,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         /***                 INSTANCE SYSTEM                   ***/
         /*********************************************************/
 
-        typedef HM_NAMESPACE::hash_map< uint32 /*mapId*/, InstancePlayerBind > BoundInstancesMap;
+        typedef UNORDERED_MAP< uint32 /*mapId*/, InstancePlayerBind > BoundInstancesMap;
 
         void UpdateHomebindTime(uint32 time);
 
@@ -2021,6 +2016,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         Player* GetNextRandomRaidMember(float radius);
 
         GridReference<Player> &GetGridRef() { return m_gridRef; }
+        MapReference &GetMapRef() { return m_mapRef; }
+
         bool isAllowedToLoot(Creature* creature);
 
         WorldLocation& GetTeleportDest() { return m_teleport_dest; }
@@ -2265,6 +2262,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         Item* _StoreItem( uint16 pos, Item *pItem, uint32 count, bool clone, bool update );
 
         GridReference<Player> m_gridRef;
+        MapReference m_mapRef;
 };
 
 void AddItemsSetItem(Player*player,Item *item);

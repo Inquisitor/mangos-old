@@ -22,7 +22,7 @@
 #include "Platform/Define.h"
 #include "Policies/Singleton.h"
 #include "zthread/FastMutex.h"
-#include "Utilities/HashMap.h"
+#include "Utilities/UnorderedMap.h"
 #include "Policies/ThreadingModel.h"
 
 #include "ByteBuffer.h"
@@ -47,7 +47,7 @@ class HashMapHolder
 {
     public:
 
-        typedef HM_NAMESPACE::hash_map< uint64, T* >   MapType;
+        typedef UNORDERED_MAP< uint64, T* >   MapType;
         typedef ZThread::FastMutex LockType;
         typedef MaNGOS::GeneralLock<LockType > Guard;
 
@@ -89,8 +89,8 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
     ObjectAccessor& operator=(const ObjectAccessor &);
 
     public:
-        typedef HM_NAMESPACE::hash_map<uint64, Corpse* >      Player2CorpsesMapType;
-        typedef HM_NAMESPACE::hash_map<Player*, UpdateData>::value_type UpdateDataValueType;
+        typedef UNORDERED_MAP<uint64, Corpse* >      Player2CorpsesMapType;
+        typedef UNORDERED_MAP<Player*, UpdateData>::value_type UpdateDataValueType;
 
         template<class T> static T* GetObjectInWorld(uint64 guid, T* /*fake*/)
         {
@@ -184,14 +184,13 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
         void RemoveUpdateObject(Object *obj);
 
         void Update(uint32 diff);
+        void UpdatePlayers(uint32 diff);
 
         Corpse* GetCorpseForPlayerGUID(uint64 guid);
         void RemoveCorpse(Corpse *corpse);
         void AddCorpse(Corpse* corpse);
         void AddCorpsesToGrid(GridPair const& gridpair,GridType& grid,Map* map);
         Corpse* ConvertCorpseForPlayer(uint64 player_guid);
-
-        bool PlayersNearGrid(uint32 x,uint32 y,uint32 m_id,uint32 i_id) const;
 
         static void UpdateObject(Object* obj, Player* exceptPlayer);
         static void _buildUpdateObject(Object* obj, UpdateDataMapType &);
@@ -216,7 +215,6 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
 
         static void _buildChangeObjectForPlayer(WorldObject *, UpdateDataMapType &);
         static void _buildPacket(Player *, Object *, UpdateDataMapType &);
-        void _update(void);
         std::set<Object *> i_objects;
         LockType i_playerGuard;
         LockType i_updateGuard;
