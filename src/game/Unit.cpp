@@ -745,38 +745,21 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
         }
 
         // battleground things (do this at the end, so the death state flag will be properly set to handle in the bg->handlekill)
-        if(pVictim->GetTypeId() == TYPEID_PLAYER && (((Player*)pVictim)->InBattleGround()))
+        if(pVictim->GetTypeId() == TYPEID_PLAYER && ((Player*)pVictim)->InBattleGround())
         {
             Player *killed = ((Player*)pVictim);
-            Player *killer = NULL;
-            if(GetTypeId() == TYPEID_PLAYER)
-                killer = ((Player*)this);
-            else if(GetTypeId() == TYPEID_UNIT && ((Creature*)this)->isPet())
-            {
-                Unit *owner = GetOwner();
-                if(owner && owner->GetTypeId() == TYPEID_PLAYER)
-                    killer = ((Player*)owner);
-            }
-
-            if(killer)
-                if(BattleGround *bg = killed->GetBattleGround())
-                    bg->HandleKillPlayer(killed, killer);   // drop flags and etc
+            if(BattleGround *bg == killed->GetBattleGround())
+                if(player)
+                    bg->HandleKillPlayer(killed, player);
+                //later we can add support for creature->player kills here i'm
+                //not sure, but i guess those kills also get counted in av
+                //else if(GetTypeId() == TYPEID_UNIT)
+                //    bg->HandleKillPlayer(killed,(Creature*)this);
         }
         else if(pVictim->GetTypeId() == TYPEID_UNIT)
         {
-            Player *killer = NULL;
-            if(GetTypeId() == TYPEID_PLAYER)
-                killer = ((Player*)this);
-            else if(GetTypeId() == TYPEID_UNIT && ((Creature*)this)->isPet())
-            {
-                if(Unit *owner = GetOwner())
-                    if(owner->GetTypeId() == TYPEID_PLAYER)
-                        killer = ((Player*)owner);
-            }
-
-            if(killer)
-                if(BattleGround *bg = killer->GetBattleGround())
-                    bg->HandleKillUnit((Creature*)pVictim,killer);
+            if(player && BattleGround *bg = player->GetBattleGround())
+                bg->HandleKillUnit((Creature*)pVictim,player);
         }
     }
     else                                                    // if (health <= damage)
