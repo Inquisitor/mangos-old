@@ -748,7 +748,7 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
         if(pVictim->GetTypeId() == TYPEID_PLAYER && ((Player*)pVictim)->InBattleGround())
         {
             Player *killed = ((Player*)pVictim);
-            if(BattleGround *bg == killed->GetBattleGround())
+            if(BattleGround *bg = killed->GetBattleGround())
                 if(player)
                     bg->HandleKillPlayer(killed, player);
                 //later we can add support for creature->player kills here i'm
@@ -758,8 +758,9 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
         }
         else if(pVictim->GetTypeId() == TYPEID_UNIT)
         {
-            if(player && BattleGround *bg = player->GetBattleGround())
-                bg->HandleKillUnit((Creature*)pVictim,player);
+            if(player)
+                if(BattleGround *bg = player->GetBattleGround())
+                    bg->HandleKillUnit((Creature*)pVictim,player);
         }
     }
     else                                                    // if (health <= damage)
