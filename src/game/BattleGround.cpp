@@ -1009,6 +1009,7 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
     }
 
     pCreature->Relocate(x, y, z, o);
+    pCreature->SetDBTableGuid(1); //this is only, that creatures can find their homepoint, cause getrespawncoord, returns, if no m_dbtableguid is set.. maybe this function needs to be changed, but until now, i only will fix it here
 
     if(!pCreature->IsPositionValid())
     {
