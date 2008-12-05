@@ -400,6 +400,12 @@ void BattleGround::EndBattleGround(uint32 winner)
             plr->ResurrectPlayer(1.0f);
             plr->SpawnCorpseBones();
         }
+        else
+        {
+            //needed cause else in av some creatures will kill the players at the end
+            plr->CombatStop();
+            plr->getHostilRefManager().deleteReferences();
+        }
 
         if(plr->GetTeam() == winner)
         {
