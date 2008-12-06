@@ -430,6 +430,7 @@ class BattleGround
                                                             // can be extended in in BG subclass
 
         virtual void OnCreatureCreate(Creature* /*Creature*/) {}
+        virtual void OnObjectCreate(GameObject* /*Creature*/) {}
 
         void HandleTriggerBuff(uint64 const& go_guid);
 
