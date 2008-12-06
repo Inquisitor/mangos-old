@@ -149,7 +149,10 @@ Map* MapInstanced::GetInstance(const WorldObject* obj)
                 assert(NewInstanceId);
                 map = _FindMap(NewInstanceId);
                 if(!map)
+                {
                     map = CreateBattleGround(NewInstanceId);
+                    ((BattleGroundMap*)map)->SetBG(player->GetBattleGround());
+                }
                 return map;
             }
 
