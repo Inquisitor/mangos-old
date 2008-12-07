@@ -31,9 +31,8 @@
 
 BattleGroundAV::BattleGroundAV()
 {
-
     m_BgObjects.resize(BG_AV_OBJECT_MAX);
-    m_BgCreatures.resize(AV_CPLACE_MAX+AV_STATICCPLACE_MAX);
+    m_BgCreatures.resize(AV_CPLACE_MAX);
 }
 
 BattleGroundAV::~BattleGroundAV()
@@ -60,27 +59,24 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
     uint32 entry = unit->GetEntry();
-    if(entry == BG_AV_CreatureInfo[AV_NPC_A_BOSS][0])
+    if( m_DB_Creature[AV_CREATURE_A_BOSS] && unit == m_DB_Creature[AV_CREATURE_A_BOSS])
     {
         CastSpellOnTeam(23658,HORDE); //this is a spell which finishes a quest where a player has to kill the boss
         RewardReputationToTeam(729,BG_AV_REP_BOSS,HORDE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),HORDE);
         EndBattleGround(HORDE);
     }
-    else if ( entry == BG_AV_CreatureInfo[AV_NPC_H_BOSS][0] )
+    else if( m_DB_Creature[AV_CREATURE_H_BOSS] && unit == m_DB_Creature[AV_CREATURE_H_BOSS])
     {
         CastSpellOnTeam(23658,ALLIANCE); //this is a spell which finishes a quest where a player has to kill the boss
         RewardReputationToTeam(730,BG_AV_REP_BOSS,ALLIANCE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),ALLIANCE);
         EndBattleGround(ALLIANCE);
     }
-    else if(entry == BG_AV_CreatureInfo[AV_NPC_A_CAPTAIN][0])
+    else if( m_DB_Creature[AV_CREATURE_A_CAPTAIN] && unit == m_DB_Creature[AV_CREATURE_A_CAPTAIN])
     {
         if(!m_CaptainAlive[0])
-        {
-            sLog.outError("Killed a Captain twice, please report this bug, if you haven't done \".respawn\"");
             return;
-        }
         m_CaptainAlive[0]=false;
         RewardReputationToTeam(729,BG_AV_REP_CAPTAIN,HORDE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),HORDE);
@@ -88,18 +84,14 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
         //spawn destroyed aura
         for(uint8 i=0; i<=9; i++)
             SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_ALLIANCE+i,RESPAWN_IMMEDIATELY);
-        Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
-        if(creature)
-            YellToAll(creature,GetMangosString(LANG_BG_AV_A_CAPTAIN_DEAD),LANG_UNIVERSAL);
+        if(m_DB_Creature[AV_CREATURE_HERALD])
+            YellToAll(m_DB_Creature[AV_CREATURE_HERALD],GetMangosString(LANG_BG_AV_A_CAPTAIN_DEAD),LANG_UNIVERSAL);
 
     }
-    else if ( entry == BG_AV_CreatureInfo[AV_NPC_H_CAPTAIN][0] )
+    else if( m_DB_Creature[AV_CREATURE_H_CAPTAIN] && unit == m_DB_Creature[AV_CREATURE_H_CAPTAIN])
     {
         if(!m_CaptainAlive[1])
-        {
-            sLog.outError("Killed a Captain twice, please report this bug, if you haven't done \".respawn\"");
             return;
-        }
         m_CaptainAlive[1]=false;
         RewardReputationToTeam(730,BG_AV_REP_CAPTAIN,ALLIANCE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),ALLIANCE);
@@ -107,9 +99,8 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
         //spawn destroyed aura
         for(uint8 i=0; i<=9; i++)
             SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_HORDE+i,RESPAWN_IMMEDIATELY);
-        Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
-        if(creature)
-            YellToAll(creature,GetMangosString(LANG_BG_AV_H_CAPTAIN_DEAD),LANG_UNIVERSAL);
+        if(m_DB_Creature[AV_CREATURE_HERALD])
+            YellToAll(m_DB_Creature[AV_CREATURE_HERALD],GetMangosString(LANG_BG_AV_H_CAPTAIN_DEAD),LANG_UNIVERSAL);
     }
     else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_H_4][0])
         ChangeMineOwner(AV_NORTH_MINE,killer->GetTeam());
@@ -244,40 +235,56 @@ void BattleGroundAV::UpdateScore(uint16 team, int16 points )
     }
 }
 
+void BattleGroundAV::OnCreatureCreate(Creature* creature)
+{
+    switch(creature->GetEntry())
+    {
+        case 11947: //h captain
+            m_DB_Creature[AV_CREATURE_H_CAPTAIN] = creature;
+            break;
+        case 11946: //h boss
+            m_DB_Creature[AV_CREATURE_H_BOSS] = creature;
+            break;
+        case 11948: //a boss
+            m_DB_Creature[AV_CREATURE_A_BOSS] = creature;
+            break;
+        case 11949: //a captain
+            m_DB_Creature[AV_CREATURE_A_CAPTAIN] = creature;
+            break;
+        case 11997: //herald
+            m_DB_Creature[AV_CREATURE_HERALD] = creature;
+            break;
+        case 13179:            //H-lieutnant guse
+        case 13236:            //H-shaman-boss
+        case 13284:            //h-shaman-creep
+        case 13438:            //A-lieutnant slidore
+        case 13442:            //a-druid boss
+        case 13443:            //a-druid creep
+            //not impplemented yet
+            break;
+    }
+    uint32 level = creature->getLevel();
+    if(level != 0)
+        level += GetMaxLevel()-60; //maybe we can do this more generic for custom level-range.. actually it's ok
+    creature->SetLevel(level);
+}
+
 Creature* BattleGroundAV::AddAVCreature(uint16 cinfoid, uint16 type )
 {
     uint32 level;
-    bool isStatic=false;
     Creature* creature = NULL;
-    assert(type <= AV_CPLACE_MAX + AV_STATICCPLACE_MAX);
-    if(type>=AV_CPLACE_MAX) //static
-    {
-        type-=AV_CPLACE_MAX;
-        cinfoid=int(BG_AV_StaticCreaturePos[type][4]);
-        creature = AddCreature(BG_AV_StaticCreatureInfo[cinfoid][0],(type+AV_CPLACE_MAX),BG_AV_StaticCreatureInfo[cinfoid][1],BG_AV_StaticCreaturePos[type][0],BG_AV_StaticCreaturePos[type][1],BG_AV_StaticCreaturePos[type][2],BG_AV_StaticCreaturePos[type][3]);
-        level = ( BG_AV_StaticCreatureInfo[cinfoid][2] == BG_AV_StaticCreatureInfo[cinfoid][3] ) ? BG_AV_StaticCreatureInfo[cinfoid][2] : urand(BG_AV_StaticCreatureInfo[cinfoid][2],BG_AV_StaticCreatureInfo[cinfoid][3]);
-        isStatic=true;
-    }
-    else
-    {
-        creature = AddCreature(BG_AV_CreatureInfo[cinfoid][0],type,BG_AV_CreatureInfo[cinfoid][1],BG_AV_CreaturePos[type][0],BG_AV_CreaturePos[type][1],BG_AV_CreaturePos[type][2],BG_AV_CreaturePos[type][3]);
-        level = ( BG_AV_CreatureInfo[cinfoid][2] == BG_AV_CreatureInfo[cinfoid][3] ) ? BG_AV_CreatureInfo[cinfoid][2] : urand(BG_AV_CreatureInfo[cinfoid][2],BG_AV_CreatureInfo[cinfoid][3]);
-    }
+    assert(type <= AV_CPLACE_MAX);
+    creature = AddCreature(BG_AV_CreatureInfo[cinfoid][0],type,BG_AV_CreatureInfo[cinfoid][1],BG_AV_CreaturePos[type][0],BG_AV_CreaturePos[type][1],BG_AV_CreaturePos[type][2],BG_AV_CreaturePos[type][3]);
+    level = ( BG_AV_CreatureInfo[cinfoid][2] == BG_AV_CreatureInfo[cinfoid][3] ) ? BG_AV_CreatureInfo[cinfoid][2] : urand(BG_AV_CreatureInfo[cinfoid][2],BG_AV_CreatureInfo[cinfoid][3]);
+
     if(!creature)
         return NULL;
-    if(creature->GetEntry() == BG_AV_CreatureInfo[AV_NPC_A_CAPTAIN][0] || creature->GetEntry() == BG_AV_CreatureInfo[AV_NPC_H_CAPTAIN][0])
-        creature->SetRespawnDelay(RESPAWN_ONE_DAY); // TODO: look if this can be done by database + also add this for the wingcommanders
 
-    if((isStatic && cinfoid>=10 && cinfoid<=14) || (!isStatic && ((cinfoid >= AV_NPC_A_GRAVEDEFENSE0 && cinfoid<=AV_NPC_A_GRAVEDEFENSE3) ||
-        (cinfoid>=AV_NPC_H_GRAVEDEFENSE0 && cinfoid<=AV_NPC_H_GRAVEDEFENSE3))))
+    if((cinfoid >= AV_NPC_A_GRAVEDEFENSE0 && cinfoid<=AV_NPC_A_GRAVEDEFENSE3) ||
+        (cinfoid>=AV_NPC_H_GRAVEDEFENSE0 && cinfoid<=AV_NPC_H_GRAVEDEFENSE3))
     {
-        if(!isStatic && ((cinfoid>=AV_NPC_A_GRAVEDEFENSE0 && cinfoid<=AV_NPC_A_GRAVEDEFENSE3)
-            || (cinfoid>=AV_NPC_H_GRAVEDEFENSE0 && cinfoid<=AV_NPC_H_GRAVEDEFENSE3)))
-        {
-            CreatureData &data = objmgr.NewOrExistCreatureData(creature->GetDBTableGUIDLow());
-            data.spawndist      = 5;
-        }
-        //else spawndist will be 15, so creatures move maximum=10
+        CreatureData &data = objmgr.NewOrExistCreatureData(creature->GetDBTableGUIDLow());
+        data.spawndist      = 5;
         creature->SetDefaultMovementType(RANDOM_MOTION_TYPE);
         creature->GetMotionMaster()->Initialize();
         creature->setDeathState(JUST_DIED);
@@ -287,7 +294,7 @@ Creature* BattleGroundAV::AddAVCreature(uint16 cinfoid, uint16 type )
     }
 
     if(level != 0)
-        level += m_MaxLevel-60; //maybe we can do this more generic for custom level-range.. actually it's blizzlike
+        level += GetMaxLevel(); //maybe we can do this more generic for custom level-range.. actually it's ok
     creature->SetLevel(level);
     return creature;
 }
@@ -342,25 +349,20 @@ void BattleGroundAV::Update(time_t diff)
 
             //creatures
             sLog.outDebug("BG_AV start poputlating nodes");
-			for(BG_AV_Nodes i= BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; ++i )
+            for(BG_AV_Nodes i= BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; ++i )
             {
                 if(m_Nodes[i].Owner)
-				PopulateNode(i);
+                    PopulateNode(i);
             }
-            //all creatures which don't get despawned through the script are static
-            sLog.outDebug("BG_AV: start spawning static creatures");
-            for(i=0; i < AV_STATICCPLACE_MAX; i++ )
-                AddAVCreature(0,i+AV_CPLACE_MAX);
-		//mainspiritguides:
+        //mainspiritguides:
             sLog.outDebug("BG_AV: start spawning spiritguides creatures");
-	        AddSpiritGuide(7, BG_AV_CreaturePos[7][0], BG_AV_CreaturePos[7][1], BG_AV_CreaturePos[7][2], BG_AV_CreaturePos[7][3], ALLIANCE);
-    		AddSpiritGuide(8, BG_AV_CreaturePos[8][0], BG_AV_CreaturePos[8][1], BG_AV_CreaturePos[8][2], BG_AV_CreaturePos[8][3], HORDE);
+            AddSpiritGuide(7, BG_AV_CreaturePos[7][0], BG_AV_CreaturePos[7][1], BG_AV_CreaturePos[7][2], BG_AV_CreaturePos[7][3], ALLIANCE);
+            AddSpiritGuide(8, BG_AV_CreaturePos[8][0], BG_AV_CreaturePos[8][1], BG_AV_CreaturePos[8][2], BG_AV_CreaturePos[8][3], HORDE);
             //spawn the marshals (those who get deleted, if a tower gets destroyed)
             sLog.outDebug("BG_AV: start spawning marshal creatures");
             for(i=AV_NPC_A_MARSHAL_SOUTH; i<= AV_NPC_H_MARSHAL_WTOWER; i++)
                 AddAVCreature(i,AV_CPLACE_A_MARSHAL_SOUTH+(i-AV_NPC_A_MARSHAL_SOUTH));
 
-            AddAVCreature(AV_NPC_HERALD,AV_CPLACE_HERALD);
             DoorClose(BG_AV_OBJECT_DOOR_A);
             DoorClose(BG_AV_OBJECT_DOOR_H);
 
@@ -418,16 +420,14 @@ void BattleGroundAV::Update(time_t diff)
                 if(i==0)
                 {
                     CastSpellOnTeam(AV_BUFF_A_CAPTAIN,ALLIANCE);
-                    Creature* creature = GetBGCreature(AV_CPLACE_MAX + 61);
-                    if(creature)
-                        YellToAll(creature,LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON);
+                    if(m_DB_Creature[AV_CREATURE_A_CAPTAIN])
+                        YellToAll(m_DB_Creature[AV_CREATURE_A_CAPTAIN],LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON);
                 }
                 else
                 {
                     CastSpellOnTeam(AV_BUFF_H_CAPTAIN,HORDE);
-                    Creature* creature = GetBGCreature(AV_CPLACE_MAX + 59); //TODO: make the captains a dynamic creature
-                    if(creature)
-                        YellToAll(creature,LANG_BG_AV_H_CAPTAIN_BUFF,LANG_ORCISH);
+                    if(m_DB_Creature[AV_CREATURE_H_CAPTAIN])
+                        YellToAll(m_DB_Creature[AV_CREATURE_H_CAPTAIN],LANG_BG_AV_H_CAPTAIN_BUFF,LANG_ORCISH);
                 }
                 m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60000; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
             }
@@ -470,8 +470,7 @@ void BattleGroundAV::AddPlayer(Player *plr)
     BattleGroundAVScore* sc = new BattleGroundAVScore;
     m_PlayerScores[plr->GetGUID()] = sc;
     if(m_MaxLevel==0)
-        m_MaxLevel=(plr->getLevel()%10 == 0)? plr->getLevel() : (plr->getLevel()-(plr->getLevel()%10))+10; //TODO: just look at the code \^_^/ --but queue-info should provide this information..
-
+        m_MaxLevel=(plr->getLevel()%10 == 0)? plr->getLevel() : (plr->getLevel()-(plr->getLevel()%10))+10;
 }
 
 void BattleGroundAV::EndBattleGround(uint32 winner)
@@ -663,9 +662,8 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
     else
         sprintf(buf, GetMangosString(LANG_BG_AV_GRAVE_TAKEN) , GetNodeName(node),( owner == ALLIANCE ) ? GetMangosString(LANG_BG_AV_ALLY) :GetMangosString(LANG_BG_AV_HORDE)  );
 
-    Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
-    if(creature)
-        YellToAll(creature,buf,LANG_UNIVERSAL);
+    if(m_DB_Creature[AV_CREATURE_HERALD])
+        YellToAll(m_DB_Creature[AV_CREATURE_HERALD],buf,LANG_UNIVERSAL);
 }
 
 void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial)
@@ -743,9 +741,8 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial)
         m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
 	char buf[256];
 	    sprintf(buf, GetMangosString(LANG_BG_AV_MINE_TAKEN), GetMangosString(( mine == AV_NORTH_MINE ) ? LANG_BG_AV_MINE_NORTH : LANG_BG_AV_MINE_SOUTH), ( team == ALLIANCE ) ?  GetMangosString(LANG_BG_AV_ALLY) : GetMangosString(LANG_BG_AV_HORDE));
-        Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
-        if(creature)
-            YellToAll(creature,buf,LANG_UNIVERSAL);
+        if(m_DB_Creature[AV_CREATURE_HERALD])
+            YellToAll(m_DB_Creature[AV_CREATURE_HERALD],buf,LANG_UNIVERSAL);
     }
     else
     {
@@ -961,9 +958,8 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 object)
 	//send a nice message to all :)
 	char buf[256];
 	sprintf(buf, GetMangosString(( IsTower(node) ) ? LANG_BG_AV_TOWER_DEFENDED : LANG_BG_AV_GRAVE_DEFENDED), GetNodeName(node),( team == ALLIANCE ) ?  GetMangosString(LANG_BG_AV_ALLY) : GetMangosString(LANG_BG_AV_HORDE));
-    Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
-    if(creature)
-        YellToAll(creature,buf,LANG_UNIVERSAL);
+    if(m_DB_Creature[AV_CREATURE_HERALD])
+        YellToAll(m_DB_Creature[AV_CREATURE_HERALD],buf,LANG_UNIVERSAL);
 	//update the statistic for the defending player
 	UpdatePlayerScore(player, ( IsTower(node) ) ? SCORE_TOWERS_DEFENDED : SCORE_GRAVEYARDS_DEFENDED, 1);
     if(IsTower(node))
@@ -1071,9 +1067,8 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
     //send a nice message to all :)
     char buf[256];
     sprintf(buf, ( IsTower(node) ) ? GetMangosString(LANG_BG_AV_TOWER_ASSAULTED) : GetMangosString(LANG_BG_AV_GRAVE_ASSAULTED), GetNodeName(node),  ( team == ALLIANCE ) ?  GetMangosString(LANG_BG_AV_ALLY) : GetMangosString(LANG_BG_AV_HORDE ));
-    Creature* creature = GetBGCreature(AV_CPLACE_HERALD);
-    if(creature)
-        YellToAll(creature,buf,LANG_UNIVERSAL);
+    if(m_DB_Creature[AV_CREATURE_HERALD])
+        YellToAll(m_DB_Creature[AV_CREATURE_HERALD],buf,LANG_UNIVERSAL);
     //update the statistic for the assaulting player
     UpdatePlayerScore(player, ( IsTower(node) ) ? SCORE_TOWERS_ASSAULTED : SCORE_GRAVEYARDS_ASSAULTED, 1);
     PlaySoundToAll((team==ALLIANCE)?AV_SOUND_ALLIANCE_ASSAULTS:AV_SOUND_HORDE_ASSAULTS);
@@ -1414,12 +1409,11 @@ void BattleGroundAV::DefendNode(BG_AV_Nodes node, uint16 team)
 
 void BattleGroundAV::ResetBGSubclass()
 {
-    m_MaxLevel=0;
     for(uint8 i=0; i<2; i++) //forloop for both teams (it just make 0==alliance and 1==horde also for both mines 0=north 1=south
     {
         for(uint8 j=0; j<9; j++)
             m_Team_QuestStatus[i][j]=0;
-	m_Team_Scores[i]=BG_AV_SCORE_INITIAL_POINTS;
+        m_Team_Scores[i]=BG_AV_SCORE_INITIAL_POINTS;
         m_IsInformedNearVictory[i]=false;
         m_CaptainAlive[i] = true;
         m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
@@ -1437,7 +1431,7 @@ void BattleGroundAV::ResetBGSubclass()
     InitNode(BG_AV_NODES_SNOWFALL_GRAVE,AV_NEUTRAL_TEAM,false); //give snowfall neutral owner
 
     m_Mine_Timer=AV_MINE_TICK_TIMER;
-    for(uint16 i = 0; i < AV_CPLACE_MAX+AV_STATICCPLACE_MAX; i++)
+    for(uint16 i = 0; i < AV_CPLACE_MAX; i++)
         if(m_BgCreatures[i])
             DelCreature(i);
 

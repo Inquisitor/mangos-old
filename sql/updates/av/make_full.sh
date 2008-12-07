@@ -12,6 +12,9 @@ echo "
 " >> full.sql
 cat "creature_template.sql" >> full.sql
 echo "
+-- creature spawns
+" >> full.sql
+echo "
 -- gameobject-spawns
 " >> full.sql
 cat "gameobjects.sql" >> full.sql
