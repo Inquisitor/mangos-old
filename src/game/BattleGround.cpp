@@ -400,6 +400,12 @@ void BattleGround::EndBattleGround(uint32 winner)
             plr->ResurrectPlayer(1.0f);
             plr->SpawnCorpseBones();
         }
+        else
+        {
+            //needed cause else in av some creatures will kill the players at the end
+            plr->CombatStop();
+            plr->getHostilRefManager().deleteReferences();
+        }
 
         if(plr->GetTeam() == winner)
         {
@@ -726,14 +732,21 @@ void BattleGround::AddPlayer(Player *plr)
         plr->RemoveArenaSpellCooldowns();
         //plr->RemoveArenaAuras();
         plr->RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
-        if(team == ALLIANCE && plr->GetTeam() == ALLIANCE)
-            plr->CastSpell(plr,SPELL_ALLIANCE_GOLD_FLAG,true);
-        else if(team == HORDE && plr->GetTeam() == ALLIANCE)
-            plr->CastSpell(plr,SPELL_ALLIANCE_GREEN_FLAG,true);
-        else if(team == ALLIANCE && plr->GetTeam() == HORDE)
-            plr->CastSpell(plr,SPELL_HORDE_GOLD_FLAG,true);
-        else
-            plr->CastSpell(plr,SPELL_HORDE_GREEN_FLAG,true);
+        if(team == ALLIANCE)                                // gold
+        {
+            if(plr->GetTeam() == HORDE)
+                plr->CastSpell(plr, SPELL_HORDE_GOLD_FLAG,true);
+            else
+                plr->CastSpell(plr, SPELL_ALLIANCE_GOLD_FLAG,true);
+        }
+        else                                                // green
+        {
+            if(plr->GetTeam() == HORDE)
+                plr->CastSpell(plr, SPELL_HORDE_GREEN_FLAG,true);
+            else
+                plr->CastSpell(plr, SPELL_ALLIANCE_GREEN_FLAG,true);
+        }
+
         plr->DestroyConjuredItems(true);
 
         if(GetStatus() == STATUS_WAIT_JOIN)                 // not started yet
@@ -1009,6 +1022,7 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
     }
 
     pCreature->Relocate(x, y, z, o);
+    pCreature->SetDBTableGuid(1); //this is only, that creatures can find their homepoint, cause getrespawncoord, returns, if no m_dbtableguid is set.. maybe this function needs to be changed, but until now, i only will fix it here
 
     if(!pCreature->IsPositionValid())
     {

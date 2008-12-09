@@ -609,6 +609,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
        }
        bool GetDeleteAfterNoAggro() { return m_deleteAfterNoAggro; }
 
+       void SetDBTableGuid(uint32 id) { m_DBTableGuid = id; }
     protected:
         bool CreateFromProto(uint32 guidlow,uint32 Entry,uint32 team, const CreatureData *data = NULL);
         bool InitEntry(uint32 entry, uint32 team=ALLIANCE, const CreatureData* data=NULL);
