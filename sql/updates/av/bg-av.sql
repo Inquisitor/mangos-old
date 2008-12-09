@@ -21,7 +21,7 @@ REPLACE INTO gameobject_template VALUES (180423,6,266,"Neutral Banner Aura, Larg
 REPLACE INTO gameobject_template VALUES (180424,0,3751,"Alterac Valley Gate","",100,0,3.5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"");
 
 -- removes the damage from the fire-gos (used for destroyed towers) - but this is not blizzlike TODO remove this hack
-UPDATE `mangos`.`gameobject_template` SET `type` = '5',`data0` = '0',`data1` = '0',`data2` = '0',`data3` = '1',`data5` = '0',`data10` = '0' WHERE `gameobject_template`.`entry` =179065 LIMIT 1 ;
+UPDATE `gameobject_template` SET `type` = '5',`data0` = '0',`data1` = '0',`data2` = '0',`data3` = '1',`data5` = '0',`data10` = '0' WHERE `gameobject_template`.`entry` =179065 LIMIT 1 ;
 
 -- bowman apply aura entangling root (so they can't move)
 DELETE FROM `creature_template_addon` WHERE `entry` IN(13358,13359);
@@ -29,7 +29,7 @@ INSERT INTO `creature_template_addon` (`entry`, `auras`) VALUES ('13358', '42716
 INSERT INTO `creature_template_addon` (`entry`, `auras`) VALUES ('13359', '42716 0 42716 1');
 
 -- following is the player loot.. it takes the id 1 - be sure that i don't delete anything
-REPLACE INTO `mangos`.`creature_loot_template` (`entry` ,`item` ,`ChanceOrQuestChance` ,`groupid` ,`mincountOrRef` ,`maxcount` ,`lootcondition` ,`condition_value1` ,`condition_value2`)
+REPLACE INTO `creature_loot_template` (`entry` ,`item` ,`ChanceOrQuestChance` ,`groupid` ,`mincountOrRef` ,`maxcount` ,`lootcondition` ,`condition_value1` ,`condition_value2`)
 VALUES ('1', '17306', '33', '0', '5', '15',  '6', '67', '0'),
 ('1', '17422', '100', '0', '20', '40', '0', '0', '0'),
 ('1', '17423', '33', '0', '5', '15',  '6', '469', '0'),
