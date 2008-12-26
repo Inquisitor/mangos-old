@@ -6,7 +6,7 @@ cat "bg-av.sql" >> full.sql
 echo "
 -- language
 " >> full.sql
-cat "lang.sql" >> full.sql
+cat "mangos_string.sql" >> full.sql
 echo "
 -- creature stats
 " >> full.sql

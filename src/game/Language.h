@@ -642,69 +642,69 @@ enum MangosStrings
 
     LANG_BG_QUEUE_ANNOUNCE_SELF         = 711,
     LANG_BG_QUEUE_ANNOUNCE_WORLD        = 712,
-
-
     LANG_YOUR_ARENA_LEVEL_REQ_ERROR     = 713,
-//    LANG_HIS_ARENA_LEVEL_REQ_ERROR      = 714, an opcode exists for this
+//                                      = 714, not used
     LANG_YOUR_BG_LEVEL_REQ_ERROR        = 715,
-//    LANG_YOUR_ARENA_TEAM_FULL           = 716, an opcode exists for this
+//                                      = 716, not used
+    LANG_BG_STARTED_ANNOUNCE_WORLD      = 717,
+    LANG_ARENA_QUEUE_ANNOUNCE_WORLD_JOIN= 718,
+    LANG_ARENA_QUEUE_ANNOUNCE_WORLD_EXIT= 719,
 
-    LANG_BG_AV_ALLY                     = 717,
-    LANG_BG_AV_HORDE                    = 718,
-    LANG_BG_AV_TOWER_TAKEN              = 719,
-    LANG_BG_AV_TOWER_ASSAULTED          = 720,
-    LANG_BG_AV_TOWER_DEFENDED           = 721,
-    LANG_BG_AV_GRAVE_TAKEN              = 722,
-    LANG_BG_AV_GRAVE_DEFENDED           = 723,
-    LANG_BG_AV_GRAVE_ASSAULTED          = 724,
-    LANG_BG_AV_MINE_TAKEN               = 725,
-    LANG_BG_AV_MINE_NORTH               = 726,
-    LANG_BG_AV_MINE_SOUTH               = 727,
+    LANG_BG_GROUP_TOO_LARGE             = 720,              // "Your group is too large for this battleground. Please regroup to join."
+    LANG_ARENA_GROUP_TOO_LARGE          = 721,              // "Your group is too large for this arena. Please regroup to join."
+    LANG_ARENA_YOUR_TEAM_ONLY           = 722,              // "Your group has members not in your arena team. Please regroup to join."
+    LANG_ARENA_NOT_ENOUGH_PLAYERS       = 723,              // "Your group does not have enough players to join this match."
+    LANG_ARENA_GOLD_WINS                = 724,              // "The Gold Team wins!"
+    LANG_ARENA_GREEN_WINS               = 725,              // "The Green Team wins!"
+    LANG_BATTLEGROUND_PREMATURE_FINISH_WARNING = 726,       // The battleground will end soon, because there aren't enough players. Get more ppl or win already!
+    LANG_BG_GROUP_OFFLINE_MEMBER        = 727,              // "Your group has an offline member. Please remove him before joining."
+    LANG_BG_GROUP_MIXED_FACTION         = 728,              // "Your group has players from the opposing faction. You can't join the battleground as a group."
+    LANG_BG_GROUP_MIXED_LEVELS          = 729,              // "Your group has players from different battleground brakets. You can't join as group."
+    LANG_BG_GROUP_MEMBER_ALREADY_IN_QUEUE = 730,            // "Someone in your party is already in this battleground queue. (S)he must leave it before joining as group."
+    LANG_BG_GROUP_MEMBER_DESERTER       = 731,              // "Someone in your party is Deserter. You can't join as group."
+    LANG_BG_GROUP_MEMBER_NO_FREE_QUEUE_SLOTS = 732,         // "Someone in your party is already in three battleground queues. You cannot join as group."
 
-    LANG_BG_AV_NODE_GRAVE_STORM_AID     = 728,
-    LANG_BG_AV_NODE_TOWER_DUN_S         = 729,
-    LANG_BG_AV_NODE_TOWER_DUN_N         = 730,
-    LANG_BG_AV_NODE_GRAVE_STORMPIKE     = 731,
-    LANG_BG_AV_NODE_TOWER_ICEWING       = 732,
-    LANG_BG_AV_NODE_GRAVE_STONE         = 733,
-    LANG_BG_AV_NODE_TOWER_STONE         = 734,
-    LANG_BG_AV_NODE_GRAVE_SNOW          = 735,
-    LANG_BG_AV_NODE_TOWER_ICE           = 736,
-    LANG_BG_AV_NODE_GRAVE_ICE           = 737,
-    LANG_BG_AV_NODE_TOWER_POINT         = 738,
-    LANG_BG_AV_NODE_GRAVE_FROST         = 739,
-    LANG_BG_AV_NODE_TOWER_FROST_E       = 740,
-    LANG_BG_AV_NODE_TOWER_FROST_W       = 741,
-    LANG_BG_AV_NODE_GRAVE_FROST_HUT     = 742,
+    LANG_CANNOT_TELE_TO_BG              = 733,              // "You cannot teleport to a battleground or arena map."
+    LANG_CANNOT_SUMMON_TO_BG            = 734,              // "You cannot summon players to a battleground or arena map."
+    LANG_CANNOT_GO_TO_BG_GM             = 735,              // "You must be in GM mode to teleport to a player in a battleground."
+    LANG_CANNOT_GO_TO_BG_FROM_BG        = 736,              // "You cannot teleport to a battleground from another battleground. Please leave the current battleground first."
 
-    LANG_BG_AV_ONEMINTOSTART            = 743,
-    LANG_BG_AV_HALFMINTOSTART           = 744,
-    LANG_BG_AV_STARTED                  = 745,
-    LANG_BG_AV_A_NEAR_LOSE              = 746,
-    LANG_BG_AV_H_NEAR_LOSE              = 747,
-    LANG_BG_AV_H_CAPTAIN_DEAD           = 748,
-    LANG_BG_AV_A_CAPTAIN_DEAD           = 749,
+    LANG_BG_AV_ALLY                     = 737,
+    LANG_BG_AV_HORDE                    = 738,
+    LANG_BG_AV_TOWER_TAKEN              = 739,
+    LANG_BG_AV_TOWER_ASSAULTED          = 740,
+    LANG_BG_AV_TOWER_DEFENDED           = 741,
+    LANG_BG_AV_GRAVE_TAKEN              = 742,
+    LANG_BG_AV_GRAVE_DEFENDED           = 743,
+    LANG_BG_AV_GRAVE_ASSAULTED          = 744,
+    LANG_BG_AV_MINE_TAKEN               = 745,
+    LANG_BG_AV_MINE_NORTH               = 746,
+    LANG_BG_AV_MINE_SOUTH               = 747,
 
-    // Room for BG/ARENA                  750-799 not used
+    LANG_BG_AV_NODE_GRAVE_STORM_AID     = 748,
+    LANG_BG_AV_NODE_TOWER_DUN_S         = 749,
+    LANG_BG_AV_NODE_TOWER_DUN_N         = 750,
+    LANG_BG_AV_NODE_GRAVE_STORMPIKE     = 751,
+    LANG_BG_AV_NODE_TOWER_ICEWING       = 752,
+    LANG_BG_AV_NODE_GRAVE_STONE         = 753,
+    LANG_BG_AV_NODE_TOWER_STONE         = 754,
+    LANG_BG_AV_NODE_GRAVE_SNOW          = 755,
+    LANG_BG_AV_NODE_TOWER_ICE           = 756,
+    LANG_BG_AV_NODE_GRAVE_ICE           = 757,
+    LANG_BG_AV_NODE_TOWER_POINT         = 758,
+    LANG_BG_AV_NODE_GRAVE_FROST         = 759,
+    LANG_BG_AV_NODE_TOWER_FROST_E       = 760,
+    LANG_BG_AV_NODE_TOWER_FROST_W       = 761,
+    LANG_BG_AV_NODE_GRAVE_FROST_HUT     = 762,
 
-    LANG_BG_GROUP_TOO_LARGE             = 1122, // "Your group is too large for this battleground. Please regroup to join."
-    LANG_ARENA_GROUP_TOO_LARGE          = 1123, // "Your group is too large for this arena. Please regroup to join."
-    LANG_ARENA_YOUR_TEAM_ONLY           = 1124, // "Your group has members not in your arena team. Please regroup to join."
-    LANG_ARENA_NOT_ENOUGH_PLAYERS       = 1125, // "Your group does not have enough players to join this match."
-    LANG_ARENA_GOLD_WINS                = 1126, // "The Gold Team wins!"
-    LANG_ARENA_GREEN_WINS               = 1127, // "The Green Team wins!"
-    LANG_BATTLEGROUND_PREMATURE_FINISH_WARNING = 1128,   // The battleground will end soon, because there aren't enough players. Get more ppl or win already!
-    LANG_BG_GROUP_OFFLINE_MEMBER        = 1129, // "Your group has an offline member. Please remove him before joining."
-    LANG_BG_GROUP_MIXED_FACTION         = 1130, // "Your group has players from the opposing faction. You can't join the battleground as a group."
-    LANG_BG_GROUP_MIXED_LEVELS          = 1131, // "Your group has players from different battleground brakets. You can't join as group."
-    LANG_BG_GROUP_MEMBER_ALREADY_IN_QUEUE = 1132, // "Someone in your party is already in this battleground queue. (S)he must leave it before joining as group."
-    LANG_BG_GROUP_MEMBER_DESERTER       = 1133, // "Someone in your party is Deserter. You can't join as group."
-    LANG_BG_GROUP_MEMBER_NO_FREE_QUEUE_SLOTS = 1134, // "Someone in your party is already in three battleground queues. You cannot join as group."
-
-    LANG_CANNOT_TELE_TO_BG              = 1135, // "You cannot teleport to a battleground or arena map."
-    LANG_CANNOT_SUMMON_TO_BG            = 1136, // "You cannot summon players to a battleground or arena map."
-    LANG_CANNOT_GO_TO_BG_GM             = 1137, // "You must be in GM mode to teleport to a player in a battleground."
-    LANG_CANNOT_GO_TO_BG_FROM_BG        = 1138, // "You cannot teleport to a battleground from another battleground. Please leave the current battleground first."
+    LANG_BG_AV_ONEMINTOSTART            = 763,
+    LANG_BG_AV_HALFMINTOSTART           = 764,
+    LANG_BG_AV_STARTED                  = 765,
+    LANG_BG_AV_A_NEAR_LOSE              = 766,
+    LANG_BG_AV_H_NEAR_LOSE              = 767,
+    LANG_BG_AV_H_CAPTAIN_DEAD           = 768,
+    LANG_BG_AV_A_CAPTAIN_DEAD           = 769,
+    // Room for batleground/arena strings 770-799 not used
 
     // in game strings
     //                                  = 800, not used
