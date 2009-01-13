@@ -364,8 +364,16 @@ void BattleGround::CastSpellOnTeam(uint32 SpellID, uint32 TeamID)
 
 void BattleGround::YellToAll(Creature* creature, const char* text, uint32 language)
 {
-    if(!creature)
+    if(!*text)
+    {
+        sLog.outError("missing text at yelltoall");
         return;
+    }
+    if(!creature)
+    {
+        sLog.outError("missing creature at yelltoall");
+        return;
+    }
     for(std::map<uint64, BattleGroundPlayer>::iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
     {
         WorldPacket data(SMSG_MESSAGECHAT, 200);
@@ -1323,7 +1331,7 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
     }
 
     CreatureData &data = objmgr.NewOrExistCreatureData(pCreature->GetDBTableGUIDLow());
-    
+
     data.id             = entry;
 //    data.mapid          = GetMapId();
     data.posX           = x;
