@@ -1,4 +1,5 @@
 -- following gameobjects are static
+DELETE FROM gameobject WHERE map=30;
 INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (2061,30,-1423.16,-318.436,89.1136,2.35619,60);
 INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (2061,30,-1290.27,-172.471,72.1853,3.06305,60);
 INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (2061,30,-1286.25,-184.48,71.8334,-2.05076,60);

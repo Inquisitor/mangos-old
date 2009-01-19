@@ -1,3 +1,4 @@
+DELETE FROM creature WHERE map=30;
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(2225,30,-1235.31, -340.777, 60.5088, 3.31613);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(3343,30,-1244.02, -323.795, 61.0485, 5.21853);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(3625,30,-1235.16, -332.302, 60.2985, 2.96706);
@@ -124,3 +125,6 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(14284,30,773.651, -497.482, 99.0408, 2.11185);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(14284,30,949.1, -506.913, 95.4237, 3.31613);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11946,30,-1370.9, -219.793, 98.4258, 5.04381);
+
+UPDATE creature c, creature_template t SET c.curhealth=t.minhealth WHERE c.map=30 AND c.id=t.entry;
+UPDATE creature SET spawndist=0 WHERE MovementType=0 AND map=30;
