@@ -87,3 +87,28 @@ INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientati
 -- nest 2 gos were inserted by hand..
 INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (179024,30,40.0913,0.0153897,-4.0962,0.96131,120);
 INSERT INTO gameobject (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (179025,30,-1552.55, -359.738, 66.948,2.8875,120);
+
+-- irondeep supplies
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178785,30,870.899,-388.434,61.6406,-1.22173,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178785,30,825.214,-320.174,63.712,-2.82743,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178785,30,837.117,-452.556,47.2331,-3.12414,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178785,30,869.755,-448.867,52.5448,-0.855212,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178785,30,949.877,-458.198,56.4874,0.314159,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178785,30,900.35,-479.024,58.3553,0.122173,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178785,30,854.449,-442.255,50.6589,0.401426,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178785,30,886.685,-442.358,54.6962,-1.22173,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178785,30,817.509,-457.331,48.4666,2.07694,60);
+
+-- coldtooth supplies
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-934.212,-57.3517,80.277,-0.0174535,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-916.281,-36.8579,77.0227,0.122173,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-902.73,-103.868,75.4378,-1.58825,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-900.514,-143.527,75.9686,1.8675,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-862.882,-0.353299,72.1526,-2.51327,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-854.932,-85.9184,68.6056,-2.04204,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-851.833,-118.959,63.8672,-0.0698131,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-849.832,-20.8421,70.4672,-1.81514,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-844.25,-60.0374,72.1031,-2.19912,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-820.644,-136.043,63.1977,2.40855,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-947.642,-208.807,77.0101,1.36136,60);
+INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-951.394,-193.695,67.634,0.802851,60);

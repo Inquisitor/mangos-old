@@ -107,6 +107,7 @@ enum BG_AV_OTHER_VALUES
     AV_MINE_RECLAIM_TIMER      = 1200000, //TODO: get the right value.. this is currently 20 minutes
     AV_NEUTRAL_TEAM            = 0 //this is the neutral owner of snowfall
 };
+
 enum BG_AV_ObjectIds
 {
     //cause the mangos-system is a bit different, we don't use the right go-ids for every node.. if we want to be 100% like another big server, we must take one object for every node
@@ -300,62 +301,54 @@ enum BG_AV_ObjectTypes
     BG_AV_OBJECT_SNOW_EYECANDY_PA            = 203,
     BG_AV_OBJECT_SNOW_EYECANDY_H             = 207,
     BG_AV_OBJECT_SNOW_EYECANDY_PH            = 211,
-    BG_AV_OBJECT_MINE_SUPPLY_N_MIN           = 215,
-    BG_AV_OBJECT_MINE_SUPPLY_N_MAX           = 224,
-    BG_AV_OBJECT_MINE_SUPPLY_S_MIN           = 225,
-    BG_AV_OBJECT_MINE_SUPPLY_S_MAX           = 236,
 
-    BG_AV_OBJECT_MAX                          = 237
+    BG_AV_OBJECT_MAX                          = 212
 };
 
 
 
 enum BG_AV_OBJECTS
 {
-    AV_OPLACE_FIRSTAID_STATION          = 0,
-    AV_OPLACE_STORMPIKE_GRAVE         = 1,
-    AV_OPLACE_STONEHEART_GRAVE        = 2,
-    AV_OPLACE_SNOWFALL_GRAVE          = 3,
-    AV_OPLACE_ICEBLOOD_GRAVE          = 4,
-    AV_OPLACE_FROSTWOLF_GRAVE         = 5,
-    AV_OPLACE_FROSTWOLF_HUT           = 6,
-    AV_OPLACE_DUNBALDAR_SOUTH         = 7,
-    AV_OPLACE_DUNBALDAR_NORTH         = 8,
-    AV_OPLACE_ICEWING_BUNKER          = 9,
-    AV_OPLACE_STONEHEART_BUNKER       = 10,
-    AV_OPLACE_ICEBLOOD_TOWER          = 11,
-    AV_OPLACE_TOWER_POINT             = 12,
-    AV_OPLACE_FROSTWOLF_ETOWER        = 13,
-    AV_OPLACE_FROSTWOLF_WTOWER        = 14,
-    AV_OPLACE_BIGBANNER_DUNBALDAR_SOUTH         = 15,
-    AV_OPLACE_BIGBANNER_DUNBALDAR_NORTH         = 16,
-    AV_OPLACE_BIGBANNER_ICEWING_BUNKER          = 17,
-    AV_OPLACE_BIGBANNER_STONEHEART_BUNKER       = 18,
-    AV_OPLACE_BIGBANNER_ICEBLOOD_TOWER          = 19,
-    AV_OPLACE_BIGBANNER_TOWER_POINT             = 20,
-    AV_OPLACE_BIGBANNER_FROSTWOLF_ETOWER        = 21,
-    AV_OPLACE_BIGBANNER_FROSTWOLF_WTOWER        = 22,
+    AV_OPLACE_FIRSTAID_STATION              = 0,
+    AV_OPLACE_STORMPIKE_GRAVE               = 1,
+    AV_OPLACE_STONEHEART_GRAVE              = 2,
+    AV_OPLACE_SNOWFALL_GRAVE                = 3,
+    AV_OPLACE_ICEBLOOD_GRAVE                = 4,
+    AV_OPLACE_FROSTWOLF_GRAVE               = 5,
+    AV_OPLACE_FROSTWOLF_HUT                 = 6,
+    AV_OPLACE_DUNBALDAR_SOUTH               = 7,
+    AV_OPLACE_DUNBALDAR_NORTH               = 8,
+    AV_OPLACE_ICEWING_BUNKER                = 9,
+    AV_OPLACE_STONEHEART_BUNKER             = 10,
+    AV_OPLACE_ICEBLOOD_TOWER                = 11,
+    AV_OPLACE_TOWER_POINT                   = 12,
+    AV_OPLACE_FROSTWOLF_ETOWER              = 13,
+    AV_OPLACE_FROSTWOLF_WTOWER              = 14,
+    AV_OPLACE_BIGBANNER_DUNBALDAR_SOUTH     = 15,
+    AV_OPLACE_BIGBANNER_DUNBALDAR_NORTH     = 16,
+    AV_OPLACE_BIGBANNER_ICEWING_BUNKER      = 17,
+    AV_OPLACE_BIGBANNER_STONEHEART_BUNKER   = 18,
+    AV_OPLACE_BIGBANNER_ICEBLOOD_TOWER      = 19,
+    AV_OPLACE_BIGBANNER_TOWER_POINT         = 20,
+    AV_OPLACE_BIGBANNER_FROSTWOLF_ETOWER    = 21,
+    AV_OPLACE_BIGBANNER_FROSTWOLF_WTOWER    = 22,
 
-    AV_OPLACE_BURN_DUNBALDAR_SOUTH         = 23,
-    AV_OPLACE_BURN_DUNBALDAR_NORTH         = 33,
-    AV_OPLACE_BURN_ICEWING_BUNKER          = 43,
-    AV_OPLACE_BURN_STONEHEART_BUNKER       = 53,
-    AV_OPLACE_BURN_ICEBLOOD_TOWER          = 63,
-    AV_OPLACE_BURN_TOWER_POINT             = 73,
-    AV_OPLACE_BURN_FROSTWOLF_ETOWER        = 83,
-    AV_OPLACE_BURN_FROSTWOLF_WTOWER        = 93,
-    AV_OPLACE_BURN_BUILDING_A        = 103,
-    AV_OPLACE_BURN_BUILDING_H        = 113,
-    AV_OPLACE_SNOW_1                      = 123,
-    AV_OPLACE_SNOW_2                      = 124,
-    AV_OPLACE_SNOW_3                      = 125,
-    AV_OPLACE_SNOW_4                      = 126,
-    AV_OPLACE_MINE_SUPPLY_N_MIN           = 127,
-    AV_OPLACE_MINE_SUPPLY_N_MAX           = 136,
-    AV_OPLACE_MINE_SUPPLY_S_MIN           = 137,
-    AV_OPLACE_MINE_SUPPLY_S_MAX           = 148,
+    AV_OPLACE_BURN_DUNBALDAR_SOUTH          = 23,
+    AV_OPLACE_BURN_DUNBALDAR_NORTH          = 33,
+    AV_OPLACE_BURN_ICEWING_BUNKER           = 43,
+    AV_OPLACE_BURN_STONEHEART_BUNKER        = 53,
+    AV_OPLACE_BURN_ICEBLOOD_TOWER           = 63,
+    AV_OPLACE_BURN_TOWER_POINT              = 73,
+    AV_OPLACE_BURN_FROSTWOLF_ETOWER         = 83,
+    AV_OPLACE_BURN_FROSTWOLF_WTOWER         = 93,
+    AV_OPLACE_BURN_BUILDING_A               = 103,
+    AV_OPLACE_BURN_BUILDING_H               = 113,
+    AV_OPLACE_SNOW_1                        = 123,
+    AV_OPLACE_SNOW_2                        = 124,
+    AV_OPLACE_SNOW_3                        = 125,
+    AV_OPLACE_SNOW_4                        = 126,
 
-    AV_OPLACE_MAX                         = 149
+    AV_OPLACE_MAX                           = 127
 };
 const float BG_AV_ObjectPos[AV_OPLACE_MAX][4] = {
     {638.592f,-32.422f,46.0608f,-1.62316f },//firstaid station
@@ -501,31 +494,6 @@ const float BG_AV_ObjectPos[AV_OPLACE_MAX][4] = {
     {-201.282f,-134.319f,78.6753f,-0.942478f },
     {-215.981f,-91.4101f,80.8702f,-1.74533f },
     {-200.465f,-96.418f,79.7587f,1.36136f },
-    //mine supplies
-    //irondeep
-    {870.899f,-388.434f,61.6406f,-1.22173f},
-    {825.214f,-320.174f,63.712f,-2.82743f},
-    {837.117f,-452.556f,47.2331f,-3.12414f},
-    {869.755f,-448.867f,52.5448f,-0.855212f},
-    {949.877f,-458.198f,56.4874f,0.314159f},
-    {900.35f,-479.024f,58.3553f,0.122173f},
-    {854.449f,-442.255f,50.6589f,0.401426f},
-    {886.685f,-442.358f,54.6962f,-1.22173f},
-    {817.509f,-457.331f,48.4666f,2.07694f},
-    {793.411f,-326.281f,63.1117f,-2.79253f},
-    //coldtooth
-    {-934.212f,-57.3517f,80.277f,-0.0174535f},
-    {-916.281f,-36.8579f,77.0227f,0.122173f},
-    {-902.73f,-103.868f,75.4378f,-1.58825f},
-    {-900.514f,-143.527f,75.9686f,1.8675f},
-    {-862.882f,-0.353299f,72.1526f,-2.51327f},
-    {-854.932f,-85.9184f,68.6056f,-2.04204f},
-    {-851.833f,-118.959f,63.8672f,-0.0698131f},
-    {-849.832f,-20.8421f,70.4672f,-1.81514f},
-    {-844.25f,-60.0374f,72.1031f,-2.19912f},
-    {-820.644f,-136.043f,63.1977f,2.40855f},
-    {-947.642f,-208.807f,77.0101f,1.36136f},
-    {-951.394f,-193.695f,67.634f,0.802851f}
 };
 
 const float BG_AV_DoorPositons[2][4] = {
@@ -1314,6 +1282,7 @@ class BattleGroundAV : public BattleGround
         /* inherited from BattlegroundClass */
         virtual void AddPlayer(Player *plr);
         virtual void OnCreatureCreate(Creature* creature);
+        virtual void OnObjectCreate(GameObject* obj);
 
         void RemovePlayer(Player *plr,uint64 guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);

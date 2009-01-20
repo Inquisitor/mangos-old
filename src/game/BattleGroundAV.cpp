@@ -235,6 +235,17 @@ void BattleGroundAV::UpdateScore(uint16 team, int16 points )
     }
 }
 
+void BattleGroundAV::OnObjectCreate(GameObject* obj)
+{
+    switch(obj->GetEntry())
+    {
+        case 178785: //irondeep mine supply
+            break;
+        case 178784: //coldtooth mine supply
+            break;
+    }
+}
+
 void BattleGroundAV::OnCreatureCreate(Creature* creature)
 {
     switch(creature->GetEntry())
@@ -392,10 +403,6 @@ void BattleGroundAV::Update(time_t diff)
             SetStatus(STATUS_IN_PROGRESS);
 
             sLog.outDebug("BG_AV: start spawning mine stuff");
-            for(uint16 i= BG_AV_OBJECT_MINE_SUPPLY_N_MIN; i<=BG_AV_OBJECT_MINE_SUPPLY_N_MAX;i++)
-                SpawnBGObject(i,RESPAWN_IMMEDIATELY);
-            for(uint16 i= BG_AV_OBJECT_MINE_SUPPLY_S_MIN; i<=BG_AV_OBJECT_MINE_SUPPLY_S_MAX;i++)
-                SpawnBGObject(i,RESPAWN_IMMEDIATELY);
             for(uint8 mine = AV_NORTH_MINE; mine <= AV_SOUTH_MINE; mine++) //mine population
                 ChangeMineOwner(mine, AV_NEUTRAL_TEAM,true);
             DoorOpen(BG_AV_OBJECT_DOOR_H);
@@ -724,15 +731,12 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial)
         AddAVCreature(miner+(urand(1,2)),i);
     AddAVCreature(miner+3,(mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3);
     //because the gameobjects in this mine have changed, update all surrounding players:
-//    for(uint16 i = ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MIN:BG_AV_OBJECT_MINE_SUPPLY_N_MIN); i <= ((mine==AV_NORTH_MINE)?BG_AV_OBJECT_MINE_SUPPLY_N_MAX:BG_AV_OBJECT_MINE_SUPPLY_N_MAX); i++)
-//    {
-        //TODO: add gameobject-update code
-//    }
+    //TODO: add gameobject-update code (currently this is done in a hacky way)
     if(team == ALLIANCE || team == HORDE)
     {
         m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
-	char buf[256];
-	    sprintf(buf, GetMangosString(LANG_BG_AV_MINE_TAKEN), GetMangosString(( mine == AV_NORTH_MINE ) ? LANG_BG_AV_MINE_NORTH : LANG_BG_AV_MINE_SOUTH), ( team == ALLIANCE ) ?  GetMangosString(LANG_BG_AV_ALLY) : GetMangosString(LANG_BG_AV_HORDE));
+        char buf[256];
+        sprintf(buf, GetMangosString(LANG_BG_AV_MINE_TAKEN), GetMangosString(( mine == AV_NORTH_MINE ) ? LANG_BG_AV_MINE_NORTH : LANG_BG_AV_MINE_SOUTH), ( team == ALLIANCE ) ?  GetMangosString(LANG_BG_AV_ALLY) : GetMangosString(LANG_BG_AV_HORDE));
         if(m_DB_Creature[AV_CREATURE_HERALD])
             YellToAll(m_DB_Creature[AV_CREATURE_HERALD],buf,LANG_UNIVERSAL);
     }
@@ -1284,22 +1288,6 @@ bool BattleGroundAV::SetupBattleGround()
                     return false;
                 }
             }
-        }
-    }
-    for(uint16 i= 0; i<=(BG_AV_OBJECT_MINE_SUPPLY_N_MAX-BG_AV_OBJECT_MINE_SUPPLY_N_MIN);i++)
-    {
-        if(!AddObject(BG_AV_OBJECT_MINE_SUPPLY_N_MIN+i,BG_AV_OBJECTID_MINE_N,BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_N_MIN+i][0],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_N_MIN+i][1],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_N_MIN+i][2],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_N_MIN+i][3], 0, 0, sin(BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_N_MIN+i][3]/2), cos(BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_N_MIN+i][3]/2),RESPAWN_ONE_DAY))
-        {
-            sLog.outError("BatteGroundAV: Failed to spawn some mine supplies BattleGround not created!7.5.%i",i);
-            return false;
-        }
-    }
-    for(uint16 i= 0 ; i<=(BG_AV_OBJECT_MINE_SUPPLY_S_MAX-BG_AV_OBJECT_MINE_SUPPLY_S_MIN);i++)
-    {
-        if(!AddObject(BG_AV_OBJECT_MINE_SUPPLY_S_MIN+i,BG_AV_OBJECTID_MINE_S,BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][0],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][1],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][2],BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][3], 0, 0, sin(BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][3]/2), cos(BG_AV_ObjectPos[AV_OPLACE_MINE_SUPPLY_S_MIN+i][3]/2),RESPAWN_ONE_DAY))
-        {
-            sLog.outError("BatteGroundAV: Failed to spawn some mine supplies BattleGround not created!7.6.%i",i);
-            return false;
         }
     }
 
