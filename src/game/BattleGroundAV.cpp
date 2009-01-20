@@ -1420,9 +1420,12 @@ void BattleGroundAV::ResetBGSubclass()
         m_Mine_Owner[i] = AV_NEUTRAL_TEAM;
         m_Mine_PrevOwner[i] = m_Mine_Owner[i];
     }
+    for (uint8 i=0; i<AV_DB_CREATURE_MAX; i++)
+        m_DB_Creature[i] = NULL; // they don't get initalized with NULL :-/
+
     for(BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_STONEHEART_GRAVE; ++i) //alliance graves
         InitNode(i,ALLIANCE,false);
-	for(BG_AV_Nodes i = BG_AV_NODES_DUNBALDAR_SOUTH; i <= BG_AV_NODES_STONEHEART_BUNKER; ++i) //alliance towers
+    for(BG_AV_Nodes i = BG_AV_NODES_DUNBALDAR_SOUTH; i <= BG_AV_NODES_STONEHEART_BUNKER; ++i) //alliance towers
         InitNode(i,ALLIANCE,true);
     for(BG_AV_Nodes i = BG_AV_NODES_ICEBLOOD_GRAVE; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i) //horde graves
         InitNode(i,HORDE,false);
