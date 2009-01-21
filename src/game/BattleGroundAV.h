@@ -1384,7 +1384,6 @@ class BattleGroundAV : public BattleGround
         uint32 m_CaptainBuffTimer[2];
         bool m_CaptainAlive[2];
 
-        uint8 m_MaxLevel; //TODO remove this when battleground-getmaxlevel() returns something usefull
         bool m_IsInformedNearVictory[2];
         Creature* m_DB_Creature[AV_DB_CREATURE_MAX];
 

@@ -39,9 +39,9 @@ BattleGroundAV::~BattleGroundAV()
 {
 }
 
-const uint16 BattleGroundAV::GetBonusHonor(uint8 kills) //TODO: move this function to Battleground.cpp (needs to find a way to get m_MaxLevel)
+const uint16 BattleGroundAV::GetBonusHonor(uint8 kills) //TODO: move this function to Battleground.cpp - but this is another patch
 {
-    return MaNGOS::Honor::hk_honor_at_level(m_MaxLevel, kills);
+    return MaNGOS::Honor::hk_honor_at_level(GetMaxLevel(), kills);
 }
 
 void BattleGroundAV::HandleKillPlayer(Player *player, Player *killer)
@@ -294,7 +294,7 @@ Creature* BattleGroundAV::AddAVCreature(uint16 cinfoid, uint16 type )
     }
 
     if(level != 0)
-        level += GetMaxLevel(); //maybe we can do this more generic for custom level-range.. actually it's ok
+        level += GetMaxLevel()-60; //maybe we can do this more generic for custom level-range.. actually it's ok
     creature->SetLevel(level);
     return creature;
 }
@@ -469,8 +469,6 @@ void BattleGroundAV::AddPlayer(Player *plr)
     //create score and add it to map, default values are set in constructor
     BattleGroundAVScore* sc = new BattleGroundAVScore;
     m_PlayerScores[plr->GetGUID()] = sc;
-    if(m_MaxLevel==0)
-        m_MaxLevel=(plr->getLevel()%10 == 0)? plr->getLevel() : (plr->getLevel()-(plr->getLevel()%10))+10;
 }
 
 void BattleGroundAV::EndBattleGround(uint32 winner)
