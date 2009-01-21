@@ -50,7 +50,7 @@ void BattleGroundAV::HandleKillPlayer(Player *player, Player *killer)
         return;
 
     BattleGround::HandleKillPlayer(player, killer);
-	UpdateScore(player->GetTeam(),-1);
+    UpdateScore(player->GetTeam(),-1);
 }
 
 void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
@@ -586,12 +586,6 @@ void BattleGroundAV::UpdatePlayerScore(Player* Source, uint32 type, uint32 value
             break;
         case SCORE_TOWERS_DEFENDED:
             ((BattleGroundAVScore*)itr->second)->TowersDefended += value;
-            break;
-        case SCORE_MINES_CAPTURED:
-            ((BattleGroundAVScore*)itr->second)->MinesCaptured += value;
-            break;
-        case SCORE_LEADERS_KILLED:
-            ((BattleGroundAVScore*)itr->second)->LeadersKilled += value;
             break;
         case SCORE_SECONDARY_OBJECTIVES:
             ((BattleGroundAVScore*)itr->second)->SecondaryObjectives += value;
