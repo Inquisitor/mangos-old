@@ -152,7 +152,16 @@ Map* MapInstanced::GetInstance(const WorldObject* obj)
                 {
                     map = CreateBattleGround(NewInstanceId);
                     ((BattleGroundMap*)map)->SetBG(player->GetBattleGround());
-                    assert(((BattleGroundMap*)map)->GetBG());
+                }
+                if(!((BattleGroundMap*)map)->GetBG())
+                {
+                    sLog.outError("The bg-class couldn't be assigned (very early) to the battlegroundmap, it's possible, that some db-spawned creatures are now not handled right this is related to battleground alterac valley (av) - please post bugreport, and add information how this bg was created (if you don't have information, report it also) Player: %s (%u) in map:%u requested map:%u", player->GetName(), player->GetGUIDLow(), player->GetMapId(), GetId());
+                    if(player->GetBattleGround())
+                    {
+                        sLog.outError("somehow the battleground was found, but please report also");
+                        ((BattleGroundMap*)map)->SetBG(player->GetBattleGround());
+                    }
+                    assert(false);
                 }
                 return map;
             }
