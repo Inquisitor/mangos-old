@@ -1033,9 +1033,9 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
             {
                 Player *plr;
                 WorldSafeLocsEntry const *ClosestGrave = NULL;
-                for (std::vector<uint64>::iterator itr = ghost_list.begin(); itr != ghost_list.end(); ++itr)
+                for (std::vector<uint64>::const_iterator itr = ghost_list.begin(); itr != ghost_list.end(); ++itr)
                 {
-                    plr = objmgr.GetPlayer(*ghost_list.begin());
+                    plr = objmgr.GetPlayer(*itr);
                     if( !plr )
                         continue;
                     if(!ClosestGrave)
