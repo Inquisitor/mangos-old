@@ -1384,7 +1384,7 @@ bool BattleGround::DelCreature(uint32 type)
     Creature *cr = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
     if(!cr)
     {
-        sLog.outError("Can't find creature guid: %u",GUID_LOPART(m_BgCreatures[type]));
+        sLog.outError("Can't find Battleground creature type:%u guid:%u",type, GUID_LOPART(m_BgCreatures[type]));
         return false;
     }
     cr->SetDeleteAfterNoAggro(true);
@@ -1397,7 +1397,7 @@ bool BattleGround::DelObject(uint32 type)
     GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
     if(!obj)
     {
-        sLog.outError("Can't find gobject guid: %u",GUID_LOPART(m_BgObjects[type]));
+        sLog.outError("Can't find Battleground gobject type:%u guid:%u",type, GUID_LOPART(m_BgObjects[type]));
         return false;
     }
     obj->SetRespawnTime(0);                                 // not save respawn time
