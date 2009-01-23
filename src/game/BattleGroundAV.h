@@ -98,6 +98,24 @@ horde:
 
 };
 
+enum BG_AV_CREATURE_ENTRIES //only those, whoe are interesting for us
+{
+    AV_CREATURE_ENTRY_H_CAPTAIN     = 11947,
+    AV_CREATURE_ENTRY_A_CAPTAIN     = 11949,
+    AV_CREATURE_ENTRY_H_BOSS        = 11946,
+    AV_CREATURE_ENTRY_A_BOSS        = 11948,
+    AV_CREATURE_ENTRY_N_HERALD      = 11997,
+
+    //TODO implement the following ones
+    AV_CREATURE_ENTRY_H_L1          = 13179,            //H-lieutnant guse
+    AV_CREATURE_ENTRY_H_D_B         = 13236,            //H-shaman-boss
+    AV_CREATURE_ENTRY_H_D_C         = 13284,            //h-shaman-creep
+    AV_CREATURE_ENTRY_A_L1          = 13438,            //A-lieutnant slidore
+    AV_CREATURE_ENTRY_A_D_B         = 13442,            //a-druid boss
+    AV_CREATURE_ENTRY_A_D_C         = 13443             //a-druid creep
+
+};
+
 enum BG_AV_OTHER_VALUES
 {
     AV_STATICCPLACE_MAX        = 123,
