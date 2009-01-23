@@ -768,7 +768,6 @@ void AreaAura::Update(uint32 diff)
                     if(actualSpellInfo != GetSpellProto())
                         actualBasePoints = actualSpellInfo->EffectBasePoints[m_effIndex];
                     AreaAura *aur = new AreaAura(actualSpellInfo, m_effIndex, &actualBasePoints, (*tIter), caster, NULL);
-                    aur->SetAuraDuration(GetAuraDuration());
                     (*tIter)->AddAura(aur);
                 }
             }
@@ -3560,18 +3559,13 @@ void Aura::HandleAuraModRoot(bool apply, bool Real)
     if(!Real)
         return;
 
-    // Frost root aura -> freeze/unfreeze target
-    if (GetSpellSchoolMask(m_spellProto) & SPELL_SCHOOL_MASK_FROST)
-        m_target->ModifyAuraState(AURA_STATE_FROZEN, apply);
-
     uint32 apply_stat = UNIT_STAT_ROOT;
     if (apply)
     {
         m_target->addUnitState(UNIT_STAT_ROOT);
         m_target->SetUInt64Value (UNIT_FIELD_TARGET, 0);
-// probably wrong (this add skinable flag)
-// TODO: find correct flag
-//        m_target->SetFlag(UNIT_FIELD_FLAGS,(apply_stat<<16));
+                                                            // probably wrong
+        m_target->SetFlag(UNIT_FIELD_FLAGS,(apply_stat<<16));
 
         //Save last orientation
         if( m_target->getVictim() )
@@ -3597,9 +3591,8 @@ void Aura::HandleAuraModRoot(bool apply, bool Real)
             return;
 
         m_target->clearUnitState(UNIT_STAT_ROOT);
-// probably wrong (this add skinable flag)
-// TODO: find correct flag
-//        m_target->RemoveFlag(UNIT_FIELD_FLAGS,(apply_stat<<16));
+                                                            // probably wrong
+        m_target->RemoveFlag(UNIT_FIELD_FLAGS,(apply_stat<<16));
 
         if(!m_target->hasUnitState(UNIT_STAT_STUNNED))      // prevent allow move if have also stun effect
         {
@@ -5302,7 +5295,6 @@ void Aura::HandleShapeshiftBoosts(bool apply)
             break;
         case FORM_FLIGHT:
             spellId = 33948;
-            spellId2 = 34764;
             break;
         case FORM_FLIGHT_EPIC:
             spellId  = 40122;

@@ -686,7 +686,7 @@ enum AuraState
     AURA_STATE_DEFENSE                      = 1,            // C   |
     AURA_STATE_HEALTHLESS_20_PERCENT        = 2,            // CcT |
     AURA_STATE_BERSERKING                   = 3,            // C T |
-    AURA_STATE_FROZEN                       = 4,            //  c t| frozen target
+    //AURA_STATE_UNKNOWN4                   = 4,            //  c t| some limitation to charge spells (?) and target test spells
     AURA_STATE_JUDGEMENT                    = 5,            // C   |
     //AURA_STATE_UNKNOWN6                   = 6,            //     | not used
     AURA_STATE_HUNTER_PARRY                 = 7,            // C   |
@@ -1568,10 +1568,9 @@ enum CreatureFamily
 
 enum CreatureTypeFlags
 {
-    CREATURE_TYPEFLAGS_TAMEABLE        = 0x0001,
-    CREATURE_TYPEFLAGS_HERBLOOT        = 0x0100,
-    CREATURE_TYPEFLAGS_MININGLOOT      = 0x0200,
-    CREATURE_TYPEFLAGS_ENGINEERLOOT    = 0x8000
+    CREATURE_TYPEFLAGS_TAMEABLE   = 0x0001,
+    CREATURE_TYPEFLAGS_HERBLOOT   = 0x0100,
+    CREATURE_TYPEFLAGS_MININGLOOT = 0x0200
 };
 
 enum CreatureEliteType

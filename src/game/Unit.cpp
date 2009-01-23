@@ -9887,7 +9887,11 @@ void CharmInfo::SetPetNumber(uint32 petnumber, bool statwindow)
 
 bool Unit::isFrozen() const
 {
-    return HasAuraState(AURA_STATE_FROZEN);
+    AuraList const& mRoot = GetAurasByType(SPELL_AURA_MOD_ROOT);
+    for(AuraList::const_iterator i = mRoot.begin(); i != mRoot.end(); ++i)
+        if( GetSpellSchoolMask((*i)->GetSpellProto()) & SPELL_SCHOOL_MASK_FROST)
+            return true;
+    return false;
 }
 
 struct ProcTriggeredData

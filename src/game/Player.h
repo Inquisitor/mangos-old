@@ -1467,11 +1467,11 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         void SendProficiency(uint8 pr1, uint32 pr2);
         void SendInitialSpells();
-        bool addSpell(uint32 spell_id, bool active, bool learning, bool disabled);
+        bool addSpell(uint32 spell_id, bool active, bool learning = true, bool loading = false, bool disabled = false);
         void learnSpell(uint32 spell_id);
         void removeSpell(uint32 spell_id, bool disabled = false);
         void resetSpells();
-        void learnDefaultSpells();
+        void learnDefaultSpells(bool loading = false);
         void learnQuestRewardedSpells();
         void learnQuestRewardedSpells(Quest const* quest);
 
