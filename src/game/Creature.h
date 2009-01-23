@@ -169,7 +169,7 @@ struct CreatureInfo
     uint32  rangeattacktime;
     uint32  unit_flags;                                     // enum UnitFlags mask values
     uint32  dynamicflags;
-    uint32  family;                                         // enum CreatureFamily values for type==CREATURE_TYPE_BEAST, or 0 in another cases
+    uint32  family;                                         // enum CreatureFamily values (optional)
     uint32  trainer_type;
     uint32  trainer_spell;
     uint32  classNum;
@@ -212,6 +212,8 @@ struct CreatureInfo
             return SKILL_HERBALISM;
         else if(type_flags & CREATURE_TYPEFLAGS_MININGLOOT)
             return SKILL_MINING;
+        else if(type_flags & CREATURE_TYPEFLAGS_ENGINEERLOOT)
+            return SKILL_ENGINERING;
         else
             return SKILL_SKINNING;                          // normal case
     }
@@ -362,6 +364,10 @@ struct TrainerSpell
     uint32 reqskill;
     uint32 reqskillvalue;
     uint32 reqlevel;
+    uint32 learned_spell;
+
+    // helpers
+    bool IsCastable() const { return learned_spell != spell; }
 };
 
 typedef std::vector<TrainerSpell*> TrainerSpellList;
@@ -427,7 +433,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         bool IsOutOfThreatArea(Unit* pVictim) const;
         bool IsImmunedToSpell(SpellEntry const* spellInfo);
                                                             // redefine Unit::IsImmunedToSpell
-        bool IsImmunedToSpellEffect(uint32 effect, uint32 mechanic) const;
+        bool IsImmunedToSpellEffect(SpellEntry const* spellInfo, uint32 index) const;
                                                             // redefine Unit::IsImmunedToSpellEffect
         bool isElite() const
         {

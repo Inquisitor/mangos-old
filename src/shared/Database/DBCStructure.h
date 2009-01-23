@@ -664,6 +664,14 @@ struct CreatureSpellDataEntry
     //uint32    availability[4];                            // 4-7      m_availability[4]
 };
 
+struct CreatureTypeEntry
+{
+    uint32    ID;                                           // 0        m_ID
+    //char*   Name[16];                                     // 1-16     name
+                                                            // 17       string flags
+    //uint32    no_expirience;                              // 18 no exp? critters, non-combat pets, gas cloud.
+};
+
 struct DurabilityCostsEntry
 {
     uint32    Itemlvl;                                      // 0
@@ -808,14 +816,14 @@ struct GtRegenMPPerSptEntry
 
 struct ItemEntry
 {
-   uint32   ID;
-   //uint32   Class;
-   //uint32   SubClass;
-   //uint32   Unk0;
-   //uint32   Material;
-   uint32   DisplayId;
-   uint32   InventoryType;
-   uint32   Sheath;
+   uint32   ID;                                             // 0
+   uint32   Class;                                          // 1
+   //uint32   SubClass;                                     // 2 some items have strnage subclasses
+   int32    Unk0;                                           // 3
+   int32    Material;                                       // 4
+   uint32   DisplayId;                                      // 5
+   uint32   InventoryType;                                  // 6
+   uint32   Sheath;                                         // 7
 };
 
 struct ItemDisplayInfoEntry
@@ -941,14 +949,15 @@ struct MapEntry
     bool IsBattleGround() const { return map_type == MAP_BATTLEGROUND; }
     bool IsBattleArena() const { return map_type == MAP_ARENA; }
     bool IsBattleGroundOrArena() const { return map_type == MAP_BATTLEGROUND || map_type == MAP_ARENA; }
-    bool SupportsHeroicMode() const { return resetTimeHeroic && !resetTimeRaid; }
+    bool SupportsHeroicMode() const { return resetTimeHeroic != 0; }
     bool HasResetTime() const { return resetTimeHeroic || resetTimeRaid; }
 
     bool IsMountAllowed() const
     {
         return !IsDungeon() ||
-            MapID==568 || MapID==309 || MapID==209 || MapID==534 ||
-            MapID==560 || MapID==509 || MapID==269;
+            MapID==209 || MapID==269 || MapID==309 ||       // TanarisInstance, CavernsOfTime, Zul'gurub
+            MapID==509 || MapID==534 || MapID==560 ||       // AhnQiraj, HyjalPast, HillsbradPast
+            MapID==568 || MapID==615 || MapID==616;         // ZulAman, Obsidian Sanctrum, Eye Of Eternity
     }
 
     bool IsContinent() const
@@ -1409,7 +1418,7 @@ struct VehicleEntry
     uint32  m_uiSeatIndicatorType;                          // 42
 };
 
-struct VehicleSeatEntry 
+struct VehicleSeatEntry
 {
     uint32  m_ID;                                           // 0
     uint32  m_flags;                                        // 1
