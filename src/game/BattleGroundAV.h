@@ -320,7 +320,7 @@ enum BG_AV_ObjectTypes
     BG_AV_OBJECT_SNOW_EYECANDY_H             = 207,
     BG_AV_OBJECT_SNOW_EYECANDY_PH            = 211,
 
-    BG_AV_OBJECT_MAX                          = 212
+    BG_AV_OBJECT_MAX                          = 215
 };
 
 
