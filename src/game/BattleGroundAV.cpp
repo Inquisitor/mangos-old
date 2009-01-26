@@ -59,21 +59,21 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
     uint32 entry = unit->GetEntry();
-    if( m_DB_Creature[AV_CREATURE_A_BOSS] && unit == m_DB_Creature[AV_CREATURE_A_BOSS])
+    if( entry==AV_CREATURE_ENTRY_A_BOSS )
     {
         CastSpellOnTeam(23658,HORDE); //this is a spell which finishes a quest where a player has to kill the boss
         RewardReputationToTeam(729,BG_AV_REP_BOSS,HORDE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),HORDE);
         EndBattleGround(HORDE);
     }
-    else if( m_DB_Creature[AV_CREATURE_H_BOSS] && unit == m_DB_Creature[AV_CREATURE_H_BOSS])
+    else if( entry==AV_CREATURE_ENTRY_H_BOSS )
     {
         CastSpellOnTeam(23658,ALLIANCE); //this is a spell which finishes a quest where a player has to kill the boss
         RewardReputationToTeam(730,BG_AV_REP_BOSS,ALLIANCE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),ALLIANCE);
         EndBattleGround(ALLIANCE);
     }
-    else if( m_DB_Creature[AV_CREATURE_A_CAPTAIN] && unit == m_DB_Creature[AV_CREATURE_A_CAPTAIN])
+    else if( entry=AV_CREATURE_ENTRY_A_CAPTAIN && m_DB_Creature[AV_CREATURE_A_CAPTAIN] )
     {
         if(!m_CaptainAlive[0])
             return;
@@ -87,7 +87,7 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
         YellToAll(m_DB_Creature[AV_CREATURE_HERALD],GetMangosString(LANG_BG_AV_A_CAPTAIN_DEAD),LANG_UNIVERSAL);
 
     }
-    else if( m_DB_Creature[AV_CREATURE_H_CAPTAIN] && unit == m_DB_Creature[AV_CREATURE_H_CAPTAIN])
+    else if( entry=AV_CREATURE_ENTRY_H_CAPTAIN && m_DB_Creature[AV_CREATURE_H_CAPTAIN])
     {
         if(!m_CaptainAlive[1])
             return;
@@ -248,27 +248,27 @@ void BattleGroundAV::OnCreatureCreate(Creature* creature)
 {
     switch(creature->GetEntry())
     {
-        case 11947: //h captain
+        case AV_CREATURE_ENTRY_H_CAPTAIN:
             m_DB_Creature[AV_CREATURE_H_CAPTAIN] = creature;
             break;
-        case 11946: //h boss
+        case AV_CREATURE_ENTRY_H_BOSS:
             m_DB_Creature[AV_CREATURE_H_BOSS] = creature;
             break;
-        case 11948: //a boss
+        case AV_CREATURE_ENTRY_A_BOSS:
             m_DB_Creature[AV_CREATURE_A_BOSS] = creature;
             break;
-        case 11949: //a captain
+        case AV_CREATURE_ENTRY_A_CAPTAIN:
             m_DB_Creature[AV_CREATURE_A_CAPTAIN] = creature;
             break;
-        case 11997: //herald
+        case AV_CREATURE_ENTRY_N_HERALD:
             m_DB_Creature[AV_CREATURE_HERALD] = creature;
             break;
-        case 13179:            //H-lieutnant guse
-        case 13236:            //H-shaman-boss
-        case 13284:            //h-shaman-creep
-        case 13438:            //A-lieutnant slidore
-        case 13442:            //a-druid boss
-        case 13443:            //a-druid creep
+        case AV_CREATURE_ENTRY_H_L1:
+        case AV_CREATURE_ENTRY_H_D_B:
+        case AV_CREATURE_ENTRY_H_D_C:
+        case AV_CREATURE_ENTRY_A_L1:
+        case AV_CREATURE_ENTRY_A_D_B:
+        case AV_CREATURE_ENTRY_A_D_C:
             //not impplemented yet
             break;
     }
