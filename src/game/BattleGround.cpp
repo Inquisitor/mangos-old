@@ -1278,6 +1278,29 @@ Creature* BattleGround::GetBGCreature(uint32 type)
     return creature;
 }
 
+void BattleGround::SpawnBGObject(GameObject* obj, uint32 respawntime)
+{
+    if(!obj)
+        return;
+    Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceID());
+    if(!map)
+        return;
+    if( respawntime == 0 )
+    {
+        //we need to change state from GO_JUST_DEACTIVATED to GO_READY in case battleground is starting again
+        if( obj->getLootState() == GO_JUST_DEACTIVATED )
+            obj->SetLootState(GO_READY);
+        obj->SetRespawnTime(0);
+        map->Add(obj);
+    }
+    else
+    {
+        map->Add(obj);
+        obj->SetLootState(GO_JUST_DEACTIVATED);
+        obj->SetRespawnTime(respawntime);
+        obj->SaveRespawnTime();
+    }
+}
 void BattleGround::SpawnBGObject(uint32 type, uint32 respawntime)
 {
     Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceID());

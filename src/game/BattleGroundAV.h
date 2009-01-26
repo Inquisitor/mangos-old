@@ -322,12 +322,8 @@ enum BG_AV_ObjectTypes
     BG_AV_OBJECT_BURN_FROSTWOLF_WTOWER       = 169,
     BG_AV_OBJECT_BURN_BUILDING_ALLIANCE      = 179,
     BG_AV_OBJECT_BURN_BUILDING_HORDE         = 189,
-    BG_AV_OBJECT_SNOW_EYECANDY_A             = 199,
-    BG_AV_OBJECT_SNOW_EYECANDY_PA            = 203,
-    BG_AV_OBJECT_SNOW_EYECANDY_H             = 207,
-    BG_AV_OBJECT_SNOW_EYECANDY_PH            = 211,
 
-    BG_AV_OBJECT_MAX                          = 215
+    BG_AV_OBJECT_MAX                          = 199
 };
 
 
@@ -514,11 +510,6 @@ const float BG_AV_ObjectPos[AV_OPLACE_MAX][4] = {
     {-501.775f,-151.581f,81.2027f,0},
     {-509.975f,-191.652f,83.2978f,0},
 
-//snowfall eyecandy
-    {-191.153f,-129.868f,78.5595f,-1.25664f },
-    {-201.282f,-134.319f,78.6753f,-0.942478f },
-    {-215.981f,-91.4101f,80.8702f,-1.74533f },
-    {-200.465f,-96.418f,79.7587f,1.36136f },
 };
 
 const float BG_AV_DoorPositons[2][4] = {
@@ -1376,7 +1367,11 @@ class BattleGroundAV : public BattleGround
         uint32 m_CaptainBuffTimer[2];
 
         bool m_IsInformedNearVictory[2];
+
         Creature* m_DB_Creature[AV_DB_CREATURE_MAX];
+
+        typedef std::vector<GameObject*> ObjectVector;
+        ObjectVector m_SnowfallEyecandy[4];
 
 };
 

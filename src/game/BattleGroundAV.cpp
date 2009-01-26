@@ -234,11 +234,19 @@ void BattleGroundAV::OnObjectCreate(GameObject* obj)
 {
     switch(obj->GetEntry())
     {
-        case 178785: //irondeep mine supply
+        case BG_AV_OBJECTID_MINE_N: //irondeep mine supply
             break;
-        case 178784: //coldtooth mine supply
+        case BG_AV_OBJECTID_MINE_S: //coldtooth mine supply
             break;
+        case BG_AV_OBJECTID_SNOWFALL_CANDY_A:  m_SnowfallEyecandy[0].push_back(obj); SpawnBGObject(obj, RESPAWN_ONE_DAY); break;
+        case BG_AV_OBJECTID_SNOWFALL_CANDY_PA: m_SnowfallEyecandy[1].push_back(obj); SpawnBGObject(obj, RESPAWN_ONE_DAY); break;
+        case BG_AV_OBJECTID_SNOWFALL_CANDY_H:  m_SnowfallEyecandy[2].push_back(obj); SpawnBGObject(obj, RESPAWN_ONE_DAY); break;
+        case BG_AV_OBJECTID_SNOWFALL_CANDY_PH: m_SnowfallEyecandy[3].push_back(obj); SpawnBGObject(obj, RESPAWN_ONE_DAY); break;
+        default:
+            //do nothing
+            return;
     }
+
 }
 
 void BattleGroundAV::OnCreatureCreate(Creature* creature)
@@ -643,11 +651,14 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
         PopulateNode(node);
         if(node == BG_AV_NODES_SNOWFALL_GRAVE) //snowfall eyecandy
         {
-            for(uint8 i = 0; i < 4; i++)
-            {
-                SpawnBGObject(((owner==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_ONE_DAY);
-                SpawnBGObject(((owner==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_A  : BG_AV_OBJECT_SNOW_EYECANDY_H )+i,RESPAWN_IMMEDIATELY);
-            }
+            uint32 del_go=(owner==ALLIANCE)?1:3;
+            uint32 add_go=(owner==ALLIANCE)?0:2;
+            if(!m_SnowfallEyecandy[del_go].empty())
+                for(ObjectVector::const_iterator itr = m_SnowfallEyecandy[del_go].begin(); itr != m_SnowfallEyecandy[del_go].end(); ++itr)
+                    SpawnBGObject(*itr,RESPAWN_ONE_DAY);
+            if(!m_SnowfallEyecandy[add_go].empty())
+                for(ObjectVector::const_iterator itr = m_SnowfallEyecandy[add_go].begin(); itr != m_SnowfallEyecandy[add_go].end(); ++itr)
+                    SpawnBGObject(*itr,RESPAWN_IMMEDIATELY);
         }
     }
     //send a nice message to all :)
@@ -940,11 +951,14 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 object)
     }
     else if(node == BG_AV_NODES_SNOWFALL_GRAVE) //snowfall eyecandy
     {
-        for(uint8 i = 0; i < 4; i++)
-        {
-            SpawnBGObject(((owner==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_PH)+i,RESPAWN_ONE_DAY);
-            SpawnBGObject(((team==ALLIANCE)?BG_AV_OBJECT_SNOW_EYECANDY_A : BG_AV_OBJECT_SNOW_EYECANDY_H)+i,RESPAWN_IMMEDIATELY);
-        }
+        uint32 del_go=(owner==ALLIANCE)?1:3;
+        uint32 add_go=(team==ALLIANCE)?0:2;
+        if(!m_SnowfallEyecandy[del_go].empty())
+            for(ObjectVector::const_iterator itr = m_SnowfallEyecandy[del_go].begin(); itr != m_SnowfallEyecandy[del_go].end(); ++itr)
+                SpawnBGObject(*itr,RESPAWN_ONE_DAY);
+        if(!m_SnowfallEyecandy[add_go].empty())
+            for(ObjectVector::const_iterator itr = m_SnowfallEyecandy[add_go].begin(); itr != m_SnowfallEyecandy[add_go].end(); ++itr)
+                SpawnBGObject(*itr,RESPAWN_IMMEDIATELY);
     }
     //send a nice message to all :)
     char buf[256];
@@ -960,8 +974,6 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 object)
 
 void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
 {
-    assert(GetStatus() == STATUS_IN_PROGRESS);
-
     BG_AV_Nodes node = GetNodeThroughObject(object);
     uint32 owner = m_Nodes[node].Owner; //maybe name it prevowner
     uint32 team  = player->GetTeam();
@@ -990,22 +1002,25 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
                 SpawnBGObject(object+11, RESPAWN_IMMEDIATELY);
         }
         //eyecandy
-        uint32 spawn,despawn;
+        uint32 del_go,add_go;
         if(team == ALLIANCE)
         {
-            despawn = ( m_Nodes[node].State == POINT_ASSAULTED )?BG_AV_OBJECT_SNOW_EYECANDY_PH : BG_AV_OBJECT_SNOW_EYECANDY_H;
-            spawn = BG_AV_OBJECT_SNOW_EYECANDY_PA;
+            del_go=(m_Nodes[node].State == POINT_ASSAULTED)?3:2;
+            add_go=1;
         }
         else
         {
-            despawn = ( m_Nodes[node].State == POINT_ASSAULTED )?BG_AV_OBJECT_SNOW_EYECANDY_PA : BG_AV_OBJECT_SNOW_EYECANDY_A;
-            spawn = BG_AV_OBJECT_SNOW_EYECANDY_PH;
+            del_go=(m_Nodes[node].State == POINT_ASSAULTED)?1:0;
+            add_go=3;
         }
-        for(uint8 i = 0; i < 4; i++)
-        {
-            SpawnBGObject(despawn+i,RESPAWN_ONE_DAY);
-            SpawnBGObject(spawn+i,RESPAWN_IMMEDIATELY);
-        }
+        if(!m_SnowfallEyecandy[del_go].empty())
+            for(ObjectVector::const_iterator itr = m_SnowfallEyecandy[del_go].begin(); itr != m_SnowfallEyecandy[del_go].end(); ++itr)
+            {
+                SpawnBGObject(*itr,RESPAWN_ONE_DAY);
+            }
+        if(!m_SnowfallEyecandy[add_go].empty())
+            for(ObjectVector::const_iterator itr = m_SnowfallEyecandy[add_go].begin(); itr != m_SnowfallEyecandy[add_go].end(); ++itr)
+                SpawnBGObject(*itr,RESPAWN_IMMEDIATELY);
     }
 
     //if snowfall gots capped it can be handled like all other graveyards
@@ -1289,17 +1304,6 @@ bool BattleGroundAV::SetupBattleGround()
         sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!8");
         return false;
     }
-    for(uint8 i = 0; i < 4; i++)
-    {
-        if(!AddObject(BG_AV_OBJECT_SNOW_EYECANDY_A+i, BG_AV_OBJECTID_SNOWFALL_CANDY_A ,BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][0],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][1],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][2],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3],0,0,sin(BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3]/2), cos(BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3]/2), RESPAWN_ONE_DAY)
-            || !AddObject(BG_AV_OBJECT_SNOW_EYECANDY_PA+i, BG_AV_OBJECTID_SNOWFALL_CANDY_PA ,BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][0],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][1],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][2],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3],0,0,sin(BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3]/2), cos(BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3]/2), RESPAWN_ONE_DAY)
-            || !AddObject(BG_AV_OBJECT_SNOW_EYECANDY_H+i, BG_AV_OBJECTID_SNOWFALL_CANDY_H ,BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][0],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][1],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][2],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3],0,0,sin(BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3]/2), cos(BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3]/2), RESPAWN_ONE_DAY)
-            || !AddObject(BG_AV_OBJECT_SNOW_EYECANDY_PH+i, BG_AV_OBJECTID_SNOWFALL_CANDY_PH ,BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][0],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][1],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][2],BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3],0,0,sin(BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3]/2), cos(BG_AV_ObjectPos[AV_OPLACE_SNOW_1+i][3]/2), RESPAWN_ONE_DAY))
-        {
-            sLog.outError("BatteGroundAV: Failed to spawn some object BattleGround not created!9.%i",i);
-            return false;
-        }
-    }
     return true;
 }
 
@@ -1394,6 +1398,12 @@ void BattleGroundAV::ResetBGSubclass()
     }
     for (uint8 i=0; i<AV_DB_CREATURE_MAX; i++)
         m_DB_Creature[i] = NULL; // they don't get initalized with NULL :-/
+
+    for(uint8 i=0; i<4; i++)
+    {
+        m_SnowfallEyecandy[i].clear();
+        m_SnowfallEyecandy[i].reserve(4); //retail is 4, but making a vector here, allows more customisation
+    }
 
     for(BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_STONEHEART_GRAVE; ++i) //alliance graves
         InitNode(i,ALLIANCE,false);
