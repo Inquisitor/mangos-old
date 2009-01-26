@@ -112,9 +112,16 @@ enum BG_AV_CREATURE_ENTRIES //only those, whoe are interesting for us
     AV_CREATURE_ENTRY_H_D_C         = 13284,            //h-shaman-creep
     AV_CREATURE_ENTRY_A_L1          = 13438,            //A-lieutnant slidore
     AV_CREATURE_ENTRY_A_D_B         = 13442,            //a-druid boss
-    AV_CREATURE_ENTRY_A_D_C         = 13443             //a-druid creep
+    AV_CREATURE_ENTRY_A_D_C         = 13443,             //a-druid creep
 
+    AV_CREATURE_ENTRY_NM_N_B        = 11657,
+    AV_CREATURE_ENTRY_NM_A_B        = 13078,
+    AV_CREATURE_ENTRY_NM_H_B        = 13079,
+    AV_CREATURE_ENTRY_SM_N_B        = 11677,
+    AV_CREATURE_ENTRY_SM_A_B        = 13086,
+    AV_CREATURE_ENTRY_SM_H_B        = 13088,
 };
+
 
 enum BG_AV_OTHER_VALUES
 {

@@ -58,52 +58,55 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     sLog.outDebug("bg_av HandleKillUnit %i",unit->GetEntry());
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
-    uint32 entry = unit->GetEntry();
-    if( entry==AV_CREATURE_ENTRY_A_BOSS )
+    switch(unit->GetEntry())
     {
-        CastSpellOnTeam(23658,HORDE); //this is a spell which finishes a quest where a player has to kill the boss
-        RewardReputationToTeam(729,BG_AV_REP_BOSS,HORDE);
-        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),HORDE);
-        EndBattleGround(HORDE);
+        case AV_CREATURE_ENTRY_A_BOSS:
+            CastSpellOnTeam(23658,HORDE); //this is a spell which finishes a quest where a player has to kill the boss
+            RewardReputationToTeam(729,BG_AV_REP_BOSS,HORDE);
+            RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),HORDE);
+            EndBattleGround(HORDE);
+            break;
+        case AV_CREATURE_ENTRY_H_BOSS:
+            CastSpellOnTeam(23658,ALLIANCE); //this is a spell which finishes a quest where a player has to kill the boss
+            RewardReputationToTeam(730,BG_AV_REP_BOSS,ALLIANCE);
+            RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),ALLIANCE);
+            EndBattleGround(ALLIANCE);
+            break;
+        case AV_CREATURE_ENTRY_A_CAPTAIN:
+            if(!m_CaptainAlive[0] || !m_DB_Creature[AV_CREATURE_A_CAPTAIN])
+                return;
+            m_CaptainAlive[0]=false;
+            RewardReputationToTeam(729,BG_AV_REP_CAPTAIN,HORDE);
+            RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),HORDE);
+            UpdateScore(ALLIANCE,(-1)*BG_AV_RES_CAPTAIN);
+            //spawn destroyed aura
+            for(uint8 i=0; i<=9; i++)
+                SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_ALLIANCE+i,RESPAWN_IMMEDIATELY);
+            YellToAll(m_DB_Creature[AV_CREATURE_HERALD],GetMangosString(LANG_BG_AV_A_CAPTAIN_DEAD),LANG_UNIVERSAL);
+            break;
+        case AV_CREATURE_ENTRY_H_CAPTAIN:
+            if(!m_CaptainAlive[1] || !m_DB_Creature[AV_CREATURE_H_CAPTAIN])
+                return;
+            m_CaptainAlive[1]=false;
+            RewardReputationToTeam(730,BG_AV_REP_CAPTAIN,ALLIANCE);
+            RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),ALLIANCE);
+            UpdateScore(HORDE,(-1)*BG_AV_RES_CAPTAIN);
+            //spawn destroyed aura
+            for(uint8 i=0; i<=9; i++)
+                SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_HORDE+i,RESPAWN_IMMEDIATELY);
+            YellToAll(m_DB_Creature[AV_CREATURE_HERALD],GetMangosString(LANG_BG_AV_H_CAPTAIN_DEAD),LANG_UNIVERSAL);
+            break;
+        case AV_CREATURE_ENTRY_NM_N_B:
+        case AV_CREATURE_ENTRY_NM_A_B:
+        case AV_CREATURE_ENTRY_NM_H_B:
+            ChangeMineOwner(AV_NORTH_MINE,killer->GetTeam());
+            break;
+        case AV_CREATURE_ENTRY_SM_N_B:
+        case AV_CREATURE_ENTRY_SM_A_B:
+        case AV_CREATURE_ENTRY_SM_H_B:
+            ChangeMineOwner(AV_SOUTH_MINE,killer->GetTeam());
+            break;
     }
-    else if( entry==AV_CREATURE_ENTRY_H_BOSS )
-    {
-        CastSpellOnTeam(23658,ALLIANCE); //this is a spell which finishes a quest where a player has to kill the boss
-        RewardReputationToTeam(730,BG_AV_REP_BOSS,ALLIANCE);
-        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),ALLIANCE);
-        EndBattleGround(ALLIANCE);
-    }
-    else if( entry=AV_CREATURE_ENTRY_A_CAPTAIN && m_DB_Creature[AV_CREATURE_A_CAPTAIN] )
-    {
-        if(!m_CaptainAlive[0])
-            return;
-        m_CaptainAlive[0]=false;
-        RewardReputationToTeam(729,BG_AV_REP_CAPTAIN,HORDE);
-        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),HORDE);
-        UpdateScore(ALLIANCE,(-1)*BG_AV_RES_CAPTAIN);
-        //spawn destroyed aura
-        for(uint8 i=0; i<=9; i++)
-            SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_ALLIANCE+i,RESPAWN_IMMEDIATELY);
-        YellToAll(m_DB_Creature[AV_CREATURE_HERALD],GetMangosString(LANG_BG_AV_A_CAPTAIN_DEAD),LANG_UNIVERSAL);
-
-    }
-    else if( entry=AV_CREATURE_ENTRY_H_CAPTAIN && m_DB_Creature[AV_CREATURE_H_CAPTAIN])
-    {
-        if(!m_CaptainAlive[1])
-            return;
-        m_CaptainAlive[1]=false;
-        RewardReputationToTeam(730,BG_AV_REP_CAPTAIN,ALLIANCE);
-        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),ALLIANCE);
-        UpdateScore(HORDE,(-1)*BG_AV_RES_CAPTAIN);
-        //spawn destroyed aura
-        for(uint8 i=0; i<=9; i++)
-            SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_HORDE+i,RESPAWN_IMMEDIATELY);
-        YellToAll(m_DB_Creature[AV_CREATURE_HERALD],GetMangosString(LANG_BG_AV_H_CAPTAIN_DEAD),LANG_UNIVERSAL);
-    }
-    else if ( entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_N_MINE_H_4][0])
-        ChangeMineOwner(AV_NORTH_MINE,killer->GetTeam());
-    else if ( entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_N_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_A_4][0] || entry == BG_AV_CreatureInfo[AV_NPC_S_MINE_H_4][0])
-        ChangeMineOwner(AV_SOUTH_MINE,killer->GetTeam());
 }
 
 void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
