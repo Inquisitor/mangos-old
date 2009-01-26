@@ -73,9 +73,6 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
             EndBattleGround(ALLIANCE);
             break;
         case AV_CREATURE_ENTRY_A_CAPTAIN:
-            if(!m_CaptainAlive[0] || !m_DB_Creature[AV_CREATURE_A_CAPTAIN])
-                return;
-            m_CaptainAlive[0]=false;
             RewardReputationToTeam(729,BG_AV_REP_CAPTAIN,HORDE);
             RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),HORDE);
             UpdateScore(ALLIANCE,(-1)*BG_AV_RES_CAPTAIN);
@@ -85,9 +82,6 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
             YellToAll(m_DB_Creature[AV_CREATURE_HERALD],GetMangosString(LANG_BG_AV_A_CAPTAIN_DEAD),LANG_UNIVERSAL);
             break;
         case AV_CREATURE_ENTRY_H_CAPTAIN:
-            if(!m_CaptainAlive[1] || !m_DB_Creature[AV_CREATURE_H_CAPTAIN])
-                return;
-            m_CaptainAlive[1]=false;
             RewardReputationToTeam(730,BG_AV_REP_CAPTAIN,ALLIANCE);
             RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),ALLIANCE);
             UpdateScore(HORDE,(-1)*BG_AV_RES_CAPTAIN);
@@ -419,18 +413,20 @@ void BattleGroundAV::Update(uint32 diff)
     {
         for(uint8 i=0; i<=1;i++)//0=alliance, 1=horde
         {
-            if(!m_CaptainAlive[i])
+            if(i==1 && (!m_DB_Creature[AV_CREATURE_H_CAPTAIN] || !m_DB_Creature[AV_CREATURE_H_CAPTAIN]->isAlive()))
+                continue;
+            if(i==0 && (!m_DB_Creature[AV_CREATURE_A_CAPTAIN] || !m_DB_Creature[AV_CREATURE_A_CAPTAIN]->isAlive()))
                 continue;
             if(m_CaptainBuffTimer[i] > diff)
                 m_CaptainBuffTimer[i] -= diff;
             else
             {
-                if(i==0 && m_DB_Creature[AV_CREATURE_A_CAPTAIN])
+                if(i==0)
                 {
                     CastSpellOnTeam(AV_BUFF_A_CAPTAIN,ALLIANCE);
                     YellToAll(m_DB_Creature[AV_CREATURE_A_CAPTAIN],LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON);
                 }
-                else if(i==1 && m_DB_Creature[AV_CREATURE_H_CAPTAIN])
+                else if(i==1)
                 {
                     CastSpellOnTeam(AV_BUFF_H_CAPTAIN,HORDE);
                     YellToAll(m_DB_Creature[AV_CREATURE_H_CAPTAIN],LANG_BG_AV_H_CAPTAIN_BUFF,LANG_ORCISH);
@@ -499,7 +495,7 @@ void BattleGroundAV::EndBattleGround(uint32 winner)
     RewardReputationToTeam(730, ally_tower_survived*BG_AV_REP_SURVIVING_TOWER, ALLIANCE);
     RewardHonorToTeam(GetBonusHonor(ally_tower_survived*BG_AV_KILL_SURVIVING_TOWER), ALLIANCE);
     sLog.outDebug("alliance towers:%u honor:%u rep:%u", ally_tower_survived, GetBonusHonor(ally_tower_survived*BG_AV_KILL_SURVIVING_TOWER), ally_tower_survived*BG_AV_REP_SURVIVING_TOWER);
-    if(m_CaptainAlive[0])
+    if(m_DB_Creature[AV_CREATURE_A_CAPTAIN] && m_DB_Creature[AV_CREATURE_A_CAPTAIN]->isAlive())
     {
         RewardReputationToTeam(730, BG_AV_REP_SURVIVING_CAPTAIN, ALLIANCE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_SURVIVING_CAPTAIN), ALLIANCE);
@@ -508,7 +504,7 @@ void BattleGroundAV::EndBattleGround(uint32 winner)
     RewardReputationToTeam(729, horde_tower_survived*BG_AV_REP_SURVIVING_TOWER, ALLIANCE);
     RewardHonorToTeam(GetBonusHonor(horde_tower_survived*BG_AV_KILL_SURVIVING_TOWER), ALLIANCE);
     sLog.outDebug("horde towers:%u honor:%u rep:%u", horde_tower_survived, GetBonusHonor(horde_tower_survived*BG_AV_KILL_SURVIVING_TOWER), horde_tower_survived*BG_AV_REP_SURVIVING_TOWER);
-    if(m_CaptainAlive[1])
+    if(m_DB_Creature[AV_CREATURE_H_CAPTAIN] && m_DB_Creature[AV_CREATURE_H_CAPTAIN]->isAlive())
     {
         RewardReputationToTeam(729, BG_AV_REP_SURVIVING_CAPTAIN, ALLIANCE);
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_SURVIVING_CAPTAIN), ALLIANCE);
@@ -1391,7 +1387,6 @@ void BattleGroundAV::ResetBGSubclass()
             m_Team_QuestStatus[i][j]=0;
         m_Team_Scores[i]=BG_AV_SCORE_INITIAL_POINTS;
         m_IsInformedNearVictory[i]=false;
-        m_CaptainAlive[i] = true;
         m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
         m_Mine_Owner[i] = AV_NEUTRAL_TEAM;
         m_Mine_PrevOwner[i] = m_Mine_Owner[i];

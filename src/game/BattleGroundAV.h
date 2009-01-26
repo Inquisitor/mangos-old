@@ -1374,7 +1374,6 @@ class BattleGroundAV : public BattleGround
         int32 m_Mine_Timer; //ticks for both teams
         uint32 m_Mine_Reclaim_Timer[2];
         uint32 m_CaptainBuffTimer[2];
-        bool m_CaptainAlive[2];
 
         bool m_IsInformedNearVictory[2];
         Creature* m_DB_Creature[AV_DB_CREATURE_MAX];
