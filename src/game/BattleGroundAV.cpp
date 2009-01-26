@@ -556,7 +556,7 @@ void BattleGroundAV::HandleAreaTrigger(Player *Source, uint32 Trigger)
         case 3329:
         case 3330:
         case 3331:
-			//Source->Unmount();
+            //Source->Unmount();
             break;
         default:
             sLog.outDebug("WARNING: Unhandled AreaTrigger in Battleground: %u", Trigger);
@@ -661,8 +661,9 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
 }
 
 void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial)
-{ //mine=0 northmine mine=1 southmin
-//changing the owner results in setting respawntim to infinite for current creatures, spawning new mine owners creatures and changing the chest-objects so that the current owning team can use them
+{
+    //mine=0 northmine mine=1 southmin
+    //changing the owner results in setting respawntim to infinite for current creatures, spawning new mine owners creatures and changing the chest-objects so that the current owning team can use them
     assert(mine == AV_NORTH_MINE || mine == AV_SOUTH_MINE);
     if(team != ALLIANCE && team != HORDE)
         team = AV_NEUTRAL_TEAM;
@@ -757,7 +758,7 @@ bool BattleGroundAV::PlayerCanDoMineQuest(int32 GOId,uint32 team)
 void BattleGroundAV::PopulateNode(BG_AV_Nodes node)
 {
     uint32 owner = m_Nodes[node].Owner;
-	assert(owner);
+    assert(owner);
 
     uint32 c_place = AV_CPLACE_DEFENSE_STORM_AID + ( 4 * node );
     uint32 creatureid;
@@ -766,7 +767,7 @@ void BattleGroundAV::PopulateNode(BG_AV_Nodes node)
     else
     {
         uint8 team2 = GetTeamIndexByTeamId(owner);
-	if (m_Team_QuestStatus[team2][0] < 500 )
+        if (m_Team_QuestStatus[team2][0] < 500 )
             creatureid = ( owner == ALLIANCE )? AV_NPC_A_GRAVEDEFENSE0 : AV_NPC_H_GRAVEDEFENSE0;
         else if ( m_Team_QuestStatus[team2][0] < 1000 )
             creatureid = ( owner == ALLIANCE )? AV_NPC_A_GRAVEDEFENSE1 : AV_NPC_H_GRAVEDEFENSE1;
@@ -788,7 +789,7 @@ void BattleGroundAV::PopulateNode(BG_AV_Nodes node)
 }
 void BattleGroundAV::DePopulateNode(BG_AV_Nodes node)
 {
-	uint32 c_place = AV_CPLACE_DEFENSE_STORM_AID + ( 4 * node );
+    uint32 c_place = AV_CPLACE_DEFENSE_STORM_AID + ( 4 * node );
     for(uint8 i=0; i<4; i++)
         if( m_BgCreatures[c_place+i] )
             DelCreature(c_place+i);
@@ -801,21 +802,21 @@ void BattleGroundAV::DePopulateNode(BG_AV_Nodes node)
 const BG_AV_Nodes BattleGroundAV::GetNodeThroughObject(uint32 object)
 {
     sLog.outDebug("bg_AV getnodethroughobject %i",object);
-	if( object <= BG_AV_OBJECT_FLAG_A_STONEHEART_BUNKER )
-		return BG_AV_Nodes(object);
-	if( object <= BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_HUT )
-		return BG_AV_Nodes(object - 11);
-	if( object <= BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_WTOWER )
-		return BG_AV_Nodes(object - 7);
-	if( object <= BG_AV_OBJECT_FLAG_C_H_STONEHEART_BUNKER )
-		return BG_AV_Nodes(object -22);
-	if( object <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_HUT )
-		return BG_AV_Nodes(object - 33);
-	if( object <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER )
-		return BG_AV_Nodes(object - 29);
-	if( object == BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE )
-		return BG_AV_NODES_SNOWFALL_GRAVE;
-	sLog.outError("BattleGroundAV: ERROR! GetPlace got a wrong object :(");
+    if( object <= BG_AV_OBJECT_FLAG_A_STONEHEART_BUNKER )
+        return BG_AV_Nodes(object);
+    if( object <= BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_HUT )
+        return BG_AV_Nodes(object - 11);
+    if( object <= BG_AV_OBJECT_FLAG_C_A_FROSTWOLF_WTOWER )
+        return BG_AV_Nodes(object - 7);
+    if( object <= BG_AV_OBJECT_FLAG_C_H_STONEHEART_BUNKER )
+        return BG_AV_Nodes(object -22);
+    if( object <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_HUT )
+        return BG_AV_Nodes(object - 33);
+    if( object <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER )
+        return BG_AV_Nodes(object - 29);
+    if( object == BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE )
+        return BG_AV_NODES_SNOWFALL_GRAVE;
+    sLog.outError("BattleGroundAV: ERROR! GetPlace got a wrong object :(");
     assert(false);
     return BG_AV_Nodes(0);
 }
@@ -926,7 +927,7 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 object)
     SpawnBGObject(object, RESPAWN_ONE_DAY);
 
     DefendNode(node,team);
-	PopulateNode(node);
+    PopulateNode(node);
     UpdateNodeWorldState(node);
 
     if(IsTower(node))
