@@ -206,7 +206,6 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
     }
 }
 
-
 void BattleGroundAV::UpdateScore(uint16 team, int16 points )
 { //note: to remove reinforcementpoints points must be negative, for adding reinforcements points must be positive
     assert( team == ALLIANCE || team == HORDE);
@@ -268,6 +267,50 @@ void BattleGroundAV::OnCreatureCreate(Creature* creature)
         case AV_CREATURE_ENTRY_N_HERALD:
             m_DB_Creature[AV_CREATURE_HERALD] = creature;
             break;
+        case 13396: //irondeep alliance TODO: get the right ids
+        case 13080:
+        case 13098:
+        case 13078:
+            SpawnBGCreature(creature,RESPAWN_ONE_DAY);
+            m_MineCreatures[AV_NORTH_MINE][0].push_back(creature);
+            break;
+        case 13397: //irondeep horde
+        case 13099:
+        case 13081:
+        case 13079:
+            SpawnBGCreature(creature,RESPAWN_ONE_DAY);
+            m_MineCreatures[AV_NORTH_MINE][1].push_back(creature);
+            break;
+        case 10987: //Irondeep Trogg
+        case 11600: //Irondeep Shaman
+        case 11602: //Irondeep Skullthumper
+        case 11657: //Morloch
+            m_MineCreatures[AV_NORTH_MINE][2].push_back(creature);
+            break;
+         case 13317: //alliance
+         case 13096: //explorer
+         case 13087: //invader
+         case 13086:
+             SpawnBGCreature(creature,RESPAWN_ONE_DAY);
+             m_MineCreatures[AV_SOUTH_MINE][0].push_back(creature);
+             break;
+         case 13316: //horde
+         case 13097: //surveypr
+         case 13089: //guard
+         case 13088:
+             m_MineCreatures[AV_SOUTH_MINE][1].push_back(creature);
+             SpawnBGCreature(creature,RESPAWN_ONE_DAY);
+             break;
+         case 11603: //south mine neutral
+         case 11604:
+         case 11605:
+         case 11677:
+         case 10982: //vermin
+             if(creature->GetEntry()==11677)
+                 m_DB_Creature[AV_CREATURE_SNIFFLE] = creature;
+             m_MineCreatures[AV_SOUTH_MINE][2].push_back(creature);
+             break;
+
         case AV_CREATURE_ENTRY_H_L1:
         case AV_CREATURE_ENTRY_H_D_B:
         case AV_CREATURE_ENTRY_H_D_C:
@@ -294,8 +337,7 @@ Creature* BattleGroundAV::AddAVCreature(uint16 cinfoid, uint16 type )
     if(!creature)
         return NULL;
 
-    if((cinfoid >= AV_NPC_A_GRAVEDEFENSE0 && cinfoid<=AV_NPC_A_GRAVEDEFENSE3) ||
-        (cinfoid>=AV_NPC_H_GRAVEDEFENSE0 && cinfoid<=AV_NPC_H_GRAVEDEFENSE3))
+    if(cinfoid<=AV_NPC_H_GRAVEDEFENSE3) //all gravedefender entries
     {
         CreatureData &data = objmgr.NewOrExistCreatureData(creature->GetDBTableGUIDLow());
         data.spawndist      = 5;
@@ -405,9 +447,6 @@ void BattleGroundAV::Update(uint32 diff)
             PlaySoundToAll(SOUND_BG_START);
             SetStatus(STATUS_IN_PROGRESS);
 
-            sLog.outDebug("BG_AV: start spawning mine stuff");
-            for(uint8 mine = AV_NORTH_MINE; mine <= AV_SOUTH_MINE; mine++) //mine population
-                ChangeMineOwner(mine, AV_NEUTRAL_TEAM,true);
             DoorOpen(BG_AV_OBJECT_DOOR_H);
             DoorOpen(BG_AV_OBJECT_DOOR_A);
 
@@ -671,76 +710,40 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
     YellToAll(m_DB_Creature[AV_CREATURE_HERALD],buf,LANG_UNIVERSAL);
 }
 
-void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial)
+void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
 {
     //mine=0 northmine mine=1 southmin
     //changing the owner results in setting respawntim to infinite for current creatures, spawning new mine owners creatures and changing the chest-objects so that the current owning team can use them
     assert(mine == AV_NORTH_MINE || mine == AV_SOUTH_MINE);
+    if(m_Mine_Owner[mine] == team)
+        return;
+
     if(team != ALLIANCE && team != HORDE)
         team = AV_NEUTRAL_TEAM;
-    else
-        PlaySoundToAll((team==ALLIANCE)?AV_SOUND_ALLIANCE_GOOD:AV_SOUND_HORDE_GOOD);
 
-    if(m_Mine_Owner[mine] == team && !initial)
-        return;
     m_Mine_PrevOwner[mine] = m_Mine_Owner[mine];
     m_Mine_Owner[mine] = team;
+    uint32 i;
 
-    if(!initial)
-    {
-        sLog.outDebug("bg_av depopulating mine %i (0=north,1=south)",mine);
-        if(mine==AV_SOUTH_MINE)
-            for(uint16 i=AV_CPLACE_MINE_S_S_MIN; i <= AV_CPLACE_MINE_S_S_MAX; i++)
-                if( m_BgCreatures[i] )
-                    DelCreature(i); //TODO just set the respawntime to 999999
-        for(uint16 i=((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_1_MIN:AV_CPLACE_MINE_S_1_MIN); i <= ((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3); i++)
-            if( m_BgCreatures[i] )
-                DelCreature(i); //TODO here also
-    }
     SendMineWorldStates(mine);
 
-    sLog.outDebug("bg_av populating mine %i (0=north,1=south)",mine);
-    uint16 miner;
-    //also neutral team exists.. after a big time, the neutral team tries to conquer the mine
-    if(mine==AV_NORTH_MINE)
-    {
-        if(team == ALLIANCE)
-            miner = AV_NPC_N_MINE_A_1;
-        else if (team == HORDE)
-            miner = AV_NPC_N_MINE_H_1;
-        else
-            miner = AV_NPC_N_MINE_N_1;
-    }
-    else
-    {
-        uint16 cinfo;
-        if(team == ALLIANCE)
-            miner = AV_NPC_S_MINE_A_1;
-        else if (team == HORDE)
-            miner = AV_NPC_S_MINE_H_1;
-        else
-            miner = AV_NPC_S_MINE_N_1;
-       //vermin
-        sLog.outDebug("spawning vermin");
-        if(team == ALLIANCE)
-            cinfo = AV_NPC_S_MINE_A_3;
-        else if (team == HORDE)
-            cinfo = AV_NPC_S_MINE_H_3;
-        else
-            cinfo = AV_NPC_S_MINE_N_S;
-        for(uint16 i=AV_CPLACE_MINE_S_S_MIN; i <= AV_CPLACE_MINE_S_S_MAX; i++)
-            AddAVCreature(cinfo,i);
-    }
-    for(uint16 i=( (mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_1_MIN:AV_CPLACE_MINE_S_1_MIN ); i <= ((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_1_MAX:AV_CPLACE_MINE_S_1_MAX); i++)
-        AddAVCreature(miner,i);
-    //the next chooses randomly between 2 cretures
-    for(uint16 i=((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_2_MIN:AV_CPLACE_MINE_S_2_MIN); i <= ((mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_2_MAX:AV_CPLACE_MINE_S_2_MAX); i++)
-        AddAVCreature(miner+(urand(1,2)),i);
-    AddAVCreature(miner+3,(mine==AV_NORTH_MINE)?AV_CPLACE_MINE_N_3:AV_CPLACE_MINE_S_3);
+    sLog.outDebug("bg_av depopulating mine %i (0=north,1=south)",mine);
+    i=(m_Mine_PrevOwner[mine]==ALLIANCE)?0:(m_Mine_PrevOwner[mine]==HORDE)?1:2;
+    if(!m_MineCreatures[mine][i].empty())
+        for(CreatureVector::const_iterator itr = m_MineCreatures[mine][i].begin(); itr != m_MineCreatures[mine][i].end(); ++itr)
+            SpawnBGCreature(*itr,RESPAWN_ONE_DAY);
+
+    sLog.outDebug("bg_av populating mine %i owner %i, prevowner %i",mine,m_Mine_Owner[mine], m_Mine_PrevOwner[mine]);
+    i=(m_Mine_Owner[mine]==ALLIANCE)?0:(m_Mine_Owner[mine]==HORDE)?1:2;
+    if(!m_MineCreatures[mine][i].empty())
+        for(CreatureVector::const_iterator itr = m_MineCreatures[mine][i].begin(); itr != m_MineCreatures[mine][i].end(); ++itr)
+            SpawnBGCreature(*itr,RESPAWN_IMMEDIATELY);
+
     //because the gameobjects in this mine have changed, update all surrounding players:
     //TODO: add gameobject-update code (currently this is done in a hacky way)
     if(team == ALLIANCE || team == HORDE)
     {
+        PlaySoundToAll((team==ALLIANCE)?AV_SOUND_ALLIANCE_GOOD:AV_SOUND_HORDE_GOOD);
         m_Mine_Reclaim_Timer[mine]=AV_MINE_RECLAIM_TIMER;
         char buf[256];
         sprintf(buf, GetMangosString(LANG_BG_AV_MINE_TAKEN), GetMangosString(( mine == AV_NORTH_MINE ) ? LANG_BG_AV_MINE_NORTH : LANG_BG_AV_MINE_SOUTH), ( team == ALLIANCE ) ?  GetMangosString(LANG_BG_AV_ALLY) : GetMangosString(LANG_BG_AV_HORDE));
@@ -750,11 +753,10 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team, bool initial)
     {
         if(mine==AV_SOUTH_MINE) //i think this gets called all the time
         {
-            Creature* creature = GetBGCreature(AV_CPLACE_MINE_S_3);
+            Creature* creature = m_DB_Creature[AV_CREATURE_SNIFFLE];
             YellToAll(creature,LANG_BG_AV_S_MINE_BOSS_CLAIMS,LANG_UNIVERSAL);
         }
     }
-    return;
 }
 
 bool BattleGroundAV::PlayerCanDoMineQuest(int32 GOId,uint32 team)
@@ -1403,6 +1405,14 @@ void BattleGroundAV::ResetBGSubclass()
     {
         m_SnowfallEyecandy[i].clear();
         m_SnowfallEyecandy[i].reserve(4); //retail is 4, but making a vector here, allows more customisation
+    }
+    for(uint8 i=0;i<2; i++)
+    {
+        for(uint8 j=0;j<3; j++)
+        {
+            m_MineCreatures[i][j].clear();
+            m_MineCreatures[i][j].reserve(100);
+        }
     }
 
     for(BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_STONEHEART_GRAVE; ++i) //alliance graves

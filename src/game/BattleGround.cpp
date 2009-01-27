@@ -1301,6 +1301,7 @@ void BattleGround::SpawnBGObject(GameObject* obj, uint32 respawntime)
         obj->SaveRespawnTime();
     }
 }
+
 void BattleGround::SpawnBGObject(uint32 type, uint32 respawntime)
 {
     Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceID());
@@ -1369,36 +1370,33 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
 
     return  pCreature;
 }
-/*
-void BattleGround::SpawnBGCreature(uint32 type, uint32 respawntime)
-{
-    Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceId());
-    if(!map)
-        return false;
 
+void BattleGround::SpawnBGCreature(Creature* obj, uint32 respawntime)
+{
+    if(!obj)
+        return;
+    Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceID());
+    if(!map)
+        return;
     if(respawntime == 0)
     {
-        Creature *obj = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
-        if(obj)
-        {
-            //obj->Respawn();                               // bugged
-            obj->SetRespawnTime(0);
-            objmgr.SaveCreatureRespawnTime(obj->GetGUIDLow(), GetInstanceID(), 0);
-            map->Add(obj);
-        }
+        //obj->SetVisibility(VISIBILITY_ON);
+        obj->Respawn();
+        //obj->SetRespawnTime(0);
+        //objmgr.SaveCreatureRespawnTime(obj->GetGUIDLow(), GetInstanceID(), 0);
+        map->Add(obj);
     }
     else
     {
-        Creature *obj = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
-        if(obj)
-        {
-            obj->setDeathState(DEAD);
-            obj->SetRespawnTime(respawntime);
-            map->Add(obj);
-        }
+        map->Add(obj);
+        obj->setDeathState(JUST_DIED);
+        obj->SetRespawnDelay(respawntime);
+        obj->RemoveCorpse();
+        obj->SetRespawnTime(respawntime);
+        obj->SaveRespawnTime();
     }
 }
-*/
+
 bool BattleGround::DelCreature(uint32 type)
 {
     Creature *cr = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
