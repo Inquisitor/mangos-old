@@ -1287,7 +1287,6 @@ void BattleGround::SpawnBGObject(GameObject* obj, uint32 respawntime)
         return;
     if( respawntime == 0 )
     {
-        //we need to change state from GO_JUST_DEACTIVATED to GO_READY in case battleground is starting again
         if( obj->getLootState() == GO_JUST_DEACTIVATED )
             obj->SetLootState(GO_READY);
         obj->SetRespawnTime(0);
@@ -1296,8 +1295,8 @@ void BattleGround::SpawnBGObject(GameObject* obj, uint32 respawntime)
     else
     {
         map->Add(obj);
-        obj->SetLootState(GO_JUST_DEACTIVATED);
         obj->SetRespawnTime(respawntime);
+        obj->SetLootState(GO_JUST_DEACTIVATED);
         obj->SaveRespawnTime();
     }
 }
@@ -1312,7 +1311,6 @@ void BattleGround::SpawnBGObject(uint32 type, uint32 respawntime)
         GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
         if(obj)
         {
-            //we need to change state from GO_JUST_DEACTIVATED to GO_READY in case battleground is starting again
             if( obj->getLootState() == GO_JUST_DEACTIVATED )
                 obj->SetLootState(GO_READY);
             obj->SetRespawnTime(0);
