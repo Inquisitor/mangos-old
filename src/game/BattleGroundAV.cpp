@@ -548,13 +548,13 @@ void BattleGroundAV::EndBattleGround(uint32 winner)
         RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_SURVIVING_CAPTAIN), ALLIANCE);
     }
     //horde:
-    RewardReputationToTeam(729, horde_tower_survived*BG_AV_REP_SURVIVING_TOWER, ALLIANCE);
-    RewardHonorToTeam(GetBonusHonor(horde_tower_survived*BG_AV_KILL_SURVIVING_TOWER), ALLIANCE);
+    RewardReputationToTeam(729, horde_tower_survived*BG_AV_REP_SURVIVING_TOWER, HORDE);
+    RewardHonorToTeam(GetBonusHonor(horde_tower_survived*BG_AV_KILL_SURVIVING_TOWER), HORDE);
     sLog.outDebug("horde towers:%u honor:%u rep:%u", horde_tower_survived, GetBonusHonor(horde_tower_survived*BG_AV_KILL_SURVIVING_TOWER), horde_tower_survived*BG_AV_REP_SURVIVING_TOWER);
     if(m_DB_Creature[AV_CREATURE_H_CAPTAIN] && m_DB_Creature[AV_CREATURE_H_CAPTAIN]->isAlive())
     {
-        RewardReputationToTeam(729, BG_AV_REP_SURVIVING_CAPTAIN, ALLIANCE);
-        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_SURVIVING_CAPTAIN), ALLIANCE);
+        RewardReputationToTeam(729, BG_AV_REP_SURVIVING_CAPTAIN, HORDE);
+        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_SURVIVING_CAPTAIN), HORDE);
     }
     //TODO add enterevademode for all attacking creatures TODO look if this must
     //be done
