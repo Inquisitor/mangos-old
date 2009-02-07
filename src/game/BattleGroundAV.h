@@ -120,6 +120,17 @@ enum BG_AV_CREATURE_ENTRIES //only those, whoe are interesting for us
     AV_CREATURE_ENTRY_SM_N_B        = 11677,
     AV_CREATURE_ENTRY_SM_A_B        = 13086,
     AV_CREATURE_ENTRY_SM_H_B        = 13088,
+
+    AV_CREATURE_ENTRY_A_MARSHAL_SOUTH       = 14763,
+    AV_CREATURE_ENTRY_A_MARSHAL_NORTH       = 14762,
+    AV_CREATURE_ENTRY_A_MARSHAL_ICE         = 14764,
+    AV_CREATURE_ENTRY_A_MARSHAL_STONE       = 14765,
+    AV_CREATURE_ENTRY_H_MARSHAL_ICE         = 14773,
+    AV_CREATURE_ENTRY_H_MARSHAL_TOWER       = 14776,
+    AV_CREATURE_ENTRY_H_MARSHAL_ETOWER      = 14772,
+    AV_CREATURE_ENTRY_H_MARSHAL_WTOWER      = 14777,
+
+
 };
 
 
@@ -364,12 +375,8 @@ enum BG_AV_OBJECTS
     AV_OPLACE_BURN_FROSTWOLF_WTOWER         = 93,
     AV_OPLACE_BURN_BUILDING_A               = 103,
     AV_OPLACE_BURN_BUILDING_H               = 113,
-    AV_OPLACE_SNOW_1                        = 123,
-    AV_OPLACE_SNOW_2                        = 124,
-    AV_OPLACE_SNOW_3                        = 125,
-    AV_OPLACE_SNOW_4                        = 126,
 
-    AV_OPLACE_MAX                           = 127
+    AV_OPLACE_MAX                           = 123
 };
 const float BG_AV_ObjectPos[AV_OPLACE_MAX][4] = {
     {638.592f,-32.422f,46.0608f,-1.62316f },//firstaid station
@@ -549,16 +556,7 @@ enum BG_AV_CreaturePlace
     AV_CPLACE_DEFENSE_FROST_E        = 61,
     AV_CPLACE_DEFENSE_FROST_t        = 65,
 
-    AV_CPLACE_A_MARSHAL_SOUTH       = 69,
-    AV_CPLACE_A_MARSHAL_NORTH       = 70,
-    AV_CPLACE_A_MARSHAL_ICE         = 71,
-    AV_CPLACE_A_MARSHAL_STONE       = 72,
-    AV_CPLACE_H_MARSHAL_ICE         = 73,
-    AV_CPLACE_H_MARSHAL_TOWER       = 74,
-    AV_CPLACE_H_MARSHAL_ETOWER      = 75,
-    AV_CPLACE_H_MARSHAL_WTOWER      = 76,
-
-    AV_CPLACE_MAX = 77
+    AV_CPLACE_MAX = 69
 };
 
 //x, y, z, o
@@ -649,18 +647,8 @@ const float BG_AV_CreaturePos[AV_CPLACE_MAX][4] = {
     {-1300.96f,-275.111f,114.058f,4.12804f},
     {-1302.41f,-259.256f,114.065f,1.67602f},
     {-1287.97f,-262.087f,114.165f,6.18264f},
-    {-1291.59f,-271.166f,114.151f,5.28257f},
+    {-1291.59f,-271.166f,114.151f,5.28257f}
 
-    //alliance marshall
-    {721.104f,-7.64155f,50.7046f,3.45575f},// south
-    {723.058f,-14.1548f,50.7046f,3.40339f},// north
-    {715.691f,-4.72233f,50.2187f,3.47321f},// icewing
-    {720.046f,-19.9413f,50.2187f,3.36849f},// stone
-//horde  (coords not 100% ok)
-    {-1363.99f,-221.99f,98.4053f,4.93012f},
-    {-1370.96f,-223.532f,98.4266f,4.93012f},
-    {-1378.37f,-228.614f,99.3546f,5.38565f},
-    {-1358.02f,-228.998f,98.868f,3.87768f}
 };
 
 
@@ -679,15 +667,7 @@ enum BG_AV_CreatureIds
     AV_NPC_H_GRAVEDEFENSE3 = 8,    // champion guardian
     AV_NPC_H_TOWERDEFENSE  = 9,    // frostwolf bowman
 
-    AV_NPC_A_MARSHAL_SOUTH = 10,
-    AV_NPC_MARSHAL_NORTH   = 11,
-    AV_NPC_A_MARSHAL_ICE   = 12,
-    AV_NPC_A_MARSHAL_STONE = 13,
-    AV_NPC_H_MARSHAL_ICE   = 14,
-    AV_NPC_H_MARSHAL_TOWER = 15,
-    AV_NPC_MARSHAL_ETOWER  = 16,
-    AV_NPC_H_MARSHAL_WTOWER= 17,
-    AV_NPC_INFO_MAX        = 18
+    AV_NPC_INFO_MAX        = 10
 
 };
 
@@ -704,16 +684,6 @@ const uint32 BG_AV_CreatureInfo[AV_NPC_INFO_MAX][4] = {
     { 13332, 1214, 60, 60 }, //Veteran Guardian
     { 13421, 1214, 61, 61 }, //Champion Guardian
     { 13359, 1214, 59, 60 }, //Frostwolf Bowman
-    { 14763, 1534, 60, 60 }, //Dun Baldar South Marshal
-    { 14762, 1534, 60, 60 }, //Dun Baldar North Marshal
-    { 14764, 1534, 60, 60 }, //Icewing Marshal
-    { 14765, 1534, 60, 60 }, //Stonehearth Marshal
-
-    { 14773, 1214, 60, 60 }, //Iceblood Warmaster
-    { 14776, 1214, 60, 60 }, //Tower Point Warmaster
-    { 14772, 1214, 60, 60 }, //East Frostwolf Warmaster
-    { 14777, 1214, 60, 60 }, //West Frostwolf Warmaster
-
 
 };
 
@@ -725,7 +695,8 @@ enum BG_AV_DB_Creatures
     AV_CREATURE_A_BOSS      = 4,
     AV_CREATURE_H_BOSS      = 5,
     AV_CREATURE_SNIFFLE     = 6,
-    AV_DB_CREATURE_MAX      = 7
+    AV_CREATURE_MARSHAL     = 7,//4alliance marshals + 4 horde marshals their ids are similar to those of the tower-ids
+    AV_DB_CREATURE_MAX      = 15
 };
 
 enum BG_AV_MineCreature_Entries

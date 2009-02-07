@@ -126,5 +126,23 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(14284,30,949.1, -506.913, 95.4237, 3.31613);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11946,30,-1370.9, -219.793, 98.4258, 5.04381);
 
+-- marshals, who stand around the boss
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation)
+VALUES(14763,30,721.104, -7.64155, 50.7046, 3.45575);
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation)
+VALUES(14762,30,723.058, -14.1548, 50.7046, 3.40339);
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation)
+VALUES(14764,30,715.691, -4.72233, 50.2187, 3.47321);
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation)
+VALUES(14765,30,720.046, -19.9413, 50.2187, 3.36849);
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation)
+VALUES(14773,30,-1363.99, -221.99, 98.4053, 4.93012);
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation)
+VALUES(14776,30,-1370.96, -223.532, 98.4266, 4.93012);
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation)
+VALUES(14772,30,-1378.37, -228.614, 99.3546, 5.38565);
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation)
+VALUES(14777,30,-1358.02, -228.998, 98.868, 3.87768);
+
 UPDATE creature c, creature_template t SET c.curhealth=t.minhealth WHERE c.map=30 AND c.id=t.entry;
 UPDATE creature SET spawndist=0 WHERE MovementType=0 AND map=30;

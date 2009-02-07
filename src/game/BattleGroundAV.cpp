@@ -267,6 +267,32 @@ void BattleGroundAV::OnCreatureCreate(Creature* creature)
         case AV_CREATURE_ENTRY_N_HERALD:
             m_DB_Creature[AV_CREATURE_HERALD] = creature;
             break;
+        case AV_CREATURE_ENTRY_A_MARSHAL_SOUTH:
+            m_DB_Creature[AV_CREATURE_MARSHAL+0] = creature;
+            break;
+        case AV_CREATURE_ENTRY_A_MARSHAL_NORTH:
+            m_DB_Creature[AV_CREATURE_MARSHAL+1] = creature;
+            break;
+        case AV_CREATURE_ENTRY_A_MARSHAL_ICE:
+            m_DB_Creature[AV_CREATURE_MARSHAL+2] = creature;
+            break;
+        case AV_CREATURE_ENTRY_A_MARSHAL_STONE:
+            m_DB_Creature[AV_CREATURE_MARSHAL+3] = creature;
+            break;
+        case AV_CREATURE_ENTRY_H_MARSHAL_ICE:
+            m_DB_Creature[AV_CREATURE_MARSHAL+4] = creature;
+            break;
+        case AV_CREATURE_ENTRY_H_MARSHAL_TOWER:
+            m_DB_Creature[AV_CREATURE_MARSHAL+5] = creature;
+            break;
+        case AV_CREATURE_ENTRY_H_MARSHAL_ETOWER:
+            m_DB_Creature[AV_CREATURE_MARSHAL+6] = creature;
+            break;
+        case AV_CREATURE_ENTRY_H_MARSHAL_WTOWER:
+            m_DB_Creature[AV_CREATURE_MARSHAL+7] = creature;
+            break;
+
+//TODO use BG_AV_MineCreature_Entries
         case 13396: //irondeep alliance TODO: get the right ids
         case 13080:
         case 13098:
@@ -416,8 +442,6 @@ void BattleGroundAV::Update(uint32 diff)
             AddSpiritGuide(8, BG_AV_CreaturePos[8][0], BG_AV_CreaturePos[8][1], BG_AV_CreaturePos[8][2], BG_AV_CreaturePos[8][3], HORDE);
             //spawn the marshals (those who get deleted, if a tower gets destroyed)
             sLog.outDebug("BG_AV: start spawning marshal creatures");
-            for(i=AV_NPC_A_MARSHAL_SOUTH; i<= AV_NPC_H_MARSHAL_WTOWER; i++)
-                AddAVCreature(i,AV_CPLACE_A_MARSHAL_SOUTH+(i-AV_NPC_A_MARSHAL_SOUTH));
 
             DoorClose(BG_AV_OBJECT_DOOR_A);
             DoorClose(BG_AV_OBJECT_DOOR_H);
@@ -664,10 +688,10 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
     {
         uint8 tmp = node-BG_AV_NODES_DUNBALDAR_SOUTH;
         //despawn marshal
-        if(m_BgCreatures[AV_CPLACE_A_MARSHAL_SOUTH + tmp])
-            DelCreature(AV_CPLACE_A_MARSHAL_SOUTH + tmp);
+        if(m_DB_Creature[AV_CREATURE_MARSHAL+tmp])
+            SpawnBGCreature(m_DB_Creature[AV_CREATURE_MARSHAL+tmp],RESPAWN_ONE_DAY);
         else
-            sLog.outError("BG_AV: playerdestroyedpoint: marshal %i doesn't exist",AV_CPLACE_A_MARSHAL_SOUTH + tmp);
+            sLog.outError("BG_AV: playerdestroyedpoint: marshal %i doesn't exist",AV_CREATURE_MARSHAL + tmp);
         //spawn destroyed aura
         for(uint8 i=0; i<=9; i++)
             SpawnBGObject(BG_AV_OBJECT_BURN_DUNBALDAR_SOUTH + i + (tmp * 10),RESPAWN_IMMEDIATELY);
