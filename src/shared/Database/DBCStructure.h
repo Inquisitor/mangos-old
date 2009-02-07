@@ -957,7 +957,8 @@ struct MapEntry
         return !IsDungeon() ||
             MapID==209 || MapID==269 || MapID==309 ||       // TanarisInstance, CavernsOfTime, Zul'gurub
             MapID==509 || MapID==534 || MapID==560 ||       // AhnQiraj, HyjalPast, HillsbradPast
-            MapID==568 || MapID==615 || MapID==616;         // ZulAman, Obsidian Sanctrum, Eye Of Eternity
+            MapID==568 || MapID==580 || MapID==615 ||       // ZulAman, Sunwell Plateau, Obsidian Sanctrum
+            MapID==616;                                     // Eye Of Eternity
     }
 
     bool IsContinent() const
@@ -1272,14 +1273,14 @@ struct SpellItemEnchantmentEntry
     uint32      amount[3];                                  // 5-7      m_effectPointsMin[3]
     //uint32      amount2[3]                                // 8-10     m_effectPointsMax[3]
     uint32      spellid[3];                                 // 11-13    m_effectArg[3]
-    char*       description[16];                            // 14-30    m_name_lang[16]
-    //uint32      descriptionFlags;                         // 31 name flags
-    uint32      aura_id;                                    // 32       m_itemVisual
-    uint32      slot;                                       // 33       m_flags
-    uint32      GemID;                                      // 34       m_src_itemID
-    uint32      EnchantmentCondition;                       // 35       m_condition_id
-    //uint32      requiredSkill;                            // 36       m_requiredSkillID
-    //uint32      requiredSkillValue;                       // 37       m_requiredSkillRank
+    char*       description[16];                            // 14-29    m_name_lang[16]
+    //uint32      descriptionFlags;                         // 30 name flags
+    uint32      aura_id;                                    // 31       m_itemVisual
+    uint32      slot;                                       // 32       m_flags
+    uint32      GemID;                                      // 33       m_src_itemID
+    uint32      EnchantmentCondition;                       // 34       m_condition_id
+    //uint32      requiredSkill;                            // 35       m_requiredSkillID
+    //uint32      requiredSkillValue;                       // 36       m_requiredSkillRank
 };
 
 struct SpellItemEnchantmentConditionEntry

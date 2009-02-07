@@ -85,8 +85,9 @@ enum PlayerSpellState
 struct PlayerSpell
 {
     PlayerSpellState state : 8;
-    bool active            : 1;
-    bool disabled          : 1;
+    bool active            : 1;                             // show in spellbook
+    bool dependent         : 1;                             // learned as result another spell learn, skill grow, quest reward, etc
+    bool disabled          : 1;                             // first rank has been learned in result talent learn but currently talent unlearned, save max learned ranks
 };
 
 // Spell modifier (used for modify other spells)
@@ -103,7 +104,7 @@ struct SpellModifier
     Spell const* lastAffected;
 };
 
-typedef UNORDERED_MAP<uint16, PlayerSpell*> PlayerSpellMap;
+typedef UNORDERED_MAP<uint32, PlayerSpell*> PlayerSpellMap;
 typedef std::list<SpellModifier*> SpellModList;
 
 struct SpellCooldown
@@ -370,52 +371,6 @@ enum DrunkenState
     DRUNKEN_TIPSY   = 1,
     DRUNKEN_DRUNK   = 2,
     DRUNKEN_SMASHED = 3
-};
-
-enum PlayerStateType
-{
-    /*
-        PLAYER_STATE_DANCE
-        PLAYER_STATE_SLEEP
-        PLAYER_STATE_SIT
-        PLAYER_STATE_STAND
-        PLAYER_STATE_READYUNARMED
-        PLAYER_STATE_WORK
-        PLAYER_STATE_POINT(DNR)
-        PLAYER_STATE_NONE // not used or just no state, just standing there?
-        PLAYER_STATE_STUN
-        PLAYER_STATE_DEAD
-        PLAYER_STATE_KNEEL
-        PLAYER_STATE_USESTANDING
-        PLAYER_STATE_STUN_NOSHEATHE
-        PLAYER_STATE_USESTANDING_NOSHEATHE
-        PLAYER_STATE_WORK_NOSHEATHE
-        PLAYER_STATE_SPELLPRECAST
-        PLAYER_STATE_READYRIFLE
-        PLAYER_STATE_WORK_NOSHEATHE_MINING
-        PLAYER_STATE_WORK_NOSHEATHE_CHOPWOOD
-        PLAYER_STATE_AT_EASE
-        PLAYER_STATE_READY1H
-        PLAYER_STATE_SPELLKNEELSTART
-        PLAYER_STATE_SUBMERGED
-    */
-
-    PLAYER_STATE_NONE              = 0,
-    PLAYER_STATE_SIT               = 1,
-    PLAYER_STATE_SIT_CHAIR         = 2,
-    PLAYER_STATE_SLEEP             = 3,
-    PLAYER_STATE_SIT_LOW_CHAIR     = 4,
-    PLAYER_STATE_SIT_MEDIUM_CHAIR  = 5,
-    PLAYER_STATE_SIT_HIGH_CHAIR    = 6,
-    PLAYER_STATE_DEAD              = 7,
-    PLAYER_STATE_KNEEL             = 8,
-
-    PLAYER_STATE_FORM_ALL          = 0x00FF0000,
-
-    PLAYER_STATE_FLAG_ALWAYS_STAND = 0x01,                  // byte 4
-    PLAYER_STATE_FLAG_CREEP        = 0x02000000,
-    PLAYER_STATE_FLAG_UNTRACKABLE  = 0x04000000,
-    PLAYER_STATE_FLAG_ALL          = 0xFF000000,
 };
 
 enum PlayerFlags
@@ -729,8 +684,8 @@ enum KeyRingSlots
 
 enum VanityPetSlots
 {
-    VANITYPET_SLOT_START        = 118,
-    VANITYPET_SLOT_END          = 136
+    VANITYPET_SLOT_START        = 118,                      // not use, vanity pets stored as spells
+    VANITYPET_SLOT_END          = 136                       // not alloed any content in.
 };
 
 enum CurrencyTokenSlots
@@ -1088,6 +1043,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void AddGuardian(Pet* pet) { m_guardianPets.insert(pet->GetGUID()); }
         GuardianPetList const& GetGuardians() const { return m_guardianPets; }
         void Uncharm();
+        uint32 GetPhaseMaskForSpawn() const;                // used for proper set phase for DB at GM-mode creature/GO spawn
 
         void Say(const std::string& text, const uint32 language);
         void Yell(const std::string& text, const uint32 language);
@@ -1154,8 +1110,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         Item* EquipItem( uint16 pos, Item *pItem, bool update );
         void AutoUnequipOffhandIfNeed();
         bool StoreNewItemInBestSlots(uint32 item_id, uint32 item_count);
-        void AutoStoreLootItem(uint8 bag, uint8 slot, uint32 loot_id, LootStore const& store);
-        void AutoStoreLootItem(uint32 loot_id, LootStore const& store) { AutoStoreLootItem(NULL_BAG,NULL_SLOT,loot_id,store); }
+        void AutoStoreLoot(uint8 bag, uint8 slot, uint32 loot_id, LootStore const& store, bool broadcast = false);
+        void AutoStoreLoot(uint32 loot_id, LootStore const& store, bool broadcast = false) { AutoStoreLoot(NULL_BAG,NULL_SLOT,loot_id,store,broadcast); }
 
         uint8 _CanTakeMoreSimilarItems(uint32 entry, uint32 count, Item* pItem, uint32* no_space_count = NULL) const;
         uint8 _CanStoreItem( uint8 bag, uint8 slot, ItemPosCountVec& dest, uint32 entry, uint32 count, Item *pItem = NULL, bool swap = false, uint32* no_space_count = NULL ) const;
@@ -1305,7 +1261,6 @@ class MANGOS_DLL_SPEC Player : public Unit
             }
         }
         uint32 GetReqKillOrCastCurrentCount(uint32 quest_id, int32 entry);
-        void AdjustQuestReqItemCount( Quest const* pQuest );
         void AreaExploredOrEventHappens( uint32 questId );
         void GroupEventHappens( uint32 questId, WorldObject const* pEventObject );
         void ItemAddedQuestCheck( uint32 entry, uint32 count );
@@ -1342,6 +1297,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         /*********************************************************/
 
         bool LoadFromDB(uint32 guid, SqlQueryHolder *holder);
+
         bool MinimalLoadFromDB(QueryResult *result, uint32 guid);
         static bool   LoadValuesArrayFromDB(Tokens& data,uint64 guid);
         static uint32 GetUInt32ValueFromArray(Tokens const& data, uint16 index);
@@ -1475,18 +1431,21 @@ class MANGOS_DLL_SPEC Player : public Unit
         void CharmSpellInitialize();
         void PossessSpellInitialize();
         bool HasSpell(uint32 spell) const;
+        bool HasActiveSpell(uint32 spell) const;            // show in spellbook
         TrainerSpellState GetTrainerSpellState(TrainerSpell const* trainer_spell) const;
         bool IsSpellFitByClassAndRace( uint32 spell_id ) const;
+        bool IsNeedCastPassiveSpellAtLearn(SpellEntry const* spellInfo) const;
 
         void SendProficiency(uint8 pr1, uint32 pr2);
         void SendInitialSpells();
-        bool addSpell(uint32 spell_id, bool active, bool learning, bool disabled);
-        void learnSpell(uint32 spell_id);
-        void removeSpell(uint32 spell_id, bool disabled = false);
+        bool addSpell(uint32 spell_id, bool active, bool learning, bool dependent, bool disabled);
+        void learnSpell(uint32 spell_id, bool dependent);
+        void removeSpell(uint32 spell_id, bool disabled = false, bool update_action_bar_for_low_rank = false);
         void resetSpells();
         void learnDefaultSpells();
         void learnQuestRewardedSpells();
         void learnQuestRewardedSpells(Quest const* quest);
+        void learnSpellHighRank(uint32 spellid);
 
         uint32 GetFreeTalentPoints() const { return GetUInt32Value(PLAYER_CHARACTER_POINTS1); }
         void SetFreeTalentPoints(uint32 points) { SetUInt32Value(PLAYER_CHARACTER_POINTS1,points); }
@@ -1768,8 +1727,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         int16 GetSkillPermBonusValue(uint32 skill) const;
         int16 GetSkillTempBonusValue(uint32 skill) const;
         bool HasSkill(uint32 skill) const;
-        void learnSkillRewardedSpells( uint32 id );
-        void learnSkillRewardedSpells();
+        void learnSkillRewardedSpells(uint32 id, uint32 value);
 
         void SetDontMove(bool dontMove);
         bool GetDontMove() const { return m_dontMove; }
@@ -2051,6 +2009,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         bool CanFly() const { return HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY); }
         bool IsFlying() const { return HasUnitMovementFlag(MOVEMENTFLAG_FLYING); }
+        bool IsAllowUseFlyMountsHere() const;
 
         void HandleDrowning();
 
@@ -2240,6 +2199,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void _LoadDailyQuestStatus(QueryResult *result);
         void _LoadGroup(QueryResult *result);
         void _LoadReputation(QueryResult *result);
+        void _LoadSkills();
         void _LoadSpells(QueryResult *result);
         void _LoadTutorials(QueryResult *result);
         void _LoadFriendList(QueryResult *result);
@@ -2281,7 +2241,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         time_t m_lastHonorUpdateTime;
 
         void outDebugValues() const;
-        bool _removeSpell(uint16 spell_id);
         uint64 m_lootGuid;
 
         uint32 m_race;
@@ -2432,6 +2391,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint8 _CanStoreItem_InBag( uint8 bag, ItemPosCountVec& dest, ItemPrototype const *pProto, uint32& count, bool merge, bool non_specialized, Item *pSrcItem, uint8 skip_bag, uint8 skip_slot ) const;
         uint8 _CanStoreItem_InInventorySlots( uint8 slot_begin, uint8 slot_end, ItemPosCountVec& dest, ItemPrototype const *pProto, uint32& count, bool merge, Item *pSrcItem, uint8 skip_bag, uint8 skip_slot ) const;
         Item* _StoreItem( uint16 pos, Item *pItem, uint32 count, bool clone, bool update );
+
+        void AdjustQuestReqItemCount( Quest const* pQuest, QuestStatusData& questStatusData );
 
         GridReference<Player> m_gridRef;
         MapReference m_mapRef;
