@@ -1086,7 +1086,7 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES
 
 UPDATE creature c, creature_template t SET c.curhealth=t.minhealth WHERE c.map=30 AND c.id=t.entry;
 UPDATE creature SET spawndist=0 WHERE MovementType=0 AND map=30;
-delete from mangos_string where entry>736 and entry<770;
+delete from mangos_string where entry>746 and entry<780;
 INSERT INTO mangos_string VALUES
 (747,'Alliance',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (748,'Horde',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
