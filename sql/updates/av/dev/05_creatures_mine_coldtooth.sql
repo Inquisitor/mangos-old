@@ -49,7 +49,7 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11603,30,-857.292,-152.277,63.2114,4.18879);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11603,30,-853.357,-0.696194,72.0655,0.994838);
 
--- 
+
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13317,30,-917.648,-46.8922,77.0872,5.27089);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13317,30,-912.689,-45.4494,76.2277,4.60767);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13317,30,-905.455,-84.5179,75.3642,3.29867);
@@ -195,7 +195,7 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11604,30,-847.446,-98.0061,68.5131,3.24631);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11604,30,-837.026,-140.729,62.5141,5.51524);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11604,30,-824.204,-65.053,72.3381,3.01942);
- 
+
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13096,30,-954.622,-110.958,80.7911,6.24828);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13096,30,-951.477,-53.9647,80.0235,5.32325);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13096,30,-946.812,-126.04,78.8601,5.15265);
@@ -235,7 +235,7 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13096,30,-847.446,-98.0061,68.5131,3.24631);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13096,30,-837.026,-140.729,62.5141,5.51524);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13096,30,-824.204,-65.053,72.3381,3.01942);
- 
+
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13097,30,-954.622,-110.958,80.7911,6.24828);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13097,30,-951.477,-53.9647,80.0235,5.32325);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13097,30,-946.812,-126.04,78.8601,5.15265);
