@@ -1583,10 +1583,6 @@ uint32 BattleGround::GetPlayerTeam(uint64 guid)
     return 0;
 }
 
-void BattleGround::HandleKillUnit(Creature *creature, Player *killer)
-{
-}
-
 bool BattleGround::IsPlayerInBattleGround(uint64 guid)
 {
     std::map<uint64, BattleGroundPlayer>::const_iterator itr = m_Players.find(guid);

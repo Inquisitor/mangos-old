@@ -802,6 +802,7 @@ void BattleGroundQueue::Update(BattleGroundTypeId bgTypeId, uint32 queue_id, uin
         bg2->SetArenaType(arenatype);
         // set rating
         bg2->SetRated(isRated);
+        bg2->SetLevelRange(Player::GetMinLevelForBattleGroundQueueId(queue_id),Player::GetMaxLevelForBattleGroundQueueId(queue_id));
 
         std::list<GroupQueueInfo* >::iterator itr;
 
