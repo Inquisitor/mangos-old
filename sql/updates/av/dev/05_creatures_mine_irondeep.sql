@@ -329,6 +329,3 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11657,30,865.554, -438.735, 50.7333, 2.12431);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13078,30,865.554, -438.735, 50.7333, 2.12431);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13079,30,865.554, -438.735, 50.7333, 2.12431);
-
-UPDATE creature c, creature_template t SET c.curhealth=t.minhealth WHERE c.map=30 AND c.id=t.entry;
-UPDATE creature SET spawndist=0 WHERE MovementType=0 AND map=30;

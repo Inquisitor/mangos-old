@@ -317,9 +317,6 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation)
 VALUES(14772,30,-1378.37, -228.614, 99.3546, 5.38565);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation)
 VALUES(14777,30,-1358.02, -228.998, 98.868, 3.87768);
-
-UPDATE creature c, creature_template t SET c.curhealth=t.minhealth WHERE c.map=30 AND c.id=t.entry;
-UPDATE creature SET spawndist=0 WHERE MovementType=0 AND map=30;
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11603,30,-917.648,-46.8922,77.0872,5.27089);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11603,30,-912.689,-45.4494,76.2277,4.60767);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11603,30,-905.455,-84.5179,75.3642,3.29867);
@@ -614,8 +611,6 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13088,30,-848.902,-92.931,68.6325,3.33350);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13086,30,-848.902,-92.931,68.6325,3.33350);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11677,30,-848.902,-92.931,68.6325,3.33350);
-UPDATE creature c, creature_template t SET c.curhealth=t.minhealth WHERE c.map=30 AND c.id=t.entry;
-UPDATE creature SET spawndist=0 WHERE MovementType=0 AND map=30;
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(10987,30,971.671, -442.657, 57.6951, 3.1765);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(10987,30,969.979, -457.148, 58.1119, 4.5204);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(10987,30,958.692, -333.477, 63.2276, 5.77704);
@@ -947,8 +942,8 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(11657,30,865.554, -438.735, 50.7333, 2.12431);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13078,30,865.554, -438.735, 50.7333, 2.12431);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13079,30,865.554, -438.735, 50.7333, 2.12431);
-
 UPDATE creature c, creature_template t SET c.curhealth=t.minhealth WHERE c.map=30 AND c.id=t.entry;
+UPDATE creature c, creature_template t SET c.curmana=t.minmana WHERE c.map=30 AND c.id=t.entry;
 UPDATE creature SET spawndist=0 WHERE MovementType=0 AND map=30;
 -- following gameobjects are static
 DELETE FROM gameobject WHERE map=30;
