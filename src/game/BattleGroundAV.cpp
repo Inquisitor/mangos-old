@@ -1411,8 +1411,9 @@ void BattleGroundAV::DefendNode(BG_AV_Nodes node, uint16 team)
     m_Nodes[node].Timer      = 0;
 }
 
-void BattleGroundAV::ResetBGSubclass()
+void BattleGroundAV::Reset()
 {
+    BattleGround::Reset();
     for(uint8 i=0; i<2; i++) //forloop for both teams (it just make 0==alliance and 1==horde also for both mines 0=north 1=south
     {
         for(uint8 j=0; j<9; j++)

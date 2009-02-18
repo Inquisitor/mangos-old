@@ -995,7 +995,7 @@ class BattleGroundAV : public BattleGround
         void RemovePlayer(Player *plr,uint64 guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
         bool SetupBattleGround();
-        virtual void ResetBGSubclass();
+        virtual void Reset();
 
         /*general stuff*/
         void UpdateScore(uint16 team, int16 points);
