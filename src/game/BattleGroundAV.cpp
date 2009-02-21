@@ -107,9 +107,10 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
 void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
-        return;//maybe we should log this, cause this must be a cheater or a big bug
+        return;
     uint8 team = GetTeamIndexByTeamId(player->GetTeam());
-    //TODO add reputation, events (including quest not available anymore, next quest availabe, go/npc de/spawning)and maybe honor
+    uint32 reputation=0; //reputation for the whole team for 730/729
+    //TODO add events (including quest not available anymore, next quest availabe, go/npc de/spawning)
     sLog.outError("BG_AV Quest %i completed",questid);
     switch(questid)
     {
@@ -118,51 +119,57 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
         case AV_QUEST_H_SCRAPS1:
         case AV_QUEST_H_SCRAPS2:
             m_Team_QuestStatus[team][0]+=20;
+            reputation=1; //+10 og rep (player only)
             if(m_Team_QuestStatus[team][0] == 500 || m_Team_QuestStatus[team][0] == 1000 || m_Team_QuestStatus[team][0] == 1500) //25,50,75 turn ins
             {
                 sLog.outDebug("BG_AV Quest %i completed starting with unit upgrading..",questid);
                 for (BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i)
+                {
                     if (m_Nodes[i].Owner == player->GetTeam() && m_Nodes[i].State == POINT_CONTROLED)
                     {
                         DePopulateNode(i);
                         PopulateNode(i);
-                            //maybe this is bad, because it will instantly respawn all creatures on every grave..
                      }
+                }
             }
             break;
         case AV_QUEST_A_COMMANDER1:
         case AV_QUEST_H_COMMANDER1:
             m_Team_QuestStatus[team][1]++;
-            RewardReputationToTeam(team,1,player->GetTeam());
-            if(m_Team_QuestStatus[team][1] == 30)
+            reputation=1;
+            if(m_Team_QuestStatus[team][1] == 120)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
         case AV_QUEST_A_COMMANDER2:
         case AV_QUEST_H_COMMANDER2:
             m_Team_QuestStatus[team][2]++;
-            RewardReputationToTeam(team,1,player->GetTeam());
+            reputation=2;
             if(m_Team_QuestStatus[team][2] == 60)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
         case AV_QUEST_A_COMMANDER3:
         case AV_QUEST_H_COMMANDER3:
             m_Team_QuestStatus[team][3]++;
+            reputation=5;
             RewardReputationToTeam(team,1,player->GetTeam());
-            if(m_Team_QuestStatus[team][1] == 120)
+            if(m_Team_QuestStatus[team][1] == 30)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
         case AV_QUEST_A_BOSS1:
         case AV_QUEST_H_BOSS1:
-            m_Team_QuestStatus[team][4] += 9; //you can turn in 10 or 1 item..
+            m_Team_QuestStatus[team][4] += 4; //you can turn in 5 or 1 item.. (+4 cause +1 will be done some lines below)
+            reputation=4;
         case AV_QUEST_A_BOSS2:
         case AV_QUEST_H_BOSS2:
             m_Team_QuestStatus[team][4]++;
+            reputation+=1;
             if(m_Team_QuestStatus[team][4] >= 200)
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
             break;
         case AV_QUEST_A_NEAR_MINE:
         case AV_QUEST_H_NEAR_MINE:
             m_Team_QuestStatus[team][5]++;
+            reputation=2;
             if(m_Team_QuestStatus[team][5] == 28)
             {
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
@@ -173,6 +180,7 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
         case AV_QUEST_A_OTHER_MINE:
         case AV_QUEST_H_OTHER_MINE:
             m_Team_QuestStatus[team][6]++;
+            reputation=3;
             if(m_Team_QuestStatus[team][6] == 7)
             {
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
@@ -183,6 +191,7 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
         case AV_QUEST_A_RIDER_HIDE:
         case AV_QUEST_H_RIDER_HIDE:
             m_Team_QuestStatus[team][7]++;
+            reputation=1;
             if(m_Team_QuestStatus[team][7] == 25)
             {
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
@@ -193,6 +202,7 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
         case AV_QUEST_A_RIDER_TAME:
         case AV_QUEST_H_RIDER_TAME:
             m_Team_QuestStatus[team][8]++;
+            reputation=1;
             if(m_Team_QuestStatus[team][8] == 25)
             {
                 sLog.outDebug("BG_AV Quest %i completed (need to implement some events here",questid);
@@ -205,6 +215,8 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
             return; //was no interesting quest at all
             break;
     }
+    if(reputation)
+        RewardReputationToTeam((player->GetTeam()==ALLIANCE)?730:729, reputation, player->GetTeam());
 }
 
 void BattleGroundAV::UpdateScore(uint16 team, int16 points )

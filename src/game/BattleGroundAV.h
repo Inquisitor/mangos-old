@@ -929,8 +929,8 @@ const uint32 BG_AV_NodeWorldStates[16][4] = {
 
 enum BG_AV_QuestIds
 {
-    AV_QUEST_A_SCRAPS1      = 7223,
-    AV_QUEST_A_SCRAPS2      = 6781,
+    AV_QUEST_A_SCRAPS1      = 7223, //first quest
+    AV_QUEST_A_SCRAPS2      = 6781, //repeatable
     AV_QUEST_H_SCRAPS1      = 7224,
     AV_QUEST_H_SCRAPS2      = 6741,
     AV_QUEST_A_COMMANDER1   = 6942, //soldier
