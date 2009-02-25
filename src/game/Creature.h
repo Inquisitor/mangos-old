@@ -619,7 +619,10 @@ class MANGOS_DLL_SPEC Creature : public Unit
                m_deleteAfterNoAggro=set;
        }
        bool GetDeleteAfterNoAggro() { return m_deleteAfterNoAggro; }
-        void SetDeadByDefault (bool death_state) {m_isDeadByDefault = death_state;}
+        void SetDeadByDefault (bool death_state) { m_isDeadByDefault = death_state; }
+
+        bool isActiveObject() const { return m_isActiveObject; }
+        void SetActiveObjectState(bool on);
 
        void SetDBTableGuid(uint32 id) { m_DBTableGuid = id; }
     protected:
@@ -675,6 +678,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
     private:
         GridReference<Creature> m_gridRef;
         CreatureInfo const* m_creatureInfo;                 // in heroic mode can different from ObjMgr::GetCreatureTemplate(GetEntry())
+        bool m_isActiveObject;
 };
 
 class AssistDelayEvent : public BasicEvent
