@@ -1317,6 +1317,7 @@ void BattleGround::SpawnBGObject(GameObject* obj, uint32 respawntime)
         return;
     if( respawntime == 0 )
     {
+        obj->SetPhaseMask(PHASEMASK_NORMAL,false);
         if( obj->getLootState() == GO_JUST_DEACTIVATED )
             obj->SetLootState(GO_READY);
         obj->SetRespawnTime(0);
@@ -1324,6 +1325,7 @@ void BattleGround::SpawnBGObject(GameObject* obj, uint32 respawntime)
     }
     else
     {
+        obj->SetPhaseMask(0,false);
         map->Add(obj);
         obj->SetRespawnTime(respawntime);
         obj->SetLootState(GO_JUST_DEACTIVATED);
@@ -1341,9 +1343,9 @@ void BattleGround::SpawnBGObject(uint32 type, uint32 respawntime)
         GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
         if(obj)
         {
-            if( obj->getLootState() == GO_JUST_DEACTIVATED )
-                obj->SetLootState(GO_READY);
-            obj->SetRespawnTime(0);
+            obj->SetPhaseMask(PHASEMASK_NORMAL,false);
+            obj->SetLootState(GO_READY);
+            obj->Respawn();
             map->Add(obj);
         }
     }
@@ -1352,8 +1354,8 @@ void BattleGround::SpawnBGObject(uint32 type, uint32 respawntime)
         GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
         if(obj)
         {
+            obj->SetPhaseMask(0,false);
             map->Add(obj);
-            obj->SetRespawnTime(respawntime);
             obj->SetLootState(GO_JUST_DEACTIVATED);
         }
     }
@@ -1408,20 +1410,15 @@ void BattleGround::SpawnBGCreature(Creature* obj, uint32 respawntime)
         return;
     if(respawntime == 0)
     {
-        //obj->SetVisibility(VISIBILITY_ON);
+        obj->SetPhaseMask(PHASEMASK_NORMAL,false);
+        obj->setDeathState(ALIVE);
         obj->Respawn();
-        //obj->SetRespawnTime(0);
-        //objmgr.SaveCreatureRespawnTime(obj->GetGUIDLow(), GetInstanceID(), 0);
         map->Add(obj);
     }
     else
     {
+        obj->SetPhaseMask(0,false);
         map->Add(obj);
-        obj->setDeathState(JUST_DIED);
-        obj->SetRespawnDelay(respawntime);
-        obj->RemoveCorpse();
-        obj->SetRespawnTime(respawntime);
-        obj->SaveRespawnTime();
     }
 }
 
