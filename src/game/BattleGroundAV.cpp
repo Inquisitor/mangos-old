@@ -1086,16 +1086,15 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
             std::vector<uint64> ghost_list = m_ReviveQueue[m_BgCreatures[node]];
             if( !ghost_list.empty() )
             {
-                Player *plr;
                 WorldSafeLocsEntry const *ClosestGrave = NULL;
                 for (std::vector<uint64>::const_iterator itr = ghost_list.begin(); itr != ghost_list.end(); ++itr)
                 {
-                    plr = objmgr.GetPlayer(*itr);
+                    Player *plr = objmgr.GetPlayer(*itr);
                     if( !plr )
                         continue;
                     if(!ClosestGrave)
-                        ClosestGrave = GetClosestGraveYard(plr->GetPositionX(), plr->GetPositionY(), plr->GetPositionZ(), team);
-                    else
+                        ClosestGrave = GetClosestGraveYard(plr);
+                    if(ClosestGrave)
                         plr->TeleportTo(GetMapId(), ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, plr->GetOrientation());
                 }
                 m_ReviveQueue[m_BgCreatures[node]].clear();
@@ -1216,8 +1215,11 @@ void BattleGroundAV::SendMineWorldStates(uint32 mine)
 }
 
 
-WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(float x, float y, float z, uint32 team)
+WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(Player *plr)
 {
+    float x = plr->GetPositionX();
+    float y = plr->GetPositionY();
+    uint32 team = plr->GetTeam();
     WorldSafeLocsEntry const* good_entry = NULL;
     if( GetStatus() == STATUS_IN_PROGRESS)
     {
