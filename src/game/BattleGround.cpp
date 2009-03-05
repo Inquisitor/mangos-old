@@ -1256,15 +1256,12 @@ void BattleGround::SpawnBGObject(GameObject* obj, uint32 respawntime)
         return;
     if( respawntime == 0 )
     {
-        obj->SetPhaseMask(PHASEMASK_NORMAL,false);
-        if( obj->getLootState() == GO_JUST_DEACTIVATED )
-            obj->SetLootState(GO_READY);
+        obj->SetLootState(GO_READY);
         obj->SetRespawnTime(0);
         map->Add(obj);
     }
     else
     {
-        obj->SetPhaseMask(0,false);
         map->Add(obj);
         obj->SetRespawnTime(respawntime);
         obj->SetLootState(GO_JUST_DEACTIVATED);
@@ -1282,9 +1279,8 @@ void BattleGround::SpawnBGObject(uint32 type, uint32 respawntime)
         GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
         if(obj)
         {
-            obj->SetPhaseMask(PHASEMASK_NORMAL,false);
             obj->SetLootState(GO_READY);
-            obj->Respawn();
+            obj->SetRespawnTime(0);
             map->Add(obj);
         }
     }
@@ -1293,8 +1289,8 @@ void BattleGround::SpawnBGObject(uint32 type, uint32 respawntime)
         GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
         if(obj)
         {
-            obj->SetPhaseMask(0,false);
             map->Add(obj);
+            obj->SetRespawnTime(respawntime);
             obj->SetLootState(GO_JUST_DEACTIVATED);
         }
     }
@@ -1342,6 +1338,11 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
 
 void BattleGround::SpawnBGCreature(Creature* obj, uint32 respawntime)
 {
+    //i think this is done, by just setting a respawntime
+    //so despawn means, next respawn in 5days
+    //and spawn means, next respawn in normal way+respawn right now
+    //cause in the mine the troggs kill all alliance-creatures instantly
+    //this doesn't work yet (don't know if this is a db-problem)
     if(!obj)
         return;
     Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceID());
@@ -1372,6 +1373,7 @@ bool BattleGround::DelCreature(uint32 type)
         sLog.outError("Can't find Battleground creature type:%u guid:%u",type, GUID_LOPART(m_BgCreatures[type]));
         return false;
     }
+    //following will delete only if this creature has no aggro or bg ends
     cr->SetDeleteAfterNoAggro(true);
     m_BgCreatures[type] = 0;
     return true;
