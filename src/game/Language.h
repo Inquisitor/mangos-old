@@ -680,8 +680,7 @@ enum MangosStrings
     LANG_DIST_ARENA_POINTS_TEAM_START   = 744,
     LANG_DIST_ARENA_POINTS_TEAM_END     = 745,
     LANG_DIST_ARENA_POINTS_END          = 746,
-
-   // Room for batleground/arena strings 747-799 not used
+    // Room for batleground/arena strings 747-799 not used
 
     // in game strings
     //                                  = 800, not used
