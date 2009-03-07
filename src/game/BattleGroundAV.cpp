@@ -34,6 +34,11 @@ BattleGroundAV::BattleGroundAV()
 {
     m_BgObjects.resize(BG_AV_OBJECT_MAX);
     m_BgCreatures.resize(AV_CPLACE_MAX);
+
+    m_StartMessageIds[BG_STARTING_EVENT_FIRST]  = LANG_BG_AV_START_TWO_MINUTES;
+    m_StartMessageIds[BG_STARTING_EVENT_SECOND] = LANG_BG_AV_START_ONE_MINUTE;
+    m_StartMessageIds[BG_STARTING_EVENT_THIRD]  = LANG_BG_AV_START_HALF_MINUTE;
+    m_StartMessageIds[BG_STARTING_EVENT_FOURTH] = LANG_BG_AV_HAS_BEGUN;
 }
 
 BattleGroundAV::~BattleGroundAV()
@@ -547,6 +552,14 @@ void BattleGroundAV::Update(uint32 diff)
                      EventPlayerDestroyedPoint( i);
             }
     }
+}
+
+void BattleGroundAV::StartingEventCloseDoors()
+{
+}
+
+void BattleGroundAV::StartingEventOpenDoors()
+{
 }
 
 void BattleGroundAV::AddPlayer(Player *plr)
