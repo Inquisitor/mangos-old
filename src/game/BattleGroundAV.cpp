@@ -240,7 +240,7 @@ void BattleGroundAV::UpdateScore(uint16 team, int16 points )
         }
         else if(!m_IsInformedNearVictory[teamindex] && m_Team_Scores[teamindex] < SEND_MSG_NEAR_LOSE)
         {
-            SendMessageToAll(GetMangosString((teamindex==BG_TEAM_HORDE)?LANG_BG_AV_H_NEAR_LOSE:LANG_BG_AV_A_NEAR_LOSE));
+            SendMessageToAll(GetMangosString((teamindex==BG_TEAM_HORDE)?LANG_BG_AV_H_NEAR_LOSE:LANG_BG_AV_A_NEAR_LOSE),CHAT_MSG_BG_SYSTEM_NEUTRAL);
             PlaySoundToAll(AV_SOUND_NEAR_VICTORY);
             m_IsInformedNearVictory[teamindex] = true;
         }
@@ -402,164 +402,124 @@ Creature* BattleGroundAV::AddAVCreature(uint16 cinfoid, uint16 type )
 void BattleGroundAV::Update(uint32 diff)
 {
     BattleGround::Update(diff);
-    if (GetStatus() == STATUS_WAIT_JOIN && GetPlayersSize())
+    if(GetStatus() != STATUS_IN_PROGRESS)
+        return;
+
+    for(uint8 i=0; i<=1;i++)//0=alliance, 1=horde
     {
-        ModifyStartDelayTime(diff);
-
-        if (!(m_Events & 0x01))
+        if(i==1 && (!m_DB_Creature[AV_CREATURE_H_CAPTAIN] || !m_DB_Creature[AV_CREATURE_H_CAPTAIN]->isAlive()))
+            continue;
+        if(i==0 && (!m_DB_Creature[AV_CREATURE_A_CAPTAIN] || !m_DB_Creature[AV_CREATURE_A_CAPTAIN]->isAlive()))
+            continue;
+        if(m_CaptainBuffTimer[i] > diff)
+            m_CaptainBuffTimer[i] -= diff;
+        else
         {
-            m_Events |= 0x01;
-
-            if(!SetupBattleGround())
+            if(i==0)
             {
-                EndNow();
-                return;
+                CastSpellOnTeam(AV_BUFF_A_CAPTAIN,ALLIANCE);
+                YellToAll(m_DB_Creature[AV_CREATURE_A_CAPTAIN],LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON);
             }
-
-            uint16 i;
-            sLog.outDebug("Alterac Valley: entering state STATUS_WAIT_JOIN ...");
-            // Initial Nodes
-            for(i = 0; i < BG_AV_OBJECT_MAX; i++)
-                SpawnBGObject(i, RESPAWN_ONE_DAY);
-            for(i = BG_AV_OBJECT_FLAG_A_FIRSTAID_STATION; i <= BG_AV_OBJECT_FLAG_A_STONEHEART_GRAVE ; i++){
-                SpawnBGObject(BG_AV_OBJECT_AURA_A_FIRSTAID_STATION+3*i,RESPAWN_IMMEDIATELY);
-                SpawnBGObject(i, RESPAWN_IMMEDIATELY);
-            }
-            for(i = BG_AV_OBJECT_FLAG_A_DUNBALDAR_SOUTH; i <= BG_AV_OBJECT_FLAG_A_STONEHEART_BUNKER ; i++)
-                SpawnBGObject(i, RESPAWN_IMMEDIATELY);
-            for(i = BG_AV_OBJECT_FLAG_H_ICEBLOOD_GRAVE; i <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER ; i++){
-                SpawnBGObject(i, RESPAWN_IMMEDIATELY);
-                if(i<=BG_AV_OBJECT_FLAG_H_FROSTWOLF_HUT)
-                    SpawnBGObject(BG_AV_OBJECT_AURA_H_FIRSTAID_STATION+3*GetNodeThroughObject(i),RESPAWN_IMMEDIATELY);
-            }
-            for(i = BG_AV_OBJECT_TFLAG_A_DUNBALDAR_SOUTH; i <= BG_AV_OBJECT_TFLAG_A_STONEHEART_BUNKER; i+=2)
+            else if(i==1)
             {
-                SpawnBGObject(i, RESPAWN_IMMEDIATELY); //flag
-                SpawnBGObject(i+16, RESPAWN_IMMEDIATELY); //aura
+                CastSpellOnTeam(AV_BUFF_H_CAPTAIN,HORDE);
+                YellToAll(m_DB_Creature[AV_CREATURE_H_CAPTAIN],LANG_BG_AV_H_CAPTAIN_BUFF,LANG_ORCISH);
             }
-            for(i = BG_AV_OBJECT_TFLAG_H_ICEBLOOD_TOWER; i <= BG_AV_OBJECT_TFLAG_H_FROSTWOLF_WTOWER; i+=2)
-            {
-                SpawnBGObject(i, RESPAWN_IMMEDIATELY); //flag
-                SpawnBGObject(i+16, RESPAWN_IMMEDIATELY); //aura
-            }
-            //snowfall and the doors
-            for(i = BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE; i <= BG_AV_OBJECT_DOOR_A; i++)
-                SpawnBGObject(i, RESPAWN_IMMEDIATELY);
-            SpawnBGObject(BG_AV_OBJECT_AURA_N_SNOWFALL_GRAVE,RESPAWN_IMMEDIATELY);
-
-            //creatures
-            sLog.outDebug("BG_AV start poputlating nodes");
-            for(BG_AV_Nodes i= BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; ++i )
-            {
-                if(m_Nodes[i].Owner)
-                    PopulateNode(i);
-            }
-        //mainspiritguides:
-            sLog.outDebug("BG_AV: start spawning spiritguides creatures");
-            AddSpiritGuide(7, BG_AV_CreaturePos[7][0], BG_AV_CreaturePos[7][1], BG_AV_CreaturePos[7][2], BG_AV_CreaturePos[7][3], ALLIANCE);
-            AddSpiritGuide(8, BG_AV_CreaturePos[8][0], BG_AV_CreaturePos[8][1], BG_AV_CreaturePos[8][2], BG_AV_CreaturePos[8][3], HORDE);
-            //spawn the marshals (those who get deleted, if a tower gets destroyed)
-            sLog.outDebug("BG_AV: start spawning marshal creatures");
-
-            DoorClose(BG_AV_OBJECT_DOOR_A);
-            DoorClose(BG_AV_OBJECT_DOOR_H);
-
-            SetStartDelayTime(START_DELAY0);
-        }
-        // After 1 minute, warning is signalled
-        else if (GetStartDelayTime() <= START_DELAY1 && !(m_Events & 0x04))
-        {
-            m_Events |= 0x04;
-            SendMessageToAll(GetMangosString(LANG_BG_AV_ONEMINTOSTART));
-        }
-        // After 1,5 minute, warning is signalled
-        else if (GetStartDelayTime() <= START_DELAY2 && !(m_Events & 0x08))
-        {
-            m_Events |= 0x08;
-            SendMessageToAll(GetMangosString(LANG_BG_AV_HALFMINTOSTART));
-        }
-        // After 2 minutes, gates OPEN ! x)
-        else if (GetStartDelayTime() <= 0 && !(m_Events & 0x10))
-        {
-            UpdateWorldState(AV_SHOW_H_SCORE, 1);
-            UpdateWorldState(AV_SHOW_A_SCORE, 1);
-            m_Events |= 0x10;
-
-            SendMessageToAll(GetMangosString(LANG_BG_AV_STARTED));
-            PlaySoundToAll(SOUND_BG_START);
-            SetStatus(STATUS_IN_PROGRESS);
-
-            DoorOpen(BG_AV_OBJECT_DOOR_H);
-            DoorOpen(BG_AV_OBJECT_DOOR_A);
-
-
-            for(BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
-                if(Player* plr = objmgr.GetPlayer(itr->first))
-                    plr->RemoveAurasDueToSpell(SPELL_PREPARATION);
+            m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60000; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
         }
     }
-    else if(GetStatus() == STATUS_IN_PROGRESS)
+    //add points from mine owning, and look if he neutral team wanrts to reclaim the mine
+    m_Mine_Timer -=diff;
+    for(uint8 mine=0; mine <2; mine++)
     {
-        for(uint8 i=0; i<=1;i++)//0=alliance, 1=horde
+        if(m_Mine_Owner[mine] == ALLIANCE || m_Mine_Owner[mine] == HORDE)
         {
-            if(i==1 && (!m_DB_Creature[AV_CREATURE_H_CAPTAIN] || !m_DB_Creature[AV_CREATURE_H_CAPTAIN]->isAlive()))
-                continue;
-            if(i==0 && (!m_DB_Creature[AV_CREATURE_A_CAPTAIN] || !m_DB_Creature[AV_CREATURE_A_CAPTAIN]->isAlive()))
-                continue;
-            if(m_CaptainBuffTimer[i] > diff)
-                m_CaptainBuffTimer[i] -= diff;
+            if( m_Mine_Timer <= 0)
+                UpdateScore(m_Mine_Owner[mine],1);
+
+            if(m_Mine_Reclaim_Timer[mine] > diff)
+                m_Mine_Reclaim_Timer[mine] -= diff;
+            else{ //we don't need to set this timer to 0 cause this codepart wont get called when this thing is 0
+                ChangeMineOwner(mine,AV_NEUTRAL_TEAM);
+            }
+        }
+    }
+    if( m_Mine_Timer <= 0)
+        m_Mine_Timer=AV_MINE_TICK_TIMER; //this is at the end, cause we need to update both mines
+
+    //looks for all timers of the nodes and destroy the building (for graveyards the building wont get destroyed, it goes just to the other team
+    for(BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; ++i)
+    {
+        if(m_Nodes[i].State == POINT_ASSAULTED) //maybe remove this
+        {
+            if(m_Nodes[i].Timer > diff)
+                m_Nodes[i].Timer -= diff;
             else
-            {
-                if(i==0)
-                {
-                    CastSpellOnTeam(AV_BUFF_A_CAPTAIN,ALLIANCE);
-                    YellToAll(m_DB_Creature[AV_CREATURE_A_CAPTAIN],LANG_BG_AV_A_CAPTAIN_BUFF,LANG_COMMON);
-                }
-                else if(i==1)
-                {
-                    CastSpellOnTeam(AV_BUFF_H_CAPTAIN,HORDE);
-                    YellToAll(m_DB_Creature[AV_CREATURE_H_CAPTAIN],LANG_BG_AV_H_CAPTAIN_BUFF,LANG_ORCISH);
-                }
-                m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60000; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0-4minutes TODO get the right times
-            }
+                 EventPlayerDestroyedPoint( i);
         }
-        //add points from mine owning, and look if he neutral team wanrts to reclaim the mine
-        m_Mine_Timer -=diff;
-        for(uint8 mine=0; mine <2; mine++)
-        {
-            if(m_Mine_Owner[mine] == ALLIANCE || m_Mine_Owner[mine] == HORDE)
-            {
-                if( m_Mine_Timer <= 0)
-                    UpdateScore(m_Mine_Owner[mine],1);
-
-                if(m_Mine_Reclaim_Timer[mine] > diff)
-                    m_Mine_Reclaim_Timer[mine] -= diff;
-                else{ //we don't need to set this timer to 0 cause this codepart wont get called when this thing is 0
-                    ChangeMineOwner(mine,AV_NEUTRAL_TEAM);
-                }
-            }
-        }
-        if( m_Mine_Timer <= 0)
-            m_Mine_Timer=AV_MINE_TICK_TIMER; //this is at the end, cause we need to update both mines
-
-        //looks for all timers of the nodes and destroy the building (for graveyards the building wont get destroyed, it goes just to the other team
-        for(BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; ++i)
-            if(m_Nodes[i].State == POINT_ASSAULTED) //maybe remove this
-            {
-                if(m_Nodes[i].Timer > diff)
-                    m_Nodes[i].Timer -= diff;
-                else
-                     EventPlayerDestroyedPoint( i);
-            }
     }
 }
 
 void BattleGroundAV::StartingEventCloseDoors()
 {
+    uint16 i;
+    sLog.outDebug("Alterac Valley: entering state STATUS_WAIT_JOIN ...");
+    // Initial Nodes
+    for(i = 0; i < BG_AV_OBJECT_MAX; i++)
+        SpawnBGObject(i, RESPAWN_ONE_DAY);
+    //mainspiritguides:
+    sLog.outDebug("BG_AV: start spawning main-spiritguides");
+    AddSpiritGuide(7, BG_AV_CreaturePos[7][0], BG_AV_CreaturePos[7][1], BG_AV_CreaturePos[7][2], BG_AV_CreaturePos[7][3], ALLIANCE);
+    AddSpiritGuide(8, BG_AV_CreaturePos[8][0], BG_AV_CreaturePos[8][1], BG_AV_CreaturePos[8][2], BG_AV_CreaturePos[8][3], HORDE);
+
+    //snowfall and the doors
+    for(i = BG_AV_OBJECT_FLAG_N_SNOWFALL_GRAVE; i <= BG_AV_OBJECT_DOOR_A; i++)
+        SpawnBGObject(i, RESPAWN_IMMEDIATELY);
+    SpawnBGObject(BG_AV_OBJECT_AURA_N_SNOWFALL_GRAVE,RESPAWN_IMMEDIATELY);
+
+    DoorClose(BG_AV_OBJECT_DOOR_A);
+    DoorClose(BG_AV_OBJECT_DOOR_H);
+
 }
 
 void BattleGroundAV::StartingEventOpenDoors()
 {
+    UpdateWorldState(AV_SHOW_H_SCORE, 1);
+    UpdateWorldState(AV_SHOW_A_SCORE, 1);
+
+    DoorOpen(BG_AV_OBJECT_DOOR_H);
+    DoorOpen(BG_AV_OBJECT_DOOR_A);
+
+    uint16 i;
+    for(i = BG_AV_OBJECT_FLAG_A_FIRSTAID_STATION; i <= BG_AV_OBJECT_FLAG_A_STONEHEART_GRAVE ; i++){
+        SpawnBGObject(BG_AV_OBJECT_AURA_A_FIRSTAID_STATION+3*i,RESPAWN_IMMEDIATELY);
+        SpawnBGObject(i, RESPAWN_IMMEDIATELY);
+    }
+    for(i = BG_AV_OBJECT_FLAG_A_DUNBALDAR_SOUTH; i <= BG_AV_OBJECT_FLAG_A_STONEHEART_BUNKER ; i++)
+        SpawnBGObject(i, RESPAWN_IMMEDIATELY);
+    for(i = BG_AV_OBJECT_FLAG_H_ICEBLOOD_GRAVE; i <= BG_AV_OBJECT_FLAG_H_FROSTWOLF_WTOWER ; i++){
+        SpawnBGObject(i, RESPAWN_IMMEDIATELY);
+        if(i<=BG_AV_OBJECT_FLAG_H_FROSTWOLF_HUT)
+            SpawnBGObject(BG_AV_OBJECT_AURA_H_FIRSTAID_STATION+3*GetNodeThroughObject(i),RESPAWN_IMMEDIATELY);
+    }
+    for(i = BG_AV_OBJECT_TFLAG_A_DUNBALDAR_SOUTH; i <= BG_AV_OBJECT_TFLAG_A_STONEHEART_BUNKER; i+=2)
+    {
+        SpawnBGObject(i, RESPAWN_IMMEDIATELY); //flag
+        SpawnBGObject(i+16, RESPAWN_IMMEDIATELY); //aura
+    }
+    for(i = BG_AV_OBJECT_TFLAG_H_ICEBLOOD_TOWER; i <= BG_AV_OBJECT_TFLAG_H_FROSTWOLF_WTOWER; i+=2)
+    {
+        SpawnBGObject(i, RESPAWN_IMMEDIATELY); //flag
+        SpawnBGObject(i+16, RESPAWN_IMMEDIATELY); //aura
+    }
+    //creatures
+    sLog.outDebug("BG_AV start populating nodes");
+    for(BG_AV_Nodes i= BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; ++i )
+    {
+        if(m_Nodes[i].Owner)
+            PopulateNode(i);
+    }
+
 }
 
 void BattleGroundAV::AddPlayer(Player *plr)

@@ -1,4 +1,4 @@
-delete from mangos_string where entry>10746 and entry<10780;
+delete from mangos_string where entry>10746 and entry<10781;
 INSERT INTO mangos_string VALUES
 (10747,'Alliance',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (10748,'Horde',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -26,13 +26,14 @@ INSERT INTO mangos_string VALUES
 (10770,'East Frostwolf Tower',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (10771,'West Frostwolf Tower',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (10772,'Frostwolf Relief Hut',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(10773,'The Battle for Alterac Valley begins in 1 minute.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(10774,'The Battle for Alterac Valley begins in 30 seconds. Prepare yourselves!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(10775,'The Battle for Alterac Valley has begun!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(10776,'The Alliance Team is running out of reinforcements!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(10777,'The Horde Team is running out of reinforcements!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(10778,'The Frostwolf General is Dead!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(10779,'The Stormpike General is Dead!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
+(10773,'2 minute until the battle for Alterac Valley begins.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(10774,'1 minute until the battle for Alterac Valley begins.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(10775,'30 seconds until the battle for Alterac Valley begins. Prepare yourselves!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(10776,'The battle for Alterac Valley has begun!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(10777,'The Alliance Team is running out of reinforcements!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(10778,'The Horde Team is running out of reinforcements!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(10779,'The Frostwolf General is Dead!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(10780,'The Stormpike General is Dead!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
 ;
 
 UPDATE mangos_string SET content_loc3='Allianz' WHERE entry=10747;
@@ -67,13 +68,14 @@ UPDATE mangos_string SET content_loc3='Der Friedhof der Frostwölfe' WHERE entry
 UPDATE mangos_string SET content_loc3='Der östliche Frostwolfturm' WHERE entry=10770;
 UPDATE mangos_string SET content_loc3='Der westliche Frostwolfturm' WHERE entry=10771;
 UPDATE mangos_string SET content_loc3='Die Heilerhütte der Frostwölfe' WHERE entry=10772;
-UPDATE mangos_string SET content_loc3='Der Kampf um das Alteractal beginnt in 1 Minute.' WHERE entry=10773;
-UPDATE mangos_string SET content_loc3='Der Kampf um das Alteractal beginnt in 30 Sekunden.' WHERE entry=10774;
-UPDATE mangos_string SET content_loc3='Der Kampf um das Alteractal hat begonnen!' WHERE entry=10775;
-UPDATE mangos_string SET content_loc3='Die Allianz hat nurnoch wenige Verstärkungspunkte' WHERE entry=10776; -- TODO find right msg
-UPDATE mangos_string SET content_loc3='Die Horde hat nurnoch wenige Verstärkungspunkte' WHERE entry=10777; -- TODO same here
-UPDATE mangos_string SET content_loc3='Der General der Allianz ist tot!' WHERE entry=10778;
-UPDATE mangos_string SET content_loc3='Der General der Horde ist tot!' WHERE entry=10779;
+UPDATE mangos_string SET content_loc3='Der Kampf um das Alteractal beginnt in 2 Minuten.' WHERE entry=10773;
+UPDATE mangos_string SET content_loc3='Der Kampf um das Alteractal beginnt in 1 Minute.' WHERE entry=10774;
+UPDATE mangos_string SET content_loc3='Der Kampf um das Alteractal beginnt in 30 Sekunden.' WHERE entry=10775;
+UPDATE mangos_string SET content_loc3='Der Kampf um das Alteractal hat begonnen!' WHERE entry=10776;
+UPDATE mangos_string SET content_loc3='Die Allianz hat nurnoch wenige Verstärkungspunkte' WHERE entry=10777; -- TODO find right msg
+UPDATE mangos_string SET content_loc3='Die Horde hat nurnoch wenige Verstärkungspunkte' WHERE entry=10778; -- TODO same here
+UPDATE mangos_string SET content_loc3='Der General der Allianz ist tot!' WHERE entry=10779;
+UPDATE mangos_string SET content_loc3='Der General der Horde ist tot!' WHERE entry=10780;
 
 
 -- CHAT_MSG_BG_SYSTEM_ALLIANCE', 'txt': '$N hat den Schneewehenfriedhof besetzt! Wenn niemand eingreift, erlangt die Allianz die Kontrolle \xc3\xbcber ihn

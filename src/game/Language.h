@@ -783,13 +783,14 @@ enum MangosStrings
     LANG_BG_AV_NODE_TOWER_FROST_W       = 10771,
     LANG_BG_AV_NODE_GRAVE_FROST_HUT     = 10772,
 
-    LANG_BG_AV_ONEMINTOSTART            = 10773,
-    LANG_BG_AV_HALFMINTOSTART           = 10774,
-    LANG_BG_AV_STARTED                  = 10775,
-    LANG_BG_AV_A_NEAR_LOSE              = 10776,
-    LANG_BG_AV_H_NEAR_LOSE              = 10777,
-    LANG_BG_AV_H_CAPTAIN_DEAD           = 10778,
-    LANG_BG_AV_A_CAPTAIN_DEAD           = 10779,
+    LANG_BG_AV_START_TWO_MINUTES        = 10773,
+    LANG_BG_AV_START_ONE_MINUTE         = 10774,
+    LANG_BG_AV_START_HALF_MINUTE        = 10775,
+    LANG_BG_AV_HAS_BEGUN                = 10776,
+    LANG_BG_AV_A_NEAR_LOSE              = 10777,
+    LANG_BG_AV_H_NEAR_LOSE              = 10778,
+    LANG_BG_AV_H_CAPTAIN_DEAD           = 10779,
+    LANG_BG_AV_A_CAPTAIN_DEAD           = 10780,
 
     // Use for custom patches             11000-11999
 
