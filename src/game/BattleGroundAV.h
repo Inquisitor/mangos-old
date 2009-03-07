@@ -1045,8 +1045,8 @@ class BattleGroundAV : public BattleGround
         void UpdateNodeWorldState(BG_AV_Nodes node);
 
         /*general */
-        Creature* AddAVCreature(uint16 cinfoid, uint16 type);
-        const uint16 GetBonusHonor(uint8 kills); //TODO remove this when mangos handles this right
+        Creature* AddAVCreature(uint32 cinfoid, uint32 type);
+        const uint32 GetBonusHonor(uint8 kills); //TODO remove this when mangos handles this right
 
         /*variables */
         int32 m_Team_Scores[2];

@@ -45,7 +45,7 @@ BattleGroundAV::~BattleGroundAV()
 {
 }
 
-const uint16 BattleGroundAV::GetBonusHonor(uint8 kills) //TODO: move this function to Battleground.cpp - but this is another patch
+const uint32 BattleGroundAV::GetBonusHonor(uint8 kills) //TODO: move this function to Battleground.cpp - but this is another patch
 {
     return MaNGOS::Honor::hk_honor_at_level(GetMaxLevel(), kills);
 }
@@ -370,7 +370,7 @@ void BattleGroundAV::OnCreatureCreate(Creature* creature)
     creature->SetLevel(level);
 }
 
-Creature* BattleGroundAV::AddAVCreature(uint16 cinfoid, uint16 type )
+Creature* BattleGroundAV::AddAVCreature(uint32 cinfoid, uint32 type )
 {
     uint32 level;
     Creature* creature = NULL;
@@ -407,10 +407,12 @@ void BattleGroundAV::Update(uint32 diff)
 
     for(uint8 i=0; i<=1;i++)//0=alliance, 1=horde
     {
-        if(i==1 && (!m_DB_Creature[AV_CREATURE_H_CAPTAIN] || !m_DB_Creature[AV_CREATURE_H_CAPTAIN]->isAlive()))
+        //if the creature isn't spawned or dead, we don't need to reduce the
+        //timer or look if we should buff
+        if((!m_DB_Creature[AV_CREATURE_A_CAPTAIN+i] || !m_DB_Creature[AV_CREATURE_A_CAPTAIN+i]->isAlive()))
             continue;
-        if(i==0 && (!m_DB_Creature[AV_CREATURE_A_CAPTAIN] || !m_DB_Creature[AV_CREATURE_A_CAPTAIN]->isAlive()))
-            continue;
+
+        //captain is alive, reduce the timer
         if(m_CaptainBuffTimer[i] > diff)
             m_CaptainBuffTimer[i] -= diff;
         else
@@ -462,7 +464,7 @@ void BattleGroundAV::Update(uint32 diff)
 
 void BattleGroundAV::StartingEventCloseDoors()
 {
-    uint16 i;
+    uint32 i;
     sLog.outDebug("Alterac Valley: entering state STATUS_WAIT_JOIN ...");
     // Initial Nodes
     for(i = 0; i < BG_AV_OBJECT_MAX; i++)
@@ -490,7 +492,7 @@ void BattleGroundAV::StartingEventOpenDoors()
     DoorOpen(BG_AV_OBJECT_DOOR_H);
     DoorOpen(BG_AV_OBJECT_DOOR_A);
 
-    uint16 i;
+    uint32 i;
     for(i = BG_AV_OBJECT_FLAG_A_FIRSTAID_STATION; i <= BG_AV_OBJECT_FLAG_A_STONEHEART_GRAVE ; i++){
         SpawnBGObject(BG_AV_OBJECT_AURA_A_FIRSTAID_STATION+3*i,RESPAWN_IMMEDIATELY);
         SpawnBGObject(i, RESPAWN_IMMEDIATELY);
@@ -805,7 +807,7 @@ void BattleGroundAV::PopulateNode(BG_AV_Nodes node)
             sLog.outError("AV: couldn't spawn spiritguide at node %i",node);
 
     }
-    for(uint8 i=0; i<4; i++)
+    for(uint32 i=0; i<4; i++)
     {
         Creature* cr = AddAVCreature(creatureid,c_place+i);
     }
@@ -1439,7 +1441,7 @@ void BattleGroundAV::Reset()
     InitNode(BG_AV_NODES_SNOWFALL_GRAVE,AV_NEUTRAL_TEAM,false); //give snowfall neutral owner
 
     m_Mine_Timer=AV_MINE_TICK_TIMER;
-    for(uint16 i = 0; i < AV_CPLACE_MAX; i++)
+    for(uint32 i = 0; i < AV_CPLACE_MAX; i++)
         if(m_BgCreatures[i])
             DelCreature(i);
 
