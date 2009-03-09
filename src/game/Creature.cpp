@@ -1565,7 +1565,7 @@ SpellEntry const *Creature::reachWithSpellAttack(Unit *pVictim)
         SpellEntry const *spellInfo = sSpellStore.LookupEntry(m_spells[i] );
         if(!spellInfo)
         {
-            sLog.outError("WORLD: unknown spell id %i\n", m_spells[i]);
+            sLog.outError("WORLD: unknown spell id %i", m_spells[i]);
             continue;
         }
 
@@ -1615,7 +1615,7 @@ SpellEntry const *Creature::reachWithSpellCure(Unit *pVictim)
         SpellEntry const *spellInfo = sSpellStore.LookupEntry(m_spells[i] );
         if(!spellInfo)
         {
-            sLog.outError("WORLD: unknown spell id %i\n", m_spells[i]);
+            sLog.outError("WORLD: unknown spell id %i", m_spells[i]);
             continue;
         }
 
