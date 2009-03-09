@@ -45,11 +45,6 @@ BattleGroundAV::~BattleGroundAV()
 {
 }
 
-const uint32 BattleGroundAV::GetBonusHonor(uint8 kills) //TODO: move this function to Battleground.cpp - but this is another patch
-{
-    return MaNGOS::Honor::hk_honor_at_level(GetMaxLevel(), kills);
-}
-
 void BattleGroundAV::HandleKillPlayer(Player *player, Player *killer)
 {
     if(GetStatus() != STATUS_IN_PROGRESS)
@@ -68,19 +63,19 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     {
         case AV_CREATURE_ENTRY_A_BOSS:
             CastSpellOnTeam(23658,HORDE); //this is a spell which finishes a quest where a player has to kill the boss
-            RewardReputationToTeam(729,BG_AV_REP_BOSS,HORDE);
-            RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),HORDE);
+            RewardReputationToTeam(729,m_RepBoss,HORDE);
+            RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_BOSS),HORDE);
             EndBattleGround(HORDE);
             break;
         case AV_CREATURE_ENTRY_H_BOSS:
             CastSpellOnTeam(23658,ALLIANCE); //this is a spell which finishes a quest where a player has to kill the boss
-            RewardReputationToTeam(730,BG_AV_REP_BOSS,ALLIANCE);
-            RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_BOSS),ALLIANCE);
+            RewardReputationToTeam(730,m_RepBoss,ALLIANCE);
+            RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_BOSS),ALLIANCE);
             EndBattleGround(ALLIANCE);
             break;
         case AV_CREATURE_ENTRY_A_CAPTAIN:
-            RewardReputationToTeam(729,BG_AV_REP_CAPTAIN,HORDE);
-            RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),HORDE);
+            RewardReputationToTeam(729,m_RepCaptain,HORDE);
+            RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_CAPTAIN),HORDE);
             UpdateScore(ALLIANCE,(-1)*BG_AV_RES_CAPTAIN);
             //spawn destroyed aura
             for(uint8 i=0; i<=9; i++)
@@ -88,8 +83,8 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
             SendYellToAll(LANG_BG_AV_H_CAPTAIN_DEAD, LANG_UNIVERSAL, m_DB_Creature[AV_CREATURE_HERALD]);
             break;
         case AV_CREATURE_ENTRY_H_CAPTAIN:
-            RewardReputationToTeam(730,BG_AV_REP_CAPTAIN,ALLIANCE);
-            RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_CAPTAIN),ALLIANCE);
+            RewardReputationToTeam(730,m_RepCaptain,ALLIANCE);
+            RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_CAPTAIN),ALLIANCE);
             UpdateScore(HORDE,(-1)*BG_AV_RES_CAPTAIN);
             //spawn destroyed aura
             for(uint8 i=0; i<=9; i++)
@@ -540,12 +535,15 @@ void BattleGroundAV::EndBattleGround(uint32 winner)
 {
     //calculate bonuskills for both teams:
     //first towers:
-    uint8 ally_tower_survived =0;
-    uint8 horde_tower_survived=0;
-
+    uint32 ally_tower_survived =0;
+    uint32 horde_tower_survived=0;
+    uint32 ally_graves_owned   =0;
+    uint32 horde_graves_owned  =0;
+    uint32 ally_mines_owned    =0;
+    uint32 horde_mines_owned   =0;
     for(BG_AV_Nodes i = BG_AV_NODES_DUNBALDAR_SOUTH; i <= BG_AV_NODES_FROSTWOLF_WTOWER; ++i)
     {
-            if(m_Nodes[i].State == POINT_CONTROLED)
+            if(m_Nodes[i].State != POINT_DESTROYED)
             {
                 if(m_Nodes[i].Owner == ALLIANCE)
                     ++ally_tower_survived;
@@ -553,27 +551,65 @@ void BattleGroundAV::EndBattleGround(uint32 winner)
                     ++horde_tower_survived;
             }
     }
+    for(BG_AV_Nodes i=BG_AV_NODES_FIRSTAID_STATION; i<BG_AV_NODES_MAX; ++i)
+    {
+        if(m_Nodes[i].State == POINT_CONTROLED)
+        {
+            if(m_Nodes[i].Owner == ALLIANCE)
+                ++ally_graves_owned;
+            else
+                ++horde_graves_owned;
+        }
+    }
+    if(m_Mine_Owner[AV_SOUTH_MINE]==ALLIANCE)
+        ++ally_mines_owned;
+    else if(m_Mine_Owner[AV_SOUTH_MINE]==HORDE)
+        ++horde_mines_owned;
+    if(m_Mine_Owner[AV_NORTH_MINE]==ALLIANCE)
+        ++ally_mines_owned;
+    else if(m_Mine_Owner[AV_NORTH_MINE]==HORDE)
+        ++horde_mines_owned;
 
     //alliance:
-    RewardReputationToTeam(730, ally_tower_survived*BG_AV_REP_SURVIVING_TOWER, ALLIANCE);
-    RewardHonorToTeam(GetBonusHonor(ally_tower_survived*BG_AV_KILL_SURVIVING_TOWER), ALLIANCE);
-    sLog.outDebug("alliance towers:%u honor:%u rep:%u", ally_tower_survived, GetBonusHonor(ally_tower_survived*BG_AV_KILL_SURVIVING_TOWER), ally_tower_survived*BG_AV_REP_SURVIVING_TOWER);
+    if(ally_tower_survived)
+    {
+        RewardReputationToTeam(730, ally_tower_survived*m_RepSurviveTower, ALLIANCE);
+        RewardHonorToTeam(GetBonusHonorFromKill(ally_tower_survived*BG_AV_KILL_SURVIVING_TOWER), ALLIANCE);
+    }
+    if(ally_graves_owned)
+        RewardReputationToTeam(730, ally_graves_owned*m_RepOwnedGrave, ALLIANCE);
+    if(ally_mines_owned)
+        RewardReputationToTeam(730, ally_mines_owned*m_RepOwnedMine, ALLIANCE);
+    sLog.outDebug("alliance towers:%u honor:%u rep:%u", ally_tower_survived, GetBonusHonorFromKill(ally_tower_survived*BG_AV_KILL_SURVIVING_TOWER), ally_tower_survived*BG_AV_REP_SURVIVING_TOWER);
+    //captain
     if(m_DB_Creature[AV_CREATURE_A_CAPTAIN] && m_DB_Creature[AV_CREATURE_A_CAPTAIN]->isAlive())
     {
-        RewardReputationToTeam(730, BG_AV_REP_SURVIVING_CAPTAIN, ALLIANCE);
-        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_SURVIVING_CAPTAIN), ALLIANCE);
+        RewardReputationToTeam(730, m_RepSurviveCaptain, ALLIANCE);
+        RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_SURVIVING_CAPTAIN), ALLIANCE);
     }
     //horde:
-    RewardReputationToTeam(729, horde_tower_survived*BG_AV_REP_SURVIVING_TOWER, HORDE);
-    RewardHonorToTeam(GetBonusHonor(horde_tower_survived*BG_AV_KILL_SURVIVING_TOWER), HORDE);
-    sLog.outDebug("horde towers:%u honor:%u rep:%u", horde_tower_survived, GetBonusHonor(horde_tower_survived*BG_AV_KILL_SURVIVING_TOWER), horde_tower_survived*BG_AV_REP_SURVIVING_TOWER);
+    if(horde_tower_survived)
+    {
+        RewardReputationToTeam(729, horde_tower_survived*m_RepSurviveTower, HORDE);
+        RewardHonorToTeam(GetBonusHonorFromKill(horde_tower_survived*BG_AV_KILL_SURVIVING_TOWER), HORDE);
+    }
+    if(ally_graves_owned)
+        RewardReputationToTeam(729, horde_graves_owned*m_RepOwnedGrave, HORDE);
+    if(ally_mines_owned)
+        RewardReputationToTeam(729, horde_mines_owned*m_RepOwnedMine, HORDE);
+    sLog.outDebug("horde towers:%u honor:%u rep:%u", horde_tower_survived, GetBonusHonorFromKill(horde_tower_survived*BG_AV_KILL_SURVIVING_TOWER), horde_tower_survived*BG_AV_REP_SURVIVING_TOWER);
     if(m_DB_Creature[AV_CREATURE_H_CAPTAIN] && m_DB_Creature[AV_CREATURE_H_CAPTAIN]->isAlive())
     {
-        RewardReputationToTeam(729, BG_AV_REP_SURVIVING_CAPTAIN, HORDE);
-        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_SURVIVING_CAPTAIN), HORDE);
+        RewardReputationToTeam(729, m_RepSurviveCaptain, HORDE);
+        RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_SURVIVING_CAPTAIN), HORDE);
     }
     //TODO add enterevademode for all attacking creatures TODO look if this must
     //be done
+    if(m_HonorMapComplete)
+    {
+        RewardHonorToTeam(m_HonorMapComplete,ALLIANCE);
+        RewardHonorToTeam(m_HonorMapComplete,HORDE);
+    }
     BattleGround::EndBattleGround(winner);
 }
 
@@ -689,8 +725,8 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
             SpawnBGObject(BG_AV_OBJECT_BURN_DUNBALDAR_SOUTH + i + (tmp * 10),RESPAWN_IMMEDIATELY);
 
         UpdateScore((owner == ALLIANCE) ? HORDE : ALLIANCE, (-1)*BG_AV_RES_TOWER);
-        RewardReputationToTeam((owner == ALLIANCE)?730:729,BG_AV_REP_TOWER,owner);
-        RewardHonorToTeam(GetBonusHonor(BG_AV_KILL_TOWER),owner);
+        RewardReputationToTeam((owner == ALLIANCE)?730:729,m_RepTowerDestruction,owner);
+        RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_TOWER),owner);
 
         SpawnBGObject(BG_AV_OBJECT_TAURA_A_DUNBALDAR_SOUTH+GetTeamIndexByTeamId(owner)+(2*tmp),RESPAWN_ONE_DAY);
         SpawnBGObject(BG_AV_OBJECT_TFLAG_A_DUNBALDAR_SOUTH+GetTeamIndexByTeamId(owner)+(2*tmp),RESPAWN_ONE_DAY);
@@ -1391,6 +1427,17 @@ void BattleGroundAV::DefendNode(BG_AV_Nodes node, uint16 team)
 void BattleGroundAV::Reset()
 {
     BattleGround::Reset();
+    //set the reputation and honor variables:
+    bool isBGWeekend = false;           //TODO FIXME - call sBattleGroundMgr.IsBGWeekend(m_TypeID); - you must also implement that call!
+    uint32 m_HonorMapComplete    = (isBGWeekend)? BG_AV_KILL_MAP_COMPLETE_HOLIDAY : BG_AV_KILL_MAP_COMPLETE;
+    uint32 m_RepTowerDestruction = (isBGWeekend)? BG_AV_REP_TOWER_HOLIDAY         : BG_AV_REP_TOWER;
+    uint32 m_RepCaptain          = (isBGWeekend)? BG_AV_REP_CAPTAIN_HOLIDAY       : BG_AV_REP_CAPTAIN;
+    uint32 m_RepBoss             = (isBGWeekend)? BG_AV_REP_BOSS_HOLIDAY          : BG_AV_REP_BOSS;
+    uint32 m_RepOwnedGrave       = (isBGWeekend)? BG_AV_REP_OWNED_GRAVE_HOLIDAY   : BG_AV_REP_OWNED_GRAVE;
+    uint32 m_RepSurviveCaptain   = (isBGWeekend)? BG_AV_REP_SURVIVING_CAPTAIN_HOLIDAY : BG_AV_REP_SURVIVING_CAPTAIN;
+    uint32 m_RepSurviveTower     = (isBGWeekend)? BG_AV_REP_SURVIVING_TOWER_HOLIDAY : BG_AV_REP_SURVIVING_TOWER;
+
+
     for(uint8 i=0; i<2; i++) //forloop for both teams (it just make 0==alliance and 1==horde also for both mines 0=north 1=south
     {
         for(uint8 j=0; j<9; j++)

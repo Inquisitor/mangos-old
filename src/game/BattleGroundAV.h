@@ -21,6 +21,7 @@
 
 class BattleGround;
 
+//TODO: following strings must go to scriptdev
 #define LANG_BG_AV_A_CAPTAIN_BUFF       "Take heart, Alliance! Throw these villains from Alterac Valley!"
 #define LANG_BG_AV_H_CAPTAIN_BUFF       "Now is the time to attack! For the Horde!"
 #define LANG_BG_AV_S_MINE_BOSS_CLAIMS   "Snivvle is here! Snivvle claims the Coldtooth Mine!"
@@ -31,24 +32,41 @@ class BattleGround;
 #define BG_AV_SCORE_INITIAL_POINTS       600
 #define SEND_MSG_NEAR_LOSE               120
 
+//description: KILL=bonushonor kill one kill is 21honor worth at 0
+//REP reputation, RES= ressources a team will lose
 #define BG_AV_KILL_BOSS                 4
 #define BG_AV_REP_BOSS                  350
+#define BG_AV_REP_BOSS_HOLIDAY          525
 
 #define BG_AV_KILL_CAPTAIN              3
 #define BG_AV_REP_CAPTAIN               125
+#define BG_AV_REP_CAPTAIN_HOLIDAY       185
 #define BG_AV_RES_CAPTAIN               100
 
 #define BG_AV_KILL_TOWER                3
 #define BG_AV_REP_TOWER                 12
+#define BG_AV_REP_TOWER_HOLIDAY         18
 #define BG_AV_RES_TOWER                 75
 
-#define BG_AV_GET_COMMANDER            1 //for a safely returned wingcommander
+#define BG_AV_KILL_GET_COMMANDER        1 //for a safely returned wingcommander TODO implement it
+
 //bonushonor at the end
 #define BG_AV_KILL_SURVIVING_TOWER      2
 #define BG_AV_REP_SURVIVING_TOWER       12
+#define BG_AV_REP_SURVIVING_TOWER_HOLIDAY       18
 
 #define BG_AV_KILL_SURVIVING_CAPTAIN    2
 #define BG_AV_REP_SURVIVING_CAPTAIN     125
+#define BG_AV_REP_SURVIVING_CAPTAIN_HOLIDAY     175
+
+#define BG_AV_KILL_MAP_COMPLETE         0
+#define BG_AV_KILL_MAP_COMPLETE_HOLIDAY 4
+
+#define BG_AV_REP_OWNED_GRAVE           12
+#define BG_AV_REP_OWNED_GRAVE_HOLIDAY   18
+
+#define BG_AV_REP_OWNED_MINE            24
+#define BG_AV_REP_OWNED_MINE_HOLIDAY    36
 
 enum BG_AV_Sounds
 { //TODO: get out if there comes a sound when neutral team captures mine
@@ -1046,7 +1064,6 @@ class BattleGroundAV : public BattleGround
 
         /*general */
         Creature* AddAVCreature(uint32 cinfoid, uint32 type);
-        const uint32 GetBonusHonor(uint8 kills); //TODO remove this when mangos handles this right
 
         /*variables */
         int32 m_Team_Scores[2];
@@ -1068,6 +1085,17 @@ class BattleGroundAV : public BattleGround
         typedef std::vector<Creature*> CreatureVector;
         ObjectVector m_SnowfallEyecandy[4];
         CreatureVector m_MineCreatures[2][3];
+
+        uint32 m_HonorMapComplete;
+        uint32 m_RepTowerDestruction;
+        uint32 m_RepCaptain;
+        uint32 m_RepBoss;
+        uint32 m_RepOwnedGrave;
+        uint32 m_RepOwnedMine;
+        uint32 m_RepSurviveCaptain;
+        uint32 m_RepSurviveTower;
+
+
 };
 
 #endif
