@@ -99,7 +99,7 @@ horde:
     horde wins
     */
 
-    AV_SOUND_NEAR_VICTORY                   = 8456, //not confirmed yet
+    AV_SOUND_NEAR_LOSE                      = 8456, //not confirmed yet
 
     AV_SOUND_ALLIANCE_ASSAULTS              = 8212, //tower,grave + enemy boss if someone tries to attack him
     AV_SOUND_HORDE_ASSAULTS                 = 8174,
@@ -964,9 +964,9 @@ enum BG_AV_QuestIds
 
 struct BG_AV_NodeInfo
 {
-    uint16       TotalOwner;
-    uint16       Owner;
-    uint16       PrevOwner;
+    uint32       TotalOwner;
+    uint32       Owner;
+    uint32       PrevOwner;
     BG_AV_States State;
     BG_AV_States PrevState;
     int          Timer;
@@ -1009,7 +1009,7 @@ class BattleGroundAV : public BattleGround
         virtual void Reset();
 
         /*general stuff*/
-        void UpdateScore(uint16 team, int16 points);
+        void UpdateScore(uint32 team, int16 points);
        void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
 
         /*handlestuff*/ //these are functions which get called from extern
@@ -1030,10 +1030,10 @@ class BattleGroundAV : public BattleGround
         void EventPlayerDefendsPoint(Player* player, uint32 object);
         void EventPlayerDestroyedPoint(BG_AV_Nodes node);
 
-        void AssaultNode(BG_AV_Nodes node,uint16 team);
+        void AssaultNode(BG_AV_Nodes node, uint32 team);
         void DestroyNode(BG_AV_Nodes node);
-        void InitNode(BG_AV_Nodes node, uint16 team, bool tower);
-        void DefendNode(BG_AV_Nodes node, uint16 team);
+        void InitNode(BG_AV_Nodes node, uint32 team, bool tower);
+        void DefendNode(BG_AV_Nodes node, uint32 team);
 
         void PopulateNode(BG_AV_Nodes node);
         void DePopulateNode(BG_AV_Nodes node);
@@ -1049,7 +1049,7 @@ class BattleGroundAV : public BattleGround
 
         /*worldstates*/
         void FillInitialWorldStates(WorldPacket& data);
-        const uint8 GetWorldStateType(uint8 state, uint16 team);
+        const uint8 GetWorldStateType(uint8 state, uint32 team);
         void SendMineWorldStates(uint32 mine);
         void UpdateNodeWorldState(BG_AV_Nodes node);
 
@@ -1067,7 +1067,7 @@ class BattleGroundAV : public BattleGround
         int32 m_Mine_Timer; //ticks for both teams
         uint32 m_Mine_Reclaim_Timer[2];
 
-        bool m_IsInformedNearVictory[2];
+        bool m_IsInformedNearLose[2];
 
         Creature* m_DB_Creature[AV_DB_CREATURE_MAX];
 

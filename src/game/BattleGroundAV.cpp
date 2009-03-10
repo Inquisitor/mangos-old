@@ -110,7 +110,8 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
         return;
     uint8 team = GetTeamIndexByTeamId(player->GetTeam());
     uint32 reputation = 0; //reputation for the whole team for 730/729
-    //TODO add events (including quest not available anymore, next quest availabe, go/npc de/spawning)
+    // TODO add events (including quest not available anymore, next quest availabe, go/npc de/spawning)
+    // maybe we can do it with sd2?
     sLog.outError("BG_AV Quest %i completed",questid);
     switch(questid)
     {
@@ -119,7 +120,7 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
         case AV_QUEST_H_SCRAPS1:
         case AV_QUEST_H_SCRAPS2:
             m_Team_QuestStatus[team][0]+=20;
-            reputation = 1; //+10 og rep (player only)
+            reputation = 1;
             if(m_Team_QuestStatus[team][0] == 500 || m_Team_QuestStatus[team][0] == 1000 || m_Team_QuestStatus[team][0] == 1500) //25,50,75 turn ins
             {
                 sLog.outDebug("BG_AV Quest %i completed starting with unit upgrading..",questid);
@@ -157,7 +158,7 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
             break;
         case AV_QUEST_A_BOSS1:
         case AV_QUEST_H_BOSS1:
-            m_Team_QuestStatus[team][4] += 4; //you can turn in 5 or 1 item.. ( + 4 cause +1 will be done some lines below)
+            m_Team_QuestStatus[team][4] += 4; //there are 2 quests where you can turn in 5 or 1 item.. ( + 4 cause +1 will be done some lines below)
             reputation = 4;
         case AV_QUEST_A_BOSS2:
         case AV_QUEST_H_BOSS2:
@@ -219,29 +220,32 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
         RewardReputationToTeam((player->GetTeam() == ALLIANCE)?730:729, reputation, player->GetTeam());
 }
 
-void BattleGroundAV::UpdateScore(uint16 team, int16 points )
-{ //note: to remove reinforcementpoints points must be negative, for adding reinforcements points must be positive
+void BattleGroundAV::UpdateScore(uint32 team, int16 points )
+{
+    //note: to remove reinforcementpoints points must be negative, for adding reinforcements points must be positive
     assert( team == ALLIANCE || team == HORDE);
-    uint8 teamindex = GetTeamIndexByTeamId(team); //0=ally 1=horde
+    uint8 teamindex = GetTeamIndexByTeamId(team);
     m_Team_Scores[teamindex] += points;
 
-    UpdateWorldState(((teamindex == BG_TEAM_HORDE)?AV_Horde_Score:AV_Alliance_Score), m_Team_Scores[teamindex]);
-    if( points < 0)
+    if( points < 0 )
     {
-        if( m_Team_Scores[teamindex] < 1)
+        if( m_Team_Scores[teamindex] < 1 )
         {
             m_Team_Scores[teamindex] = 0;
-            EndBattleGround(((teamindex == BG_TEAM_HORDE)?ALLIANCE:HORDE));
+            EndBattleGround(team);
         }
-        else if(!m_IsInformedNearVictory[teamindex] && m_Team_Scores[teamindex] < SEND_MSG_NEAR_LOSE)
+        else if(!m_IsInformedNearLose[teamindex] && m_Team_Scores[teamindex] < SEND_MSG_NEAR_LOSE)
         {
             SendMessageToAll((teamindex == BG_TEAM_HORDE)?LANG_BG_AV_H_NEAR_LOSE:LANG_BG_AV_A_NEAR_LOSE, CHAT_MSG_BG_SYSTEM_NEUTRAL);
-            PlaySoundToAll(AV_SOUND_NEAR_VICTORY);
-            m_IsInformedNearVictory[teamindex] = true;
+            PlaySoundToAll(AV_SOUND_NEAR_LOSE);
+            m_IsInformedNearLose[teamindex] = true;
         }
     }
+    //must be called here, else it could display a negative value
+    UpdateWorldState(((teamindex == BG_TEAM_HORDE)?AV_Horde_Score:AV_Alliance_Score), m_Team_Scores[teamindex]);
 }
 
+//TODO store guids instead of pointer
 void BattleGroundAV::OnObjectCreate(GameObject* obj)
 {
     switch(obj->GetEntry())
@@ -261,6 +265,7 @@ void BattleGroundAV::OnObjectCreate(GameObject* obj)
 
 }
 
+//TODO store guids instead of pointer
 void BattleGroundAV::OnCreatureCreate(Creature* creature)
 {
     switch(creature->GetEntry())
@@ -305,7 +310,7 @@ void BattleGroundAV::OnCreatureCreate(Creature* creature)
             m_DB_Creature[AV_CREATURE_MARSHAL + 7] = creature;
             break;
 
-//TODO use BG_AV_MineCreature_Entries
+        //TODO use BG_AV_MineCreature_Entries
         case 13396: //irondeep alliance TODO: get the right ids
         case 13080:
         case 13098:
@@ -360,6 +365,7 @@ void BattleGroundAV::OnCreatureCreate(Creature* creature)
             break;
     }
     uint32 level = creature->getLevel();
+    //TODO after respawn they have their old level again
     if(level != 0)
         level += GetMaxLevel() - 60; //maybe we can do this more generic for custom level - range.. actually it's ok
     creature->SetLevel(level);
@@ -384,10 +390,10 @@ Creature* BattleGroundAV::AddAVCreature(uint32 cinfoid, uint32 type )
         creature->GetMotionMaster()->Initialize();
         creature->setDeathState(JUST_DIED);
         creature->Respawn();
-        //TODO: find a way to add a motionmaster without killing the creature (i
-        //just copied this code from a gm - command
+        //TODO: find a way to add a motionmaster without killing the creature (i just copied this code from a gm - command)
     }
 
+    //TODO after respawn they have their old level again
     if(level != 0)
         level += GetMaxLevel() - 60; //maybe we can do this more generic for custom level - range.. actually it's ok
     creature->SetLevel(level);
@@ -400,7 +406,7 @@ void BattleGroundAV::Update(uint32 diff)
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
 
-    //add points from mine owning, and look if he neutral team wanrts to reclaim the mine
+    //add points from mine owning, and look if the neutral team can reclaim the mine
     m_Mine_Timer -=diff;
     for(uint8 mine = 0; mine <2; mine++)
     {
@@ -411,7 +417,7 @@ void BattleGroundAV::Update(uint32 diff)
 
             if(m_Mine_Reclaim_Timer[mine] > diff)
                 m_Mine_Reclaim_Timer[mine] -= diff;
-            else{ //we don't need to set this timer to 0 cause this codepart wont get called when this thing is 0
+            else{
                 ChangeMineOwner(mine,AV_NEUTRAL_TEAM);
             }
         }
@@ -1117,7 +1123,7 @@ void BattleGroundAV::FillInitialWorldStates(WorldPacket& data)
     SendMineWorldStates(AV_SOUTH_MINE);
 }
 
-const uint8 BattleGroundAV::GetWorldStateType(uint8 state, uint16 team) //this is used for node worldstates and returns values which fit good into the worldstatesarray
+const uint8 BattleGroundAV::GetWorldStateType(uint8 state, uint32 team) //this is used for node worldstates and returns values which fit good into the worldstatesarray
 {
     //neutral stuff cant get handled (currently its only snowfall)
     assert(team != AV_NEUTRAL_TEAM);
@@ -1333,7 +1339,7 @@ uint32 BattleGroundAV::GetNodeName(BG_AV_Nodes node)
     }
 }
 
-void BattleGroundAV::AssaultNode(BG_AV_Nodes node, uint16 team)
+void BattleGroundAV::AssaultNode(BG_AV_Nodes node, uint32 team)
 {
     assert(m_Nodes[node].TotalOwner != team);
     assert(m_Nodes[node].Owner != team);
@@ -1358,7 +1364,7 @@ void BattleGroundAV::DestroyNode(BG_AV_Nodes node)
     m_Nodes[node].Timer      = 0;
 }
 
-void BattleGroundAV::InitNode(BG_AV_Nodes node, uint16 team, bool tower)
+void BattleGroundAV::InitNode(BG_AV_Nodes node, uint32 team, bool tower)
 {
     m_Nodes[node].TotalOwner = team;
     m_Nodes[node].Owner      = team;
@@ -1370,7 +1376,7 @@ void BattleGroundAV::InitNode(BG_AV_Nodes node, uint16 team, bool tower)
     m_Nodes[node].Tower      = tower;
 }
 
-void BattleGroundAV::DefendNode(BG_AV_Nodes node, uint16 team)
+void BattleGroundAV::DefendNode(BG_AV_Nodes node, uint32 team)
 {
     assert(m_Nodes[node].TotalOwner == team);
     assert(m_Nodes[node].Owner != team);
@@ -1401,7 +1407,7 @@ void BattleGroundAV::Reset()
         for(uint8 j = 0; j<9; j++)
             m_Team_QuestStatus[i][j] = 0;
         m_Team_Scores[i] = BG_AV_SCORE_INITIAL_POINTS;
-        m_IsInformedNearVictory[i] = false;
+        m_IsInformedNearLose[i] = false;
         m_Mine_Owner[i] = AV_NEUTRAL_TEAM;
         m_Mine_PrevOwner[i] = m_Mine_Owner[i];
     }
