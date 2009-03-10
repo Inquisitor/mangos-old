@@ -21,10 +21,7 @@
 
 class BattleGround;
 
-//TODO: following strings must go to scriptdev
-#define LANG_BG_AV_A_CAPTAIN_BUFF       "Take heart, Alliance! Throw these villains from Alterac Valley!"
-#define LANG_BG_AV_H_CAPTAIN_BUFF       "Now is the time to attack! For the Horde!"
-#define LANG_BG_AV_S_MINE_BOSS_CLAIMS   "Snivvle is here! Snivvle claims the Coldtooth Mine!"
+#define BOSS_KILL_QUEST_SPELL            23658
 
 #define BG_AV_CAPTIME                    240000  //4:00
 #define BG_AV_SNOWFALL_FIRSTCAP          300000  //5:00 but i also have seen 4:05
@@ -775,12 +772,6 @@ const uint32 BG_AV_GraveyardIds[9]= {
   AV_GRAVE_MAIN_HORDE
 };
 
-enum BG_AV_BUFF
-{ //TODO add all other buffs here
-    AV_BUFF_ARMOR = 21163,
-    AV_BUFF_A_CAPTAIN = 23693, //the buff which the alliance captain does
-    AV_BUFF_H_CAPTAIN = 22751 //the buff which the horde captain does
-};
 enum BG_AV_States
 {
     POINT_NEUTRAL              =  0,
@@ -1075,7 +1066,6 @@ class BattleGroundAV : public BattleGround
         uint32 m_Mine_PrevOwner[2]; //only for worldstates needed
         int32 m_Mine_Timer; //ticks for both teams
         uint32 m_Mine_Reclaim_Timer[2];
-        uint32 m_CaptainBuffTimer[2];
 
         bool m_IsInformedNearVictory[2];
 

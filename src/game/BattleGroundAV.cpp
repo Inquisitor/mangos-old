@@ -62,13 +62,13 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
     switch(unit->GetEntry())
     {
         case AV_CREATURE_ENTRY_A_BOSS:
-            CastSpellOnTeam(23658,HORDE); //this is a spell which finishes a quest where a player has to kill the boss
+            CastSpellOnTeam(BOSS_KILL_QUEST_SPELL,HORDE); //this is a spell which finishes a quest where a player has to kill the boss
             RewardReputationToTeam(729,m_RepBoss,HORDE);
             RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_BOSS),HORDE);
             EndBattleGround(HORDE);
             break;
         case AV_CREATURE_ENTRY_H_BOSS:
-            CastSpellOnTeam(23658,ALLIANCE); //this is a spell which finishes a quest where a player has to kill the boss
+            CastSpellOnTeam(BOSS_KILL_QUEST_SPELL,ALLIANCE); //this is a spell which finishes a quest where a player has to kill the boss
             RewardReputationToTeam(730,m_RepBoss,ALLIANCE);
             RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_BOSS),ALLIANCE);
             EndBattleGround(ALLIANCE);
@@ -400,35 +400,6 @@ void BattleGroundAV::Update(uint32 diff)
     if(GetStatus() != STATUS_IN_PROGRESS)
         return;
 
-    for(uint8 i = 0; i<=1;i++)//0=alliance, 1=horde
-    {
-        //if the creature isn't spawned or dead, we don't need to reduce the
-        //timer or look if we should buff
-        if((!m_DB_Creature[AV_CREATURE_A_CAPTAIN + i] || !m_DB_Creature[AV_CREATURE_A_CAPTAIN + i]->isAlive()))
-            continue;
-
-        //captain is alive, reduce the timer
-        if(m_CaptainBuffTimer[i] > diff)
-            m_CaptainBuffTimer[i] -= diff;
-        else
-        {
-            if(i == 0)
-            {
-                CastSpellOnTeam(AV_BUFF_A_CAPTAIN,ALLIANCE);
-                //TODO implement it as script - the timer is autonom from this
-                //bg - and all players on map should also be accessible throug
-                //script
-                //SendYellToAll(LANG_BG_AV_A_CAPTAIN_BUFF, LANG_COMMON, m_DB_Creature[AV_CREATURE_A_CAPTAIN]);
-            }
-            else if(i == 1)
-            {
-                CastSpellOnTeam(AV_BUFF_H_CAPTAIN,HORDE);
-                // see todo above
-                //SendYellToAll(LANG_BG_AV_H_CAPTAIN_BUFF, LANG_ORCISH, m_DB_Creature[AV_CREATURE_H_CAPTAIN]);
-            }
-            m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60000; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0 - 4minutes TODO get the right times
-        }
-    }
     //add points from mine owning, and look if he neutral team wanrts to reclaim the mine
     m_Mine_Timer -=diff;
     for(uint8 mine = 0; mine <2; mine++)
@@ -620,10 +591,6 @@ void BattleGroundAV::RemovePlayer(Player* plr,uint64 /*guid*/)
         sLog.outError("bg_AV no player at remove");
         return;
     }
-    //TODO search more buffs
-    plr->RemoveAurasDueToSpell(AV_BUFF_ARMOR);
-    plr->RemoveAurasDueToSpell(AV_BUFF_A_CAPTAIN);
-    plr->RemoveAurasDueToSpell(AV_BUFF_H_CAPTAIN);
 }
 
 
@@ -792,15 +759,6 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
         PlaySoundToAll((team == ALLIANCE)?AV_SOUND_ALLIANCE_GOOD:AV_SOUND_HORDE_GOOD);
         m_Mine_Reclaim_Timer[mine] = AV_MINE_RECLAIM_TIMER;
         SendYell2ToAll(LANG_BG_AV_MINE_TAKEN , LANG_UNIVERSAL, m_DB_Creature[AV_CREATURE_HERALD], (mine == AV_NORTH_MINE)?LANG_BG_AV_MINE_NORTH:LANG_BG_AV_MINE_SOUTH, (team == ALLIANCE ) ? LANG_BG_AV_ALLY:LANG_BG_AV_HORDE);
-    }
-    else
-    {
-        if(mine == AV_SOUTH_MINE) //i think this gets called all the time
-        {
-            //TODO this string must go to db - but i think this is a
-            //script - issue something like onspawn()
-            //SendYellToAll(LANG_BG_AV_S_MINE_BOSS_CLAIMS, LANG_UNIVERSAL, m_DB_Creature[AV_CREATURE_SNIFFLE]);
-        }
     }
 }
 
@@ -1444,7 +1402,6 @@ void BattleGroundAV::Reset()
             m_Team_QuestStatus[i][j] = 0;
         m_Team_Scores[i] = BG_AV_SCORE_INITIAL_POINTS;
         m_IsInformedNearVictory[i] = false;
-        m_CaptainBuffTimer[i] = 120000 + urand(0,4)* 60; //as far as i could see, the buff is randomly so i make 2minutes (thats the duration of the buff itself) + 0 - 4minutes TODO get the right times
         m_Mine_Owner[i] = AV_NEUTRAL_TEAM;
         m_Mine_PrevOwner[i] = m_Mine_Owner[i];
     }
