@@ -110,7 +110,7 @@ horde:
     AV_SOUND_HORDE_GOOD                     = 8213,
     AV_SOUND_BOTH_TOWER_DEFEND              = 8192,
 
-    AV_SOUND_ALLIANCE_CAPTAIN               = 8232, //gets called when someone attacks them and at the beginning after 3min+rand(x)*10sec (maybe buff)
+    AV_SOUND_ALLIANCE_CAPTAIN               = 8232, //gets called when someone attacks them and at the beginning after 3min + rand(x) * 10sec (maybe buff)
     AV_SOUND_HORDE_CAPTAIN                  = 8333,
 
 
@@ -125,12 +125,12 @@ enum BG_AV_CREATURE_ENTRIES //only those, whoe are interesting for us
     AV_CREATURE_ENTRY_N_HERALD      = 11997,
 
     //TODO implement the following ones
-    AV_CREATURE_ENTRY_H_L1          = 13179,            //H-lieutnant guse
-    AV_CREATURE_ENTRY_H_D_B         = 13236,            //H-shaman-boss
-    AV_CREATURE_ENTRY_H_D_C         = 13284,            //h-shaman-creep
-    AV_CREATURE_ENTRY_A_L1          = 13438,            //A-lieutnant slidore
-    AV_CREATURE_ENTRY_A_D_B         = 13442,            //a-druid boss
-    AV_CREATURE_ENTRY_A_D_C         = 13443,             //a-druid creep
+    AV_CREATURE_ENTRY_H_L1          = 13179,            //H - lieutnant guse
+    AV_CREATURE_ENTRY_H_D_B         = 13236,            //H - shaman - boss
+    AV_CREATURE_ENTRY_H_D_C         = 13284,            //h - shaman - creep
+    AV_CREATURE_ENTRY_A_L1          = 13438,            //A - lieutnant slidore
+    AV_CREATURE_ENTRY_A_D_B         = 13442,            //a - druid boss
+    AV_CREATURE_ENTRY_A_D_C         = 13443,             //a - druid creep
 
     AV_CREATURE_ENTRY_NM_N_B        = 11657,
     AV_CREATURE_ENTRY_NM_A_B        = 13078,
@@ -164,7 +164,7 @@ enum BG_AV_OTHER_VALUES
 
 enum BG_AV_ObjectIds
 {
-    //cause the mangos-system is a bit different, we don't use the right go-ids for every node.. if we want to be 100% like another big server, we must take one object for every node
+    //cause the mangos - system is a bit different, we don't use the right go - ids for every node.. if we want to be 100% like another big server, we must take one object for every node
     //snowfall 4flags as eyecandy 179424 (alliance neutral)
     //Banners - stolen from battleground_AB.h ;-)
     BG_AV_OBJECTID_BANNER_A             = 178925, // can only be used by horde
@@ -187,8 +187,8 @@ enum BG_AV_ObjectIds
     //banners on top of towers:
     BG_AV_OBJECTID_TOWER_BANNER_A  = 178927, //[PH] Alliance A1 Tower Banner BIG
     BG_AV_OBJECTID_TOWER_BANNER_H  = 178955, //[PH] Horde H1 Tower Banner BIG
-    BG_AV_OBJECTID_TOWER_BANNER_PA = 179446, //[PH] Alliance H1 Tower Pre-Banner BIG
-    BG_AV_OBJECTID_TOWER_BANNER_PH = 179436, //[PH] Horde A1 Tower Pre-Banner BIG
+    BG_AV_OBJECTID_TOWER_BANNER_PA = 179446, //[PH] Alliance H1 Tower Pre - Banner BIG
+    BG_AV_OBJECTID_TOWER_BANNER_PH = 179436, //[PH] Horde A1 Tower Pre - Banner BIG
 
     //Auras
     BG_AV_OBJECTID_AURA_A               = 180421,
@@ -421,7 +421,7 @@ const float BG_AV_ObjectPos[AV_OPLACE_MAX][4] = {
     {-768.199f,-363.105f,104.537f,0.10472f }, //towerp
     {-1302.84f,-316.582f,127.516f,0.122173f }, //etower
     {-1297.87f,-266.762f,127.796f,0.0698132f }, //wtower
-    //burning auras towers have 9*179065 captain-buildings have 5*179066+5*179065
+    //burning auras towers have 9 * 179065 captain - buildings have 5 * 179066 + 5 * 179065
     //dunns
     {562.632f,-88.1815f,61.993f,0.383972f },
     {562.523f,-74.5028f,37.9474f,-0.0523599f },
@@ -713,7 +713,7 @@ enum BG_AV_DB_Creatures
     AV_CREATURE_A_BOSS      = 4,
     AV_CREATURE_H_BOSS      = 5,
     AV_CREATURE_SNIFFLE     = 6,
-    AV_CREATURE_MARSHAL     = 7,//4alliance marshals + 4 horde marshals their ids are similar to those of the tower-ids
+    AV_CREATURE_MARSHAL     = 7,//4alliance marshals + 4 horde marshals their ids are similar to those of the tower - ids
     AV_DB_CREATURE_MAX      = 15
 };
 
