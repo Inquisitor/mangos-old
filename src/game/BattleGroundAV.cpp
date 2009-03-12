@@ -225,13 +225,10 @@ void BattleGroundAV::UpdateScore(uint32 team, int32 points )
     // note: to remove reinforcements points must be negative, for adding reinforcements points must be positive
     assert( team == ALLIANCE || team == HORDE);
     uint8 teamindex = GetTeamIndexByTeamId(team);
-    // if m_TeamScores are less than points - this line will cause strange behaviour
-    // i mean if m_TeamScores[teamindex] < 50 (possible) and points == -100, then in m_TeamScores[teamindex] will be very strange value
-    m_TeamScores[teamindex] += points;
+    m_TeamScores[teamindex] += points;                      // m_TeamScores is int32 - so no problems here
 
     if( points < 0 )
     {
-        // there is only 1 possibility, that uint32 < 1 and it is when uint32 var = 0!
         if( m_TeamScores[teamindex] < 1 )
         {
             m_TeamScores[teamindex] = 0;

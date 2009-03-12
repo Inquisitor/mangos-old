@@ -1042,7 +1042,7 @@ class BattleGroundAV : public BattleGround
         Creature* AddAVCreature(uint32 cinfoid, uint32 type);
 
         /*variables */
-        uint32 m_TeamScores[BG_TEAMS_COUNT];
+        int32 m_TeamScores[BG_TEAMS_COUNT];
         uint32 m_Team_QuestStatus[BG_TEAMS_COUNT][9];       // [x][y] x=team y=questcounter
 
         BG_AV_NodeInfo m_Nodes[BG_AV_NODES_MAX];
