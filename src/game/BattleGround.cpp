@@ -1503,8 +1503,9 @@ Creature* BattleGround::GetBGCreature(uint32 type)
     return creature;
 }
 
-void BattleGround::SpawnBGObject(GameObject* obj, uint32 respawntime)
+void BattleGround::SpawnBGObjectByGuid(uint64 const& guid, uint32 respawntime)
 {
+    GameObject *obj = HashMapHolder<GameObject>::Find(guid);
     if(!obj)
         return;
     Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceID());
@@ -1592,8 +1593,9 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
     return  pCreature;
 }
 
-void BattleGround::SpawnBGCreature(Creature* obj, uint32 respawntime)
+void BattleGround::SpawnBGCreatureByGuid(uint64 const& guid, uint32 respawntime)
 {
+    Creature* obj = HashMapHolder<Creature>::Find(guid);
     //i think this is done, by just setting a respawntime
     //so despawn means, next respawn in 5days
     //and spawn means, next respawn in normal way+respawn right now
@@ -1694,8 +1696,9 @@ void BattleGround::SendMessageToAll(int32 entry, ChatMsg type, Player const* sou
     BroadcastWorker(bg_do);
 }
 
-void BattleGround::SendYellToAll(int32 entry, uint32 language, Creature const* source)
+void BattleGround::SendYellToAll(int32 entry, uint32 language, uint64 const& guid)
 {
+    Creature *source = HashMapHolder<Creature>::Find(guid);
     MaNGOS::BattleGroundYellBuilder bg_builder(language, entry, source);
     MaNGOS::LocalizedPacketDo<MaNGOS::BattleGroundYellBuilder> bg_do(bg_builder);
     BroadcastWorker(bg_do);
@@ -1720,8 +1723,9 @@ void BattleGround::SendMessage2ToAll(int32 entry, ChatMsg type, Player const* so
     BroadcastWorker(bg_do);
 }
 
-void BattleGround::SendYell2ToAll(int32 entry, uint32 language, Creature const* source, int32 arg1, int32 arg2)
+void BattleGround::SendYell2ToAll(int32 entry, uint32 language, uint64 const& guid, int32 arg1, int32 arg2)
 {
+    Creature *source = HashMapHolder<Creature>::Find(guid);
     MaNGOS::BattleGround2YellBuilder bg_builder(language, entry, source, arg1, arg2);
     MaNGOS::LocalizedPacketDo<MaNGOS::BattleGround2YellBuilder> bg_do(bg_builder);
     BroadcastWorker(bg_do);
@@ -1805,7 +1809,7 @@ void BattleGround::HandleKillPlayer( Player *player, Player *killer )
     player->SetFlag( UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE );
 }
 
-int32 BattleGround::GetObjectType(uint64 guid)
+int32 BattleGround::GetObjectType(uint64 const& guid)
 {
     for(uint32 i = 0;i <= m_BgObjects.size(); i++)
         if(m_BgObjects[i] == guid)

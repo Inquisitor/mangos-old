@@ -694,14 +694,12 @@ const uint32 BG_AV_CreatureInfo[AV_NPC_INFO_MAX][4] = {
 
 enum BG_AV_DB_Creatures
 {
-    BG_AV_CREATURE_A_CAPTAIN   = 1,
-    BG_AV_CREATURE_H_CAPTAIN   = 2,
-    BG_AV_CREATURE_HERALD      = 3,
-    BG_AV_CREATURE_A_BOSS      = 4,
-    BG_AV_CREATURE_H_BOSS      = 5,
-    BG_AV_CREATURE_SNIFFLE     = 6,
-    BG_AV_CREATURE_MARSHAL     = 7,                         // 4alliance marshals + 4 horde marshals their ids are similar to those of the tower - ids (only here)
-    BG_AV_DB_CREATURE_MAX      = 15
+    BG_AV_CREATURE_HERALD      = 1,
+    BG_AV_CREATURE_A_BOSS      = 2,
+    BG_AV_CREATURE_H_BOSS      = 3,
+    BG_AV_CREATURE_SNIFFLE     = 4,
+    BG_AV_CREATURE_MARSHAL     = 5,                         // 4alliance marshals + 4 horde marshals their ids are similar to those of the tower - ids (only here)
+    BG_AV_DB_CREATURE_MAX      = 13
 };
 
 enum BG_AV_MineCreature_Entries
@@ -1053,13 +1051,12 @@ class BattleGroundAV : public BattleGround
         uint32 m_Mine_Reclaim_Timer[BG_TEAMS_COUNT];
 
         bool m_IsInformedNearLose[BG_TEAMS_COUNT];
+        bool m_captainAlive[BG_TEAMS_COUNT];
 
-        Creature* m_DB_Creature[BG_AV_DB_CREATURE_MAX];
+        uint64 m_DB_Creature[BG_AV_DB_CREATURE_MAX];
 
-        typedef std::vector<GameObject*> ObjectVector;
-        typedef std::vector<Creature*> CreatureVector;
-        ObjectVector m_SnowfallEyecandy[4];
-        CreatureVector m_MineCreatures[2][3];
+        BGObjects   m_SnowfallEyecandy[4];
+        BGCreatures m_MineCreatures[2][3];
 
         uint32 m_HonorMapComplete;
         uint32 m_RepTowerDestruction;

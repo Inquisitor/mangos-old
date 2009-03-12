@@ -81,6 +81,7 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
             for(uint8 i = 0; i<=9; i++)
                 SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_ALLIANCE + i, RESPAWN_IMMEDIATELY);
             SendYellToAll(LANG_BG_AV_H_CAPTAIN_DEAD, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD]);
+            m_captainAlive[0]=false;
             break;
         case BG_AV_CREATURE_ENTRY_H_CAPTAIN:
             RewardReputationToTeam(730, m_RepCaptain, ALLIANCE);
@@ -90,6 +91,7 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
             for(uint8 i = 0; i<=9; i++)
                 SpawnBGObject(BG_AV_OBJECT_BURN_BUILDING_HORDE + i, RESPAWN_IMMEDIATELY);
             SendYellToAll(LANG_BG_AV_H_CAPTAIN_DEAD, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD]);
+            m_captainAlive[1]=false;
             break;
         case BG_AV_CREATURE_ENTRY_NM_N_B:
         case BG_AV_CREATURE_ENTRY_NM_A_B:
@@ -245,19 +247,28 @@ void BattleGroundAV::UpdateScore(uint32 team, int32 points )
     UpdateWorldState(((teamindex == BG_TEAM_HORDE) ? BG_AV_Horde_Score : BG_AV_Alliance_Score), m_TeamScores[teamindex]);
 }
 
-//TODO store guids instead of pointer
 void BattleGroundAV::OnObjectCreate(GameObject* obj)
 {
     switch(obj->GetEntry())
     {
+        case BG_AV_OBJECTID_SNOWFALL_CANDY_A:
+            m_SnowfallEyecandy[0].push_back(obj->GetGUID());
+            SpawnBGObjectByGuid(obj->GetGUID(), RESPAWN_ONE_DAY);
+            break;
+        case BG_AV_OBJECTID_SNOWFALL_CANDY_PA:
+            m_SnowfallEyecandy[1].push_back(obj->GetGUID());
+            SpawnBGObjectByGuid(obj->GetGUID(), RESPAWN_ONE_DAY);
+            break;
+        case BG_AV_OBJECTID_SNOWFALL_CANDY_H:
+            m_SnowfallEyecandy[2].push_back(obj->GetGUID());
+            SpawnBGObjectByGuid(obj->GetGUID(), RESPAWN_ONE_DAY);
+            break;
+        case BG_AV_OBJECTID_SNOWFALL_CANDY_PH:
+            m_SnowfallEyecandy[3].push_back(obj->GetGUID());
+            SpawnBGObjectByGuid(obj->GetGUID(), RESPAWN_ONE_DAY);
+            break;
         case BG_AV_OBJECTID_MINE_N:                         // irondeep mine supply
-            break;
         case BG_AV_OBJECTID_MINE_S:                         // coldtooth mine supply
-            break;
-        case BG_AV_OBJECTID_SNOWFALL_CANDY_A:  m_SnowfallEyecandy[0].push_back(obj); SpawnBGObject(obj, RESPAWN_ONE_DAY); break;
-        case BG_AV_OBJECTID_SNOWFALL_CANDY_PA: m_SnowfallEyecandy[1].push_back(obj); SpawnBGObject(obj, RESPAWN_ONE_DAY); break;
-        case BG_AV_OBJECTID_SNOWFALL_CANDY_H:  m_SnowfallEyecandy[2].push_back(obj); SpawnBGObject(obj, RESPAWN_ONE_DAY); break;
-        case BG_AV_OBJECTID_SNOWFALL_CANDY_PH: m_SnowfallEyecandy[3].push_back(obj); SpawnBGObject(obj, RESPAWN_ONE_DAY); break;
         default:
             // do nothing
             return;
@@ -265,49 +276,42 @@ void BattleGroundAV::OnObjectCreate(GameObject* obj)
 
 }
 
-//TODO store guids instead of pointer
 void BattleGroundAV::OnCreatureCreate(Creature* creature)
 {
     switch(creature->GetEntry())
     {
-        case BG_AV_CREATURE_ENTRY_H_CAPTAIN:
-            m_DB_Creature[BG_AV_CREATURE_H_CAPTAIN] = creature;
-            break;
         case BG_AV_CREATURE_ENTRY_H_BOSS:
-            m_DB_Creature[BG_AV_CREATURE_H_BOSS] = creature;
+            m_DB_Creature[BG_AV_CREATURE_H_BOSS] = creature->GetGUID();
             break;
         case BG_AV_CREATURE_ENTRY_A_BOSS:
-            m_DB_Creature[BG_AV_CREATURE_A_BOSS] = creature;
-            break;
-        case BG_AV_CREATURE_ENTRY_A_CAPTAIN:
-            m_DB_Creature[BG_AV_CREATURE_A_CAPTAIN] = creature;
+            m_DB_Creature[BG_AV_CREATURE_A_BOSS] = creature->GetGUID();
             break;
         case BG_AV_CREATURE_ENTRY_N_HERALD:
-            m_DB_Creature[BG_AV_CREATURE_HERALD] = creature;
+            m_DB_Creature[BG_AV_CREATURE_HERALD] = creature->GetGUID();
             break;
         case BG_AV_CREATURE_ENTRY_A_MARSHAL_SOUTH:
-            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 0] = creature;
+            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 0] = creature->GetGUID();
             break;
         case BG_AV_CREATURE_ENTRY_A_MARSHAL_NORTH:
-            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 1] = creature;
+            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 1] = creature->GetGUID();
             break;
         case BG_AV_CREATURE_ENTRY_A_MARSHAL_ICE:
-            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 2] = creature;
+            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 2] = creature->GetGUID();
             break;
         case BG_AV_CREATURE_ENTRY_A_MARSHAL_STONE:
-            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 3] = creature;
+            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 3] = creature->GetGUID();
             break;
         case BG_AV_CREATURE_ENTRY_H_MARSHAL_ICE:
-            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 4] = creature;
+            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 4] = creature->GetGUID();
             break;
         case BG_AV_CREATURE_ENTRY_H_MARSHAL_TOWER:
-            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 5] = creature;
+            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 5] = creature->GetGUID();
             break;
         case BG_AV_CREATURE_ENTRY_H_MARSHAL_ETOWER:
-            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 6] = creature;
+            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 6] = creature->GetGUID();
             break;
         case BG_AV_CREATURE_ENTRY_H_MARSHAL_WTOWER:
-            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 7] = creature;
+            m_DB_Creature[BG_AV_CREATURE_MARSHAL + 7] = creature->GetGUID();
             break;
 
         // TODO use BG_AV_MineCreature_Entries
@@ -315,35 +319,35 @@ void BattleGroundAV::OnCreatureCreate(Creature* creature)
         case 13080:
         case 13098:
         case 13078:
-            SpawnBGCreature(creature, RESPAWN_ONE_DAY);
-            m_MineCreatures[BG_AV_NORTH_MINE][0].push_back(creature);
+            SpawnBGCreatureByGuid(creature->GetGUID(), RESPAWN_ONE_DAY);
+            m_MineCreatures[BG_AV_NORTH_MINE][0].push_back(creature->GetGUID());
             break;
         case 13397:                                         // northmine horde
         case 13099:
         case 13081:
         case 13079:
-            SpawnBGCreature(creature, RESPAWN_ONE_DAY);
-            m_MineCreatures[BG_AV_NORTH_MINE][1].push_back(creature);
+            SpawnBGCreatureByGuid(creature->GetGUID(), RESPAWN_ONE_DAY);
+            m_MineCreatures[BG_AV_NORTH_MINE][1].push_back(creature->GetGUID());
             break;
         case 10987:                                         // northmine neutral -Trogg
         case 11600:                                         // Irondeep Shaman
         case 11602:                                         // Irondeep Skullthumper
         case 11657:                                         // Morloch
-            m_MineCreatures[BG_AV_NORTH_MINE][2].push_back(creature);
+            m_MineCreatures[BG_AV_NORTH_MINE][2].push_back(creature->GetGUID());
             break;
          case 13317:                                        // southmine alliance
          case 13096:                                        // explorer
          case 13087:                                        // invader
          case 13086:
-             SpawnBGCreature(creature, RESPAWN_ONE_DAY);
-             m_MineCreatures[BG_AV_SOUTH_MINE][0].push_back(creature);
+             SpawnBGCreatureByGuid(creature->GetGUID(), RESPAWN_ONE_DAY);
+             m_MineCreatures[BG_AV_SOUTH_MINE][0].push_back(creature->GetGUID());
              break;
          case 13316:                                        // southmine horde
          case 13097:                                        // surveypr
          case 13089:                                        // guard
          case 13088:
-             m_MineCreatures[BG_AV_SOUTH_MINE][1].push_back(creature);
-             SpawnBGCreature(creature, RESPAWN_ONE_DAY);
+             m_MineCreatures[BG_AV_SOUTH_MINE][1].push_back(creature->GetGUID());
+             SpawnBGCreatureByGuid(creature->GetGUID(), RESPAWN_ONE_DAY);
              break;
          case 11603:                                        // southmine neutral
          case 11604:
@@ -351,8 +355,8 @@ void BattleGroundAV::OnCreatureCreate(Creature* creature)
          case 11677:
          case 10982:                                        // vermin (special)
              if(creature->GetEntry() == 11677)
-                 m_DB_Creature[BG_AV_CREATURE_SNIFFLE] = creature;
-             m_MineCreatures[BG_AV_SOUTH_MINE][2].push_back(creature);
+                 m_DB_Creature[BG_AV_CREATURE_SNIFFLE] = creature->GetGUID();
+             m_MineCreatures[BG_AV_SOUTH_MINE][2].push_back(creature->GetGUID());
              break;
 
         case BG_AV_CREATURE_ENTRY_H_L1:
@@ -561,7 +565,7 @@ void BattleGroundAV::EndBattleGround(uint32 winner)
         RewardReputationToTeam(730, ally_mines_owned * m_RepOwnedMine, ALLIANCE);
     sLog.outDebug("alliance towers:%u honor:%u rep:%u", ally_tower_survived, GetBonusHonorFromKill(ally_tower_survived * BG_AV_KILL_SURVIVING_TOWER), ally_tower_survived * BG_AV_REP_SURVIVING_TOWER);
     // captain survived?:
-    if( m_DB_Creature[BG_AV_CREATURE_A_CAPTAIN] && m_DB_Creature[BG_AV_CREATURE_A_CAPTAIN]->isAlive() )
+    if( m_captainAlive[0] )
     {
         RewardReputationToTeam(730, m_RepSurviveCaptain, ALLIANCE);
         RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_SURVIVING_CAPTAIN), ALLIANCE);
@@ -578,7 +582,7 @@ void BattleGroundAV::EndBattleGround(uint32 winner)
         RewardReputationToTeam(729, horde_mines_owned * m_RepOwnedMine, HORDE);
     sLog.outDebug("horde towers:%u honor:%u rep:%u", horde_tower_survived, GetBonusHonorFromKill(horde_tower_survived * BG_AV_KILL_SURVIVING_TOWER), horde_tower_survived * BG_AV_REP_SURVIVING_TOWER);
     // captain survived?:
-    if( m_DB_Creature[BG_AV_CREATURE_H_CAPTAIN] && m_DB_Creature[BG_AV_CREATURE_H_CAPTAIN]->isAlive() )
+    if( m_captainAlive[1] )
     {
         RewardReputationToTeam(729, m_RepSurviveCaptain, HORDE);
         RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_SURVIVING_CAPTAIN), HORDE);
@@ -689,7 +693,7 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
         uint8 tmp = node - BG_AV_NODES_DUNBALDAR_SOUTH;
         // despawn marshal (one of those guys protecting the boss)
         if(m_DB_Creature[BG_AV_CREATURE_MARSHAL + tmp])
-            SpawnBGCreature(m_DB_Creature[BG_AV_CREATURE_MARSHAL + tmp], RESPAWN_ONE_DAY);
+            SpawnBGCreatureByGuid(m_DB_Creature[BG_AV_CREATURE_MARSHAL + tmp], RESPAWN_ONE_DAY);
         else
             sLog.outError("BG_AV: playerdestroyedpoint: marshal %i doesn't exist", BG_AV_CREATURE_MARSHAL + tmp);
         // spawn destroyed aura
@@ -717,11 +721,11 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
             uint32 del_go = (owner == ALLIANCE) ? 1 : 3;
             uint32 add_go = (owner == ALLIANCE) ? 0 : 2;
             if(!m_SnowfallEyecandy[del_go].empty())
-                for(ObjectVector::const_iterator itr = m_SnowfallEyecandy[del_go].begin(); itr != m_SnowfallEyecandy[del_go].end(); ++itr)
-                    SpawnBGObject(*itr, RESPAWN_ONE_DAY);
+                for(BGObjects::const_iterator itr = m_SnowfallEyecandy[del_go].begin(); itr != m_SnowfallEyecandy[del_go].end(); ++itr)
+                    SpawnBGObjectByGuid(*itr, RESPAWN_ONE_DAY);
             if(!m_SnowfallEyecandy[add_go].empty())
-                for(ObjectVector::const_iterator itr = m_SnowfallEyecandy[add_go].begin(); itr != m_SnowfallEyecandy[add_go].end(); ++itr)
-                    SpawnBGObject(*itr, RESPAWN_IMMEDIATELY);
+                for(BGObjects::const_iterator itr = m_SnowfallEyecandy[add_go].begin(); itr != m_SnowfallEyecandy[add_go].end(); ++itr)
+                    SpawnBGObjectByGuid(*itr, RESPAWN_IMMEDIATELY);
         }
     }
     SendYell2ToAll((IsTower(node)) ? LANG_BG_AV_TOWER_TAKEN : LANG_BG_AV_GRAVE_TAKEN, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD], GetNodeName(node), ( owner == ALLIANCE ) ? LANG_BG_AV_ALLY : LANG_BG_AV_HORDE);
@@ -747,14 +751,14 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
     sLog.outDebug("bg_av depopulating mine %i (0=north, 1=south)",mine);
     index = (m_Mine_PrevOwner[mine] == ALLIANCE) ? 0 : (m_Mine_PrevOwner[mine] == HORDE) ? 1 : 2;
     if( !m_MineCreatures[mine][index].empty() )
-        for(CreatureVector::const_iterator itr = m_MineCreatures[mine][index].begin(); itr != m_MineCreatures[mine][index].end(); ++itr)
-            SpawnBGCreature(*itr, RESPAWN_ONE_DAY);
+        for(BGCreatures::const_iterator itr = m_MineCreatures[mine][index].begin(); itr != m_MineCreatures[mine][index].end(); ++itr)
+            SpawnBGCreatureByGuid(*itr, RESPAWN_ONE_DAY);
 
     sLog.outDebug("bg_av populating mine %i owner %i, prevowner %i",mine,m_Mine_Owner[mine], m_Mine_PrevOwner[mine]);
     index = (m_Mine_Owner[mine] == ALLIANCE)?0:(m_Mine_Owner[mine] == HORDE)?1:2;
     if( !m_MineCreatures[mine][index].empty() )
-        for(CreatureVector::const_iterator itr = m_MineCreatures[mine][index].begin(); itr != m_MineCreatures[mine][index].end(); ++itr)
-            SpawnBGCreature(*itr, RESPAWN_IMMEDIATELY);
+        for(BGCreatures::const_iterator itr = m_MineCreatures[mine][index].begin(); itr != m_MineCreatures[mine][index].end(); ++itr)
+            SpawnBGCreatureByGuid(*itr, RESPAWN_IMMEDIATELY);
 
     // because the gameobjects in this mine have changed, update all surrounding players:
     // TODO: add gameobject - update code (currently this is done in a hacky way)
@@ -952,11 +956,11 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, uint32 object)
             uint32 del_go = (owner == ALLIANCE) ? 1 : 3;
             uint32 add_go = (team == ALLIANCE) ? 0 : 2;
             if( !m_SnowfallEyecandy[del_go].empty() )
-                for(ObjectVector::const_iterator itr = m_SnowfallEyecandy[del_go].begin(); itr != m_SnowfallEyecandy[del_go].end(); ++itr)
-                    SpawnBGObject(*itr, RESPAWN_ONE_DAY);
+                for(BGObjects::const_iterator itr = m_SnowfallEyecandy[del_go].begin(); itr != m_SnowfallEyecandy[del_go].end(); ++itr)
+                    SpawnBGObjectByGuid(*itr, RESPAWN_ONE_DAY);
             if( !m_SnowfallEyecandy[add_go].empty() )
-                for(ObjectVector::const_iterator itr = m_SnowfallEyecandy[add_go].begin(); itr != m_SnowfallEyecandy[add_go].end(); ++itr)
-                    SpawnBGObject(*itr, RESPAWN_IMMEDIATELY);
+                for(BGObjects::const_iterator itr = m_SnowfallEyecandy[add_go].begin(); itr != m_SnowfallEyecandy[add_go].end(); ++itr)
+                    SpawnBGObjectByGuid(*itr, RESPAWN_IMMEDIATELY);
         }
     }
     else
@@ -1024,10 +1028,10 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
         }
         if( !m_SnowfallEyecandy[del_go].empty() && !m_SnowfallEyecandy[add_go].empty() )
         {
-            for(ObjectVector::const_iterator itr = m_SnowfallEyecandy[del_go].begin(); itr != m_SnowfallEyecandy[del_go].end(); ++itr)
-                SpawnBGObject(*itr, RESPAWN_ONE_DAY);
-            for(ObjectVector::const_iterator itr = m_SnowfallEyecandy[add_go].begin(); itr != m_SnowfallEyecandy[add_go].end(); ++itr)
-                SpawnBGObject(*itr, RESPAWN_IMMEDIATELY);
+            for(BGObjects::const_iterator itr = m_SnowfallEyecandy[del_go].begin(); itr != m_SnowfallEyecandy[del_go].end(); ++itr)
+                SpawnBGObjectByGuid(*itr, RESPAWN_ONE_DAY);
+            for(BGObjects::const_iterator itr = m_SnowfallEyecandy[add_go].begin(); itr != m_SnowfallEyecandy[add_go].end(); ++itr)
+                SpawnBGObjectByGuid(*itr, RESPAWN_IMMEDIATELY);
         }
     }
 
@@ -1403,6 +1407,7 @@ void BattleGroundAV::Reset()
     uint32 m_RepSurviveCaptain   = (isBGWeekend) ? BG_AV_REP_SURVIVING_CAPTAIN_HOLIDAY : BG_AV_REP_SURVIVING_CAPTAIN;
     uint32 m_RepSurviveTower     = (isBGWeekend) ? BG_AV_REP_SURVIVING_TOWER_HOLIDAY : BG_AV_REP_SURVIVING_TOWER;
 
+
     for(uint8 i = 0; i < 2; i++)                            // forloop for both teams (it just make 0 == alliance and 1 == horde also for both mines 0=north 1=south
     {
         for(uint8 j = 0; j < 9; j++)
@@ -1411,9 +1416,10 @@ void BattleGroundAV::Reset()
         m_IsInformedNearLose[i] = false;
         m_Mine_Owner[i] = BG_AV_NEUTRAL_TEAM;
         m_Mine_PrevOwner[i] = m_Mine_Owner[i];
+        m_captainAlive[i] = true;
     }
     for (uint8 i = 0; i < BG_AV_DB_CREATURE_MAX; i++)
-        m_DB_Creature[i] = NULL;
+        m_DB_Creature[i] = 0;
 
     for(uint8 i = 0; i < 4; i++)
     {
