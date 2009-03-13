@@ -1487,7 +1487,6 @@ void BattleGround::DoorOpen(uint32 type)
     }
 }
 
-<<<<<<< HEAD:src/game/BattleGround.cpp
 GameObject* BattleGround::GetBGObject(uint32 type)
 {
     GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
@@ -1502,29 +1501,6 @@ Creature* BattleGround::GetBGCreature(uint32 type)
     if(!creature)
         sLog.outError("couldn't get creature %i",type);
     return creature;
-}
-
-void BattleGround::SpawnBGObjectByGuid(uint64 const& guid, uint32 respawntime)
-{
-    GameObject *obj = HashMapHolder<GameObject>::Find(guid);
-    if(!obj)
-        return;
-    Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceID());
-    if(!map)
-        return;
-    if( respawntime == 0 )
-    {
-        obj->SetLootState(GO_READY);
-        obj->SetRespawnTime(0);
-        map->Add(obj);
-    }
-    else
-    {
-        map->Add(obj);
-        obj->SetRespawnTime(respawntime);
-        obj->SetLootState(GO_JUST_DEACTIVATED);
-        obj->SaveRespawnTime();
-    }
 }
 
 void BattleGround::SpawnBGObject(uint64 const& guid, uint32 respawntime)
@@ -1591,14 +1567,9 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
     return  pCreature;
 }
 
-void BattleGround::SpawnBGCreatureByGuid(uint64 const& guid, uint32 respawntime)
+void BattleGround::SpawnBGCreature(uint64 const& guid, uint32 respawntime)
 {
     Creature* obj = HashMapHolder<Creature>::Find(guid);
-    //i think this is done, by just setting a respawntime
-    //so despawn means, next respawn in 5days
-    //and spawn means, next respawn in normal way+respawn right now
-    //cause in the mine the troggs kill all alliance-creatures instantly
-    //this doesn't work yet (don't know if this is a db-problem)
     if(!obj)
         return;
     Map * map = MapManager::Instance().FindMap(GetMapId(),GetInstanceID());
@@ -1629,8 +1600,8 @@ bool BattleGround::DelCreature(uint32 type)
         sLog.outError("Can't find Battleground creature type:%u guid:%u",type, GUID_LOPART(m_BgCreatures[type]));
         return false;
     }
-    i_creature.CleanupsBeforeDelete();
-    i_creature.AddObjectToRemoveList();
+    cr->CleanupsBeforeDelete();
+    cr->AddObjectToRemoveList();
     m_BgCreatures[type] = 0;
     return true;
 }
