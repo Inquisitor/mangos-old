@@ -611,22 +611,13 @@ class MANGOS_DLL_SPEC Creature : public Unit
 
         uint32 GetGlobalCooldown() const { return m_GlobalCooldown; }
 
-       void SetDeleteAfterNoAggro(bool set) {
-           if(set && !m_attacking) //if creature not in fight, delete it now..
-           {
-               CleanupsBeforeDelete();
-               AddObjectToRemoveList();
-           }
-           else if(set)
-               m_deleteAfterNoAggro=set;
-       }
-       bool GetDeleteAfterNoAggro() { return m_deleteAfterNoAggro; }
         void SetDeadByDefault (bool death_state) { m_isDeadByDefault = death_state; }
 
         bool isActiveObject() const { return m_isActiveObject; }
         void SetActiveObjectState(bool on);
 
-       void SetDBTableGuid(uint32 id) { m_DBTableGuid = id; }
+        // TODO this method is a hack, move all BattleGroundCreatures to database - or set home-point for BG-creatures
+        void SetDBTableGuid(uint32 id) { m_DBTableGuid = id; }
     protected:
         bool CreateFromProto(uint32 guidlow,uint32 Entry,uint32 team, const CreatureData *data = NULL);
         bool InitEntry(uint32 entry, uint32 team=ALLIANCE, const CreatureData* data=NULL);
@@ -674,9 +665,6 @@ class MANGOS_DLL_SPEC Creature : public Unit
         float CombatStartX;
         float CombatStartY;
         float CombatStartZ;
-
-        bool m_deleteAfterNoAggro;
-
     private:
         GridReference<Creature> m_gridRef;
         CreatureInfo const* m_creatureInfo;                 // in heroic mode can different from ObjMgr::GetCreatureTemplate(GetEntry())

@@ -1631,8 +1631,8 @@ bool BattleGround::DelCreature(uint32 type)
         sLog.outError("Can't find Battleground creature type:%u guid:%u",type, GUID_LOPART(m_BgCreatures[type]));
         return false;
     }
-    //following will delete only if this creature has no aggro or bg ends
-    cr->SetDeleteAfterNoAggro(true);
+    i_creature.CleanupsBeforeDelete();
+    i_creature.AddObjectToRemoveList();
     m_BgCreatures[type] = 0;
     return true;
 }
