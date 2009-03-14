@@ -247,7 +247,7 @@ void BattleGroundAV::UpdateScore(uint32 team, int32 points )
     UpdateWorldState(((teamindex == BG_TEAM_HORDE) ? BG_AV_Horde_Score : BG_AV_Alliance_Score), m_TeamScores[teamindex]);
 }
 
-void BattleGroundAV::OnObjectCreate(GameObject* obj)
+void BattleGroundAV::OnObjectDBLoad(GameObject* obj)
 {
     switch(obj->GetEntry())
     {
@@ -276,7 +276,7 @@ void BattleGroundAV::OnObjectCreate(GameObject* obj)
 
 }
 
-void BattleGroundAV::OnCreatureCreate(Creature* creature)
+void BattleGroundAV::OnObjectDBLoad(Creature* creature)
 {
     switch(creature->GetEntry())
     {

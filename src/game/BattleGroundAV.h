@@ -982,8 +982,8 @@ class BattleGroundAV : public BattleGround
 
         /* inherited from BattlegroundClass */
         virtual void AddPlayer(Player *plr);
-        virtual void OnCreatureCreate(Creature* creature);
-        virtual void OnObjectCreate(GameObject* obj);
+        virtual void OnObjectDBLoad(Creature* creature);
+        virtual void OnObjectDBLoad(GameObject* obj);
         virtual void StartingEventCloseDoors();
         virtual void StartingEventOpenDoors();
         // world states
