@@ -795,8 +795,8 @@ enum MangosStrings
     LANG_BG_AV_HAS_BEGUN                = 10776,
     LANG_BG_AV_A_NEAR_LOSE              = 10777,
     LANG_BG_AV_H_NEAR_LOSE              = 10778,
-    LANG_BG_AV_H_CAPTAIN_DEAD           = 10779,
-    LANG_BG_AV_A_CAPTAIN_DEAD           = 10780,
+    LANG_BG_AV_H_GENERAL_DEAD           = 10779,
+    LANG_BG_AV_A_GENERAL_DEAD           = 10780,
 
     // Use for custom patches             11000-11999
 

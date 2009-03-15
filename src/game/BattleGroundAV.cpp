@@ -65,12 +65,14 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
             CastSpellOnTeam(BG_AV_BOSS_KILL_QUEST_SPELL, HORDE);   // this is a spell which finishes a quest where a player has to kill the boss
             RewardReputationToTeam(729, m_RepBoss, HORDE);
             RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_BOSS), HORDE);
+            SendYellToAll(LANG_BG_AV_H_GENERAL_DEAD, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD]);
             EndBattleGround(HORDE);
             break;
         case BG_AV_CREATURE_ENTRY_H_BOSS:
             CastSpellOnTeam(BG_AV_BOSS_KILL_QUEST_SPELL, ALLIANCE); // this is a spell which finishes a quest where a player has to kill the boss
             RewardReputationToTeam(730, m_RepBoss, ALLIANCE);
             RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_BOSS), ALLIANCE);
+            SendYellToAll(LANG_BG_AV_A_GENERAL_DEAD, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD]);
             EndBattleGround(ALLIANCE);
             break;
         case BG_AV_CREATURE_ENTRY_A_CAPTAIN:
@@ -80,7 +82,6 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
             // spawn destroyed aura
             for(uint8 i = 0; i<=9; i++)
                 SpawnBGObject(m_BgObjects[BG_AV_OBJECT_BURN_BUILDING_ALLIANCE + i], RESPAWN_IMMEDIATELY);
-            SendYellToAll(LANG_BG_AV_H_CAPTAIN_DEAD, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD]);
             m_captainAlive[0]=false;
             break;
         case BG_AV_CREATURE_ENTRY_H_CAPTAIN:
@@ -90,7 +91,6 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
             // spawn destroyed aura
             for(uint8 i = 0; i<=9; i++)
                 SpawnBGObject(m_BgObjects[BG_AV_OBJECT_BURN_BUILDING_HORDE + i], RESPAWN_IMMEDIATELY);
-            SendYellToAll(LANG_BG_AV_H_CAPTAIN_DEAD, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD]);
             m_captainAlive[1]=false;
             break;
         case BG_AV_CREATURE_ENTRY_NM_N_B:
