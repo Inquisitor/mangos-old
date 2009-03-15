@@ -444,16 +444,17 @@ void BattleGroundAV::Update(uint32 diff)
 
 void BattleGroundAV::StartingEventCloseDoors()
 {
+    sLog.outDebug("Alterac Valley: entering state STATUS_WAIT_JOIN ...");
+    // despawn all objects at the beginning
+    for(uint32 i = 0; i < BG_AV_OBJECT_MAX; i++)
+        SpawnBGObject(m_BgObjects[i], RESPAWN_ONE_DAY);
+
+    // spawn and close the doors
     SpawnBGObject(m_BgObjects[BG_AV_OBJECT_DOOR_A], RESPAWN_IMMEDIATELY);
     SpawnBGObject(m_BgObjects[BG_AV_OBJECT_DOOR_H], RESPAWN_IMMEDIATELY);
-
     DoorClose(BG_AV_OBJECT_DOOR_A);
     DoorClose(BG_AV_OBJECT_DOOR_H);
 
-    sLog.outDebug("Alterac Valley: entering state STATUS_WAIT_JOIN ...");
-    // Initial Nodes spawning (grave/tower defending units - spiritguides)
-    for(uint32 i = 0; i < BG_AV_OBJECT_MAX; i++)
-        SpawnBGObject(m_BgObjects[i], RESPAWN_ONE_DAY);
     // mainspiritguides:
     sLog.outDebug("BG_AV: start spawning main - spiritguides");
     AddSpiritGuide(7, BG_AV_CreaturePos[7][0], BG_AV_CreaturePos[7][1], BG_AV_CreaturePos[7][2], BG_AV_CreaturePos[7][3], ALLIANCE);
