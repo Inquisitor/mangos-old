@@ -1672,6 +1672,8 @@ void BattleGround::SendMessageToAll(int32 entry, ChatMsg type, Player const* sou
 void BattleGround::SendYellToAll(int32 entry, uint32 language, uint64 const& guid)
 {
     Creature *source = HashMapHolder<Creature>::Find(guid);
+    if(!source)
+        return;
     MaNGOS::BattleGroundYellBuilder bg_builder(language, entry, source);
     MaNGOS::LocalizedPacketDo<MaNGOS::BattleGroundYellBuilder> bg_do(bg_builder);
     BroadcastWorker(bg_do);
@@ -1699,6 +1701,8 @@ void BattleGround::SendMessage2ToAll(int32 entry, ChatMsg type, Player const* so
 void BattleGround::SendYell2ToAll(int32 entry, uint32 language, uint64 const& guid, int32 arg1, int32 arg2)
 {
     Creature *source = HashMapHolder<Creature>::Find(guid);
+    if(!source)
+        return;
     MaNGOS::BattleGround2YellBuilder bg_builder(language, entry, source, arg1, arg2);
     MaNGOS::LocalizedPacketDo<MaNGOS::BattleGround2YellBuilder> bg_do(bg_builder);
     BroadcastWorker(bg_do);
