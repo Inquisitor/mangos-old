@@ -234,7 +234,8 @@ void BattleGroundAV::UpdateScore(uint32 team, int32 points )
         if( m_TeamScores[teamindex] < 1 )
         {
             m_TeamScores[teamindex] = 0;
-            EndBattleGround(team);
+            // other team will win:
+            EndBattleGround((team == ALLIANCE)? HORDE : ALLIANCE);
         }
         else if(!m_IsInformedNearLose[teamindex] && m_TeamScores[teamindex] < BG_AV_SCORE_NEAR_LOSE)
         {
