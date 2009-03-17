@@ -152,6 +152,11 @@ enum BattleGroundQueueTypeId
 };
 #define MAX_BATTLEGROUND_QUEUE_TYPES 9
 
+/// queue_id for level ranges
+/// for ranges 0 - 19, 20 - 29, 30 - 39, 40 - 49, 50 - 59, 60 - 69, 70 -79, 80
+/// alterac valley gets the range 51 - 60, 61 - 70, 71 - 80
+/// for alterac valley ranges we will use: QUEUE_ID_MAX_LEVEL_59, QUEUE_ID_MAX_LEVEL_69, QUEUE_ID_MAX_LEVEL_79
+/// see: Player::GetBattleGroundQueueIdFromLevel
 enum BGQueueIdBasedOnLevel                        // queue_id for level ranges
 {
     QUEUE_ID_MAX_LEVEL_19   = 0,
