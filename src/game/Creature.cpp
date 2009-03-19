@@ -179,47 +179,18 @@ bool Creature::InitEntry(uint32 Entry, uint32 team, const CreatureData *data )
     }
 
     // get heroic mode entry
+    uint32 actualEntry = Entry;
     CreatureInfo const *cinfo = normalInfo;
     if(normalInfo->HeroicEntry)
     {
         Map *map = MapManager::Instance().FindMap(GetMapId(), GetInstanceId());
-        if( map )
+        if(map && map->IsHeroic())
         {
-            if( map->IsHeroic() )
+            cinfo = objmgr.GetCreatureTemplate(normalInfo->HeroicEntry);
+            if(!cinfo)
             {
-                cinfo = objmgr.GetCreatureTemplate( normalInfo->HeroicEntry );
-                if( !cinfo )
-                {
-                    sLog.outErrorDb("Creature::InitEntry creature heroic entry %u does not exist.", Entry);
-                    return false;
-                }
-            }
-            else if( map->IsBattleGround() )                // will also ignore arena
-            {
-                if( BattleGround* bg = ((BattleGroundMap*)map)->GetBG() )
-                {
-                    BGQueueIdBasedOnLevel queue_id = bg->GetQueueId();
-                    // pre lvl60 the creatures in battlegrounds have all the
-                    // same level + hp, so no need for an extra entry
-                    if( queue_id > QUEUE_ID_MAX_LEVEL_59 )
-                    {
-                        // MAX_BATTLEGROUND_QUEUES - 1 because the lvl70 and lvl
-                        // 60-69 would have the same entries
-                        // please see also the notes about alterac valley at
-                        // enum BGQueueIdBasedOnLevel in BattleGround.h
-                        for( uint32 i = QUEUE_ID_MAX_LEVEL_59; i <= queue_id; i++ )
-                        {
-                            cinfo = objmgr.GetCreatureTemplate( cinfo->HeroicEntry );
-                            if( !cinfo )
-                            {
-                                sLog.outErrorDb("Creature::InitEntry creature heroic entry %u for BattleGround does not exist.", Entry);
-                                return false;
-                            }
-                            if( !cinfo->HeroicEntry )
-                                break;
-                        }
-                    }
-                }
+                sLog.outErrorDb("Creature::UpdateEntry creature heroic entry %u does not exist.", actualEntry);
+                return false;
             }
         }
     }
