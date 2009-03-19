@@ -118,23 +118,10 @@ enum BG_AV_CREATURE_ENTRIES                                 // only those, which
     BG_AV_CREATURE_ENTRY_A_CAPTAIN          = 11949,
     BG_AV_CREATURE_ENTRY_H_BOSS             = 11946,
     BG_AV_CREATURE_ENTRY_A_BOSS             = 11948,
+    // he yells all captures/defends... to all players
     BG_AV_CREATURE_ENTRY_N_HERALD           = 11997,
 
-    //TODO implement the following ones
-    BG_AV_CREATURE_ENTRY_H_L1               = 13179,        // H - lieutnant guse
-    BG_AV_CREATURE_ENTRY_H_D_B              = 13236,        // H - shaman - boss
-    BG_AV_CREATURE_ENTRY_H_D_C              = 13284,        // H - shaman - creep
-    BG_AV_CREATURE_ENTRY_A_L1               = 13438,        // A - lieutnant slidore
-    BG_AV_CREATURE_ENTRY_A_D_B              = 13442,        // A - druid boss
-    BG_AV_CREATURE_ENTRY_A_D_C              = 13443,        // A - druid creep
-
-    BG_AV_CREATURE_ENTRY_NM_N_B             = 11657,
-    BG_AV_CREATURE_ENTRY_NM_A_B             = 13078,
-    BG_AV_CREATURE_ENTRY_NM_H_B             = 13079,
-    BG_AV_CREATURE_ENTRY_SM_N_B             = 11677,
-    BG_AV_CREATURE_ENTRY_SM_A_B             = 13086,
-    BG_AV_CREATURE_ENTRY_SM_H_B             = 13088,
-
+    // they are needed cause they must get despawned after destroying a tower
     BG_AV_CREATURE_ENTRY_A_MARSHAL_SOUTH    = 14763,
     BG_AV_CREATURE_ENTRY_A_MARSHAL_NORTH    = 14762,
     BG_AV_CREATURE_ENTRY_A_MARSHAL_ICE      = 14764,
@@ -149,7 +136,6 @@ enum BG_AV_OTHER_VALUES
 {
     BG_AV_NORTH_MINE            = 0,
     BG_AV_SOUTH_MINE            = 1,
-    //unused? BG_AV_STATICCPLACE_MAX      = 123,
     BG_AV_MINE_TICK_TIMER       = 45000,
     BG_AV_MINE_RECLAIM_TIMER    = 1200000,                  // TODO: get the right value.. this is currently 20 minutes
     BG_AV_NEUTRAL_TEAM          = 0                         // this is the neutral owner of snowfall
@@ -704,33 +690,33 @@ enum BG_AV_DB_Creatures
 
 enum BG_AV_MineCreature_Entries
 {
-    // North_Mine_Neutral_X 4 is always boss
-    N_M_N_1 = 10987,
-    N_M_N_2 = 11600,
-    N_M_N_3 = 11602,
-    N_M_N_4 = 11657,
-    N_M_A_1 = 13396,
-    N_M_A_2 = 13080,
-    N_M_A_3 = 13098,
-    N_M_A_4 = 13078,
-    N_M_H_1 = 13397,
-    N_M_H_2 = 13099,
-    N_M_H_3 = 13081,
-    N_M_H_4 = 13079,
-    // South_Mine_Neutral_X 4 is always boss
-    S_M_N_1 = 11603,
-    S_M_N_2 = 11604,
-    S_M_N_3 = 11605,
-    S_M_N_4 = 11677,
-    S_M_N_5 = 10982,
-    S_M_A_1 = 13317,
-    S_M_A_2 = 13096,
-    S_M_A_3 = 13087,
-    S_M_A_4 = 13086,
-    S_M_H_1 = 13316,
-    S_M_H_2 = 13097,
-    S_M_H_3 = 13089,
-    S_M_H_4 = 13088
+    // North_Mine_..._X 4 is always boss
+    BG_AV_NORTH_MINE_NEUTRAL_1  = 10987,
+    BG_AV_NORTH_MINE_NEUTRAL_2  = 11600,
+    BG_AV_NORTH_MINE_NEUTRAL_3  = 11602,
+    BG_AV_NORTH_MINE_NEUTRAL_4  = 11657,
+    BG_AV_NORTH_MINE_ALLIANCE_1 = 13396,
+    BG_AV_NORTH_MINE_ALLIANCE_2 = 13080,
+    BG_AV_NORTH_MINE_ALLIANCE_3 = 13098,
+    BG_AV_NORTH_MINE_ALLIANCE_4 = 13078,
+    BG_AV_NORTH_MINE_HORDE_1    = 13397,
+    BG_AV_NORTH_MINE_HORDE_2    = 13099,
+    BG_AV_NORTH_MINE_HORDE_3    = 13081,
+    BG_AV_NORTH_MINE_HORDE_4    = 13079,
+    // South_Mine_..._X 4 is always boss
+    BG_AV_SOUTH_MINE_NEUTRAL_1  = 11603,
+    BG_AV_SOUTH_MINE_NEUTRAL_2  = 11604,
+    BG_AV_SOUTH_MINE_NEUTRAL_3  = 11605,
+    BG_AV_SOUTH_MINE_NEUTRAL_4  = 11677,
+    BG_AV_SOUTH_MINE_NEUTRAL_5  = 10982,
+    BG_AV_SOUTH_MINE_ALLIANCE_1 = 13317,
+    BG_AV_SOUTH_MINE_ALLIANCE_2 = 13096,
+    BG_AV_SOUTH_MINE_ALLIANCE_3 = 13087,
+    BG_AV_SOUTH_MINE_ALLIANCE_4 = 13086,
+    BG_AV_SOUTH_MINE_HORDE_1    = 13316,
+    BG_AV_SOUTH_MINE_HORDE_2    = 13097,
+    BG_AV_SOUTH_MINE_HORDE_3    = 13089,
+    BG_AV_SOUTH_MINE_HORDE_4    = 13088
 };
 
 enum BG_AV_Graveyards

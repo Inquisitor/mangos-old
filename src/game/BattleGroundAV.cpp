@@ -93,14 +93,14 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
                 SpawnBGObject(m_BgObjects[BG_AV_OBJECT_BURN_BUILDING_HORDE + i], RESPAWN_IMMEDIATELY);
             m_captainAlive[1]=false;
             break;
-        case BG_AV_CREATURE_ENTRY_NM_N_B:
-        case BG_AV_CREATURE_ENTRY_NM_A_B:
-        case BG_AV_CREATURE_ENTRY_NM_H_B:
+        case BG_AV_NORTH_MINE_ALLIANCE_4:
+        case BG_AV_NORTH_MINE_HORDE_4:
+        case BG_AV_NORTH_MINE_NEUTRAL_4:
             ChangeMineOwner(BG_AV_NORTH_MINE, killer->GetTeam());
             break;
-        case BG_AV_CREATURE_ENTRY_SM_N_B:
-        case BG_AV_CREATURE_ENTRY_SM_A_B:
-        case BG_AV_CREATURE_ENTRY_SM_H_B:
+        case BG_AV_SOUTH_MINE_NEUTRAL_4:
+        case BG_AV_SOUTH_MINE_ALLIANCE_4:
+        case BG_AV_SOUTH_MINE_HORDE_4:
             ChangeMineOwner(BG_AV_SOUTH_MINE, killer->GetTeam());
             break;
     }
@@ -315,60 +315,51 @@ void BattleGroundAV::OnObjectDBLoad(Creature* creature)
             m_DB_Creature[BG_AV_CREATURE_MARSHAL + 7] = creature->GetGUID();
             break;
 
-        // TODO use BG_AV_MineCreature_Entries
-        case 13396:                                         // northmine alliance TODO: get the right ids
-        case 13080:
-        case 13098:
-        case 13078:
+        case BG_AV_NORTH_MINE_ALLIANCE_1:
+        case BG_AV_NORTH_MINE_ALLIANCE_2:
+        case BG_AV_NORTH_MINE_ALLIANCE_3:
+        case BG_AV_NORTH_MINE_ALLIANCE_4:
             SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
             m_MineCreatures[BG_AV_NORTH_MINE][0].push_back(creature->GetGUID());
             break;
-        case 13397:                                         // northmine horde
-        case 13099:
-        case 13081:
-        case 13079:
+        case BG_AV_NORTH_MINE_HORDE_1:
+        case BG_AV_NORTH_MINE_HORDE_2:
+        case BG_AV_NORTH_MINE_HORDE_3:
+        case BG_AV_NORTH_MINE_HORDE_4:
             SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
             m_MineCreatures[BG_AV_NORTH_MINE][1].push_back(creature->GetGUID());
             break;
-        case 10987:                                         // northmine neutral -Trogg
-        case 11600:                                         // Irondeep Shaman
-        case 11602:                                         // Irondeep Skullthumper
-        case 11657:                                         // Morloch
+        case BG_AV_NORTH_MINE_NEUTRAL_1:
+        case BG_AV_NORTH_MINE_NEUTRAL_2:
+        case BG_AV_NORTH_MINE_NEUTRAL_3:
+        case BG_AV_NORTH_MINE_NEUTRAL_4:
             m_MineCreatures[BG_AV_NORTH_MINE][2].push_back(creature->GetGUID());
             break;
-         case 13317:                                        // southmine alliance
-         case 13096:                                        // explorer
-         case 13087:                                        // invader
-         case 13086:
-             SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
-             m_MineCreatures[BG_AV_SOUTH_MINE][0].push_back(creature->GetGUID());
-             break;
-         case 13316:                                        // southmine horde
-         case 13097:                                        // surveypr
-         case 13089:                                        // guard
-         case 13088:
-             m_MineCreatures[BG_AV_SOUTH_MINE][1].push_back(creature->GetGUID());
-             SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
-             break;
-         case 11603:                                        // southmine neutral
-         case 11604:
-         case 11605:
-         case 11677:
-         case 10982:                                        // vermin (special)
-             if(creature->GetEntry() == 11677)
-                 m_DB_Creature[BG_AV_CREATURE_SNIFFLE] = creature->GetGUID();
-             m_MineCreatures[BG_AV_SOUTH_MINE][2].push_back(creature->GetGUID());
-             break;
-
-        case BG_AV_CREATURE_ENTRY_H_L1:
-        case BG_AV_CREATURE_ENTRY_H_D_B:
-        case BG_AV_CREATURE_ENTRY_H_D_C:
-        case BG_AV_CREATURE_ENTRY_A_L1:
-        case BG_AV_CREATURE_ENTRY_A_D_B:
-        case BG_AV_CREATURE_ENTRY_A_D_C:
-            // not impplemented yet
+        case BG_AV_SOUTH_MINE_ALLIANCE_1:
+        case BG_AV_SOUTH_MINE_ALLIANCE_2:
+        case BG_AV_SOUTH_MINE_ALLIANCE_3:
+        case BG_AV_SOUTH_MINE_ALLIANCE_4:
+            SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
+            m_MineCreatures[BG_AV_SOUTH_MINE][0].push_back(creature->GetGUID());
+            break;
+        case BG_AV_SOUTH_MINE_HORDE_1:
+        case BG_AV_SOUTH_MINE_HORDE_2:
+        case BG_AV_SOUTH_MINE_HORDE_3:
+        case BG_AV_SOUTH_MINE_HORDE_4:
+            m_MineCreatures[BG_AV_SOUTH_MINE][1].push_back(creature->GetGUID());
+            SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
+            break;
+        case BG_AV_SOUTH_MINE_NEUTRAL_1:
+        case BG_AV_SOUTH_MINE_NEUTRAL_2:
+        case BG_AV_SOUTH_MINE_NEUTRAL_3:
+        case BG_AV_SOUTH_MINE_NEUTRAL_4:
+        case BG_AV_SOUTH_MINE_NEUTRAL_5:
+            if(creature->GetEntry() == BG_AV_SOUTH_MINE_NEUTRAL_4)
+                m_DB_Creature[BG_AV_CREATURE_SNIFFLE] = creature->GetGUID();
+            m_MineCreatures[BG_AV_SOUTH_MINE][2].push_back(creature->GetGUID());
             break;
     }
+
     uint32 level = creature->getLevel();
     //FIXME after respawn they have their old level again
     if(level != 0)
