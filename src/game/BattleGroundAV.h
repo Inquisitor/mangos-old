@@ -970,6 +970,8 @@ class BattleGroundAV : public BattleGround
         virtual void AddPlayer(Player *plr);
         virtual void OnObjectDBLoad(Creature* creature);
         virtual void OnObjectDBLoad(GameObject* obj);
+        virtual void OnCreatureRespawn(Creature* creature);
+
         virtual void StartingEventCloseDoors();
         virtual void StartingEventOpenDoors();
         // world states

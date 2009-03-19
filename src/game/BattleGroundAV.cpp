@@ -361,7 +361,14 @@ void BattleGroundAV::OnObjectDBLoad(Creature* creature)
     }
 
     uint32 level = creature->getLevel();
-    //FIXME after respawn they have their old level again
+    if(level != 0)
+        level += GetMaxLevel() - 60;                        // maybe we can do this more generic for custom level - range.. actually it's ok
+    creature->SetLevel(level);
+}
+
+void BattleGroundAV::OnCreatureRespawn(Creature* creature)
+{
+    uint32 level = creature->getLevel();
     if(level != 0)
         level += GetMaxLevel() - 60;                        // maybe we can do this more generic for custom level - range.. actually it's ok
     creature->SetLevel(level);
@@ -389,7 +396,6 @@ Creature* BattleGroundAV::AddAVCreature(uint32 cinfoid, uint32 type)
         // TODO: find a way to add a motionmaster without killing the creature (i just copied this code from a gm - command)
     }
 
-    // FIXME after respawn they have their old level again
     if(level != 0)
         level += GetMaxLevel() - 60;                        // maybe we can do this more generic for custom level - range.. actually it's ok
     creature->SetLevel(level);
