@@ -21,6 +21,8 @@
 
 class BattleGround;
 
+#define BG_AV_MAX_NODE_DISTANCE             25              // distance in which db-objects will be added to nodeObject-vector
+
 #define BG_AV_BOSS_KILL_QUEST_SPELL         23658
 
 #define BG_AV_CAPTIME                       240000          // 4 minutes
@@ -130,6 +132,19 @@ enum BG_AV_CREATURE_ENTRIES                                 // only those, which
     BG_AV_CREATURE_ENTRY_H_MARSHAL_TOWER    = 14776,
     BG_AV_CREATURE_ENTRY_H_MARSHAL_ETOWER   = 14772,
     BG_AV_CREATURE_ENTRY_H_MARSHAL_WTOWER   = 14777,
+
+    BG_AV_CREATURE_ENTRY_A_GRAVE_DEFENSE_1  = 12050,
+    BG_AV_CREATURE_ENTRY_A_GRAVE_DEFENSE_2  = 13326,
+    BG_AV_CREATURE_ENTRY_A_GRAVE_DEFENSE_3  = 13331,
+    BG_AV_CREATURE_ENTRY_A_GRAVE_DEFENSE_4  = 13422,
+
+    BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_1  = 12053,
+    BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_2  = 13328,
+    BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_3  = 13332,
+    BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_4  = 13421,
+
+    BG_AV_CREATURE_ENTRY_A_TOWER_DEFENSE    = 13358,
+    BG_AV_CREATURE_ENTRY_H_TOWER_DEFENSE    = 13359,
 };
 
 enum BG_AV_OTHER_VALUES
@@ -206,6 +221,26 @@ enum BG_AV_Nodes
     BG_AV_NODES_FROSTWOLF_WTOWER        = 14,
 
     BG_AV_NODES_MAX                     = 15
+};
+
+/// stores x,y-position from the center of the node (for graves and horde-towers, the
+/// node-banner-position), (for alliance-towers the bigbanner/bigaura position)
+const float BG_AV_NodePositions[BG_AV_NODES_MAX][2] = {
+    {638.592f,-32.422f },                                   // firstaid station
+    {669.007f,-294.078f },                                  // stormpike
+    {77.8013f,-404.7f },                                    // stone grave
+    {-202.581f,-112.73f },                                  // snowfall
+    {-611.962f,-396.17f },                                  // iceblood grave
+    {-1082.45f,-346.823f },                                 // frostwolf grave
+    {-1402.21f,-307.431f },                                 // frostwolf hut
+    {555.848f,-84.4151f },                                  // dunbaldar south
+    {679.339f,-136.468f },                                  // dunbaldar north
+    {208.973f,-365.971f },                                  // icewing bunker
+    {-155.832f,-449.401f },                                 // stoneheart bunker
+    {-571.88f,-262.777f },                                  // ice tower
+    {-768.907f,-363.71f },                                  // tower point
+    {-1302.9f,-316.981f },                                  // frostwolf etower
+    {-1297.5f,-266.767f }                                   // frostwolf wtower
 };
 
 enum BG_AV_ObjectTypes
@@ -533,25 +568,7 @@ enum BG_AV_CreaturePlace
     BG_AV_CPLACE_SPIRIT_FROST_HUT       = 6,
     BG_AV_CPLACE_SPIRIT_MAIN_ALLIANCE   = 7,
     BG_AV_CPLACE_SPIRIT_MAIN_HORDE      = 8,
-    // i don't add for all 4 positions a variable.. i think one is enough to compute the rest
-    BG_AV_CPLACE_DEFENSE_STORM_AID      = 9,
-    BG_AV_CPLACE_DEFEMSE_STORM_GRAVE    = 13,
-    BG_AV_CPLACE_DEFENSE_STONE_GRAVE    = 17,
-    BG_AV_CPLACE_DEFENSE_SNOWFALL       = 21,
-    BG_AV_CPLACE_DEFENSE_FROSTWOLF      = 25,
-    BG_AV_CPLACE_DEFENSE_ICE_GRAVE      = 29,
-    BG_AV_CPLACE_DEFENSE_FROST_HUT      = 33,
-
-    BG_AV_CPLACE_DEFENSE_DUN_S          = 37,
-    BG_AV_CPLACE_DEFENSE_DUN_N          = 41,
-    BG_AV_CPLACE_DEFENSE_ICEWING        = 45,
-    BG_AV_CPLACE_DEFENSE_STONE_TOWER    = 49,
-    BG_AV_CPLACE_DEFENSE_ICE_TOWER      = 53,
-    BG_AV_CPLACE_DEFENSE_TOWERPOINT     = 57,
-    BG_AV_CPLACE_DEFENSE_FROST_E        = 61,
-    BG_AV_CPLACE_DEFENSE_FROST_W        = 65,
-
-    BG_AV_CPLACE_MAX                    = 69
+    BG_AV_CPLACE_MAX                    = 9
 };
 
 // x, y, z, o
@@ -565,117 +582,7 @@ const float BG_AV_CreaturePos[BG_AV_CPLACE_MAX][4] = {
     {-1090.476807f,-253.308670f,57.672371f,-0.001854f},
     {-1496.065063f,-333.338409f,101.134804f,-0.001854f},
     {873.001770f,-491.283630f,96.541931f,-0.001854f},
-    {-1437.670044f,-610.088989f,51.161900f,-0.001854f},
-
-    // graves
-    // firstaid
-    {635.17f,-29.5594f,46.5056f,4.81711f},
-    {642.488f,-32.9437f,46.365f,4.67748f},
-    {642.326f,-27.9442f,46.9211f,4.59022f},
-    {635.945f,-33.6171f,45.7164f,4.97419f},
-    // stormpike
-    {669.272f,-297.304f,30.291f,4.66604f},
-    {674.08f,-292.328f,30.4817f,0.0918785f},
-    {667.01f,-288.532f,29.8809f,1.81583f},
-    {664.153f,-294.042f,30.2851f,3.28531f},
-    // stone
-    {81.7027f,-406.135f,47.7843f,0.598464f},
-    {78.1431f,-409.215f,48.0401f,5.05953f},
-    {73.4135f,-407.035f,46.7527f,3.34736f},
-    {78.2258f,-401.859f,46.4202f,2.05852f},
-    // snowfall
-    {-207.412f,-110.616f,78.7959f,2.43251f},
-    {-197.95f,-112.205f,78.5686f,6.22441f},
-    {-202.709f,-116.829f,78.4358f,5.13742f},
-    {-202.059f,-108.314f,78.5783f,5.91968f},
-    // ice
-    {-615.501f,-393.802f,60.4299f,3.06147f},
-    {-608.513f,-392.717f,62.5724f,2.06323f},
-    {-609.769f,-400.072f,60.7174f,5.22367f},
-    {-616.093f,-398.293f,60.5628f,3.73613f},
-    // frost
-    {-1077.7f,-340.21f,55.4682f,6.25569f},
-    {-1082.74f,-333.821f,54.7962f,2.05459f},
-    {-1090.66f,-341.267f,54.6768f,3.27746f},
-    {-1081.58f,-344.63f,55.256f,4.75636f},
-    // frost hut
-    {-1408.95f,-311.69f,89.2536f,4.49954f},
-    {-1407.15f,-305.323f,89.1993f,2.86827f},
-    {-1400.64f,-304.3f,89.7008f,1.0595f},
-    {-1400.4f,-311.35f,89.3028f,4.99434f},
-
-    // towers
-    // dun south - OK
-    {569.395f,-101.064f,52.8296f,2.34974f},
-    {574.85f,-92.9842f,52.5869f,3.09325f},
-    {575.411f,-83.597f,52.3626f,6.26573f},
-    {571.352f,-75.6582f,52.479f,0.523599f},
-    // dun north - OK
-    {668.60f,-122.53f,64.12f,2.34f},                        // not 100% ok
-    {662.253f,-129.105f,64.1794f,2.77507f},
-    {661.209f,-138.877f,64.2251f,3.38594f},
-    {665.481f,-146.857f,64.1271f,3.75246f},
-    // icewing - OK
-    {225.228f,-368.909f,56.9983f,6.23806f},
-    {191.36f,-369.899f,57.1524f,3.24631f},
-    {215.518f,-384.019f,56.9889f,5.09636f},
-    {199.625f,-382.177f,56.8691f,4.08407f},
-    // stone
-    {-172.851f,-452.366f,40.8725f,3.31829f},
-    {-147.147f,-435.053f,40.8022f,0.599238f},
-    {-169.456f,-440.325f,40.985f,2.59101f},
-    {-163.494f,-434.904f,41.0725f,1.84174f},
-    // ice - OK
-    {-573.522f,-271.854f,75.0078f,3.9619f},
-    {-565.616f,-269.051f,74.9952f,5.02655f},
-    {-562.825f,-261.087f,74.9898f,5.95157f},
-    {-569.176f,-254.446f,74.8771f,0.820305f},
-    // towerpoint
-    {-763.04f,-371.032f,90.7933f,5.25979f},
-    {-759.764f,-358.264f,90.8681f,0.289795f},
-    {-768.808f,-353.056f,90.8811f,1.52601f},
-    {-775.944f,-362.639f,90.8949f,2.59573f},
-    // frost etower
-    {-1294.13f,-313.045f,107.328f,0.270162f},
-    {-1306.5f,-308.105f,113.767f,1.78755f},
-    {-1294.78f,-319.966f,113.79f,5.94545f},
-    {-1294.83f,-312.241f,113.799f,0.295293f},
-    // frost wtower
-    {-1300.96f,-275.111f,114.058f,4.12804f},
-    {-1302.41f,-259.256f,114.065f,1.67602f},
-    {-1287.97f,-262.087f,114.165f,6.18264f},
-    {-1291.59f,-271.166f,114.151f,5.28257f}
-};
-
-enum BG_AV_CreatureIds
-{
-    BG_AV_NPC_A_GRAVE_DEFENSE_0 = 0,                        // stormpike Defender
-    BG_AV_NPC_A_GRAVE_DEFENSE_1 = 1,                        // seasoned defender
-    BG_AV_NPC_A_GRAVE_DEFENSE_2 = 2,                        // veteran defender
-    BG_AV_NPC_A_GRAVE_DEFENSE_3 = 3,                        // champion defender
-    BG_AV_NPC_A_TOWER_DEFENSE   = 4,                        // stormpike bowman
-
-    BG_AV_NPC_H_GRAVE_DEFENSE_0 = 5,                        // frostwolf guardian
-    BG_AV_NPC_H_GRAVE_DEFENSE_1 = 6,                        // seasoned guardian
-    BG_AV_NPC_H_GRAVE_DEFENSE_2 = 7,                        // veteran guardian
-    BG_AV_NPC_H_GRAVE_DEFENSE_3 = 8,                        // champion guardian
-    BG_AV_NPC_H_TOWER_DEFENSE   = 9,                        // frostwolf bowman
-
-    AV_NPC_INFO_MAX             = 10
-};
-
-// entry, team, minlevel, maxlevel
-const uint32 BG_AV_CreatureInfo[AV_NPC_INFO_MAX][4] = {
-    { 12050, 1216, 58, 58 },                                // Stormpike Defender
-    { 13326, 1216, 59, 59 },                                // Seasoned Defender
-    { 13331, 1216, 60, 60 },                                // Veteran Defender
-    { 13422, 1216, 61, 61 },                                // Champion Defender
-    { 13358, 1216, 59, 60 },                                // Stormpike Bowman
-    { 12053, 1214, 58, 58 },                                // Frostwolf Guardian
-    { 13328, 1214, 59, 59 },                                // Seasoned Guardian
-    { 13332, 1214, 60, 60 },                                // Veteran Guardian
-    { 13421, 1214, 61, 61 },                                // Champion Guardian
-    { 13359, 1214, 59, 60 },                                // Frostwolf Bowman
+    {-1437.670044f,-610.088989f,51.161900f,-0.001854f}
 };
 
 enum BG_AV_DB_Creatures
@@ -1024,9 +931,6 @@ class BattleGroundAV : public BattleGround
         void SendMineWorldStates(uint32 mine);
         void UpdateNodeWorldState(BG_AV_Nodes node);
 
-        /*general */
-        Creature* AddAVCreature(uint32 cinfoid, uint32 type);
-
         /*variables */
         int32 m_TeamScores[BG_TEAMS_COUNT];
         uint32 m_Team_QuestStatus[BG_TEAMS_COUNT][9];       // [x][y] x=team y=questcounter
@@ -1043,8 +947,12 @@ class BattleGroundAV : public BattleGround
 
         uint64 m_DB_Creature[BG_AV_DB_CREATURE_MAX];
 
-        BGObjects   m_SnowfallEyecandy[4];
-        BGCreatures m_MineCreatures[2][3];
+        BGObjects   m_SnowfallEyecandy[4];                  // 4 kinds: alliance/horde-assaulted, alliance/horde-captured
+        BGCreatures m_MineCreatures[2][3];                  // 2 mines, 3 factions (neutral, alliance, horde)
+
+        // 7 grave yards 2kinds: alliance/horde-captured, 4 different creaturetypes (there is a quest where you can improve those creatures)
+        BGCreatures m_GraveCreatures[7][BG_TEAMS_COUNT][4];
+        BGCreatures m_TowerCreatures[8];                    // 8 towers
 
         uint32 m_HonorMapComplete;
         uint32 m_RepTowerDestruction;
