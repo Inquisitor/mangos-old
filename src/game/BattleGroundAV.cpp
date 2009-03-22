@@ -589,35 +589,25 @@ void BattleGroundAV::EndBattleGround(uint32 winner)
         ++mines_owned[BG_TEAM_HORDE];
 
     // now we have the values give the honor/reputation to the teams:
-    // cycle through both bg_teams
-    for(uint32 i=0; i<2; i++)
+    uint32 team[2]      = { ALLIANCE, HORDE };
+    uint32 faction[2]   = { 730, 729 };
+    for(uint32 i = 0; i < BG_TEAMS_COUNT; i++)
     {
-        uint32 team, faction;
-        if( i == BG_TEAM_ALLIANCE )
-        {
-            team    = ALLIANCE;
-            faction = 730;
-        }
-        else
-        {
-            team    = HORDE;
-            faction = 729;
-        }
         if( tower_survived[i] )
         {
-            RewardReputationToTeam(faction, tower_survived[i] * m_RepSurviveTower, team);
-            RewardHonorToTeam(GetBonusHonorFromKill(tower_survived[i] * BG_AV_KILL_SURVIVING_TOWER), team);
+            RewardReputationToTeam(faction[i], tower_survived[i] * m_RepSurviveTower, team[i]);
+            RewardHonorToTeam(GetBonusHonorFromKill(tower_survived[i] * BG_AV_KILL_SURVIVING_TOWER), team[i]);
         }
         sLog.outDebug("BG_AV EndbattleGround: bgteam: %u towers:%u honor:%u rep:%u", i, tower_survived[i], GetBonusHonorFromKill(tower_survived[i] * BG_AV_KILL_SURVIVING_TOWER), tower_survived[i] * BG_AV_REP_SURVIVING_TOWER);
         if( graves_owned[i] )
-            RewardReputationToTeam(faction, graves_owned[i] * m_RepOwnedGrave, team);
+            RewardReputationToTeam(faction[i], graves_owned[i] * m_RepOwnedGrave, team[i]);
         if( mines_owned[i] )
-            RewardReputationToTeam(faction, mines_owned[i] * m_RepOwnedMine, team);
+            RewardReputationToTeam(faction[i], mines_owned[i] * m_RepOwnedMine, team[i]);
         // captain survived?:
         if( m_captainAlive[i] )
         {
-            RewardReputationToTeam(faction, m_RepSurviveCaptain, team);
-            RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_SURVIVING_CAPTAIN), team);
+            RewardReputationToTeam(faction[i], m_RepSurviveCaptain, team[i]);
+            RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_SURVIVING_CAPTAIN), team[i]);
         }
     }
 
