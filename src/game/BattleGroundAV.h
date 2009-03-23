@@ -219,9 +219,32 @@ enum BG_AV_Nodes
     BG_AV_NODES_TOWER_POINT             = 12,
     BG_AV_NODES_FROSTWOLF_ETOWER        = 13,
     BG_AV_NODES_FROSTWOLF_WTOWER        = 14,
-
-    BG_AV_NODES_MAX                     = 15
 };
+#define BG_AV_NODES_MAX                 15
+
+/// the last dimension 2 is for 0=assaulted, 1=controlled
+/// neutral node (snowfall) will get into an extra enum)
+const uint8 BG_AV_NodeEventIndexes[BG_AV_NODES_MAX][BG_TEAMS_COUNT][2] = {
+    { {1, 2}, {3, 4} },                                     // FIRSTAID_STATION
+    { {5, 6}, {7,  8} },                                    // STORMPIKE_GRAVE
+    { {9, 10}, {11, 12} },                                  // STONEHEART_GRAVE
+    { {13, 14}, {15, 16} },                                 // SNOWFALL_GRAVE
+    { {17, 18}, {19, 20} },                                 // ICEBLOOD_GRAVE
+    { {21, 22}, {23, 24} },                                 // FROSTWOLF_GRAVE
+    { {25, 26}, {27, 28} },                                 // FROSTWOLF_HUT
+    { {29, 30}, {31, 32} },                                 // DUNBALDAR_SOUTH
+    { {33, 34}, {35, 36} },                                 // DUNBALDAR_NORTH
+    { {37, 38}, {39, 40} },                                 // ICEWING_BUNKER
+    { {41, 42}, {43, 44} },                                 // STONEHEART_BUNKER
+    { {45, 46}, {47, 48} },                                 // ICEBLOOD_TOWER
+    { {49, 50}, {51, 52} },                                 // TOWER_POINT
+    { {53, 54}, {55, 56} },                                 // FROSTWOLF_ETOWER
+    { {57, 58}, {59, 60} }                                  // FROSTWOLF_WTOWER
+};
+// cause snowfall is the only neutral one, i will give it an extra variable, and
+// don't add neutral state to this array
+#define BG_AV_NodeEventSnowfall 61                          // neutral state of snowfall
+#define BG_AV_MAX_NODE_EVENTS   62
 
 /// stores x,y-position from the center of the node (for graves and horde-towers, the
 /// node-banner-position), (for alliance-towers the bigbanner/bigaura position)
@@ -777,7 +800,7 @@ const uint32 BG_AV_MineWorldStates[2][3] = {
 };
 
 // alliance_control alliance_assault h_control h_assault
-const uint32 BG_AV_NodeWorldStates[16][4] = {
+const uint32 BG_AV_NodeWorldStates[BG_AV_NODES_MAX][4] = {
     // Stormpike first aid station
     {1325,1326,1327,1328},
     // Stormpike Graveyard
@@ -922,6 +945,8 @@ class BattleGroundAV : public BattleGround
         const uint32 GetObjectThroughNode(BG_AV_Nodes node);
         uint32 GetNodeName(BG_AV_Nodes node);
         const bool IsTower(BG_AV_Nodes node) {   return m_Nodes[node].Tower; }
+        BG_AV_Nodes GetNodeThroughNodeEvent(uint8 event);
+        uint8 GetNodeEventThroughNode(BG_AV_Nodes node);
 
         /*mine*/
         void ChangeMineOwner(uint8 mine, uint32 team);
@@ -952,7 +977,13 @@ class BattleGroundAV : public BattleGround
 
         // 7 grave yards 2kinds: alliance/horde-captured, 4 different creaturetypes (there is a quest where you can improve those creatures)
         BGCreatures m_GraveCreatures[7][BG_TEAMS_COUNT][4];
-        BGCreatures m_TowerCreatures[8];                    // 8 towers
+
+        struct BG_AV_NodeObjects
+        {
+            BGObjects gameObjects;
+            BGCreatures creatures;
+        };
+        BG_AV_NodeObjects m_NodeObjects[BG_AV_MAX_NODE_EVENTS];
 
         uint32 m_HonorMapComplete;
         uint32 m_RepTowerDestruction;

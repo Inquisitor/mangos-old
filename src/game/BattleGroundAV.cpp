@@ -19,6 +19,7 @@
 #include "Player.h"
 #include "BattleGround.h"
 #include "BattleGroundAV.h"
+#include "BattleGroundMgr.h"
 #include "Creature.h"
 #include "Chat.h"
 #include "Object.h"
@@ -284,8 +285,11 @@ void BattleGroundAV::OnObjectDBLoad(GameObject* obj)
 
 void BattleGroundAV::OnObjectDBLoad(Creature* creature)
 {
+    // it's important that creature which should be spawned at the beginning are
+    // spawned here, cause they only get loaded if a player enters the grid..
+    // and we can't tell when this happens (could even be after the beginning)
     uint32 graveDefenderType = 0;
-    uint32 node = 42;
+    uint8 nodeEvent = 255;
     switch(creature->GetEntry())
     {
         case BG_AV_CREATURE_ENTRY_H_BOSS:
@@ -376,52 +380,39 @@ void BattleGroundAV::OnObjectDBLoad(Creature* creature)
             ++graveDefenderType;
         case BG_AV_CREATURE_ENTRY_A_GRAVE_DEFENSE_1:
         case BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_1:
-            for(uint32 i = BG_AV_NODES_FIRSTAID_STATION ; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i)
+            nodeEvent = sBattleGroundMgr.GetCreatureEventIndex(creature->GetDBTableGUIDLow());
+            if( nodeEvent == 255 )
             {
-                if(creature->GetDistance2d(BG_AV_NodePositions[i][0], BG_AV_NodePositions[i][1]) < BG_AV_MAX_NODE_DISTANCE)
-                {
-                    node = i;
-                    break;
-                }
+                sLog.outError("BattleGroundAV: grave defending unit %u has no EventIndex, the game could not be created", creature->GetDBTableGUIDLow());
+                EndNow();
+                return;
             }
-            assert( node != 42 );
             if(creature->GetEntry() == BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_4 || creature->GetEntry() == BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_3
                 || creature->GetEntry() == BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_2 || creature->GetEntry() == BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_1)
             {
-                if( graveDefenderType > 0 || node < BG_AV_NODES_ICEBLOOD_GRAVE )
+                if( graveDefenderType > 0 || GetNodeThroughNodeEvent(nodeEvent) < BG_AV_NODES_ICEBLOOD_GRAVE )
                     SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
-                m_GraveCreatures[node][BG_TEAM_HORDE][graveDefenderType].push_back(creature->GetGUID());
+                m_GraveCreatures[GetNodeThroughNodeEvent(nodeEvent)][BG_TEAM_HORDE][graveDefenderType].push_back(creature->GetGUID());
             }
             else
             {
-                if( graveDefenderType > 0 || node > BG_AV_NODES_STONEHEART_GRAVE )
+                if( graveDefenderType > 0 || GetNodeThroughNodeEvent(nodeEvent) > BG_AV_NODES_STONEHEART_GRAVE )
                     SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
-                m_GraveCreatures[node][BG_TEAM_ALLIANCE][graveDefenderType].push_back(creature->GetGUID());
+                m_GraveCreatures[GetNodeThroughNodeEvent(nodeEvent)][BG_TEAM_ALLIANCE][graveDefenderType].push_back(creature->GetGUID());
             }
+            if( graveDefenderType > 0 )
+                SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
             break;
         case BG_AV_CREATURE_ENTRY_A_TOWER_DEFENSE:          // only spawned at alliance-towers
-            for(uint32 i = BG_AV_NODES_DUNBALDAR_SOUTH; i <= BG_AV_NODES_STONEHEART_BUNKER; ++i)
-            {
-                if(creature->GetDistance2d(BG_AV_NodePositions[i][0], BG_AV_NodePositions[i][1]) < BG_AV_MAX_NODE_DISTANCE)
-                {
-                    node = i;
-                    break;
-                }
-            }
-            assert( node != 42 );
-            m_TowerCreatures[ node - BG_AV_NODES_DUNBALDAR_SOUTH].push_back(creature->GetGUID());
-            break;
         case BG_AV_CREATURE_ENTRY_H_TOWER_DEFENSE:
-            for(uint32 i = BG_AV_NODES_ICEBLOOD_TOWER; i <= BG_AV_NODES_FROSTWOLF_WTOWER; ++i)
+            nodeEvent = sBattleGroundMgr.GetCreatureEventIndex(creature->GetDBTableGUIDLow());
+            if( nodeEvent == 255 )
             {
-                if(creature->GetDistance2d(BG_AV_NodePositions[i][0], BG_AV_NodePositions[i][1]) < BG_AV_MAX_NODE_DISTANCE)
-                {
-                    node = i;
-                    break;
-                }
+                sLog.outError("BattleGroundAV: tower defending unit %u has no EventIndex, the game could not be created", creature->GetDBTableGUIDLow());
+                EndNow();
+                return;
             }
-            assert( node != 42 );
-            m_TowerCreatures[ node - BG_AV_NODES_DUNBALDAR_SOUTH].push_back(creature->GetGUID());
+            m_NodeObjects[nodeEvent].creatures.push_back(creature->GetGUID());
             break;
         default:
             break;
@@ -531,13 +522,12 @@ void BattleGroundAV::StartingEventOpenDoors()
         SpawnBGObject(m_BgObjects[i + 16], RESPAWN_IMMEDIATELY);         // aura
     }
     // creatures
-    sLog.outDebug("BattleGroundAV: start spawning spiritguides for nodes");
+    sLog.outDebug("BattleGroundAV: start populating graveyards");
     for(BG_AV_Nodes i= BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; ++i )
     {
         // spawn grave sprititguides
-        if(!IsTower(i))
-            if(m_Nodes[i].Owner)
-                AddSpiritGuide(i , BG_AV_CreaturePos[i][0], BG_AV_CreaturePos[i][1], BG_AV_CreaturePos[i][2], BG_AV_CreaturePos[i][3], m_Nodes[i].Owner);
+        if(m_Nodes[i].Owner)
+            AddSpiritGuide(i, BG_AV_CreaturePos[i][0], BG_AV_CreaturePos[i][1], BG_AV_CreaturePos[i][2], BG_AV_CreaturePos[i][3], m_Nodes[i].Owner);
     }
 
 }
@@ -798,15 +788,37 @@ bool BattleGroundAV::PlayerCanDoMineQuest(int32 GOId,uint32 team)
     return true;                                            // cause it's no mine'object it is ok if this is true
 }
 
+uint8 BattleGroundAV::GetNodeEventThroughNode(BG_AV_Nodes node)
+{
+    if( m_Nodes[node].Owner == BG_AV_NEUTRAL_TEAM )
+        return BG_AV_NodeEventSnowfall;
+    assert( m_Nodes[node].State != POINT_NEUTRAL );
+    uint32 controlled = ( m_Nodes[node].State == POINT_CONTROLLED || m_Nodes[node].State == POINT_DESTROYED);
+    uint32 team = GetTeamIndexByTeamId(m_Nodes[node].Owner);
+    return BG_AV_NodeEventIndexes[node][team][controlled];
+}
+
+BG_AV_Nodes BattleGroundAV::GetNodeThroughNodeEvent(uint8 event)
+{
+    if ( event == BG_AV_NodeEventSnowfall )
+        return BG_AV_NODES_SNOWFALL_GRAVE;
+
+    if( event > BG_AV_MAX_NODE_EVENTS-1 || event == 0 )
+    {
+        sLog.outError("BattleGroundAV: GetNodeThroughNodeEvent received a wrong event %u", event);
+        assert(false);
+    }
+    return BG_AV_Nodes(uint8(event / 4));
+}
+
 /// will spawn creatures around a node
 void BattleGroundAV::PopulateNode(BG_AV_Nodes node)
 {
-    uint32 owner = m_Nodes[node].Owner;
-    assert(owner != BG_AV_NEUTRAL_TEAM);
-
-    if(!IsTower(node))
+    // graves will be handled extra, cause the defenders are not stored in the
+    // m_NodeObjects.creature vector, cause they can change through a quest
+    if(!IsTower(node) && m_Nodes[node].Owner != BG_AV_NEUTRAL_TEAM)
     {
-        uint32 team = GetTeamIndexByTeamId(owner);
+        uint32 team = GetTeamIndexByTeamId(m_Nodes[node].Owner);
         uint32 graveDefenderType;
         if (m_Team_QuestStatus[team][0] < 500 )
             graveDefenderType = 0;
@@ -821,30 +833,25 @@ void BattleGroundAV::PopulateNode(BG_AV_Nodes node)
         for(; itr != m_GraveCreatures[node][team][graveDefenderType].end(); ++itr)
             SpawnBGCreature(*itr,RESPAWN_IMMEDIATELY);
 
-        // spiritguide
+        // spiritguide TODO: move it to db and store it in m_NodeObjects
         if( m_BgCreatures[node] )
             DelCreature(node);
-        if( !AddSpiritGuide(node, BG_AV_CreaturePos[node][0], BG_AV_CreaturePos[node][1], BG_AV_CreaturePos[node][2], BG_AV_CreaturePos[node][3], owner))
-            sLog.outError("BattleGroundAV: couldn't spawn spiritguide at node %i", node);
-
+        AddSpiritGuide(node, BG_AV_CreaturePos[node][0], BG_AV_CreaturePos[node][1], BG_AV_CreaturePos[node][2], BG_AV_CreaturePos[node][3], m_Nodes[node].Owner);
     }
-    else
-    {
-        BGCreatures::const_iterator itr = m_TowerCreatures[node - BG_AV_NODES_DUNBALDAR_SOUTH].begin();
-        for(; itr != m_TowerCreatures[node - BG_AV_NODES_DUNBALDAR_SOUTH].end(); ++itr)
-            SpawnBGCreature(*itr,RESPAWN_IMMEDIATELY);
-    }
+    uint8 event = GetNodeEventThroughNode(node);
+    BGCreatures::const_iterator itr = m_NodeObjects[event].creatures.begin();
+    for(; itr != m_NodeObjects[event].creatures.end(); ++itr)
+        SpawnBGCreature(*itr,RESPAWN_IMMEDIATELY);
 }
 
 /// will despawn creatures around a node
 void BattleGroundAV::DePopulateNode(BG_AV_Nodes node)
 {
-    uint32 owner = m_Nodes[node].Owner;
-    assert(owner != BG_AV_NEUTRAL_TEAM);
-
-    if(!IsTower(node))
+    // graves will be handled extra, cause the defenders are not stored in the
+    // m_NodeObjects.creature vector, cause they can change through a quest
+    if(!IsTower(node) && m_Nodes[node].Owner != BG_AV_NEUTRAL_TEAM)
     {
-        uint32 team = GetTeamIndexByTeamId(owner);
+        uint32 team = GetTeamIndexByTeamId(m_Nodes[node].Owner);
         uint32 graveDefenderType;
         if (m_Team_QuestStatus[team][0] < 500 )
             graveDefenderType = 0;
@@ -858,15 +865,15 @@ void BattleGroundAV::DePopulateNode(BG_AV_Nodes node)
         BGCreatures::const_iterator itr = m_GraveCreatures[node][team][graveDefenderType].begin();
         for(; itr != m_GraveCreatures[node][team][graveDefenderType].end(); ++itr)
             SpawnBGCreature(*itr,RESPAWN_ONE_DAY);
-        if( m_BgCreatures[node] )                           // spiritguide
+
+        // spiritguide TODO: move it to db and store it in m_NodeObjects
+        if( m_BgCreatures[node] )
             DelCreature(node);
     }
-    else
-    {
-        BGCreatures::const_iterator itr = m_TowerCreatures[node - BG_AV_NODES_DUNBALDAR_SOUTH].begin();
-        for(; itr != m_TowerCreatures[node - BG_AV_NODES_DUNBALDAR_SOUTH].end(); ++itr)
-            SpawnBGCreature(*itr,RESPAWN_ONE_DAY);
-    }
+    uint8 event = GetNodeEventThroughNode(node);
+    BGCreatures::const_iterator itr = m_NodeObjects[event].creatures.begin();
+    for(; itr != m_NodeObjects[event].creatures.end(); ++itr)
+        SpawnBGCreature(*itr,RESPAWN_ONE_DAY);
 }
 
 /// with object it means the typeid of m_BGObjects[typeid]
@@ -1488,19 +1495,11 @@ void BattleGroundAV::Reset()
         InitNode(i, ALLIANCE, false);
     }
     for(BG_AV_Nodes i = BG_AV_NODES_DUNBALDAR_SOUTH; i <= BG_AV_NODES_STONEHEART_BUNKER; ++i)   // alliance towers
-    {
         InitNode(i, ALLIANCE, true);
-        m_TowerCreatures[i - BG_AV_NODES_DUNBALDAR_SOUTH].reserve(4);
-    }
     for(BG_AV_Nodes i = BG_AV_NODES_ICEBLOOD_GRAVE; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i)        // horde graves
-    {
         InitNode(i, HORDE, false);
-    }
     for(BG_AV_Nodes i = BG_AV_NODES_ICEBLOOD_TOWER; i <= BG_AV_NODES_FROSTWOLF_WTOWER; ++i)     // horde towers
-    {
         InitNode(i, HORDE, true);
-        m_TowerCreatures[i - BG_AV_NODES_DUNBALDAR_SOUTH].reserve(4);
-    }
 
     InitNode(BG_AV_NODES_SNOWFALL_GRAVE, BG_AV_NEUTRAL_TEAM, false);                            // give snowfall neutral owner
     for(BG_AV_Nodes i = BG_AV_NODES_DUNBALDAR_SOUTH; i<= BG_AV_NODES_FROSTWOLF_HUT; ++i)
