@@ -172,6 +172,13 @@ UPDATE creature_template SET minlevel=54 , maxlevel=55 WHERE entry IN (11602,130
 UPDATE creature_template SET minlevel=58 , maxlevel=58 WHERE entry IN (11657,13078,13079,11677,13086,13088);
 UPDATE creature_template SET minlevel=54 , maxlevel=55 WHERE entry=10982;
 
+DROP TABLE IF EXISTS `creature_battleground`;
+CREATE TABLE `creature_battleground` (
+    `guid` int(10) unsigned NOT NULL COMMENT 'Creature\'s GUID',
+    `eventIndex` tinyint(3) unsigned NOT NULL,
+    PRIMARY KEY  (`guid`),
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='Creature battleground indexing system';
+
 DELETE FROM creature WHERE map=30;
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(2225,30,-1235.31, -340.777, 60.5088, 3.31613);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(3343,30,-1244.02, -323.795, 61.0485, 5.21853);
