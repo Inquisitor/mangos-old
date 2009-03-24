@@ -194,6 +194,7 @@ enum BG_AV_Nodes
     BG_AV_NODES_TOWER_POINT             = 12,
     BG_AV_NODES_FROSTWOLF_ETOWER        = 13,
     BG_AV_NODES_FROSTWOLF_WTOWER        = 14,
+    BG_AV_NODES_ERROR                   = 255,
 };
 #define BG_AV_NODES_MAX                 15
 
@@ -622,7 +623,8 @@ class BattleGroundAV : public BattleGround
 
         const BG_AV_Nodes GetNodeThroughPlayerPosition(Player* plr);
         uint32 GetNodeName(BG_AV_Nodes node);
-        const bool IsTower(BG_AV_Nodes node) {   return m_Nodes[node].Tower; }
+        const bool IsTower(BG_AV_Nodes node) { return (node == BG_AV_NODES_ERROR)? false : m_Nodes[node].Tower; }
+        const bool IsGrave(BG_AV_Nodes node) { return (node == BG_AV_NODES_ERROR)? false : !m_Nodes[node].Tower; }
         BG_AV_Nodes GetNodeThroughNodeEvent(uint8 event);
         uint8 GetNodeEventThroughNode(BG_AV_Nodes node);
         bool IsActiveNodeEvent(uint8 event);

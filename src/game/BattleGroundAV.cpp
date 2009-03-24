@@ -261,7 +261,7 @@ void BattleGroundAV::UpdateScore(uint32 team, int32 points )
 void BattleGroundAV::OnObjectDBLoad(GameObject* obj)
 {
     uint8 nodeEvent = sBattleGroundMgr.GetGameObjectEventIndex(obj->GetDBTableGUIDLow());
-    if( nodeEvent == 255 )
+    if( nodeEvent == BG_EVENT_NONE )
         return;
     if( nodeEvent == BG_AV_NodeEventCaptainDead_A)
     {
@@ -291,7 +291,8 @@ void BattleGroundAV::OnObjectDBLoad(Creature* creature)
     // spawned here, cause they only get loaded if a player enters the grid..
     // and we can't tell when this happens (could even be after the beginning)
     uint32 graveDefenderType = 0;
-    uint8 nodeEvent = 255;
+    uint8 nodeEvent;
+    BG_AV_Nodes node;
     switch(creature->GetEntry())
     {
         case BG_AV_CREATURE_ENTRY_H_BOSS:
@@ -383,20 +384,22 @@ void BattleGroundAV::OnObjectDBLoad(Creature* creature)
         case BG_AV_CREATURE_ENTRY_A_GRAVE_DEFENSE_1:
         case BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_1:
             nodeEvent = sBattleGroundMgr.GetCreatureEventIndex(creature->GetDBTableGUIDLow());
-            if( nodeEvent == 255 )
+            node = GetNodeThroughNodeEvent(nodeEvent);
+            if( nodeEvent == BG_EVENT_NONE || !IsGrave(node) )
             {
-                sLog.outError("BattleGroundAV: grave defending unit %u has no EventIndex, the game could not be created", creature->GetDBTableGUIDLow());
+                sLog.outError("BattleGroundAV: grave defending unit %u has no EventIndex or the EventIndex has no grave associated, the game could not be created", creature->GetDBTableGUIDLow());
                 EndNow();
                 return;
             }
+
             if( creature->GetEntry() == BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_4 || creature->GetEntry() == BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_3
                 || creature->GetEntry() == BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_2 || creature->GetEntry() == BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_1 )
             {
-                m_GraveCreatures[GetNodeThroughNodeEvent(nodeEvent)][BG_TEAM_HORDE][graveDefenderType].push_back(creature->GetGUID());
+                m_GraveCreatures[node][BG_TEAM_HORDE][graveDefenderType].push_back(creature->GetGUID());
             }
             else
             {
-                m_GraveCreatures[GetNodeThroughNodeEvent(nodeEvent)][BG_TEAM_ALLIANCE][graveDefenderType].push_back(creature->GetGUID());
+                m_GraveCreatures[node][BG_TEAM_ALLIANCE][graveDefenderType].push_back(creature->GetGUID());
             }
             if( graveDefenderType > 0 || !IsActiveNodeEvent(nodeEvent) )
                 SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
@@ -404,9 +407,10 @@ void BattleGroundAV::OnObjectDBLoad(Creature* creature)
         case BG_AV_CREATURE_ENTRY_A_TOWER_DEFENSE:          // only spawned at alliance-towers
         case BG_AV_CREATURE_ENTRY_H_TOWER_DEFENSE:
             nodeEvent = sBattleGroundMgr.GetCreatureEventIndex(creature->GetDBTableGUIDLow());
-            if( nodeEvent == 255 )
+            node = GetNodeThroughNodeEvent(nodeEvent);
+            if( nodeEvent == BG_EVENT_NONE || !IsTower(node) )
             {
-                sLog.outError("BattleGroundAV: tower defending unit %u has no EventIndex, the game could not be created", creature->GetDBTableGUIDLow());
+                sLog.outError("BattleGroundAV: tower defending unit %u has no EventIndex or the EventIndex has no tower associated, the game could not be created", creature->GetDBTableGUIDLow());
                 EndNow();
                 return;
             }
@@ -683,8 +687,12 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
         UpdateScore(GetOtherTeam(owner), (-1) * BG_AV_RES_TOWER);
         RewardReputationToTeam((owner == ALLIANCE) ? 730 : 729, m_RepTowerDestruction, owner);
         RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_TOWER), owner);
+        SendYell2ToAll(LANG_BG_AV_TOWER_TAKEN, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD], GetNodeName(node), ( owner == ALLIANCE ) ? LANG_BG_AV_ALLY : LANG_BG_AV_HORDE);
     }
-    SendYell2ToAll((IsTower(node)) ? LANG_BG_AV_TOWER_TAKEN : LANG_BG_AV_GRAVE_TAKEN, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD], GetNodeName(node), ( owner == ALLIANCE ) ? LANG_BG_AV_ALLY : LANG_BG_AV_HORDE);
+    else if( IsGrave(node) )
+    {
+        SendYell2ToAll(LANG_BG_AV_GRAVE_TAKEN, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD], GetNodeName(node), ( owner == ALLIANCE ) ? LANG_BG_AV_ALLY : LANG_BG_AV_HORDE);
+    }
 }
 
 void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
@@ -737,11 +745,16 @@ bool BattleGroundAV::PlayerCanDoMineQuest(int32 GOId,uint32 team)
 
 bool BattleGroundAV::IsActiveNodeEvent(uint8 event)
 {
-    return GetNodeEventThroughNode( GetNodeThroughNodeEvent(event) ) == event;
+    BG_AV_Nodes node = GetNodeThroughNodeEvent(event);
+    if( node == BG_AV_NODES_ERROR )
+        return false;
+    return GetNodeEventThroughNode( node ) == event;
 }
 
 uint8 BattleGroundAV::GetNodeEventThroughNode(BG_AV_Nodes node)
 {
+    if( node == BG_AV_NODES_ERROR )
+        return BG_EVENT_NONE;
     if( m_Nodes[node].Owner == BG_AV_NEUTRAL_TEAM )
     {
         sLog.outDebug("BattleGroundAV GetNodeEventThroughNode event: %u", BG_AV_NodeEventSnowfall);
@@ -765,7 +778,7 @@ BG_AV_Nodes BattleGroundAV::GetNodeThroughNodeEvent(uint8 event)
     if( event > BG_AV_MAX_NODE_EVENTS-1 || event == 0 )
     {
         sLog.outError("BattleGroundAV: GetNodeThroughNodeEvent received a wrong event %u", event);
-        assert(false);
+        return BG_AV_NODES_ERROR;
     }
     sLog.outDebug("BattleGroundAV GetNodeThroughNodeEvent event: %u", uint8( (event - 1) / 4) );
     return BG_AV_Nodes(uint8( (event - 1) / 4));
@@ -776,7 +789,7 @@ void BattleGroundAV::PopulateNode(BG_AV_Nodes node)
 {
     // graves will be handled extra, cause the defenders are not stored in the
     // m_NodeObjects.creature vector, cause they can change through a quest
-    if(!IsTower(node) && m_Nodes[node].Owner != BG_AV_NEUTRAL_TEAM && m_Nodes[node].State == POINT_CONTROLLED)
+    if(IsGrave(node) && m_Nodes[node].Owner != BG_AV_NEUTRAL_TEAM && m_Nodes[node].State == POINT_CONTROLLED)
     {
         uint32 team = GetTeamIndexByTeamId(m_Nodes[node].Owner);
         uint32 graveDefenderType;
@@ -813,7 +826,7 @@ void BattleGroundAV::DePopulateNode(BG_AV_Nodes node)
 {
     // graves will be handled extra, cause the defenders are not stored in the
     // m_NodeObjects.creature vector, cause they can change through a quest
-    if(!IsTower(node) && m_Nodes[node].Owner != BG_AV_NEUTRAL_TEAM && m_Nodes[node].State == POINT_CONTROLLED)
+    if(IsGrave(node) && m_Nodes[node].Owner != BG_AV_NEUTRAL_TEAM && m_Nodes[node].State == POINT_CONTROLLED)
     {
         uint32 team = GetTeamIndexByTeamId(m_Nodes[node].Owner);
         uint32 graveDefenderType;
@@ -851,8 +864,8 @@ const BG_AV_Nodes BattleGroundAV::GetNodeThroughPlayerPosition(Player* plr)
         if(plr->GetDistance2d(BG_AV_NodePositions[i][0], BG_AV_NodePositions[i][1]) < BG_AV_MAX_NODE_DISTANCE)
             return BG_AV_Nodes(i);
     }
-    sLog.outError("BattleGroundAV: player isn't near to any node - TODO return something not usefull - player can cheat here");
-    return BG_AV_Nodes(0);
+    sLog.outError("BattleGroundAV: player isn't near to any node maybe a cheater? or you spawned a banner not near to a node - or there is a bug in the code");
+    return BG_AV_NODES_ERROR;
 }
 
 /// called when using a banner
@@ -885,6 +898,8 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player)
 {
     assert(GetStatus() == STATUS_IN_PROGRESS);
     BG_AV_Nodes node = GetNodeThroughPlayerPosition(player);
+    if( node == BG_AV_NODES_ERROR )
+        return;
 
     uint32 team = player->GetTeam();
 
@@ -910,18 +925,27 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player)
     PopulateNode(node);                                     // spawn node-creatures (defender for example)
     UpdateNodeWorldState(node);                             // send new mapicon to the player
 
-    SendYell2ToAll(( IsTower(node) ) ? LANG_BG_AV_TOWER_DEFENDED : LANG_BG_AV_GRAVE_DEFENDED, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD], GetNodeName(node), ( team == ALLIANCE ) ? LANG_BG_AV_ALLY:LANG_BG_AV_HORDE);
-    // update the statistic for the defending player
-    UpdatePlayerScore(player, ( IsTower(node) ) ? SCORE_TOWERS_DEFENDED : SCORE_GRAVEYARDS_DEFENDED, 1);
     if( IsTower(node) )
+    {
+        SendYell2ToAll( LANG_BG_AV_TOWER_DEFENDED, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD], GetNodeName(node), ( team == ALLIANCE ) ? LANG_BG_AV_ALLY:LANG_BG_AV_HORDE);
+        UpdatePlayerScore(player, SCORE_TOWERS_DEFENDED, 1);
         PlaySoundToAll(BG_AV_SOUND_BOTH_TOWER_DEFEND);
-    else
+    }
+    else if( IsGrave(node) )
+    {
+        SendYell2ToAll(LANG_BG_AV_GRAVE_DEFENDED, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD], GetNodeName(node), ( team == ALLIANCE ) ? LANG_BG_AV_ALLY:LANG_BG_AV_HORDE);
+        UpdatePlayerScore(player, SCORE_GRAVEYARDS_DEFENDED, 1);
+    // update the statistic for the defending player
         PlaySoundToAll((team == ALLIANCE)?BG_AV_SOUND_ALLIANCE_GOOD:BG_AV_SOUND_HORDE_GOOD);
+    }
 }
 
 void BattleGroundAV::EventPlayerAssaultsPoint(Player* player)
 {
     BG_AV_Nodes node = GetNodeThroughPlayerPosition(player);
+    if( node == BG_AV_NODES_ERROR )
+        return;
+
     uint32 team  = player->GetTeam();
     sLog.outDebug("BattleGroundAV: player assaults node %i", node);
     if( m_Nodes[node].Owner == team || team == m_Nodes[node].TotalOwner )
@@ -929,7 +953,7 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player)
 
 
     // for graveyards we have to teleport players away who are waiting for ressurection
-    if( !IsTower(node) &&  m_Nodes[node].TotalOwner != BG_AV_NEUTRAL_TEAM )
+    if( IsGrave(node) &&  m_Nodes[node].TotalOwner != BG_AV_NEUTRAL_TEAM )
     {
         std::vector<uint64> ghost_list = m_ReviveQueue[m_BgCreatures[node]];
         if( !ghost_list.empty() )
@@ -954,9 +978,18 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player)
     UpdateNodeWorldState(node);                             // send mapicon
     PopulateNode(node);
 
-    SendYell2ToAll(( IsTower(node) ) ? LANG_BG_AV_TOWER_ASSAULTED: LANG_BG_AV_GRAVE_ASSAULTED, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD], GetNodeName(node), ( team == ALLIANCE ) ? LANG_BG_AV_ALLY:LANG_BG_AV_HORDE);
-    // update the statistic for the assaulting player
-    UpdatePlayerScore(player, ( IsTower(node) ) ? SCORE_TOWERS_ASSAULTED : SCORE_GRAVEYARDS_ASSAULTED, 1);
+    if( IsTower(node) )
+    {
+        SendYell2ToAll(LANG_BG_AV_TOWER_ASSAULTED, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD], GetNodeName(node), ( team == ALLIANCE ) ? LANG_BG_AV_ALLY:LANG_BG_AV_HORDE);
+        UpdatePlayerScore(player, SCORE_GRAVEYARDS_ASSAULTED, 1);
+    }
+    else if( IsGrave(node) )
+    {
+        SendYell2ToAll(LANG_BG_AV_GRAVE_ASSAULTED, LANG_UNIVERSAL, m_DB_Creature[BG_AV_CREATURE_HERALD], GetNodeName(node), ( team == ALLIANCE ) ? LANG_BG_AV_ALLY:LANG_BG_AV_HORDE);
+        // update the statistic for the assaulting player
+        UpdatePlayerScore(player, SCORE_GRAVEYARDS_ASSAULTED, 1);
+    }
+
     PlaySoundToAll((team == ALLIANCE) ? BG_AV_SOUND_ALLIANCE_ASSAULTS : BG_AV_SOUND_HORDE_ASSAULTS);
 }
 
