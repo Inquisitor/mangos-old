@@ -522,8 +522,9 @@ void BattleGroundAV::StartingEventOpenDoors()
         SpawnBGObject(m_BgObjects[i + 16], RESPAWN_IMMEDIATELY);         // aura
     }
     // creatures
-    sLog.outDebug("BattleGroundAV: start populating graveyards");
-    for(BG_AV_Nodes i= BG_AV_NODES_FIRSTAID_STATION; i < BG_AV_NODES_MAX; ++i )
+    sLog.outDebug("BattleGroundAV: start spawning spiritguides at graveyards");
+    // all other creatures are spawned through the database
+    for(BG_AV_Nodes i= BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i )
     {
         // spawn grave sprititguides
         if(m_Nodes[i].Owner)
