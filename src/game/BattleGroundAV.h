@@ -223,6 +223,8 @@ const uint8 BG_AV_NodeEventIndexes[BG_AV_NODES_MAX][BG_TEAMS_COUNT][2] = {
 // don't add neutral state to this array
 #define BG_AV_NodeEventSnowfall 61                          // neutral state of snowfall
 #define BG_AV_MAX_NODE_EVENTS   62
+#define BG_AV_NodeEventCaptainDead_A 63
+#define BG_AV_NodeEventCaptainDead_H 64
 
 /// stores x,y-position from the center of the node (for graves and horde-towers, the
 /// node-banner-position), (for alliance-towers the bigbanner/bigaura position)
@@ -961,6 +963,8 @@ class BattleGroundAV : public BattleGround
             BGCreatures creatures;
         };
         BG_AV_NodeObjects m_NodeObjects[BG_AV_MAX_NODE_EVENTS];
+
+        BGObjects m_DeadCaptainBurning[BG_TEAMS_COUNT];
 
         uint32 m_HonorMapComplete;
         uint32 m_RepTowerDestruction;

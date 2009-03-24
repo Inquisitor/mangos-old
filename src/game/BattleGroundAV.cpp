@@ -81,8 +81,8 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
             RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_CAPTAIN), HORDE);
             UpdateScore(ALLIANCE, (-1) * BG_AV_RES_CAPTAIN);
             // spawn destroyed aura
-            for(uint8 i = 0; i<=9; i++)
-                SpawnBGObject(m_BgObjects[BG_AV_OBJECT_BURN_BUILDING_ALLIANCE + i], RESPAWN_IMMEDIATELY);
+            for(BGObjects::const_iterator itr = m_DeadCaptainBurning[0].begin(); itr != m_DeadCaptainBurning[0].end(); ++itr)
+                SpawnBGObject(*itr,RESPAWN_IMMEDIATELY);
             m_captainAlive[0]=false;
             break;
         case BG_AV_CREATURE_ENTRY_H_CAPTAIN:
@@ -90,8 +90,8 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
             RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_CAPTAIN), ALLIANCE);
             UpdateScore(HORDE, (-1) * BG_AV_RES_CAPTAIN);
             // spawn destroyed aura
-            for(uint8 i = 0; i<=9; i++)
-                SpawnBGObject(m_BgObjects[BG_AV_OBJECT_BURN_BUILDING_HORDE + i], RESPAWN_IMMEDIATELY);
+            for(BGObjects::const_iterator itr = m_DeadCaptainBurning[1].begin(); itr != m_DeadCaptainBurning[1].end(); ++itr)
+                SpawnBGObject(*itr,RESPAWN_IMMEDIATELY);
             m_captainAlive[1]=false;
             break;
         case BG_AV_NORTH_MINE_ALLIANCE_4:
@@ -259,11 +259,26 @@ void BattleGroundAV::OnObjectDBLoad(GameObject* obj)
     uint8 nodeEvent = sBattleGroundMgr.GetGameObjectEventIndex(obj->GetDBTableGUIDLow());
     if( nodeEvent == 255 )
         return;
-    m_NodeObjects[nodeEvent].gameobjects.push_back(obj->GetGUID());
-    if( !IsActiveNodeEvent(nodeEvent) )
+    if( nodeEvent == BG_AV_NodeEventCaptainDead_A)
     {
-        sLog.outDebug("avobj %u %u %u", obj->GetDBTableGUIDLow(), nodeEvent, GetNodeEventThroughNode(GetNodeThroughNodeEvent(nodeEvent)));
-        SpawnBGObject(obj->GetGUID(), RESPAWN_ONE_DAY);
+        m_DeadCaptainBurning[0].push_back(obj->GetGUID());
+        if( m_captainAlive[0] )
+            SpawnBGObject(obj->GetGUID(), RESPAWN_ONE_DAY);
+    }
+    else if ( nodeEvent == BG_AV_NodeEventCaptainDead_H)
+    {
+        m_DeadCaptainBurning[1].push_back(obj->GetGUID());
+        if( m_captainAlive[1] )
+            SpawnBGObject(obj->GetGUID(), RESPAWN_ONE_DAY);
+    }
+    else
+    {
+        m_NodeObjects[nodeEvent].gameobjects.push_back(obj->GetGUID());
+        if( !IsActiveNodeEvent(nodeEvent) )
+        {
+            sLog.outDebug("avobj %u %u %u", obj->GetDBTableGUIDLow(), nodeEvent, GetNodeEventThroughNode(GetNodeThroughNodeEvent(nodeEvent)));
+            SpawnBGObject(obj->GetGUID(), RESPAWN_ONE_DAY);
+        }
     }
     return;
 
@@ -1090,29 +1105,6 @@ bool BattleGroundAV::SetupBattleGround()
     {
         sLog.outErrorDb("BatteGroundAV: Failed to spawn doors, BattleGround not created!");
         return false;
-    }
-
-    for(uint8 i = 0; i < BG_TEAMS_COUNT; i++)               // burning aura for buildings (after captain's death)
-    {
-        for(uint8 j = 0; j <= 9; j++)
-        {
-            if(j < 5)
-            {
-                if( !AddObject(BG_AV_OBJECT_BURN_BUILDING_ALLIANCE + (i * 10) + j,BG_AV_OBJECTID_SMOKE,BG_AV_ObjectPos[BG_AV_OPLACE_BURN_BUILDING_A + (i * 10) + j][0],BG_AV_ObjectPos[BG_AV_OPLACE_BURN_BUILDING_A + (i * 10) + j][1],BG_AV_ObjectPos[BG_AV_OPLACE_BURN_BUILDING_A + (i * 10) + j][2],BG_AV_ObjectPos[BG_AV_OPLACE_BURN_BUILDING_A + (i * 10) + j][3], 0, 0, sin(BG_AV_ObjectPos[BG_AV_OPLACE_BURN_BUILDING_A + (i * 10) + j][3]/2), cos(BG_AV_ObjectPos[BG_AV_OPLACE_BURN_BUILDING_A + (i * 10) + j][3]/2), RESPAWN_ONE_DAY) )
-                {
-                    sLog.outError("BatteGroundAV: Failed to spawn burning aura object for captain's building %i, BattleGround not created!", j);
-                    return false;
-                }
-            }
-            else
-            {
-                if( !AddObject(BG_AV_OBJECT_BURN_BUILDING_ALLIANCE + (i * 10) + j,BG_AV_OBJECTID_FIRE,BG_AV_ObjectPos[BG_AV_OPLACE_BURN_BUILDING_A + (i * 10) + j][0],BG_AV_ObjectPos[BG_AV_OPLACE_BURN_BUILDING_A + (i * 10) + j][1],BG_AV_ObjectPos[BG_AV_OPLACE_BURN_BUILDING_A + (i * 10) + j][2],BG_AV_ObjectPos[BG_AV_OPLACE_BURN_BUILDING_A + (i * 10) + j][3], 0, 0, sin(BG_AV_ObjectPos[BG_AV_OPLACE_BURN_BUILDING_A + (i * 10) + j][3]/2), cos(BG_AV_ObjectPos[BG_AV_OPLACE_BURN_BUILDING_A + (i * 10) + j][3]/2), RESPAWN_ONE_DAY) )
-                {
-                    sLog.outError("BatteGroundAV: Failed to spawn burning aura object for captain's building %i, BattleGround not created!", j);
-                    return false;
-                }
-            }
-        }
     }
 
     sLog.outDebug("BattleGroundAV: spawned everything");
