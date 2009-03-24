@@ -21,7 +21,7 @@
 
 class BattleGround;
 
-#define BG_AV_MAX_NODE_DISTANCE             25              // distance in which db-objects will be added to nodeObject-vector
+#define BG_AV_MAX_NODE_DISTANCE             25              // distance in which players are still counted in range of a banner (for alliance towers this is calculated from the center of the tower)
 
 #define BG_AV_BOSS_KILL_QUEST_SPELL         23658
 
@@ -158,8 +158,6 @@ enum BG_AV_OTHER_VALUES
 
 enum BG_AV_ObjectIds
 {
-    // cause the mangos - system is a bit different, we don't use the right go - ids for every node.. if we want to be 100% like another big server, we must take one object-entry for every node
-    // snowfall 4flags as eyecandy 179424 (alliance neutral)
     BG_AV_OBJECTID_BANNER_A             = 178925,           // can only be used by horde
     BG_AV_OBJECTID_BANNER_H             = 178943,           // can only be used by alliance
     BG_AV_OBJECTID_BANNER_CONT_A        = 178940,           // can only be used by horde
@@ -170,26 +168,6 @@ enum BG_AV_ObjectIds
     BG_AV_OBJECTID_BANNER_CONT_A_B      = 179286,
     BG_AV_OBJECTID_BANNER_CONT_H_B      = 179287,
     BG_AV_OBJECTID_BANNER_SNOWFALL_N    = 180418,
-
-    // snowfall eyecandy banner:
-    BG_AV_OBJECTID_SNOWFALL_CANDY_A     = 179044,
-    BG_AV_OBJECTID_SNOWFALL_CANDY_PA    = 179424,
-    BG_AV_OBJECTID_SNOWFALL_CANDY_H     = 179064,
-    BG_AV_OBJECTID_SNOWFALL_CANDY_PH    = 179425,
-
-    // banners on top of towers:
-    BG_AV_OBJECTID_TOWER_BANNER_A       = 178927,           // [PH] Alliance A1 Tower Banner BIG
-    BG_AV_OBJECTID_TOWER_BANNER_H       = 178955,           // [PH] Horde H1 Tower Banner BIG
-    BG_AV_OBJECTID_TOWER_BANNER_PA      = 179446,           // [PH] Alliance H1 Tower Pre - Banner BIG
-    BG_AV_OBJECTID_TOWER_BANNER_PH      = 179436,           // [PH] Horde A1 Tower Pre - Banner BIG
-
-    // Auras
-    BG_AV_OBJECTID_AURA_A               = 180421,
-    BG_AV_OBJECTID_AURA_H               = 180422,
-    BG_AV_OBJECTID_AURA_N               = 180423,
-    BG_AV_OBJECTID_AURA_A_S             = 180100,
-    BG_AV_OBJECTID_AURA_H_S             = 180101,
-    BG_AV_OBJECTID_AURA_N_S             = 180102,
 
     BG_AV_OBJECTID_GATE_A               = 180424,
     BG_AV_OBJECTID_GATE_H               = 180424,
@@ -929,8 +907,8 @@ class BattleGroundAV : public BattleGround
 
     private:
         /* Nodes occupying */
-        void EventPlayerAssaultsPoint(Player* player, uint32 object);
-        void EventPlayerDefendsPoint(Player* player, uint32 object);
+        void EventPlayerAssaultsPoint(Player* player);
+        void EventPlayerDefendsPoint(Player* player);
         void EventPlayerDestroyedPoint(BG_AV_Nodes node);
 
         void AssaultNode(BG_AV_Nodes node, uint32 team);
@@ -941,12 +919,12 @@ class BattleGroundAV : public BattleGround
         void PopulateNode(BG_AV_Nodes node);
         void DePopulateNode(BG_AV_Nodes node);
 
-        const BG_AV_Nodes GetNodeThroughObject(uint32 object);
-        const uint32 GetObjectThroughNode(BG_AV_Nodes node);
+        const BG_AV_Nodes GetNodeThroughPlayerPosition(Player* plr);
         uint32 GetNodeName(BG_AV_Nodes node);
         const bool IsTower(BG_AV_Nodes node) {   return m_Nodes[node].Tower; }
         BG_AV_Nodes GetNodeThroughNodeEvent(uint8 event);
         uint8 GetNodeEventThroughNode(BG_AV_Nodes node);
+        bool IsActiveNodeEvent(uint8 event);
 
         /*mine*/
         void ChangeMineOwner(uint8 mine, uint32 team);
@@ -972,7 +950,6 @@ class BattleGroundAV : public BattleGround
 
         uint64 m_DB_Creature[BG_AV_DB_CREATURE_MAX];
 
-        BGObjects   m_SnowfallEyecandy[4];                  // 4 kinds: alliance/horde-assaulted, alliance/horde-captured
         BGCreatures m_MineCreatures[2][3];                  // 2 mines, 3 factions (neutral, alliance, horde)
 
         // 7 grave yards 2kinds: alliance/horde-captured, 4 different creaturetypes (there is a quest where you can improve those creatures)
@@ -980,7 +957,7 @@ class BattleGroundAV : public BattleGround
 
         struct BG_AV_NodeObjects
         {
-            BGObjects gameObjects;
+            BGObjects gameobjects;
             BGCreatures creatures;
         };
         BG_AV_NodeObjects m_NodeObjects[BG_AV_MAX_NODE_EVENTS];

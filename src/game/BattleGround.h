@@ -490,7 +490,6 @@ class BattleGround
         bool DelCreature(uint32 type);
         bool DelObject(uint32 type);
         bool AddSpiritGuide(uint32 type, float x, float y, float z, float o, uint32 team);
-        int32 GetObjectType(uint64 const& guid);
 
         void DoorOpen(uint32 type);
         void DoorClose(uint32 type);

@@ -1780,15 +1780,6 @@ void BattleGround::HandleKillPlayer( Player *player, Player *killer )
     player->SetFlag( UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE );
 }
 
-int32 BattleGround::GetObjectType(uint64 const& guid)
-{
-    for(uint32 i = 0;i <= m_BgObjects.size(); i++)
-        if(m_BgObjects[i] == guid)
-            return i;
-    sLog.outError("BattleGround: cheating? a player used a gameobject which isnt supposed to be a usable object!");
-    return -1;
-}
-
 // return the player's team based on battlegroundplayer info
 // used in same faction arena matches mainly
 uint32 BattleGround::GetPlayerTeam(uint64 guid)
