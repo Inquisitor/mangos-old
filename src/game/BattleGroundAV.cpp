@@ -77,22 +77,26 @@ void BattleGroundAV::HandleKillUnit(Creature *unit, Player *killer)
             EndBattleGround(ALLIANCE);
             break;
         case BG_AV_CREATURE_ENTRY_A_CAPTAIN:
+            if( !m_captainAlive[BG_TEAM_ALLIANCE] )
+                return;
             RewardReputationToTeam(729, m_RepCaptain, HORDE);
             RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_CAPTAIN), HORDE);
             UpdateScore(ALLIANCE, (-1) * BG_AV_RES_CAPTAIN);
             // spawn destroyed aura
-            for(BGObjects::const_iterator itr = m_DeadCaptainBurning[0].begin(); itr != m_DeadCaptainBurning[0].end(); ++itr)
+            for(BGObjects::const_iterator itr = m_DeadCaptainBurning[BG_TEAM_ALLIANCE].begin(); itr != m_DeadCaptainBurning[BG_TEAM_ALLIANCE].end(); ++itr)
                 SpawnBGObject(*itr,RESPAWN_IMMEDIATELY);
-            m_captainAlive[0]=false;
+            m_captainAlive[BG_TEAM_ALLIANCE]=false;
             break;
         case BG_AV_CREATURE_ENTRY_H_CAPTAIN:
+            if( !m_captainAlive[BG_TEAM_HORDE] )
+                return;
             RewardReputationToTeam(730, m_RepCaptain, ALLIANCE);
             RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_CAPTAIN), ALLIANCE);
             UpdateScore(HORDE, (-1) * BG_AV_RES_CAPTAIN);
             // spawn destroyed aura
-            for(BGObjects::const_iterator itr = m_DeadCaptainBurning[1].begin(); itr != m_DeadCaptainBurning[1].end(); ++itr)
+            for(BGObjects::const_iterator itr = m_DeadCaptainBurning[BG_TEAM_HORDE].begin(); itr != m_DeadCaptainBurning[BG_TEAM_HORDE].end(); ++itr)
                 SpawnBGObject(*itr,RESPAWN_IMMEDIATELY);
-            m_captainAlive[1]=false;
+            m_captainAlive[BG_TEAM_HORDE]=false;
             break;
         case BG_AV_NORTH_MINE_ALLIANCE_4:
         case BG_AV_NORTH_MINE_HORDE_4:
@@ -261,24 +265,21 @@ void BattleGroundAV::OnObjectDBLoad(GameObject* obj)
         return;
     if( nodeEvent == BG_AV_NodeEventCaptainDead_A)
     {
-        m_DeadCaptainBurning[0].push_back(obj->GetGUID());
-        if( m_captainAlive[0] )
+        m_DeadCaptainBurning[BG_TEAM_ALLIANCE].push_back(obj->GetGUID());
+        if( m_captainAlive[BG_TEAM_ALLIANCE] )
             SpawnBGObject(obj->GetGUID(), RESPAWN_ONE_DAY);
     }
     else if ( nodeEvent == BG_AV_NodeEventCaptainDead_H)
     {
-        m_DeadCaptainBurning[1].push_back(obj->GetGUID());
-        if( m_captainAlive[1] )
+        m_DeadCaptainBurning[BG_TEAM_HORDE].push_back(obj->GetGUID());
+        if( m_captainAlive[BG_TEAM_HORDE] )
             SpawnBGObject(obj->GetGUID(), RESPAWN_ONE_DAY);
     }
     else
     {
         m_NodeObjects[nodeEvent].gameobjects.push_back(obj->GetGUID());
         if( !IsActiveNodeEvent(nodeEvent) )
-        {
-            sLog.outDebug("avobj %u %u %u", obj->GetDBTableGUIDLow(), nodeEvent, GetNodeEventThroughNode(GetNodeThroughNodeEvent(nodeEvent)));
             SpawnBGObject(obj->GetGUID(), RESPAWN_ONE_DAY);
-        }
     }
     return;
 
@@ -986,8 +987,8 @@ void BattleGroundAV::FillInitialWorldStates(WorldPacket& data)
         }
     if( m_Nodes[BG_AV_NODES_SNOWFALL_GRAVE].Owner == BG_AV_NEUTRAL_TEAM )   // cause neutral teams aren't handled generic
         data << uint32(AV_SNOWFALL_N) << uint32(1);
-    data << uint32(BG_AV_Alliance_Score)  << uint32(m_TeamScores[0]);
-    data << uint32(BG_AV_Horde_Score) << uint32(m_TeamScores[1]);
+    data << uint32(BG_AV_Alliance_Score)  << uint32(m_TeamScores[BG_TEAM_ALLIANCE]);
+    data << uint32(BG_AV_Horde_Score) << uint32(m_TeamScores[BG_TEAM_HORDE]);
     if( GetStatus() == STATUS_IN_PROGRESS )                 // only if game is running the teamscores are displayed
     {
         data << uint32(BG_AV_SHOW_A_SCORE) << uint32(1);
@@ -1197,21 +1198,23 @@ void BattleGroundAV::Reset()
     m_RepSurviveCaptain   = (isBGWeekend) ? BG_AV_REP_SURVIVING_CAPTAIN_HOLIDAY : BG_AV_REP_SURVIVING_CAPTAIN;
     m_RepSurviveTower     = (isBGWeekend) ? BG_AV_REP_SURVIVING_TOWER_HOLIDAY : BG_AV_REP_SURVIVING_TOWER;
 
-    for(uint8 i = 0; i < 2; i++)                            // forloop for both teams (it just make 0 == alliance and 1 == horde also for both mines 0=north 1=south
+    for(uint8 i = 0; i < BG_TEAMS_COUNT; i++)
     {
-        for(uint8 j = 0; j < 9; j++)
+        for(uint8 j = 0; j < 9; j++)                        // 9 quests getting tracked
             m_Team_QuestStatus[i][j] = 0;
-        m_TeamScores[i] = BG_AV_SCORE_INITIAL_POINTS;
+        m_TeamScores[i]         = BG_AV_SCORE_INITIAL_POINTS;
         m_IsInformedNearLose[i] = false;
-        m_Mine_Owner[i] = BG_AV_NEUTRAL_TEAM;
-        m_Mine_PrevOwner[i] = m_Mine_Owner[i];
-        m_captainAlive[i] = true;
+        m_captainAlive[i]       = true;
     }
+
     for (uint8 i = 0; i < BG_AV_DB_CREATURE_MAX; i++)
         m_DB_Creature[i] = 0;
 
+    // cycle through both mines
     for(uint8 i = 0; i < 2; i++)
     {
+        m_Mine_Owner[i] = BG_AV_NEUTRAL_TEAM;
+        m_Mine_PrevOwner[i] = m_Mine_Owner[i];
         for(uint8 j = 0; j < 3; j++)
         {
             m_MineCreatures[i][j].clear();
@@ -1221,25 +1224,25 @@ void BattleGroundAV::Reset()
     m_Mine_Timer = BG_AV_MINE_TICK_TIMER;
 
     for(BG_AV_Nodes i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_STONEHEART_GRAVE; ++i)   // alliance graves
-    {
         InitNode(i, ALLIANCE, false);
-    }
     for(BG_AV_Nodes i = BG_AV_NODES_DUNBALDAR_SOUTH; i <= BG_AV_NODES_STONEHEART_BUNKER; ++i)   // alliance towers
         InitNode(i, ALLIANCE, true);
+
     for(BG_AV_Nodes i = BG_AV_NODES_ICEBLOOD_GRAVE; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i)        // horde graves
         InitNode(i, HORDE, false);
     for(BG_AV_Nodes i = BG_AV_NODES_ICEBLOOD_TOWER; i <= BG_AV_NODES_FROSTWOLF_WTOWER; ++i)     // horde towers
         InitNode(i, HORDE, true);
 
     InitNode(BG_AV_NODES_SNOWFALL_GRAVE, BG_AV_NEUTRAL_TEAM, false);                            // give snowfall neutral owner
+
     for(BG_AV_Nodes i = BG_AV_NODES_DUNBALDAR_SOUTH; i<= BG_AV_NODES_FROSTWOLF_HUT; ++i)
     {
         for(uint32 j = 0; j <= 3; ++j)
         {
-            m_GraveCreatures[BG_AV_NODES_SNOWFALL_GRAVE][BG_TEAM_ALLIANCE][j].clear();
-            m_GraveCreatures[BG_AV_NODES_SNOWFALL_GRAVE][BG_TEAM_HORDE][j].clear();
-            m_GraveCreatures[BG_AV_NODES_SNOWFALL_GRAVE][BG_TEAM_ALLIANCE][j].reserve(4);
-            m_GraveCreatures[BG_AV_NODES_SNOWFALL_GRAVE][BG_TEAM_HORDE][j].reserve(4);
+            m_GraveCreatures[i][BG_TEAM_ALLIANCE][j].clear();
+            m_GraveCreatures[i][BG_TEAM_HORDE][j].clear();
+            m_GraveCreatures[i][BG_TEAM_ALLIANCE][j].reserve(4);
+            m_GraveCreatures[i][BG_TEAM_HORDE][j].reserve(4);
         }
     }
 

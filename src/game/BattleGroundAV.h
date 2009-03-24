@@ -199,6 +199,7 @@ enum BG_AV_Nodes
 
 /// the last dimension 2 is for 0=assaulted, 1=controlled
 /// neutral node (snowfall) will get into an extra enum)
+/// destroyed will be handled as controlled by opponent
 const uint8 BG_AV_NodeEventIndexes[BG_AV_NODES_MAX][BG_TEAMS_COUNT][2] = {
     { {1, 2}, {3, 4} },                                     // FIRSTAID_STATION
     { {5, 6}, {7,  8} },                                    // STORMPIKE_GRAVE
