@@ -1553,14 +1553,6 @@ Creature* BattleGround::AddCreature(uint32 entry, uint32 type, uint32 teamval, f
         return NULL;
     }
 
-    pCreature->SetDBTableGuid(pCreature->GetGUID());
-    CreatureData &data = objmgr.NewOrExistCreatureData(pCreature->GetDBTableGUIDLow());
-    data.posX           = x;
-    data.posY           = y;
-    data.posZ           = z;
-    data.orientation    = o;
-    data.spawndist      = 15; //for randommovement,spawning
-
     pCreature->AIM_Initialize();
 
     //pCreature->SetDungeonDifficulty(0);
