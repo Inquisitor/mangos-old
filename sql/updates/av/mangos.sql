@@ -1357,6 +1357,13 @@ UPDATE creature SET spawndist=0 WHERE MovementType=0 AND map=30;
 
 -- horde and ally captains should never respawn:
 UPDATE creature SET spawntimesecs=86400 where id in (11949,11947);
+DROP TABLE IF EXISTS `gameobject_battleground`;
+CREATE TABLE `gameobject_battleground` (
+    `guid` int(10) unsigned NOT NULL COMMENT 'GameObject\'s GUID',
+    `eventIndex` tinyint(3) unsigned NOT NULL,
+    PRIMARY KEY  (`guid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='GameObject battleground indexing system';
+
 -- following gameobjects are static
 DELETE FROM gameobject WHERE map=30;
 INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (2061,30,-1423.16,-318.436,89.1136,2.35619,60);

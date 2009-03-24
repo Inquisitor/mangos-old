@@ -29,6 +29,7 @@ typedef std::list<BattleGround*> BGFreeSlotQueueType;
 
 typedef UNORDERED_MAP<uint32, BattleGroundTypeId> BattleMastersMap;
 typedef UNORDERED_MAP<uint32, uint8> CreatureBattleEventIndexesMap;
+typedef UNORDERED_MAP<uint32, uint8> GameObjectBattleEventIndexesMap;
 
 #define BATTLEGROUND_ARENA_POINT_DISTRIBUTION_DAY 86400     // seconds in a day
 #define COUNT_OF_PLAYERS_TO_AVERAGE_WAIT_TIME 10
@@ -244,6 +245,14 @@ class BattleGroundMgr
                 return itr->second;
             return 255;                                     // needed to check for error
         }
+        void LoadGameObjectBattleEventIndexes();
+        uint8 GetGameObjectEventIndex(uint32 dbTableGuidLow) const
+        {
+            GameObjectBattleEventIndexesMap::const_iterator itr = mGameObjectBattleEventIndexMap.find(dbTableGuidLow);
+            if(itr != mGameObjectBattleEventIndexMap.end())
+                return itr->second;
+            return 255;                                     // needed to check for error
+        }
 
         bool isArenaTesting() const { return m_ArenaTesting; }
         bool isTesting() const { return m_Testing; }
@@ -256,6 +265,7 @@ class BattleGroundMgr
     private:
         BattleMastersMap    mBattleMastersMap;
         CreatureBattleEventIndexesMap mCreatureBattleEventIndexMap;
+        GameObjectBattleEventIndexesMap mGameObjectBattleEventIndexMap;
 
         /* Battlegrounds */
         BattleGroundSet m_BattleGrounds[MAX_BATTLEGROUND_TYPE_ID];
