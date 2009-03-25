@@ -1491,22 +1491,6 @@ void BattleGround::DoorOpen(uint64 const& guid)
     }
 }
 
-GameObject* BattleGround::GetBGObject(uint32 type)
-{
-    GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
-    if(!obj)
-        sLog.outError("couldn't get gameobject %i",type);
-    return obj;
-}
-
-Creature* BattleGround::GetBGCreature(uint32 type)
-{
-    Creature *creature = HashMapHolder<Creature>::Find(m_BgCreatures[type]);
-    if(!creature)
-        sLog.outError("couldn't get creature %i",type);
-    return creature;
-}
-
 void BattleGround::SpawnBGObject(uint64 const& guid, uint32 respawntime)
 {
     GameObject *obj = HashMapHolder<GameObject>::Find(guid);
