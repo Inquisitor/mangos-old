@@ -94,7 +94,7 @@ void BattleGroundWS::StartingEventCloseDoors()
 {
     for(uint32 i = BG_WS_OBJECT_DOOR_A_1; i <= BG_WS_OBJECT_DOOR_H_4; i++)
     {
-        DoorClose(i);
+        DoorClose(m_BgObjects[i]);
         SpawnBGObject(m_BgObjects[i], RESPAWN_IMMEDIATELY);
     }
     for(uint32 i = BG_WS_OBJECT_A_FLAG; i <= BG_WS_OBJECT_BERSERKBUFF_2; i++)
@@ -104,9 +104,9 @@ void BattleGroundWS::StartingEventCloseDoors()
 void BattleGroundWS::StartingEventOpenDoors()
 {
     for(uint32 i = BG_WS_OBJECT_DOOR_A_1; i <= BG_WS_OBJECT_DOOR_A_4; i++)
-        DoorOpen(i);
+        DoorOpen(m_BgObjects[i]);
     for(uint32 i = BG_WS_OBJECT_DOOR_H_1; i <= BG_WS_OBJECT_DOOR_H_2; i++)
-        DoorOpen(i);
+        DoorOpen(m_BgObjects[i]);
 
     SpawnBGObject(m_BgObjects[BG_WS_OBJECT_DOOR_A_5], RESPAWN_ONE_DAY);
     SpawnBGObject(m_BgObjects[BG_WS_OBJECT_DOOR_A_6], RESPAWN_ONE_DAY);

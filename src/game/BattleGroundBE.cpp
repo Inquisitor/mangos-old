@@ -66,7 +66,7 @@ void BattleGroundBE::StartingEventCloseDoors()
 void BattleGroundBE::StartingEventOpenDoors()
 {
     for(uint32 i = BG_BE_OBJECT_DOOR_1; i <= BG_BE_OBJECT_DOOR_2; i++)
-        DoorOpen(i);
+        DoorOpen(m_BgObjects[i]);
 
     for(uint32 i = BG_BE_OBJECT_BUFF_1; i <= BG_BE_OBJECT_BUFF_2; i++)
         SpawnBGObject(m_BgObjects[i], 60);

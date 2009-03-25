@@ -163,8 +163,8 @@ void BattleGroundAB::StartingEventCloseDoors()
         SpawnBGObject(m_BgObjects[BG_AB_OBJECT_SPEEDBUFF_STABLES + i], RESPAWN_ONE_DAY);
 
     // Starting doors
-    DoorClose(BG_AB_OBJECT_GATE_A);
-    DoorClose(BG_AB_OBJECT_GATE_H);
+    DoorClose(m_BgObjects[BG_AB_OBJECT_GATE_A]);
+    DoorClose(m_BgObjects[BG_AB_OBJECT_GATE_H]);
     SpawnBGObject(m_BgObjects[BG_AB_OBJECT_GATE_A], RESPAWN_IMMEDIATELY);
     SpawnBGObject(m_BgObjects[BG_AB_OBJECT_GATE_H], RESPAWN_IMMEDIATELY);
 
@@ -184,8 +184,8 @@ void BattleGroundAB::StartingEventOpenDoors()
         uint8 buff = urand(0, 2);
         SpawnBGObject(m_BgObjects[BG_AB_OBJECT_SPEEDBUFF_STABLES + buff + i * 3], RESPAWN_IMMEDIATELY);
     }
-    DoorOpen(BG_AB_OBJECT_GATE_A);
-    DoorOpen(BG_AB_OBJECT_GATE_H);
+    DoorOpen(m_BgObjects[BG_AB_OBJECT_GATE_A]);
+    DoorOpen(m_BgObjects[BG_AB_OBJECT_GATE_H]);
 }
 
 void BattleGroundAB::AddPlayer(Player *plr)

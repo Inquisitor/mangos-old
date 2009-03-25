@@ -482,8 +482,8 @@ void BattleGroundAV::StartingEventCloseDoors()
     // spawn and close the doors
     SpawnBGObject(m_BgObjects[BG_AV_OBJECT_DOOR_A], RESPAWN_IMMEDIATELY);
     SpawnBGObject(m_BgObjects[BG_AV_OBJECT_DOOR_H], RESPAWN_IMMEDIATELY);
-    DoorClose(BG_AV_OBJECT_DOOR_A);
-    DoorClose(BG_AV_OBJECT_DOOR_H);
+    DoorClose(m_BgObjects[BG_AV_OBJECT_DOOR_A]);
+    DoorClose(m_BgObjects[BG_AV_OBJECT_DOOR_H]);
 
     // mainspiritguides:
     sLog.outDebug("BattleGroundAV: start spawning main - spiritguides");
@@ -496,8 +496,8 @@ void BattleGroundAV::StartingEventOpenDoors()
     UpdateWorldState(BG_AV_SHOW_H_SCORE, 1);
     UpdateWorldState(BG_AV_SHOW_A_SCORE, 1);
 
-    DoorOpen(BG_AV_OBJECT_DOOR_H);
-    DoorOpen(BG_AV_OBJECT_DOOR_A);
+    DoorOpen(m_BgObjects[BG_AV_OBJECT_DOOR_H]);
+    DoorOpen(m_BgObjects[BG_AV_OBJECT_DOOR_A]);
 
     sLog.outDebug("BattleGroundAV: start spawning spiritguides at graveyards");
     // all other creatures are spawned through the database

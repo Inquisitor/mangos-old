@@ -1457,9 +1457,9 @@ bool BattleGround::AddObject(uint32 type, uint32 entry, float x, float y, float 
 
 //some doors aren't despawned so we cannot handle their closing in gameobject::update()
 //it would be nice to correctly implement GO_ACTIVATED state and open/close doors in gameobject code
-void BattleGround::DoorClose(uint32 type)
+void BattleGround::DoorClose(uint64 const& guid)
 {
-    GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
+    GameObject *obj = HashMapHolder<GameObject>::Find(guid);
     if(obj)
     {
         //if doors are open, close it
@@ -1476,9 +1476,9 @@ void BattleGround::DoorClose(uint32 type)
     }
 }
 
-void BattleGround::DoorOpen(uint32 type)
+void BattleGround::DoorOpen(uint64 const& guid)
 {
-    GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
+    GameObject *obj = HashMapHolder<GameObject>::Find(guid);
     if(obj)
     {
         //change state to be sure they will be opened
