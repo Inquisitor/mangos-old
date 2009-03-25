@@ -114,3 +114,9 @@ INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientati
 INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-947.642,-208.807,77.0101,1.36136,60);
 INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (178784,30,-951.394,-193.695,67.634,0.802851,60);
 
+-- doors
+-- a
+INSERT INTO `gameobject` (id,map,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (180424,30,780.487,-493.024,99.9553,3.0976,60);
+-- h
+INSERT INTO `gameobject` (id,map,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (180424,30,-1375.193,-538.981,55.2824,0.72178, 60);
+INSERT INTO gameobject_battleground(guid,eventIndex) SELECT guid, 0 FROM gameobject ORDER BY guid DESC LIMIT 2;

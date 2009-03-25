@@ -169,9 +169,6 @@ enum BG_AV_ObjectIds
     BG_AV_OBJECTID_BANNER_CONT_H_B      = 179287,
     BG_AV_OBJECTID_BANNER_SNOWFALL_N    = 180418,
 
-    BG_AV_OBJECTID_GATE_A               = 180424,
-    BG_AV_OBJECTID_GATE_H               = 180424,
-
     // mine supplies
     BG_AV_OBJECTID_MINE_N               = 178785,
     BG_AV_OBJECTID_MINE_S               = 178784,
@@ -222,6 +219,8 @@ const uint8 BG_AV_NodeEventIndexes[BG_AV_NODES_MAX][BG_TEAMS_COUNT][2] = {
 // don't add neutral state to this array
 #define BG_AV_NodeEventSnowfall 61                          // neutral state of snowfall
 #define BG_AV_MAX_NODE_EVENTS   62
+
+#define BG_AV_NodeEventDoors 0
 #define BG_AV_NodeEventCaptainDead_A 63
 #define BG_AV_NodeEventCaptainDead_H 64
 
@@ -243,19 +242,6 @@ const float BG_AV_NodePositions[BG_AV_NODES_MAX][2] = {
     {-768.907f,-363.71f },                                  // tower point
     {-1302.9f,-316.981f },                                  // frostwolf etower
     {-1297.5f,-266.767f }                                   // frostwolf wtower
-};
-
-enum BG_AV_ObjectTypes
-{
-    BG_AV_OBJECT_DOOR_H                     = 1,
-    BG_AV_OBJECT_DOOR_A                     = 2,
-
-    BG_AV_OBJECT_MAX                        = 3
-};
-
-const float BG_AV_DoorPositons[2][4] = {
-    {780.487f, -493.024f, 99.9553f, 3.0976f},               // alliance
-    {-1375.193f, -538.981f, 55.2824f, 0.72178f}             // horde
 };
 
 // creaturestuff starts here
@@ -666,6 +652,7 @@ class BattleGroundAV : public BattleGround
         BG_AV_NodeObjects m_NodeObjects[BG_AV_MAX_NODE_EVENTS];
 
         BGObjects m_DeadCaptainBurning[BG_TEAMS_COUNT];
+        BGObjects m_Doors;                                  // alliance and horde will go in this one
 
         uint32 m_HonorMapComplete;
         uint32 m_RepTowerDestruction;

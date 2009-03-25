@@ -33,7 +33,6 @@
 
 BattleGroundAV::BattleGroundAV()
 {
-    m_BgObjects.resize(BG_AV_OBJECT_MAX);
     m_BgCreatures.resize(BG_AV_CPLACE_MAX);
 
     m_StartMessageIds[BG_STARTING_EVENT_FIRST]  = LANG_BG_AV_START_TWO_MINUTES;
@@ -275,6 +274,15 @@ void BattleGroundAV::OnObjectDBLoad(GameObject* obj)
         if( m_captainAlive[BG_TEAM_HORDE] )
             SpawnBGObject(obj->GetGUID(), RESPAWN_ONE_DAY);
     }
+    else if ( nodeEvent == BG_AV_NodeEventDoors )
+    {
+        // we only need to store the doors if bg hasn't begun
+        // to open them at the beginning
+        if( GetStatus() < STATUS_IN_PROGRESS )
+            m_Doors.push_back(obj->GetGUID());
+        else                                                // this can happen when 0 player of one faction were in this bg before dooreventopen
+            DoorOpen(obj->GetGUID());
+    }
     else
     {
         m_NodeObjects[nodeEvent].gameobjects.push_back(obj->GetGUID());
@@ -475,15 +483,6 @@ void BattleGroundAV::Update(uint32 diff)
 void BattleGroundAV::StartingEventCloseDoors()
 {
     sLog.outDebug("BattleGroundAV: entering state STATUS_WAIT_JOIN ...");
-    // despawn all objects at the beginning
-    for(uint32 i = 0; i < BG_AV_OBJECT_MAX; i++)
-        SpawnBGObject(m_BgObjects[i], RESPAWN_ONE_DAY);
-
-    // spawn and close the doors
-    SpawnBGObject(m_BgObjects[BG_AV_OBJECT_DOOR_A], RESPAWN_IMMEDIATELY);
-    SpawnBGObject(m_BgObjects[BG_AV_OBJECT_DOOR_H], RESPAWN_IMMEDIATELY);
-    DoorClose(m_BgObjects[BG_AV_OBJECT_DOOR_A]);
-    DoorClose(m_BgObjects[BG_AV_OBJECT_DOOR_H]);
 
     // mainspiritguides:
     sLog.outDebug("BattleGroundAV: start spawning main - spiritguides");
@@ -496,8 +495,11 @@ void BattleGroundAV::StartingEventOpenDoors()
     UpdateWorldState(BG_AV_SHOW_H_SCORE, 1);
     UpdateWorldState(BG_AV_SHOW_A_SCORE, 1);
 
-    DoorOpen(m_BgObjects[BG_AV_OBJECT_DOOR_H]);
-    DoorOpen(m_BgObjects[BG_AV_OBJECT_DOOR_A]);
+    for(BGObjects::const_iterator itr = m_Doors.begin(); itr != m_Doors.end(); ++itr)
+    {
+        DoorOpen(*itr);
+        //SpawnBGObject(*itr,RESPAWN_ONE_DAY);
+    }
 
     sLog.outDebug("BattleGroundAV: start spawning spiritguides at graveyards");
     // all other creatures are spawned through the database
@@ -1128,20 +1130,8 @@ WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(Player *plr)
     return good_entry;
 }
 
-/// Create starting objects
 bool BattleGroundAV::SetupBattleGround()
 {
-    if(
-       // alliance gates
-        !AddObject(BG_AV_OBJECT_DOOR_A, BG_AV_OBJECTID_GATE_A, BG_AV_DoorPositons[0][0], BG_AV_DoorPositons[0][1], BG_AV_DoorPositons[0][2], BG_AV_DoorPositons[0][3], 0, 0, sin(BG_AV_DoorPositons[0][3]/2), cos(BG_AV_DoorPositons[0][3]/2), RESPAWN_IMMEDIATELY)
-        // horde gates
-        || !AddObject(BG_AV_OBJECT_DOOR_H, BG_AV_OBJECTID_GATE_H, BG_AV_DoorPositons[1][0],BG_AV_DoorPositons[1][1], BG_AV_DoorPositons[1][2], BG_AV_DoorPositons[1][3], 0, 0, sin(BG_AV_DoorPositons[1][3]/2), cos(BG_AV_DoorPositons[1][3]/2), RESPAWN_IMMEDIATELY))
-    {
-        sLog.outErrorDb("BatteGroundAV: Failed to spawn doors, BattleGround not created!");
-        return false;
-    }
-
-    sLog.outDebug("BattleGroundAV: spawned everything");
     return true;
 }
 
