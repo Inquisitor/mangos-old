@@ -4,3 +4,6 @@ UPDATE creature SET spawndist=0 WHERE MovementType=0 AND map=30;
 
 -- horde and ally captains should never respawn:
 UPDATE creature SET spawntimesecs=86400 where id in (11949,11947);
+
+-- kill the spiritguides
+UPDATE creature SET DeathState=1 WHERE id IN( 13116,13117 ) AND map=30;

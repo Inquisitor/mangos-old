@@ -143,6 +143,9 @@ enum BG_AV_CREATURE_ENTRIES                                 // only those, which
     BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_3  = 13332,
     BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_4  = 13421,
 
+    BG_AV_CREATURE_ENTRY_A_SPIRITGUIDE      = 13116,
+    BG_AV_CREATURE_ENTRY_H_SPIRITGUIDE      = 13117,
+
     BG_AV_CREATURE_ENTRY_A_TOWER_DEFENSE    = 13358,
     BG_AV_CREATURE_ENTRY_H_TOWER_DEFENSE    = 13359,
 };
@@ -242,36 +245,6 @@ const float BG_AV_NodePositions[BG_AV_NODES_MAX][2] = {
     {-768.907f,-363.71f },                                  // tower point
     {-1302.9f,-316.981f },                                  // frostwolf etower
     {-1297.5f,-266.767f }                                   // frostwolf wtower
-};
-
-// creaturestuff starts here
-// is related to BG_AV_CreaturePos
-enum BG_AV_CreaturePlace
-{
-    BG_AV_CPLACE_SPIRIT_STORM_AID       = 0,
-    BG_AV_CPLACE_SPIRIT_STORM_GRAVE     = 1,
-    BG_AV_CPLACE_SPIRIT_STONE_GRAVE     = 2,
-    BG_AV_CPLACE_SPIRIT_SNOWFALL        = 3,
-    BG_AV_CPLACE_SPIRIT_ICE_GRAVE       = 4,
-    BG_AV_CPLACE_SPIRIT_FROSTWOLF       = 5,
-    BG_AV_CPLACE_SPIRIT_FROST_HUT       = 6,
-    BG_AV_CPLACE_SPIRIT_MAIN_ALLIANCE   = 7,
-    BG_AV_CPLACE_SPIRIT_MAIN_HORDE      = 8,
-    BG_AV_CPLACE_MAX                    = 9
-};
-
-// x, y, z, o
-const float BG_AV_CreaturePos[BG_AV_CPLACE_MAX][4] = {
-    // spiritguides
-    {643.000000f,44.000000f,69.740196f,-0.001854f},
-    {676.000000f,-374.000000f,30.000000f,-0.001854f},
-    {73.417755f,-496.433105f,48.731918f,-0.001854f},
-    {-157.409195f,31.206272f,77.050598f,-0.001854f},
-    {-531.217834f,-405.231384f,49.551376f,-0.001854f},
-    {-1090.476807f,-253.308670f,57.672371f,-0.001854f},
-    {-1496.065063f,-333.338409f,101.134804f,-0.001854f},
-    {873.001770f,-491.283630f,96.541931f,-0.001854f},
-    {-1437.670044f,-610.088989f,51.161900f,-0.001854f}
 };
 
 enum BG_AV_DB_Creatures

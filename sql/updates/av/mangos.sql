@@ -677,6 +677,45 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13421,30,-1400.64,-304.3,89.7008,1.0595);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13421,30,-1400.4,-311.35,89.3028,4.99434);
 INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 28 FROM creature ORDER BY guid DESC LIMIT 4;
+
+-- spiritguides
+-- alliance
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13116,30,643.000000,44.000000,69.740196,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 2 FROM creature ORDER BY guid DESC LIMIT 1;
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13116,30,676.000000,-374.000000,30.000000,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 6 FROM creature ORDER BY guid DESC LIMIT 1;
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13116,30,73.417755,-496.433105,48.731918,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 10 FROM creature ORDER BY guid DESC LIMIT 1;
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13116,30,-157.409195,31.206272,77.050598,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 14 FROM creature ORDER BY guid DESC LIMIT 1;
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13116,30,-531.217834,-405.231384,49.551376,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 18 FROM creature ORDER BY guid DESC LIMIT 1;
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13116,30,-1090.476807,-253.308670,57.672371,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 22 FROM creature ORDER BY guid DESC LIMIT 1;
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13116,30,-1496.065063,-333.338409,101.134804,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 26 FROM creature ORDER BY guid DESC LIMIT 1;
+
+-- horde
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13117,30,643.000000,44.000000,69.740196,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 4 FROM creature ORDER BY guid DESC LIMIT 1;
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13117,30,676.000000,-374.000000,30.000000,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 8 FROM creature ORDER BY guid DESC LIMIT 1;
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13117,30,73.417755,-496.433105,48.731918,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 12 FROM creature ORDER BY guid DESC LIMIT 1;
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13117,30,-157.409195,31.206272,77.050598,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 16 FROM creature ORDER BY guid DESC LIMIT 1;
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13117,30,-531.217834,-405.231384,49.551376,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 20 FROM creature ORDER BY guid DESC LIMIT 1;
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13117,30,-1090.476807,-253.308670,57.672371,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 24 FROM creature ORDER BY guid DESC LIMIT 1;
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13117,30,-1496.065063,-333.338409,101.134804,-0.001854);
+INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 28 FROM creature ORDER BY guid DESC LIMIT 1;
+
+-- mainspiritguides
+-- a
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13116,30,873.001770,-491.283630,96.541931,-0.001854);
+-- h
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13117,30,-1437.670044,-610.088989,51.161900,-0.001854);
     -- towers
     -- dun south - OK
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13358,30,569.395,-101.064,52.8296,2.34974);
@@ -1358,6 +1397,9 @@ UPDATE creature SET spawndist=0 WHERE MovementType=0 AND map=30;
 
 -- horde and ally captains should never respawn:
 UPDATE creature SET spawntimesecs=86400 where id in (11949,11947);
+
+-- kill the spiritguides
+UPDATE creature SET DeathState=1 WHERE id IN( 13116,13117 ) AND map=30;
 DROP TABLE IF EXISTS `gameobject_battleground`;
 CREATE TABLE `gameobject_battleground` (
     `guid` int(10) unsigned NOT NULL COMMENT 'GameObject\'s GUID',

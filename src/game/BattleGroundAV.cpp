@@ -33,8 +33,6 @@
 
 BattleGroundAV::BattleGroundAV()
 {
-    m_BgCreatures.resize(BG_AV_CPLACE_MAX);
-
     m_StartMessageIds[BG_STARTING_EVENT_FIRST]  = LANG_BG_AV_START_TWO_MINUTES;
     m_StartMessageIds[BG_STARTING_EVENT_SECOND] = LANG_BG_AV_START_ONE_MINUTE;
     m_StartMessageIds[BG_STARTING_EVENT_THIRD]  = LANG_BG_AV_START_HALF_MINUTE;
@@ -412,6 +410,23 @@ void BattleGroundAV::OnObjectDBLoad(Creature* creature)
             if( graveDefenderType > 0 || !IsActiveNodeEvent(nodeEvent) )
                 SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
             break;
+        case BG_AV_CREATURE_ENTRY_A_SPIRITGUIDE:
+        case BG_AV_CREATURE_ENTRY_H_SPIRITGUIDE:
+            // spiritguides
+            nodeEvent = sBattleGroundMgr.GetCreatureEventIndex(creature->GetDBTableGUIDLow());
+            if( nodeEvent == BG_EVENT_NONE )                // no event means, it's a mainspiritguide which is just spawned and never gets changed
+                break;
+
+            if( !IsGrave(GetNodeThroughNodeEvent(nodeEvent)) )
+            {
+                sLog.outError("BattleGroundAV: spiritguide %u has no EventIndex or the EventIndex has no grave associated, the game could not be created", creature->GetDBTableGUIDLow());
+                EndNow();
+                return;
+            }
+            m_NodeObjects[nodeEvent].creatures.push_back(creature->GetGUID());
+            if(!IsActiveNodeEvent(nodeEvent))
+                SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
+            break;
         case BG_AV_CREATURE_ENTRY_A_TOWER_DEFENSE:          // only spawned at alliance-towers
         case BG_AV_CREATURE_ENTRY_H_TOWER_DEFENSE:
             nodeEvent = sBattleGroundMgr.GetCreatureEventIndex(creature->GetDBTableGUIDLow());
@@ -483,11 +498,6 @@ void BattleGroundAV::Update(uint32 diff)
 void BattleGroundAV::StartingEventCloseDoors()
 {
     sLog.outDebug("BattleGroundAV: entering state STATUS_WAIT_JOIN ...");
-
-    // mainspiritguides:
-    sLog.outDebug("BattleGroundAV: start spawning main - spiritguides");
-    AddSpiritGuide(7, BG_AV_CreaturePos[7][0], BG_AV_CreaturePos[7][1], BG_AV_CreaturePos[7][2], BG_AV_CreaturePos[7][3], ALLIANCE);
-    AddSpiritGuide(8, BG_AV_CreaturePos[8][0], BG_AV_CreaturePos[8][1], BG_AV_CreaturePos[8][2], BG_AV_CreaturePos[8][3], HORDE);
 }
 
 void BattleGroundAV::StartingEventOpenDoors()
@@ -500,16 +510,6 @@ void BattleGroundAV::StartingEventOpenDoors()
         DoorOpen(*itr);
         //SpawnBGObject(*itr,RESPAWN_ONE_DAY);
     }
-
-    sLog.outDebug("BattleGroundAV: start spawning spiritguides at graveyards");
-    // all other creatures are spawned through the database
-    for(BG_AV_Nodes i= BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i )
-    {
-        // spawn grave sprititguides
-        if(m_Nodes[i].Owner)
-            AddSpiritGuide(i, BG_AV_CreaturePos[i][0], BG_AV_CreaturePos[i][1], BG_AV_CreaturePos[i][2], BG_AV_CreaturePos[i][3], m_Nodes[i].Owner);
-    }
-
 }
 
 void BattleGroundAV::AddPlayer(Player *plr)
@@ -807,11 +807,6 @@ void BattleGroundAV::PopulateNode(BG_AV_Nodes node)
         BGCreatures::const_iterator itr = m_GraveCreatures[node][team][graveDefenderType].begin();
         for(; itr != m_GraveCreatures[node][team][graveDefenderType].end(); ++itr)
             SpawnBGCreature(*itr,RESPAWN_IMMEDIATELY);
-
-        // spiritguide TODO: move it to db and store it in m_NodeObjects
-        if( m_BgCreatures[node] )
-            DelCreature(node);
-        AddSpiritGuide(node, BG_AV_CreaturePos[node][0], BG_AV_CreaturePos[node][1], BG_AV_CreaturePos[node][2], BG_AV_CreaturePos[node][3], m_Nodes[node].Owner);
     }
     uint8 event = GetNodeEventThroughNode(node);
     BGCreatures::const_iterator itr = m_NodeObjects[event].creatures.begin();
@@ -844,10 +839,6 @@ void BattleGroundAV::DePopulateNode(BG_AV_Nodes node)
         BGCreatures::const_iterator itr = m_GraveCreatures[node][team][graveDefenderType].begin();
         for(; itr != m_GraveCreatures[node][team][graveDefenderType].end(); ++itr)
             SpawnBGCreature(*itr,RESPAWN_ONE_DAY);
-
-        // spiritguide TODO: move it to db and store it in m_NodeObjects
-        if( m_BgCreatures[node] )
-            DelCreature(node);
     }
     uint8 event = GetNodeEventThroughNode(node);
     BGCreatures::const_iterator itr = m_NodeObjects[event].creatures.begin();
@@ -1268,8 +1259,4 @@ void BattleGroundAV::Reset()
             m_GraveCreatures[i][BG_TEAM_HORDE][j].reserve(4);
         }
     }
-
-    for(uint32 i = 0; i < BG_AV_CPLACE_MAX; i++)
-        if( m_BgCreatures[i] )
-            DelCreature(i);
 }
