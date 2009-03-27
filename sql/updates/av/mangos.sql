@@ -177,6 +177,23 @@ UPDATE creature_template SET minlevel=58, maxlevel=58 WHERE entry IN (12050,1205
 UPDATE creature_template SET minlevel=59, maxlevel=59 WHERE entry IN (13326,13328);
 UPDATE creature_template SET minlevel=60, maxlevel=60 WHERE entry IN (13331,13332);
 UPDATE creature_template SET minlevel=61, maxlevel=61 WHERE entry IN (13422,13421);
+-- spiritguides
+UPDATE creature_template SET minlevel=60, maxlevel=60 WHERE entry IN (13116,13117);
+-- bowman
+UPDATE creature_template SET minlevel=59, maxlevel=60 WHERE entry IN (13359,13358);
+
+-- set as elites lvl 60
+-- Dun Baldar North Marshal 14762
+-- Dun Baldar South Marshal 14763
+-- Icewing Marshal          14764
+-- Stonehearth Marshal      14765
+UPDATE creature_template SET minlevel=60, maxlevel=60, rank=1, faction_A=1216, faction_H=1216 WHERE entry IN (14762, 14763, 14764, 14765);
+-- set as elites lvl 60
+-- East Frostwolf Warmaster 14772
+-- Iceblood Warmaster       14773
+-- Tower Point Warmaster    14776
+-- West Frostwolf Warmaster 14777
+UPDATE creature_template SET minlevel=60, maxlevel=60, rank=1, faction_A=1214, faction_H=1214 WHERE entry IN (14772, 14773, 14776, 14777);
 DROP TABLE IF EXISTS `creature_battleground`;
 CREATE TABLE `creature_battleground` (
     `guid` int(10) unsigned NOT NULL COMMENT 'Creature\'s GUID',
@@ -1407,9 +1424,9 @@ UPDATE creature SET spawndist=0 WHERE MovementType=0 AND map=30;
 
 -- horde and ally captains should never respawn:
 UPDATE creature SET spawntimesecs=86400 where id in (11949,11947);
+-- stonehewer a npc next to van respawns slow
+UPDATE creature SET spawntimesecs=1200 where id in (13816);
 
--- kill the spiritguides
-UPDATE creature SET DeathState=3 WHERE id IN( 13116,13117 ) AND map=30;
 -- delete to much reputation-gains from av-creatures
 DELETE FROM creature_onkill_reputation WHERE RewOnKillRepFaction1 IN (729,730) AND RewOnKillRepValue1 > 100;
 DROP TABLE IF EXISTS `gameobject_battleground`;
