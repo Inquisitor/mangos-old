@@ -417,7 +417,7 @@ void BattleGroundAV::OnObjectDBLoad(Creature* creature)
 
     // if the following should be to slow, we also can look only for interesting
     // creature entries
-    if( eventId != BG_EVENT_NONE )                          // if eventId is set, creature is already processed right
+    if( eventId == BG_EVENT_NONE )                          // if eventId is set, creature is already processed right
     {
         eventId = sBattleGroundMgr.GetCreatureEventIndex(creature->GetDBTableGUIDLow());
         node = GetNodeThroughNodeEvent(eventId);
