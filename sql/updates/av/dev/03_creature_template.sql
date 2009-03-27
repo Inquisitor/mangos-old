@@ -129,3 +129,8 @@ UPDATE creature_template SET minlevel=54 , maxlevel=55 WHERE entry IN (11602,130
 UPDATE creature_template SET minlevel=58 , maxlevel=58 WHERE entry IN (11657,13078,13079,11677,13086,13088);
 UPDATE creature_template SET minlevel=54 , maxlevel=55 WHERE entry=10982;
 
+-- grave creatures
+UPDATE creature_template SET minlevel=58, maxlevel=58 WHERE entry IN (12050,12053);
+UPDATE creature_template SET minlevel=59, maxlevel=59 WHERE entry IN (13326,13328);
+UPDATE creature_template SET minlevel=60, maxlevel=60 WHERE entry IN (13331,13332);
+UPDATE creature_template SET minlevel=61, maxlevel=61 WHERE entry IN (13422,13421);

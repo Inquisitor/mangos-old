@@ -172,6 +172,11 @@ UPDATE creature_template SET minlevel=54 , maxlevel=55 WHERE entry IN (11602,130
 UPDATE creature_template SET minlevel=58 , maxlevel=58 WHERE entry IN (11657,13078,13079,11677,13086,13088);
 UPDATE creature_template SET minlevel=54 , maxlevel=55 WHERE entry=10982;
 
+-- grave creatures
+UPDATE creature_template SET minlevel=58, maxlevel=58 WHERE entry IN (12050,12053);
+UPDATE creature_template SET minlevel=59, maxlevel=59 WHERE entry IN (13326,13328);
+UPDATE creature_template SET minlevel=60, maxlevel=60 WHERE entry IN (13331,13332);
+UPDATE creature_template SET minlevel=61, maxlevel=61 WHERE entry IN (13422,13421);
 DROP TABLE IF EXISTS `creature_battleground`;
 CREATE TABLE `creature_battleground` (
     `guid` int(10) unsigned NOT NULL COMMENT 'Creature\'s GUID',
@@ -677,6 +682,10 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13421,30,-1400.64,-304.3,89.7008,1.0595);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13421,30,-1400.4,-311.35,89.3028,4.99434);
 INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 28 FROM creature ORDER BY guid DESC LIMIT 4;
+-- give those creatures randommovement type
+UPDATE creature SET movementtype=1 WHERE id IN (12050,13326,13331,13422,12053,13328,13332,13421);
+
+
 
 -- spiritguides
 -- alliance
@@ -710,12 +719,13 @@ INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES
 INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 24 FROM creature ORDER BY guid DESC LIMIT 1;
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13117,30,-1496.065063,-333.338409,101.134804,-0.001854);
 INSERT INTO creature_battleground (guid,eventIndex) SELECT guid, 28 FROM creature ORDER BY guid DESC LIMIT 1;
-
 -- mainspiritguides
 -- a
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13116,30,873.001770,-491.283630,96.541931,-0.001854);
 -- h
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13117,30,-1437.670044,-610.088989,51.161900,-0.001854);
+
+
     -- towers
     -- dun south - OK
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(13358,30,569.395,-101.064,52.8296,2.34974);
@@ -1399,7 +1409,9 @@ UPDATE creature SET spawndist=0 WHERE MovementType=0 AND map=30;
 UPDATE creature SET spawntimesecs=86400 where id in (11949,11947);
 
 -- kill the spiritguides
-UPDATE creature SET DeathState=1 WHERE id IN( 13116,13117 ) AND map=30;
+UPDATE creature SET DeathState=3 WHERE id IN( 13116,13117 ) AND map=30;
+-- delete to much reputation-gains from av-creatures
+DELETE FROM creature_onkill_reputation WHERE RewOnKillRepFaction1 IN (729,730) AND RewOnKillRepValue1 > 100;
 DROP TABLE IF EXISTS `gameobject_battleground`;
 CREATE TABLE `gameobject_battleground` (
     `guid` int(10) unsigned NOT NULL COMMENT 'GameObject\'s GUID',
