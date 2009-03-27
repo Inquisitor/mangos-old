@@ -1575,6 +1575,23 @@ void BattleGround::SpawnBGCreature(uint64 const& guid, uint32 respawntime)
     {
         obj->SetPhaseMask(0,false);
         map->Add(obj);
+        if(obj->GetEntry() == BG_CREATURE_ENTRY_A_SPIRITGUIDE || obj->GetEntry() == BG_CREATURE_ENTRY_H_SPIRITGUIDE)
+        {
+            if( !m_ReviveQueue[guid].empty() )
+            {
+                WorldSafeLocsEntry const *ClosestGrave = NULL;
+                for (std::vector<uint64>::const_iterator itr = m_ReviveQueue[guid].begin(); itr != m_ReviveQueue[guid].end(); ++itr)
+                {
+                    Player *plr = objmgr.GetPlayer( *itr );
+                    if( !plr )
+                        continue;
+                    if(!ClosestGrave)
+                        ClosestGrave = GetClosestGraveYard(plr);
+                    plr->TeleportTo(GetMapId(), ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, plr->GetOrientation());
+                }
+                m_ReviveQueue[guid].clear();
+            }
+        }
     }
 }
 
@@ -1617,9 +1634,9 @@ bool BattleGround::AddSpiritGuide(uint32 type, float x, float y, float z, float 
     uint32 entry = 0;
 
     if(team == ALLIANCE)
-        entry = 13116;
+        entry = BG_CREATURE_ENTRY_A_SPIRITGUIDE;
     else
-        entry = 13117;
+        entry = BG_CREATURE_ENTRY_H_SPIRITGUIDE;
 
     Creature* pCreature = AddCreature(entry,type,team,x,y,z,o);
     if(!pCreature)

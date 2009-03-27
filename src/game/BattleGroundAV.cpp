@@ -930,28 +930,9 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player)
     if( m_Nodes[node].Owner == team || team == m_Nodes[node].TotalOwner )
         return;
 
-
-    // for graveyards we have to teleport players away who are waiting for ressurection
-    if( IsGrave(node) &&  m_Nodes[node].TotalOwner != BG_AV_NEUTRAL_TEAM )
-    {
-        std::vector<uint64> ghost_list = m_ReviveQueue[m_BgCreatures[node]];
-        if( !ghost_list.empty() )
-        {
-            WorldSafeLocsEntry const *ClosestGrave = NULL;
-            for (std::vector<uint64>::const_iterator itr = ghost_list.begin(); itr != ghost_list.end(); ++itr)
-            {
-                Player *plr = objmgr.GetPlayer( * itr);
-                if( !plr )
-                    continue;
-                if(!ClosestGrave)
-                    ClosestGrave = GetClosestGraveYard(plr);
-                if(ClosestGrave)
-                    plr->TeleportTo(GetMapId(), ClosestGrave->x, ClosestGrave->y, ClosestGrave->z, plr->GetOrientation());
-            }
-            m_ReviveQueue[m_BgCreatures[node]].clear();
-        }
-    }
-
+    // creatures from graveyard will be teleported away in
+    // spawnbgobject-function, when spiritguide is despawned
+    // - so n need to check here
     DePopulateNode(node);
     AssaultNode(node, team);                                // update nodeinfo variables
     UpdateNodeWorldState(node);                             // send mapicon
