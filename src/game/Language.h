@@ -734,7 +734,7 @@ enum MangosStrings
     LANG_BG_AV_A_GENERAL_DEAD           = 790,
 
 
-    // Room for batleground/arena strings 756-799 not used
+    // Room for batleground/arena strings 790-799 not used
 
     // in game strings
     //                                  = 800, not used
