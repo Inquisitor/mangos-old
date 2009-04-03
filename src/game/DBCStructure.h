@@ -52,8 +52,8 @@ struct AchievementEntry
     //uint32    icon;                                       // 42 icon (from SpellIcon.dbc)
     //char *titleReward[16];                                // 43-58
     //uint32 titleReward_flags;                             // 59
-    //uint32 count;                                         // 60 - need this count Criteria for complete
-    uint32 refAchievement;                                  // 61 - related achievement?
+    uint32 count;                                           // 60 - need this count of completed criterias (own or referenced achievement criterias)
+    uint32 refAchievement;                                  // 61 - referenced achievement (counting of all completed criterias)
 };
 
 struct AchievementCategoryEntry
@@ -1288,6 +1288,9 @@ struct SpellEntry
     uint32    SchoolMask;                                   // 228      m_schoolMask
     uint32    runeCostID;                                   // 229      m_runeCostID
     //uint32    spellMissileID;                             // 230      m_spellMissileID not used
+
+    // helpers
+    int32 CalculateSimpleValue(uint8 eff) const { return EffectBasePoints[eff]+int32(EffectBaseDice[eff]); }
 
     private:
         // prevent creating custom entries (copy data from original in fact)
