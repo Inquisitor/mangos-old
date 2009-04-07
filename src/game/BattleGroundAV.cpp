@@ -425,7 +425,7 @@ void BattleGroundAV::OnObjectDBLoad(Creature* creature)
         {
             m_NodeObjects[eventId].creatures.push_back(creature->GetGUID());
             if( !IsActiveNodeEvent(eventId) )
-                SpawnBGObject(creature->GetGUID(), RESPAWN_ONE_DAY);
+                SpawnBGCreature(creature->GetGUID(), RESPAWN_ONE_DAY);
         }
     }
 
@@ -925,6 +925,8 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player)
     if( node == BG_AV_NODES_ERROR )
         return;
 
+    m_assault_in_progress = node;                           // to disable getclosestgrave for this node
+
     uint32 team  = player->GetTeam();
     sLog.outDebug("BattleGroundAV: player assaults node %i", node);
     if( m_Nodes[node].Owner == team || team == m_Nodes[node].TotalOwner )
@@ -951,6 +953,7 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player)
     }
 
     PlaySoundToAll((team == ALLIANCE) ? BG_AV_SOUND_ALLIANCE_ASSAULTS : BG_AV_SOUND_HORDE_ASSAULTS);
+    m_assault_in_progress = BG_AV_NODES_ERROR;
 }
 
 void BattleGroundAV::FillInitialWorldStates(WorldPacket& data)
@@ -1068,6 +1071,8 @@ WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(Player *plr)
         float mindist = 9999999.0f;
         for(uint8 i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i)
         {
+            if( i == m_assault_in_progress )
+                continue;
             if( m_Nodes[i].Owner != team || m_Nodes[i].State != POINT_CONTROLLED )
                 continue;
             WorldSafeLocsEntry const * entry = sWorldSafeLocsStore.LookupEntry( BG_AV_GraveyardIds[i] );
@@ -1179,6 +1184,7 @@ void BattleGroundAV::Reset()
     m_RepSurviveCaptain   = (isBGWeekend) ? BG_AV_REP_SURVIVING_CAPTAIN_HOLIDAY : BG_AV_REP_SURVIVING_CAPTAIN;
     m_RepSurviveTower     = (isBGWeekend) ? BG_AV_REP_SURVIVING_TOWER_HOLIDAY : BG_AV_REP_SURVIVING_TOWER;
 
+    m_assault_in_progress = BG_AV_NODES_ERROR;
     for(uint8 i = 0; i < BG_TEAMS_COUNT; i++)
     {
         for(uint8 j = 0; j < 9; j++)                        // 9 quests getting tracked

@@ -245,7 +245,7 @@ class BattleGroundMgr
             CreatureBattleEventIndexesMap::const_iterator itr = mCreatureBattleEventIndexMap.find(dbTableGuidLow);
             if(itr != mCreatureBattleEventIndexMap.end())
                 return itr->second;
-            return 255;                                     // needed to check for error
+            return BG_EVENT_NONE;                           // needed to check for error
         }
         void LoadGameObjectBattleEventIndexes();
         uint8 GetGameObjectEventIndex(uint32 dbTableGuidLow) const
@@ -253,7 +253,7 @@ class BattleGroundMgr
             GameObjectBattleEventIndexesMap::const_iterator itr = mGameObjectBattleEventIndexMap.find(dbTableGuidLow);
             if(itr != mGameObjectBattleEventIndexMap.end())
                 return itr->second;
-            return 255;                                     // needed to check for error
+            return BG_EVENT_NONE;                           // needed to check for error
         }
 
         bool isArenaTesting() const { return m_ArenaTesting; }

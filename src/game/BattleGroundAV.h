@@ -609,6 +609,7 @@ class BattleGroundAV : public BattleGround
 
         uint64 m_DB_Creature[BG_AV_DB_CREATURE_MAX];
 
+        BG_AV_Nodes m_assault_in_progress;                  // this node gets currently assaulted and must be ignored for getclosestgrave
         BGCreatures m_MineCreatures[2][3];                  // 2 mines, 3 factions (neutral, alliance, horde)
 
         // 7 grave yards 2kinds: alliance/horde-captured, 4 different creaturetypes (there is a quest where you can improve those creatures)
