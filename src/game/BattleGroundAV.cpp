@@ -751,8 +751,9 @@ uint8 BattleGroundAV::GetNodeEventThroughNode(BG_AV_Nodes node)
     assert( m_Nodes[node].State != POINT_NEUTRAL );
     uint32 controlled = ( m_Nodes[node].State == POINT_CONTROLLED || m_Nodes[node].State == POINT_DESTROYED);
     uint32 team = GetTeamIndexByTeamId(m_Nodes[node].Owner);
-    sLog.outDebug("BattleGroundAV GetNodeEventThroughNode event: %u", BG_AV_NodeEventIndexes[node][team][controlled]);
-    return BG_AV_NodeEventIndexes[node][team][controlled];
+    sLog.outDebug("BattleGroundAV GetNodeEventThroughNode event: %u", (node * 4) + (2 * bg_team_id) + controlled + 1);
+    return (node * 4) + (2 * bg_team_id) + controlled + 1;
+    // return BG_AV_NodeEventIndexes[node][team][controlled]; - this array isn't used
 }
 
 BG_AV_Nodes BattleGroundAV::GetNodeThroughNodeEvent(uint8 eventId)
