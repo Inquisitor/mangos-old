@@ -370,7 +370,7 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                     damage = uint32(damage * (m_caster->GetTotalAttackPowerValue(BASE_ATTACK)) / 100);
                 }
                 // Shield Slam
-                else if(m_spellInfo->SpellFamilyFlags & 0x0000020000000000LL)
+                else if(m_spellInfo->SpellFamilyFlags & 0x0000020000000000LL && m_spellInfo->Category==1209)
                     damage += int32(m_caster->GetShieldBlockValue());
                 // Victory Rush
                 else if(m_spellInfo->SpellFamilyFlags & 0x10000000000LL)
@@ -2397,7 +2397,7 @@ void Spell::EffectPowerBurn(uint32 i)
     {
         uint32 maxdamage = m_caster->GetMaxPower(powertype) * damage * 2 / 100;
         damage = unitTarget->GetMaxPower(powertype) * damage / 100;
-        if(damage > maxdamage) damage = maxdamage;  
+        if(damage > maxdamage) damage = maxdamage;
     }
 
     int32 curPower = int32(unitTarget->GetPower(powertype));
