@@ -205,7 +205,7 @@ CREATE TABLE `creature_battleground` (
     PRIMARY KEY  (`guid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='Creature battleground indexing system';
 
-DELETE FROM creature_battleground WHERE guid=( SELECT guid FROM creature WHERE map=30 );
+DELETE FROM creature_battleground WHERE guid IN ( SELECT guid FROM creature WHERE map=30 );
 DELETE FROM creature WHERE map=30;
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(2225,30,-1235.31, -340.777, 60.5088, 3.31613);
 INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES(3343,30,-1244.02, -323.795, 61.0485, 5.21853);
@@ -1447,7 +1447,7 @@ CREATE TABLE `gameobject_battleground` (
     PRIMARY KEY  (`guid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='GameObject battleground indexing system';
 
-DELETE FROM gameobject_battleground WHERE guid=( SELECT guid FROM gameobject WHERE map=30 );
+DELETE FROM gameobject_battleground WHERE guid IN ( SELECT guid FROM gameobject WHERE map=30 );
 -- following gameobjects are static
 DELETE FROM gameobject WHERE map=30;
 INSERT INTO `gameobject` (`id` ,`map`,position_x,position_y,position_z,orientation,spawntimesecs) VALUES (2061,30,-1423.16,-318.436,89.1136,2.35619,60);
