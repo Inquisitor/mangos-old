@@ -1914,9 +1914,7 @@ INSERT INTO gameobject(id,map,position_x,position_y,position_z,orientation) VALU
 INSERT INTO gameobject(id,map,position_x,position_y,position_z,orientation) VALUES(179065,30,-501.775,-151.581,81.2027,0);
 INSERT INTO gameobject(id,map,position_x,position_y,position_z,orientation) VALUES(179065,30,-509.975,-191.652,83.2978,0);
 INSERT INTO gameobject_battleground(guid,eventIndex) SELECT guid, 64 FROM gameobject ORDER BY guid DESC LIMIT 10;
-UPDATE gameobject SET animprogress=100 WHERE id IN (180424, 178925,178943,178940,179435,178365,178364,179286,179287,180418,179025,179024);
-UPDATE gameobject SET state =1 WHERE id IN ( 180424,178925, 178943, 178940, 179435,178365, 178364, 179286, 179287, 180418,179024, 179025 ) ;
-
+UPDATE gameobject SET animprogress=100, state=1 WHERE map=30 AND id IN (180424, 178925,178943,178940,179435,178365,178364,179286,179287,180418,179025,179024);
 delete from mangos_string where entry>756 and entry<791;
 INSERT INTO mangos_string VALUES
 (757,'Alliance',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
