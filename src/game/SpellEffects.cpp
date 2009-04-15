@@ -1131,6 +1131,19 @@ void Spell::EffectDummy(uint32 i)
                 case 58418:                                 // Portal to Orgrimmar
                 case 58420:                                 // Portal to Stormwind
                     return;                                 // implemented in EffectScript[0]
+				case 33655:
+				{
+					if( m_caster->GetTypeId() != TYPEID_PLAYER )
+						return;
+					if( !m_caster->isInFlight() )
+						return;
+
+					if( m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -145.554, 1511.28, 34.3641) < 25 )
+						((Player*)m_caster)->KilledMonster( 19291, 0 );
+					if( m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -304.408, 1524.45, 37.9685 ) < 25 )
+						((Player*)m_caster)->KilledMonster( 19292, 0 );
+					return;
+				}
             }
 
             //All IconID Check in there

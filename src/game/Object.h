@@ -425,6 +425,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 
         float GetDistance( const WorldObject* obj ) const;
         float GetDistance(const float x, const float y, const float z) const;
+		float GetDistance(const float x, const float y, const float z, const float sx, const float sy, const float sz) const;
         float GetDistance2d(const WorldObject* obj) const;
         float GetDistance2d(const float x, const float y) const;
         float GetDistanceZ(const WorldObject* obj) const;
