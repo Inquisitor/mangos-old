@@ -2149,6 +2149,11 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 m_target->CastSpell(m_target,47287,true,NULL,this);
                 return;
             }
+			case 34219:
+			{
+				if( caster && GetTarget() && GetTarget()->GetEntry() == 18879 && (GetTarget()->GetHealth() * 100 / GetTarget()->GetMaxHealth() < 30) )
+					GetTarget()->SetEntry(19595);
+			}
         }
 
         if (caster && m_removeMode == AURA_REMOVE_BY_DEATH)
