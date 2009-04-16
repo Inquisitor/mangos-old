@@ -4198,7 +4198,20 @@ void Spell::EffectSummonPet(uint32 i)
         NewSummon->SetUInt32Value(UNIT_FIELD_FLAGS,UNIT_FLAG_PVP_ATTACKABLE);
 
     NewSummon->InitStatsForLevel(petlevel);
-    NewSummon->InitPetCreateSpells();
+    switch (m_caster->getClass()) {
+        case CLASS_WARLOCK:
+            {
+                NewSummon->InitPetCreateSpells();
+                // when player get a pet first at high level, pet auto level up. (only warlock)
+                NewSummon->InitStatsForLevel(petlevel);
+                break;
+            }
+        default:
+            {
+                NewSummon->InitPetCreateSpells();
+                break;
+            }
+    }
     NewSummon->InitTalentForLevel();
 
     if(NewSummon->getPetType()==SUMMON_PET)
