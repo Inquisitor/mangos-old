@@ -1703,7 +1703,7 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
             case SPELLFAMILY_PRIEST:
             {
                 // Reflective Shield
-                if (spellProto->SpellFamilyFlags == 0x1)
+                if (spellProto->SpellIconID == 566)
                 {
                     if (pVictim == this)
                         break;
