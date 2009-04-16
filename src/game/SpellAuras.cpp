@@ -3914,7 +3914,7 @@ void Aura::HandleModTaunt(bool apply, bool Real)
 
     Unit* caster = GetCaster();
 
-    if(!caster || !caster->isAlive() || caster->GetTypeId() != TYPEID_PLAYER)
+    if(!caster || !caster->isAlive())
         return;
 
     if(apply)
