@@ -92,6 +92,7 @@ class ByteBuffer;
 class WorldSession;
 class Creature;
 class Player;
+class GameObject;
 class Map;
 class UpdateMask;
 class InstanceData;
@@ -479,6 +480,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         Map      * GetMap() const;
         Map const* GetBaseMap() const;
         Creature* SummonCreature(uint32 id, float x, float y, float z, float ang,TempSummonType spwtype,uint32 despwtime);
+        GameObject* SummonGameObject(uint32 id, float x, float y, float z, float ang, uint32 despwtime);
 
     protected:
         explicit WorldObject();

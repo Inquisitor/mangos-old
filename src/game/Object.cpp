@@ -25,6 +25,7 @@
 #include "Object.h"
 #include "Creature.h"
 #include "Player.h"
+#include "GameObject.h"
 #include "Vehicle.h"
 #include "ObjectMgr.h"
 #include "UpdateData.h"
@@ -1494,6 +1495,23 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
 
     //return the creature therewith the summoner has access to it
     return pCreature;
+}
+
+GameObject* WorldObject::SummonGameObject(uint32 id, float x, float y, float z, float ang, uint32 despwtime)
+{
+	GameObject* pGameObj = new GameObject;
+
+	if(!pGameObj->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), id, GetMap(), GetPhaseMask(), x, y, z, ang, 0, 0, 0, 0, 100, 1))
+	{
+		delete pGameObj;
+		return NULL;
+	}
+
+	pGameObj->SetRespawnTime(despwtime > 0 ? despwtime/1000 : 0);
+
+	GetMap()->Add(pGameObj);
+
+	return pGameObj;
 }
 
 namespace MaNGOS
