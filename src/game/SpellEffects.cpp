@@ -5276,13 +5276,17 @@ void Spell::EffectAddComboPoints(uint32 /*i*/)
     if(!unitTarget)
         return;
 
-    if(m_caster->GetTypeId() != TYPEID_PLAYER)
-        return;
-
     if(damage <= 0)
         return;
 
-    ((Player*)m_caster)->AddComboPoints(unitTarget, damage);
+    if( m_caster->GetTypeId() == TYPEID_PLAYER )
+		((Player*)m_caster)->AddComboPoints(unitTarget, damage);
+
+    if( GUID_HIPART(m_caster) == HIGHGUID_VEHICLE )
+	{
+		if(m_caster->GetCharmer() && m_caster->GetCharmer()->GetTypeId() == TYPEID_PLAYER )
+		((Player*)m_caster->GetCharmer())->AddComboPoints(unitTarget, damage);
+	}
 }
 
 void Spell::EffectDuel(uint32 i)

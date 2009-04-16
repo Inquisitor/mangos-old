@@ -19068,6 +19068,8 @@ void Player::InitGlyphsForLevel()
     SetUInt32Value(PLAYER_GLYPHS_ENABLED, value);
 }
 
+#define DEFAULT_SPELL_STATE 0x8100
+
 void Player::EnterVehicle(Vehicle *vehicle)
 {
     VehicleEntry const *ve = sVehicleStore.LookupEntry(vehicle->GetVehicleId());
@@ -19125,6 +19127,14 @@ void Player::EnterVehicle(Vehicle *vehicle)
     data << uint8(0);
     data << uint8(0);
     GetSession()->SendPacket(&data);
+
+	CharmInfo *charmInfo = vehicle->InitCharmInfo(vehicle);
+	charmInfo->InitPossessCreateSpells();
+
+	PossessSpellInitialize();
+
+	vehicle->setPowerType( POWER_ENERGY ); // FEANOR TODO: Get Type from DB ?
+	vehicle->SetPower(POWER_ENERGY, 100); // FEANOR TODO: Get Type from DB ?
 }
 
 void Player::ExitVehicle(Vehicle *vehicle)

@@ -92,6 +92,7 @@ class ByteBuffer;
 class WorldSession;
 class Creature;
 class Player;
+class Vehicle;
 class GameObject;
 class Map;
 class UpdateMask;
@@ -481,6 +482,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         Map const* GetBaseMap() const;
         Creature* SummonCreature(uint32 id, float x, float y, float z, float ang,TempSummonType spwtype,uint32 despwtime);
         GameObject* SummonGameObject(uint32 id, float x, float y, float z, float ang, uint32 despwtime);
+		Vehicle* WorldObject::SummonVehicle(uint32 entry, uint32 vehicleId, float x, float y, float z, uint32 team);
 
     protected:
         explicit WorldObject();

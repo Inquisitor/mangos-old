@@ -85,6 +85,10 @@ bool Vehicle::Create(uint32 guidlow, Map *map, uint32 Entry, uint32 vehicleId, u
     SelectLevel(ci);
     SetHealth(GetMaxHealth());
 
+	for( int i = 0; i < 4; ++i )
+		this->m_spells[i] = this->GetCreatureInfo()->spells[i]; // So our vehicles can have spells on bar
+	GetMotionMaster()->MovePoint(0, GetPositionX(), GetPositionY(), GetPositionZ()+2 ); // So we can fly with Dragon Vehicles
+
     return true;
 }
 

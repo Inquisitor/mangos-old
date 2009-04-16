@@ -1514,6 +1514,40 @@ GameObject* WorldObject::SummonGameObject(uint32 id, float x, float y, float z, 
 	return pGameObj;
 }
 
+Vehicle* WorldObject::SummonVehicle(uint32 entry, uint32 vehicleId, float x, float y, float z, uint32 team)
+{
+	CreatureInfo const *ci = objmgr.GetCreatureTemplate(entry);
+
+	if(!ci)
+		return NULL;
+
+	VehicleEntry const *ve = sVehicleStore.LookupEntry(vehicleId);
+
+	if(!ve)
+		return NULL;
+
+	Vehicle *v = new Vehicle;
+	if(!v->Create(objmgr.GenerateLowGuid(HIGHGUID_VEHICLE), GetMap(), entry, vehicleId, team) )
+	{
+		delete v;
+		return NULL;
+	}
+
+	v->Relocate(x, y, z, GetOrientation());
+
+	if(!v->IsPositionValid())
+	{
+		sLog.outError("Vehicle (guidlow %d, entry %d) not created. Suggested coordinates isn't valid (X: %f Y: %f)",
+			v->GetGUIDLow(), v->GetEntry(), v->GetPositionX(), v->GetPositionY());
+		delete v;
+		return NULL;
+	}
+
+	GetMap()->Add((Creature*)v);
+
+	return v;
+}
+
 namespace MaNGOS
 {
     class NearUsedPosDo
