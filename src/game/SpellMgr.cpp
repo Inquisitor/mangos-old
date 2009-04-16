@@ -446,6 +446,7 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
                     }
                 }   break;
                 case SPELL_AURA_MOD_HEALING_PCT:
+                case SPELL_AURA_MOD_DAMAGE_PERCENT_DONE:
                     if(spellproto->CalculateSimpleValue(effIndex) < 0)
                         return false;
                     break;

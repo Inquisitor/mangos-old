@@ -3289,6 +3289,37 @@ void Aura::HandleModFear(bool apply, bool Real)
         return;
 
     m_target->SetFeared(apply, GetCasterGUID(), GetId());
+
+    // Improved Fear
+	if(!apply && m_spellProto->SpellFamilyName == SPELLFAMILY_WARLOCK)
+    {
+       Unit* caster = GetCaster();
+       int32 spell_id = 0;
+       if(caster && caster->GetTypeId() == TYPEID_PLAYER)
+       {
+           if(caster->HasAura(53754, 0))
+              spell_id = 60946;
+           else if(caster->HasAura(53759, 0))
+              spell_id = 60947;
+       }
+       if(spell_id)
+          m_target->CastSpell(m_target, spell_id, false);
+    }
+	// Psychic Horror
+	else if(!apply && m_spellProto->SpellFamilyName == SPELLFAMILY_PRIEST)
+    {
+       Unit* caster = GetCaster();
+       int32 spell_id = 0;
+       if(caster && caster->GetTypeId() == TYPEID_PLAYER)
+       {
+           if(caster->HasAura(47571, 0))
+              spell_id = 59980;
+           else if(caster->HasAura(47572, 0))
+              spell_id = 59981;
+       }
+       if(spell_id)
+          m_target->CastSpell(m_target, spell_id, false);
+    }
 }
 
 void Aura::HandleFeignDeath(bool apply, bool Real)
