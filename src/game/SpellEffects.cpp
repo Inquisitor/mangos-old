@@ -54,6 +54,10 @@
 #include "ScriptCalls.h"
 #include "SkillDiscovery.h"
 #include "Formulas.h"
+#include "Cell.h"
+#include "CellImpl.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
 
 pEffect SpellEffects[TOTAL_SPELL_EFFECTS]=
 {
@@ -1131,6 +1135,56 @@ void Spell::EffectDummy(uint32 i)
                 case 58418:                                 // Portal to Orgrimmar
                 case 58420:                                 // Portal to Stormwind
                     return;                                 // implemented in EffectScript[0]
+				case 45109:
+				{
+					if( !unitTarget || unitTarget->GetEntry() != 25084 && GetCaster()->GetTypeId() != TYPEID_PLAYER )
+						return;
+
+					// Iterate for all slave masters
+					CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+					Cell cell(pair);
+					cell.data.Part.reserved = ALL_DISTRICT;
+					cell.SetNoCreate();
+
+					std::list<Creature*> creatureList;
+					std::vector<Creature*> creatureVector;
+
+					MaNGOS::AnyUnitInObjectRangeCheck go_check(unitTarget, 25); // 25 yards check
+					MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(unitTarget, creatureList, go_check);
+					TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+					CellLock<GridReadGuard> cell_lock(cell, pair);
+					// Get Creatures
+					cell_lock->Visit(cell_lock, go_visit, *(unitTarget->GetMap()));
+
+					if (!creatureList.empty())
+					{
+						for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+						{
+							if( (*itr)->GetEntry() == 25060 ) // Add to vector only if its Myrmidon creature
+								creatureVector.push_back(*itr);
+						}
+					}
+					if( !creatureVector.empty() )
+					{	// Attack slave's master
+						bool found = false;
+						Creature * Myrmidon = creatureVector[ rand()%creatureVector.size()]; // Get random one from all possible
+						for( std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr )
+						{
+							if( (*itr)->GetEntry() == 25084 && (*itr)->GetDistance2d( m_targets.m_destX, m_targets.m_destY) < 10 )
+							{
+								found = true;
+								(*itr)->SetEntry(25085); // Change creature to Freed Murloc
+								(*itr)->AddThreat( Myrmidon, 10.0f );
+								(*itr)->SetInCombatWith( Myrmidon );
+								(*itr)->GetMotionMaster()->MoveChase( Myrmidon );
+								(*itr)->Attack( Myrmidon, true );
+							}
+						}
+						if( found )	((Player*)GetCaster())->KilledMonster( 25086, 0 ); // Increment quest count
+					}
+					return;
+				}
 				case 33655:
 				{
 					if( m_caster->GetTypeId() != TYPEID_PLAYER )
