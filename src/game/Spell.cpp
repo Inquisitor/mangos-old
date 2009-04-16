@@ -4564,10 +4564,16 @@ SpellCastResult Spell::CheckCast(bool strict)
                 if(m_targets.getUnitTarget()->getPowerType()!=POWER_MANA)
                     return SPELL_FAILED_BAD_TARGETS;
 
-                break;
-            }
-            default:
-                break;
+				break;
+			}
+			case SPELL_AURA_PERIODIC_TRIGGER_SPELL_WITH_VALUE:
+				{
+					if(m_caster->IsFriendlyTo(m_targets.getUnitTarget()) && !IsPositiveSpell(m_spellInfo->Id))
+						return SPELL_FAILED_TARGET_FRIENDLY;
+					break;
+				}
+			default:
+				break;
         }
     }
 
