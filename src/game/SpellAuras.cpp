@@ -3839,6 +3839,25 @@ void Aura::HandleAuraModTotalThreat(bool apply, bool Real)
         threatMod =  float(-m_modifier.m_amount);
 
     m_target->getHostilRefManager().threatAssist(caster, threatMod);
+
+	// Improved Shadowform Fade effect
+	if(apply && (m_spellProto->SpellFamilyFlags & 0x100000004000LL) && (m_spellProto->SpellFamilyFlags2 &0x400))
+    {
+       Unit* caster = GetCaster();
+       uint32 chance = 0;
+       if(caster && caster->GetTypeId() == TYPEID_PLAYER)
+       {
+           if(caster->HasAura(47569, 0))
+              chance = 50;
+           else if(caster->HasAura(47570, 0))
+              chance = 100;
+       }
+       if(chance && urand(1,100) <= chance)
+	   {
+           caster->RemoveSpellsCausingAura(SPELL_AURA_MOD_ROOT);
+           caster->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
+	   }
+    }
 }
 
 void Aura::HandleModTaunt(bool apply, bool Real)
