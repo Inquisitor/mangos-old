@@ -6585,6 +6585,13 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                 return false;
             break;
         }
+		// Unyielding Knights
+		case 38164:
+		{
+			// Do not summont our knights if we arent fighting specific enemy
+			if( GetTypeId() != TYPEID_PLAYER || pVictim->GetEntry() != 19457)
+				return false;
+		}
     }
 
     // Costum basepoints/target for exist spell
