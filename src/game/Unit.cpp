@@ -10189,13 +10189,25 @@ void CharmInfo::InitPetActionBar()
 
 void CharmInfo::InitEmptyActionBar()
 {
-    for(uint32 x = 1; x < 10; ++x)
-    {
-        PetActionBar[x].Type = ACT_PASSIVE;
-        PetActionBar[x].SpellOrAction = 0;
-    }
-    PetActionBar[0].Type = ACT_COMMAND;
-    PetActionBar[0].SpellOrAction = COMMAND_ATTACK;
+    if(this->m_unit->GetTypeId() != TYPEID_PLAYER && !((Creature*)this->m_unit)->isVehicle() )
+	{
+		// If its not vehicle, first one is always attack
+		for(uint32 x = 1; x < 10; ++x)
+		{
+			PetActionBar[x].Type = ACT_PASSIVE;
+			PetActionBar[x].SpellOrAction = 0;
+		}
+		PetActionBar[0].Type = ACT_COMMAND;
+		PetActionBar[0].SpellOrAction = COMMAND_ATTACK;
+	}
+	else 
+	{
+		for(uint32 x = 0; x < 10; ++x)
+		{
+			PetActionBar[x].Type = ACT_PASSIVE;
+			PetActionBar[x].SpellOrAction = 0;
+		}		
+	}
 }
 
 void CharmInfo::InitPossessCreateSpells()
