@@ -4031,7 +4031,10 @@ void Aura::HandleModMechanicImmunity(bool apply, bool Real)
 
 	//Forbearance(right immune mechanic)
     if (GetId()==25771)
+    {
         m_modifier.m_miscvalue = MECHANIC_IMMUNE_SHIELD;
+        m_target->CastSpell(m_target,61987,true);
+    }
 
     if(apply && GetSpellProto()->AttributesEx & SPELL_ATTR_EX_DISPEL_AURAS_ON_IMMUNITY)
     {
