@@ -789,8 +789,18 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 SetCriteriaProgress(achievementCriteria, 1, PROGRESS_ACCUMULATE);
                 break;
             case ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_QUEST:
-                if(GetPlayer()->GetQuestRewardStatus(achievementCriteria->complete_quest.questID))
-                    SetCriteriaProgress(achievementCriteria, 1);
+                // if miscvalues != 0, it contains the questID.
+                if (miscvalue1)
+                {
+                    if (miscvalue1 == achievementCriteria->complete_quest.questID)
+                        SetCriteriaProgress(achievementCriteria, 1);
+                }
+                else
+                {
+                    // login case.
+                    if(GetPlayer()->GetQuestRewardStatus(achievementCriteria->complete_quest.questID))
+                        SetCriteriaProgress(achievementCriteria, 1);
+                }
                 break;
             case ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET:
             case ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET2:
@@ -804,10 +814,10 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 SetCriteriaProgress(achievementCriteria, 1, PROGRESS_ACCUMULATE);
                 break;
             case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SPELL:
-                // spell always provide and at login spell learning.
                 if(miscvalue1 && miscvalue1!=achievementCriteria->learn_spell.spellID)
                     continue;
-                if(GetPlayer()->HasSpell(miscvalue1))
+
+                if(GetPlayer()->HasSpell(achievementCriteria->learn_spell.spellID))
                     SetCriteriaProgress(achievementCriteria, 1);
                 break;
             case ACHIEVEMENT_CRITERIA_TYPE_OWN_ITEM:
@@ -945,16 +955,17 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
 
                 SetCriteriaProgress(achievementCriteria, 1, PROGRESS_ACCUMULATE);
                 break;
+            case ACHIEVEMENT_CRITERIA_TYPE_FISH_IN_GAMEOBJECT:
+                if (!miscvalue1)
+                    continue;
+                if (miscvalue1 != achievementCriteria->fish_in_gameobject.goEntry)
+                    continue;
+
+                SetCriteriaProgress(achievementCriteria, 1, PROGRESS_ACCUMULATE);
+                break;
             case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILLLINE_SPELLS:
             {
-                // spell always provide and at login spell learning.
-                if(!miscvalue1)
-                    continue;
-                // rescan only when change possible
-                SkillLineAbilityMap::const_iterator skillIter0 = spellmgr.GetBeginSkillLineAbilityMap(miscvalue1);
-                if(skillIter0 == spellmgr.GetEndSkillLineAbilityMap(miscvalue1))
-                    continue;
-                if(skillIter0->second->skillId != achievementCriteria->learn_skilline_spell.skillLine)
+                if(miscvalue1 && miscvalue1 != achievementCriteria->learn_skillline_spell.skillLine)
                     continue;
 
                 uint32 spellCount = 0;
@@ -966,7 +977,7 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                         skillIter != spellmgr.GetEndSkillLineAbilityMap(spellIter->first);
                         ++skillIter)
                     {
-                        if(skillIter->second->skillId == achievementCriteria->learn_skilline_spell.skillLine)
+                        if(skillIter->second->skillId == achievementCriteria->learn_skillline_spell.skillLine)
                             spellCount++;
                     }
                 }
@@ -1001,6 +1012,30 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 SetCriteriaProgress(achievementCriteria, 1, PROGRESS_ACCUMULATE);
                 break;
             }
+            case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILL_LINE:
+            {
+                if(miscvalue1 && miscvalue1 != achievementCriteria->learn_skill_line.skillLine)
+                    continue;
+
+                uint32 spellCount = 0;
+                for (PlayerSpellMap::const_iterator spellIter = GetPlayer()->GetSpellMap().begin();
+                    spellIter != GetPlayer()->GetSpellMap().end();
+                    ++spellIter)
+                {
+                    for(SkillLineAbilityMap::const_iterator skillIter = spellmgr.GetBeginSkillLineAbilityMap(spellIter->first);
+                        skillIter != spellmgr.GetEndSkillLineAbilityMap(spellIter->first);
+                        ++skillIter)
+                    {
+                        if(skillIter->second->skillId == achievementCriteria->learn_skill_line.skillLine)
+                            spellCount++;
+                    }
+                }
+                SetCriteriaProgress(achievementCriteria, spellCount);
+                break;
+            }
+            case ACHIEVEMENT_CRITERIA_TYPE_EARN_HONORABLE_KILL:
+                SetCriteriaProgress(achievementCriteria, GetPlayer()->GetUInt32Value(PLAYER_FIELD_LIFETIME_HONORBALE_KILLS));
+                break;
             // std case: not exist in DBC, not triggered in code as result
             case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_HEALTH:
             case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_SPELLPOWER:
@@ -1031,7 +1066,6 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
             case ACHIEVEMENT_CRITERIA_TYPE_MONEY_FROM_VENDORS:
             case ACHIEVEMENT_CRITERIA_TYPE_NUMBER_OF_TALENT_RESETS:
             case ACHIEVEMENT_CRITERIA_TYPE_SPECIAL_PVP_KILL:
-            case ACHIEVEMENT_CRITERIA_TYPE_FISH_IN_GAMEOBJECT:
             case ACHIEVEMENT_CRITERIA_TYPE_EARNED_PVP_TITLE:
             case ACHIEVEMENT_CRITERIA_TYPE_LOSE_DUEL:
             case ACHIEVEMENT_CRITERIA_TYPE_KILL_CREATURE_TYPE:
@@ -1052,8 +1086,6 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
             case ACHIEVEMENT_CRITERIA_TYPE_QUEST_ABANDONED:
             case ACHIEVEMENT_CRITERIA_TYPE_FLIGHT_PATHS_TAKEN:
             case ACHIEVEMENT_CRITERIA_TYPE_LOOT_TYPE:
-            case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILL_LINE:
-            case ACHIEVEMENT_CRITERIA_TYPE_EARN_HONORABLE_KILL:
             case ACHIEVEMENT_CRITERIA_TYPE_ACCEPTED_SUMMONINGS:
             case ACHIEVEMENT_CRITERIA_TYPE_TOTAL:
                 break;                                   // Not implemented yet :(
@@ -1172,8 +1204,14 @@ bool AchievementMgr::IsCompletedCriteria(AchievementCriteriaEntry const* achieve
             return progress->counter >= achievementCriteria->loot_money.goldInCopper;
         case ACHIEVEMENT_CRITERIA_TYPE_USE_GAMEOBJECT:
             return progress->counter >= achievementCriteria->use_gameobject.useCount;
+        case ACHIEVEMENT_CRITERIA_TYPE_FISH_IN_GAMEOBJECT:
+            return progress->counter >= achievementCriteria->fish_in_gameobject.lootCount;
         case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILLLINE_SPELLS:
-            return progress->counter >= achievementCriteria->learn_skilline_spell.spellCount;
+            return progress->counter >= achievementCriteria->learn_skillline_spell.spellCount;
+        case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILL_LINE:
+            return progress->counter >= achievementCriteria->learn_skill_line.spellCount;
+        case ACHIEVEMENT_CRITERIA_TYPE_EARN_HONORABLE_KILL:
+            return progress->counter >= achievementCriteria->honorable_kill.killCount;
 
         // handle all statistic-only criteria here
         case ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_BATTLEGROUND:

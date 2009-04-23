@@ -381,7 +381,6 @@ class Spell
         void SetTargetMap(uint32 i,uint32 cur,UnitList& TagUnitMap);
         void FillAreaTargets( UnitList& TagUnitMap, float x, float y, float radius, SpellNotifyPushType pushType, SpellTargets spellTargets );
 
-        Unit* SelectMagnetTarget();
         bool CheckTarget( Unit* target, uint32 eff );
         bool CanAutoCast(Unit* target);
 
@@ -631,12 +630,12 @@ namespace MaNGOS
     {
         std::list<Unit*> *i_data;
         Spell &i_spell;
-        const uint32& i_push_type;
+        SpellNotifyPushType i_push_type;
         float i_radius;
         SpellTargets i_TargetType;
         Unit* i_originalCaster;
 
-        SpellNotifierCreatureAndPlayer(Spell &spell, std::list<Unit*> &data, float radius, const uint32 &type,
+        SpellNotifierCreatureAndPlayer(Spell &spell, std::list<Unit*> &data, float radius, SpellNotifyPushType type,
             SpellTargets TargetType = SPELL_TARGETS_NOT_FRIENDLY)
             : i_data(&data), i_spell(spell), i_push_type(type), i_radius(radius), i_TargetType(TargetType)
         {
