@@ -632,11 +632,6 @@ void GameObject::DeleteFromDB()
     WorldDatabase.PExecuteLog("DELETE FROM game_event_gameobject WHERE guid = '%u'", m_DBTableGuid);
 }
 
-GameObject* GameObject::GetGameObject(WorldObject& object, uint64 guid)
-{
-    return ObjectAccessor::GetGameObject(object,guid);
-}
-
 GameObjectInfo const *GameObject::GetGOInfo() const
 {
     return m_goInfo;
@@ -1032,6 +1027,7 @@ void GameObject::Use(Unit* user)
                         if (ok)
                         {
                             player->SendLoot(ok->GetGUID(),LOOT_FISHINGHOLE);
+                            player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_FISH_IN_GAMEOBJECT, ok->GetGOInfo()->id);
                             SetLootState(GO_JUST_DEACTIVATED);
                         }
                         else
