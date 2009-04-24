@@ -1189,6 +1189,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void TalkedToCreature( uint32 entry, uint64 guid );
         void MoneyChanged( uint32 value );
         void ReputationChanged(FactionEntry const* factionEntry );
+		bool HasQuest( uint32 questId ) const;
         bool HasQuestForItem( uint32 itemid ) const;
         bool HasQuestForGO(int32 GOId) const;
         void UpdateForQuestsGO();
