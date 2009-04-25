@@ -202,7 +202,7 @@ libmangosgame_a_SOURCES = \
 	Opcodes.h \
 	OutdoorPvP.cpp \
 	OutdoorPvP.h \
-	OutdoorPvPEP.cp \
+	OutdoorPvPEP.cpp \
 	OutdoorPvPEP.h \
 	OutdoorPvPHP.cpp \
 	OutdoorPvPHP.h \
