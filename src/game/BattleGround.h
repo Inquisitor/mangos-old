@@ -308,6 +308,8 @@ class BattleGround
         uint32 GetMinLevel() const          { return m_LevelMin; }
         uint32 GetMaxLevel() const          { return m_LevelMax; }
 
+		uint32 GetViewRange() const			{ return m_view_range; }
+
         uint32 GetMaxPlayersPerTeam() const { return m_MaxPlayersPerTeam; }
         uint32 GetMinPlayersPerTeam() const { return m_MinPlayersPerTeam; }
 
@@ -346,6 +348,8 @@ class BattleGround
 
         void SetMaxPlayersPerTeam(uint32 MaxPlayers) { m_MaxPlayersPerTeam = MaxPlayers; }
         void SetMinPlayersPerTeam(uint32 MinPlayers) { m_MinPlayersPerTeam = MinPlayers; }
+
+		void SetViewRange(uint32 view_range) { m_view_range = view_range; }
 
         void AddToBGFreeSlotQueue();                        //this queue will be useful when more battlegrounds instances will be available
         void RemoveFromBGFreeSlotQueue();                   //this method could delete whole BG instance, if another free is available
@@ -579,5 +583,7 @@ class BattleGround
         float m_TeamStartLocY[BG_TEAMS_COUNT];
         float m_TeamStartLocZ[BG_TEAMS_COUNT];
         float m_TeamStartLocO[BG_TEAMS_COUNT];
+
+		uint32 m_view_range;
 };
 #endif

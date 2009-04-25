@@ -37,7 +37,7 @@ const char ItemPrototypesrcfmt[]="iiiisiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
 const char ItemPrototypedstfmt[]="iiiisiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiffiffiffiffiffiiiiiiiiiifiiifiiiiiifiiiiiifiiiiiifiiiiiifiiiisiiiiiiiiiiiiiiiiiiiiiiiiifiiiiiii";
 const char PageTextfmt[]="isi";
 const char SpellThreatfmt[]="ii";
-const char InstanceTemplatesrcfmt[]="iiiiiiiffffs";
+const char InstanceTemplatesrcfmt[]="iiiiiiiffffsi";
 const char InstanceTemplatedstfmt[]="iiiiiiiffffi";
 
 SQLStorage sCreatureStorage(CreatureInfosrcfmt, CreatureInfodstfmt, "entry","creature_template");

@@ -1591,7 +1591,7 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
 }
 
 // used to create the BG templates
-uint32 BattleGroundMgr::CreateBattleGround(BattleGroundTypeId bgTypeId, bool IsArena, uint32 MinPlayersPerTeam, uint32 MaxPlayersPerTeam, uint32 LevelMin, uint32 LevelMax, char* BattleGroundName, uint32 MapID, float Team1StartLocX, float Team1StartLocY, float Team1StartLocZ, float Team1StartLocO, float Team2StartLocX, float Team2StartLocY, float Team2StartLocZ, float Team2StartLocO)
+uint32 BattleGroundMgr::CreateBattleGround(BattleGroundTypeId bgTypeId, bool IsArena, uint32 MinPlayersPerTeam, uint32 MaxPlayersPerTeam, uint32 LevelMin, uint32 LevelMax, char* BattleGroundName, uint32 MapID, float Team1StartLocX, float Team1StartLocY, float Team1StartLocZ, float Team1StartLocO, float Team2StartLocX, float Team2StartLocY, float Team2StartLocZ, float Team2StartLocO, uint32 view_range)
 {
     // Create the BG
     BattleGround *bg = NULL;
@@ -1623,6 +1623,7 @@ uint32 BattleGroundMgr::CreateBattleGround(BattleGroundTypeId bgTypeId, bool IsA
     bg->SetTeamStartLoc(ALLIANCE, Team1StartLocX, Team1StartLocY, Team1StartLocZ, Team1StartLocO);
     bg->SetTeamStartLoc(HORDE,    Team2StartLocX, Team2StartLocY, Team2StartLocZ, Team2StartLocO);
     bg->SetLevelRange(LevelMin, LevelMax);
+	bg->SetViewRange( view_range );
 
     // add bg to update list
     AddBattleGround(bg->GetInstanceID(), bg->GetTypeID(), bg);
@@ -1635,7 +1636,7 @@ void BattleGroundMgr::CreateInitialBattleGrounds()
 {
     float AStartLoc[4];
     float HStartLoc[4];
-    uint32 MaxPlayersPerTeam, MinPlayersPerTeam, MinLvl, MaxLvl, start1, start2;
+    uint32 MaxPlayersPerTeam, MinPlayersPerTeam, MinLvl, MaxLvl, start1, start2, view_range;
     BattlemasterListEntry const *bl;
     WorldSafeLocsEntry const *start;
     bool IsArena;
@@ -1643,7 +1644,7 @@ void BattleGroundMgr::CreateInitialBattleGrounds()
     uint32 count = 0;
 
     //                                                0   1                 2                 3      4      5                6              7             8
-    QueryResult *result = WorldDatabase.Query("SELECT id, MinPlayersPerTeam,MaxPlayersPerTeam,MinLvl,MaxLvl,AllianceStartLoc,AllianceStartO,HordeStartLoc,HordeStartO FROM battleground_template");
+    QueryResult *result = WorldDatabase.Query("SELECT id, MinPlayersPerTeam,MaxPlayersPerTeam,MinLvl,MaxLvl,AllianceStartLoc,AllianceStartO,HordeStartLoc,HordeStartO,view_range FROM battleground_template");
 
     if (!result)
     {
@@ -1738,8 +1739,10 @@ void BattleGroundMgr::CreateInitialBattleGrounds()
             continue;
         }
 
+		view_range = fields[9].GetUInt32();
+
         //sLog.outDetail("Creating battleground %s, %u-%u", bl->name[sWorld.GetDBClang()], MinLvl, MaxLvl);
-        if (!CreateBattleGround(bgTypeID, IsArena, MinPlayersPerTeam, MaxPlayersPerTeam, MinLvl, MaxLvl, bl->name[sWorld.GetDefaultDbcLocale()], bl->mapid[0], AStartLoc[0], AStartLoc[1], AStartLoc[2], AStartLoc[3], HStartLoc[0], HStartLoc[1], HStartLoc[2], HStartLoc[3]))
+        if (!CreateBattleGround(bgTypeID, IsArena, MinPlayersPerTeam, MaxPlayersPerTeam, MinLvl, MaxLvl, bl->name[sWorld.GetDefaultDbcLocale()], bl->mapid[0], AStartLoc[0], AStartLoc[1], AStartLoc[2], AStartLoc[3], HStartLoc[0], HStartLoc[1], HStartLoc[2], HStartLoc[3], view_range))
             continue;
 
         ++count;

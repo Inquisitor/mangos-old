@@ -227,6 +227,7 @@ struct InstanceTemplate
     float startLocZ;
     float startLocO;
     uint32 script_id;
+	uint32 view_range;
 };
 
 enum LevelRequirementVsMode
