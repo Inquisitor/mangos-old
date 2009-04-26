@@ -38,7 +38,7 @@ const char ItemPrototypedstfmt[]="iiiisiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
 const char PageTextfmt[]="isi";
 const char SpellThreatfmt[]="ii";
 const char InstanceTemplatesrcfmt[]="iiiiiiiffffsi";
-const char InstanceTemplatedstfmt[]="iiiiiiiffffi";
+const char InstanceTemplatedstfmt[]="iiiiiiiffffii";
 
 SQLStorage sCreatureStorage(CreatureInfosrcfmt, CreatureInfodstfmt, "entry","creature_template");
 SQLStorage sCreatureDataAddonStorage(CreatureDataAddonInfofmt,"guid","creature_addon");
