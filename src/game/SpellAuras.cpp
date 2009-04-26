@@ -2067,7 +2067,21 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             break;
                     }
                 }
-                return;
+				return;
+			case 39246:
+				{
+					int32 roll = rand()%100;
+					if( roll > 20 )
+					{
+						for(int x =0; x < (rand()%2 > 0 ? 2 : 3); ++x)
+						{
+							caster->SummonCreature(rand()%2 > 0 ? 22482 : 22483, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
+						}
+					}
+					else 
+						caster->SummonCreature(22038, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
+					return;
+				}
             case 46699:                                     // Requires No Ammo
                 if(m_target->GetTypeId()==TYPEID_PLAYER)
                     ((Player*)m_target)->RemoveAmmo();      // not use ammo and not allow use
