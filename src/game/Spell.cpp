@@ -2367,8 +2367,6 @@ void Spell::cast(bool skipCheck)
         {
             if (m_spellInfo->Mechanic == MECHANIC_BANDAGE)             // Bandages
                 m_preCastSpell = 11196;                                // Recently Bandaged
-            else if(m_spellInfo->SpellIconID == 1662 && m_spellInfo->AttributesEx & 0x20) // Blood Fury (Racial)
-                m_preCastSpell = 23230;                                // Blood Fury - Healing Reduction
             break;
         }
         case SPELLFAMILY_MAGE:
