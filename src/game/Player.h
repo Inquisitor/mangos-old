@@ -688,6 +688,16 @@ struct MovementInfo
     }
 };
 
+ //here stored last safe player's position
+struct SafePosition
+{
+    float x, y, z;
+    SafePosition()
+    {
+        x = y = z = 0.0f;
+    }
+};
+
 // flags that use in movement check for example at spell casting
 MovementFlags const movementFlagsMask = MovementFlags(
     MOVEMENTFLAG_FORWARD |MOVEMENTFLAG_BACKWARD  |MOVEMENTFLAG_STRAFE_LEFT|MOVEMENTFLAG_STRAFE_RIGHT|
@@ -1908,6 +1918,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         /***                 VARIOUS SYSTEMS                   ***/
         /*********************************************************/
         MovementInfo m_movementInfo;
+        SafePosition m_safeposition;
         void UpdateFallInformationIfNeed(MovementInfo const& minfo,uint16 opcode);
         Unit *m_mover;
         void SetFallInformation(uint32 time, float z)
