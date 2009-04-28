@@ -460,14 +460,16 @@ enum ActivateTaxiReplies
 enum LootType
 {
     LOOT_CORPSE                 = 1,
-    LOOT_SKINNING               = 2,
+    LOOT_PICKPOCKETING          = 2,
     LOOT_FISHING                = 3,
-    LOOT_PICKPOCKETING          = 4,                        // unsupported by client, sending LOOT_SKINNING instead
-    LOOT_DISENCHANTING          = 5,                        // unsupported by client, sending LOOT_SKINNING instead
-    LOOT_PROSPECTING            = 6,                        // unsupported by client, sending LOOT_SKINNING instead
-    LOOT_INSIGNIA               = 7,                        // unsupported by client, sending LOOT_SKINNING instead
-    LOOT_FISHINGHOLE            = 8,                        // unsupported by client, sending LOOT_FISHING instead
-    LOOT_MILLING                = 9                         // unsupported by client, sending LOOT_SKINNING instead
+    LOOT_DISENCHANTING          = 4,
+                                                            // ignored always by client
+    LOOT_SKINNING               = 6,
+    LOOT_PROSPECTING            = 7,
+    LOOT_MILLING                = 8,
+
+    LOOT_FISHINGHOLE            = 20,                       // unsupported by client, sending LOOT_FISHING instead
+    LOOT_INSIGNIA               = 21                        // unsupported by client, sending LOOT_CORPSE instead
 };
 
 enum MirrorTimerType
@@ -879,7 +881,9 @@ class MANGOS_DLL_SPEC Player : public Unit
         void SendTransferAborted(uint32 mapid, uint8 reason, uint8 arg = 0);
         void SendInstanceResetWarning(uint32 mapid, uint32 time);
 
+        Creature* GetNPCIfCanInteractWith(uint64 guid, uint32 npcflagmask);
         bool CanInteractWithNPCs(bool alive = true) const;
+        GameObject* GetGameObjectIfCanInteractWith(uint64 guid, GameobjectTypes type) const;
 
         bool ToggleAFK();
         bool ToggleDND();
@@ -1792,7 +1796,7 @@ class MANGOS_DLL_SPEC Player : public Unit
             for (int i=0; i < PLAYER_MAX_BATTLEGROUND_QUEUES; i++)
                 if (m_bgBattleGroundQueueID[i].bgQueueTypeId == bgQueueTypeId)
                     return m_bgBattleGroundQueueID[i].invitedToInstance != 0;
-            return PLAYER_MAX_BATTLEGROUND_QUEUES;
+            return false;
         }
         bool InBattleGroundQueueForBattleGroundQueueType(BattleGroundQueueTypeId bgQueueTypeId) const
         {
