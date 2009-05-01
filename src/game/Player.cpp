@@ -185,12 +185,12 @@ void PlayerTaxi::AppendTaximaskTo( ByteBuffer& data, bool all )
 {
     if(all)
     {
-        for (uint8 i=0; i<TaxiMaskSize; i++)
+        for (uint8 i=0; i<TaxiMaskSize; ++i)
             data << uint32(sTaxiNodesMask[i]);              // all existed nodes
     }
     else
     {
-        for (uint8 i=0; i<TaxiMaskSize; i++)
+        for (uint8 i=0; i<TaxiMaskSize; ++i)
             data << uint32(m_taximask[i]);                  // known nodes
     }
 }
@@ -354,7 +354,7 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
     m_DailyQuestChanged = false;
     m_lastDailyQuestTime = 0;
 
-    for (int i=0; i<MAX_TIMERS; i++)
+    for (int i=0; i<MAX_TIMERS; ++i)
         m_MirrorTimer[i] = DISABLED_MIRROR_TIMER;
 
     m_MirrorTimerFlags = UNDERWATER_NONE;
@@ -372,7 +372,7 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
 
     m_bgBattleGroundID = 0;
     m_bgTypeID = BATTLEGROUND_TYPE_NONE;
-    for (int j=0; j < PLAYER_MAX_BATTLEGROUND_QUEUES; j++)
+    for (int j=0; j < PLAYER_MAX_BATTLEGROUND_QUEUES; ++j)
     {
         m_bgBattleGroundQueueID[j].bgQueueTypeId  = BATTLEGROUND_QUEUE_NONE;
         m_bgBattleGroundQueueID[j].invitedToInstance = 0;
@@ -427,13 +427,13 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
 
     m_lastPotionId = 0;
 
-    for (int i = 0; i < BASEMOD_END; i++)
+    for (int i = 0; i < BASEMOD_END; ++i)
     {
         m_auraBaseMod[i][FLAT_MOD] = 0.0f;
         m_auraBaseMod[i][PCT_MOD] = 1.0f;
     }
 
-    for (int i = 0; i < MAX_COMBAT_RATING; i++)
+    for (int i = 0; i < MAX_COMBAT_RATING; ++i)
         m_baseRatingValue[i] = 0;
 
     m_baseSpellDamage = 0;
@@ -486,10 +486,10 @@ Player::~Player ()
         delete itr->second;
 
     //all mailed items should be deleted, also all mail should be deallocated
-    for (PlayerMails::iterator itr =  m_mail.begin(); itr != m_mail.end();++itr)
+    for (PlayerMails::const_iterator itr =  m_mail.begin(); itr != m_mail.end();++itr)
         delete *itr;
 
-    for (ItemMap::iterator iter = mMitems.begin(); iter != mMitems.end(); ++iter)
+    for (ItemMap::const_iterator iter = mMitems.begin(); iter != mMitems.end(); ++iter)
         delete iter->second;                                //if item is duplicated... then server may crash ... but that item should be deallocated
 
     delete PlayerTalkClass;
@@ -504,7 +504,7 @@ Player::~Player ()
             delete ItemSetEff[x];
 
     // clean up player-instance binds, may unload some instance saves
-    for(uint8 i = 0; i < TOTAL_DIFFICULTIES; i++)
+    for(uint8 i = 0; i < TOTAL_DIFFICULTIES; ++i)
         for(BoundInstancesMap::iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); ++itr)
             itr->second.save->RemovePlayer(this);
 
@@ -537,7 +537,7 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
         return false;
     }
 
-    for (int i = 0; i < PLAYER_SLOTS_COUNT; i++)
+    for (int i = 0; i < PLAYER_SLOTS_COUNT; ++i)
         m_items[i] = NULL;
 
     m_race = race;
@@ -658,18 +658,18 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
 
     // original action bar
     std::list<uint16>::const_iterator action_itr[4];
-    for(int i=0; i<4; i++)
+    for(int i=0; i<4; ++i)
         action_itr[i] = info->action[i].begin();
 
     for (; action_itr[0]!=info->action[0].end() && action_itr[1]!=info->action[1].end();)
     {
         uint16 taction[4];
-        for(int i=0; i<4 ;i++)
+        for(int i=0; i<4 ;++i)
             taction[i] = (*action_itr[i]);
 
         addActionButton((uint8)taction[0], taction[1], (uint8)taction[2], (uint8)taction[3]);
 
-        for(int i=0; i<4 ;i++)
+        for(int i=0; i<4 ;++i)
             ++action_itr[i];
     }
 
@@ -736,7 +736,7 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
     // bags and main-hand weapon must equipped at this moment
     // now second pass for not equipped (offhand weapon/shield if it attempt equipped before main-hand weapon)
     // or ammo not equipped in special bag
-    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; i++)
+    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; ++i)
     {
         if(Item* pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
         {
@@ -1742,7 +1742,7 @@ void Player::AddToWorld()
     ///- The player should only be added when logging in
     Unit::AddToWorld();
 
-    for(int i = PLAYER_SLOT_START; i < PLAYER_SLOT_END; i++)
+    for(int i = PLAYER_SLOT_START; i < PLAYER_SLOT_END; ++i)
     {
         if(m_items[i])
             m_items[i]->AddToWorld();
@@ -1761,7 +1761,7 @@ void Player::RemoveFromWorld()
         RemoveGuardians();
     }
 
-    for(int i = PLAYER_SLOT_START; i < PLAYER_SLOT_END; i++)
+    for(int i = PLAYER_SLOT_START; i < PLAYER_SLOT_END; ++i)
     {
         if(m_items[i])
             m_items[i]->RemoveFromWorld();
@@ -2376,7 +2376,7 @@ void Player::InitStatsForLevel(bool reapplyMods)
         SetUInt32Value(index, 0);
 
     SetUInt32Value(PLAYER_FIELD_MOD_HEALING_DONE_POS,0);
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < 7; ++i)
     {
         SetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_NEG+i, 0);
         SetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS+i, 0);
@@ -2423,7 +2423,7 @@ void Player::InitStatsForLevel(bool reapplyMods)
     SetResistanceBuffMods(SpellSchools(0), true, 0.0f);
     SetResistanceBuffMods(SpellSchools(0), false, 0.0f);
     // set other resistance to original value (0)
-    for (int i = 1; i < MAX_SPELL_SCHOOL; i++)
+    for (int i = 1; i < MAX_SPELL_SCHOOL; ++i)
     {
         SetResistance(SpellSchools(i), 0);
         SetResistanceBuffMods(SpellSchools(i), true, 0.0f);
@@ -2438,13 +2438,13 @@ void Player::InitStatsForLevel(bool reapplyMods)
         SetFloatValue(UNIT_FIELD_POWER_COST_MULTIPLIER+i,0.0f);
     }
     // Reset no reagent cost field
-    for(int i = 0; i < 3; i++)
+    for(int i = 0; i < 3; ++i)
         SetUInt32Value(PLAYER_NO_REAGENT_COST_1 + i, 0);
     // Init data for form but skip reapply item mods for form
     InitDataForForm(reapplyMods);
 
     // save new stats
-    for (int i = POWER_MANA; i < MAX_POWERS; i++)
+    for (int i = POWER_MANA; i < MAX_POWERS; ++i)
         SetMaxPower(Powers(i),  uint32(GetCreatePowers(Powers(i))));
 
     SetMaxHealth(classInfo.basehealth);                     // stamina bonus will applied later
@@ -3376,7 +3376,7 @@ bool Player::resetTalents(bool no_cost)
         }
     }
 
-    for (unsigned int i = 0; i < sTalentStore.GetNumRows(); i++)
+    for (unsigned int i = 0; i < sTalentStore.GetNumRows(); ++i)
     {
         TalentEntry const *talentInfo = sTalentStore.LookupEntry(i);
 
@@ -3393,7 +3393,7 @@ bool Player::resetTalents(bool no_cost)
         if( (getClassMask() & talentTabInfo->ClassMask) == 0 )
             continue;
 
-        for (int j = 0; j < MAX_TALENT_RANK; j++)
+        for (int j = 0; j < MAX_TALENT_RANK; ++j)
         {
             for(PlayerSpellMap::iterator itr = GetSpellMap().begin(); itr != GetSpellMap().end();)
             {
@@ -3586,7 +3586,7 @@ void Player::InitVisibleBits()
 
 void Player::BuildCreateUpdateBlockForPlayer( UpdateData *data, Player *target ) const
 {
-    for(int i = 0; i < EQUIPMENT_SLOT_END; i++)
+    for(int i = 0; i < EQUIPMENT_SLOT_END; ++i)
     {
         if(m_items[i] == NULL)
             continue;
@@ -3596,14 +3596,14 @@ void Player::BuildCreateUpdateBlockForPlayer( UpdateData *data, Player *target )
 
     if(target == this)
     {
-        for(int i = INVENTORY_SLOT_BAG_START; i < BANK_SLOT_BAG_END; i++)
+        for(int i = INVENTORY_SLOT_BAG_START; i < BANK_SLOT_BAG_END; ++i)
         {
             if(m_items[i] == NULL)
                 continue;
 
             m_items[i]->BuildCreateUpdateBlockForPlayer( data, target );
         }
-        for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; i++)
+        for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; ++i)
         {
             if(m_items[i] == NULL)
                 continue;
@@ -3619,7 +3619,7 @@ void Player::DestroyForPlayer( Player *target ) const
 {
     Unit::DestroyForPlayer( target );
 
-    for(int i = 0; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = 0; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         if(m_items[i] == NULL)
             continue;
@@ -3629,14 +3629,14 @@ void Player::DestroyForPlayer( Player *target ) const
 
     if(target == this)
     {
-        for(int i = INVENTORY_SLOT_BAG_START; i < BANK_SLOT_BAG_END; i++)
+        for(int i = INVENTORY_SLOT_BAG_START; i < BANK_SLOT_BAG_END; ++i)
         {
             if(m_items[i] == NULL)
                 continue;
 
             m_items[i]->DestroyForPlayer( target );
         }
-        for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; i++)
+        for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; ++i)
         {
             if(m_items[i] == NULL)
                 continue;
@@ -3706,7 +3706,7 @@ TrainerSpellState Player::GetTrainerSpellState(TrainerSpell const* trainer_spell
 
     // check primary prof. limit
     if(spellmgr.IsPrimaryProfessionFirstRankSpell(spell->Id) && GetFreePrimaryProffesionPoints() == 0)
-        return TRAINER_SPELL_RED;
+        return TRAINER_SPELL_GREEN_DISABLED;
 
     return TRAINER_SPELL_GREEN;
 }
@@ -4089,7 +4089,7 @@ void Player::CreateCorpse()
     uint32 iDisplayID;
     uint16 iIventoryType;
     uint32 _cfi;
-    for (int i = 0; i < EQUIPMENT_SLOT_END; i++)
+    for (int i = 0; i < EQUIPMENT_SLOT_END; ++i)
     {
         if(m_items[i])
         {
@@ -4124,25 +4124,25 @@ Corpse* Player::GetCorpse() const
 
 void Player::DurabilityLossAll(double percent, bool inventory)
 {
-    for(int i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; i++)
+    for(int i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; ++i)
         if(Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
             DurabilityLoss(pItem,percent);
 
     if(inventory)
     {
         // bags not have durability
-        // for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+        // for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
 
-        for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; i++)
+        for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; ++i)
             if(Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
                 DurabilityLoss(pItem,percent);
 
         // keys not have durability
-        //for(int i = KEYRING_SLOT_START; i < KEYRING_SLOT_END; i++)
+        //for(int i = KEYRING_SLOT_START; i < KEYRING_SLOT_END; ++i)
 
-        for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+        for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
             if(Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
-                for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+                for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
                     if(Item* pItem = GetItemByPos( i, j ))
                         DurabilityLoss(pItem,percent);
     }
@@ -4168,25 +4168,25 @@ void Player::DurabilityLoss(Item* item, double percent)
 
 void Player::DurabilityPointsLossAll(int32 points, bool inventory)
 {
-    for(int i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; i++)
+    for(int i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; ++i)
         if(Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
             DurabilityPointsLoss(pItem,points);
 
     if(inventory)
     {
         // bags not have durability
-        // for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+        // for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
 
-        for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; i++)
+        for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; ++i)
             if(Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
                 DurabilityPointsLoss(pItem,points);
 
         // keys not have durability
-        //for(int i = KEYRING_SLOT_START; i < KEYRING_SLOT_END; i++)
+        //for(int i = KEYRING_SLOT_START; i < KEYRING_SLOT_END; ++i)
 
-        for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+        for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
             if(Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
-                for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+                for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
                     if(Item* pItem = GetItemByPos( i, j ))
                         DurabilityPointsLoss(pItem,points);
     }
@@ -4229,14 +4229,14 @@ uint32 Player::DurabilityRepairAll(bool cost, float discountMod, bool guildBank)
 {
     uint32 TotalCost = 0;
     // equipped, backpack, bags itself
-    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; i++)
+    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; ++i)
         TotalCost += DurabilityRepair(( (INVENTORY_SLOT_BAG_0 << 8) | i ),cost,discountMod, guildBank);
 
     // bank, buyback and keys not repaired
 
     // items in inventory bags
-    for(int j = INVENTORY_SLOT_BAG_START; j < INVENTORY_SLOT_BAG_END; j++)
-        for(int i = 0; i < MAX_BAG_SIZE; i++)
+    for(int j = INVENTORY_SLOT_BAG_START; j < INVENTORY_SLOT_BAG_END; ++j)
+        for(int i = 0; i < MAX_BAG_SIZE; ++i)
             TotalCost += DurabilityRepair(( (j << 8) | i ),cost,discountMod, guildBank);
     return TotalCost;
 }
@@ -4848,7 +4848,7 @@ bool Player::UpdateSkill(uint32 skill_id, uint32 step)
         return false;
 
     uint16 i=0;
-    for (; i < PLAYER_MAX_SKILLS; i++)
+    for (; i < PLAYER_MAX_SKILLS; ++i)
         if ((GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF) == skill_id)
             break;
 
@@ -4979,7 +4979,7 @@ bool Player::UpdateSkillPro(uint16 SkillId, int32 Chance, uint32 step)
     }
 
     uint16 i=0;
-    for (; i < PLAYER_MAX_SKILLS; i++)
+    for (; i < PLAYER_MAX_SKILLS; ++i)
         if ( SKILL_VALUE(GetUInt32Value(PLAYER_SKILL_INDEX(i))) == SkillId ) break;
     if ( i >= PLAYER_MAX_SKILLS )
         return false;
@@ -5097,7 +5097,7 @@ void Player::UpdateCombatSkills(Unit *pVictim, WeaponAttackType attType, bool de
 
 void Player::ModifySkillBonus(uint32 skillid,int32 val, bool talent)
 {
-    for (uint16 i=0; i < PLAYER_MAX_SKILLS; i++)
+    for (uint16 i=0; i < PLAYER_MAX_SKILLS; ++i)
         if ((GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF) == skillid)
     {
         uint32 bonus_val = GetUInt32Value(PLAYER_SKILL_BONUS_INDEX(i));
@@ -5119,7 +5119,7 @@ void Player::UpdateSkillsForLevel()
 
     bool alwaysMaxSkill = sWorld.getConfig(CONFIG_ALWAYS_MAX_SKILL_FOR_LEVEL);
 
-    for (uint16 i=0; i < PLAYER_MAX_SKILLS; i++)
+    for (uint16 i=0; i < PLAYER_MAX_SKILLS; ++i)
         if (GetUInt32Value(PLAYER_SKILL_INDEX(i)))
     {
         uint32 pskill = GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF;
@@ -5150,7 +5150,7 @@ void Player::UpdateSkillsForLevel()
 
 void Player::UpdateSkillsToMaxSkillsForLevel()
 {
-    for (uint16 i=0; i < PLAYER_MAX_SKILLS; i++)
+    for (uint16 i=0; i < PLAYER_MAX_SKILLS; ++i)
         if (GetUInt32Value(PLAYER_SKILL_INDEX(i)))
     {
         uint32 pskill = GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF;
@@ -5176,7 +5176,7 @@ void Player::SetSkill(uint32 id, uint16 currVal, uint16 maxVal)
         return;
 
     uint16 i=0;
-    for (; i < PLAYER_MAX_SKILLS; i++)
+    for (; i < PLAYER_MAX_SKILLS; ++i)
         if ((GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF) == id) break;
 
     if(i<PLAYER_MAX_SKILLS)                                 //has skill
@@ -5204,7 +5204,7 @@ void Player::SetSkill(uint32 id, uint16 currVal, uint16 maxVal)
     }
     else if(currVal)                                        //add
     {
-        for (i=0; i < PLAYER_MAX_SKILLS; i++)
+        for (i=0; i < PLAYER_MAX_SKILLS; ++i)
             if (!GetUInt32Value(PLAYER_SKILL_INDEX(i)))
         {
             SkillLineEntry const *pSkill = sSkillLineStore.LookupEntry(id);
@@ -5247,7 +5247,7 @@ void Player::SetSkill(uint32 id, uint16 currVal, uint16 maxVal)
 bool Player::HasSkill(uint32 skill) const
 {
     if(!skill)return false;
-    for (uint16 i=0; i < PLAYER_MAX_SKILLS; i++)
+    for (uint16 i=0; i < PLAYER_MAX_SKILLS; ++i)
     {
         if ((GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF) == skill)
         {
@@ -5262,7 +5262,7 @@ uint16 Player::GetSkillValue(uint32 skill) const
     if(!skill)
         return 0;
 
-    for (uint16 i=0; i < PLAYER_MAX_SKILLS; i++)
+    for (uint16 i=0; i < PLAYER_MAX_SKILLS; ++i)
     {
         if ((GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF) == skill)
         {
@@ -5280,7 +5280,7 @@ uint16 Player::GetSkillValue(uint32 skill) const
 uint16 Player::GetMaxSkillValue(uint32 skill) const
 {
     if(!skill)return 0;
-    for (uint16 i=0; i < PLAYER_MAX_SKILLS; i++)
+    for (uint16 i=0; i < PLAYER_MAX_SKILLS; ++i)
     {
         if ((GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF) == skill)
         {
@@ -5298,7 +5298,7 @@ uint16 Player::GetMaxSkillValue(uint32 skill) const
 uint16 Player::GetPureMaxSkillValue(uint32 skill) const
 {
     if(!skill)return 0;
-    for (uint16 i=0; i < PLAYER_MAX_SKILLS; i++)
+    for (uint16 i=0; i < PLAYER_MAX_SKILLS; ++i)
     {
         if ((GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF) == skill)
         {
@@ -5311,7 +5311,7 @@ uint16 Player::GetPureMaxSkillValue(uint32 skill) const
 uint16 Player::GetBaseSkillValue(uint32 skill) const
 {
     if(!skill)return 0;
-    for (uint16 i=0; i < PLAYER_MAX_SKILLS; i++)
+    for (uint16 i=0; i < PLAYER_MAX_SKILLS; ++i)
     {
         if ((GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF) == skill)
         {
@@ -5326,7 +5326,7 @@ uint16 Player::GetBaseSkillValue(uint32 skill) const
 uint16 Player::GetPureSkillValue(uint32 skill) const
 {
     if(!skill)return 0;
-    for (uint16 i=0; i < PLAYER_MAX_SKILLS; i++)
+    for (uint16 i=0; i < PLAYER_MAX_SKILLS; ++i)
     {
         if ((GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF) == skill)
         {
@@ -5341,7 +5341,7 @@ int16 Player::GetSkillPermBonusValue(uint32 skill) const
     if(!skill)
         return 0;
 
-    for (int i = 0; i < PLAYER_MAX_SKILLS; i++)
+    for (int i = 0; i < PLAYER_MAX_SKILLS; ++i)
     {
         if ((GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF) == skill)
         {
@@ -5357,7 +5357,7 @@ int16 Player::GetSkillTempBonusValue(uint32 skill) const
     if(!skill)
         return 0;
 
-    for (int i = 0; i < PLAYER_MAX_SKILLS; i++)
+    for (int i = 0; i < PLAYER_MAX_SKILLS; ++i)
     {
         if ((GetUInt32Value(PLAYER_SKILL_INDEX(i)) & 0x0000FFFF) == skill)
         {
@@ -6217,7 +6217,7 @@ void Player::DuelComplete(DuelCompleteType type)
             auras2remove.push_back(i->second->GetId());
     }
 
-    for(size_t i=0; i<auras2remove.size(); i++)
+    for(size_t i=0; i<auras2remove.size(); ++i)
         duel->opponent->RemoveAurasDueToSpell(auras2remove[i]);
 
     auras2remove.clear();
@@ -6227,7 +6227,7 @@ void Player::DuelComplete(DuelCompleteType type)
         if (!i->second->IsPositive() && i->second->GetCasterGUID() == duel->opponent->GetGUID() && i->second->GetAuraApplyTime() >= duel->startTime)
             auras2remove.push_back(i->second->GetId());
     }
-    for(size_t i=0; i<auras2remove.size(); i++)
+    for(size_t i=0; i<auras2remove.size(); ++i)
         RemoveAurasDueToSpell(auras2remove[i]);
 
     // cleanup combo points
@@ -6662,7 +6662,7 @@ void Player::ApplyEquipSpell(SpellEntry const* spellInfo, Item* item, bool apply
             for (int k=0; k < 3; ++k)
             {
                 spellEffectPair spair = spellEffectPair(spellInfo->Id, k);
-                for (AuraMap::iterator iter = m_Auras.lower_bound(spair); iter != m_Auras.upper_bound(spair); ++iter)
+                for (AuraMap::const_iterator iter = m_Auras.lower_bound(spair); iter != m_Auras.upper_bound(spair); ++iter)
                 {
                     if(!item || iter->second->GetCastItemGUID() == item->GetGUID())
                     {
@@ -6700,7 +6700,7 @@ void Player::ApplyEquipSpell(SpellEntry const* spellInfo, Item* item, bool apply
 
 void Player::UpdateEquipSpellsAtFormChange()
 {
-    for (int i = 0; i < INVENTORY_SLOT_BAG_END; i++)
+    for (int i = 0; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         if(m_items[i] && !m_items[i]->IsBroken())
         {
@@ -6899,7 +6899,7 @@ void Player::_RemoveAllItemMods()
 {
     sLog.outDebug("_RemoveAllItemMods start.");
 
-    for (int i = 0; i < INVENTORY_SLOT_BAG_END; i++)
+    for (int i = 0; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         if(m_items[i])
         {
@@ -6919,7 +6919,7 @@ void Player::_RemoveAllItemMods()
         }
     }
 
-    for (int i = 0; i < INVENTORY_SLOT_BAG_END; i++)
+    for (int i = 0; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         if(m_items[i])
         {
@@ -6947,7 +6947,7 @@ void Player::_ApplyAllItemMods()
 {
     sLog.outDebug("_ApplyAllItemMods start.");
 
-    for (int i = 0; i < INVENTORY_SLOT_BAG_END; i++)
+    for (int i = 0; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         if(m_items[i])
         {
@@ -6969,7 +6969,7 @@ void Player::_ApplyAllItemMods()
         }
     }
 
-    for (int i = 0; i < INVENTORY_SLOT_BAG_END; i++)
+    for (int i = 0; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         if(m_items[i])
         {
@@ -7330,6 +7330,9 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
         case LOOT_FISHINGHOLE: loot_type = LOOT_FISHING; break;
         default: break;
     }
+
+    // need know merged fishing/corpse loot type for achievements
+    loot->loot_type = loot_type;
 
     WorldPacket data(SMSG_LOOT_RESPONSE, (9+50));           // we guess size
 
@@ -7990,7 +7993,7 @@ uint8 Player::FindEquipSlot( ItemPrototype const* proto, uint32 slot, bool swap 
     {
         if( swap || !GetItemByPos( INVENTORY_SLOT_BAG_0, slot ) )
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; ++i)
             {
                 if ( slots[i] == slot )
                     return slot;
@@ -8000,7 +8003,7 @@ uint8 Player::FindEquipSlot( ItemPrototype const* proto, uint32 slot, bool swap 
     else
     {
         // search free slot at first
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; ++i)
         {
             if ( slots[i] != NULL_SLOT && !GetItemByPos( INVENTORY_SLOT_BAG_0, slots[i] ) )
             {
@@ -8011,7 +8014,7 @@ uint8 Player::FindEquipSlot( ItemPrototype const* proto, uint32 slot, bool swap 
         }
 
         // if not found free and can swap return first appropriate from used
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; ++i)
         {
             if ( slots[i] != NULL_SLOT && swap )
                 return slots[i];
@@ -8029,7 +8032,7 @@ uint8 Player::CanUnequipItems( uint32 item, uint32 count ) const
 
     uint8 res = EQUIP_ERR_OK;
 
-    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pItem && pItem->GetEntry() == item )
@@ -8045,7 +8048,7 @@ uint8 Player::CanUnequipItems( uint32 item, uint32 count ) const
                 res = ires;
         }
     }
-    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; i++)
+    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; ++i)
     {
         pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pItem && pItem->GetEntry() == item )
@@ -8055,7 +8058,7 @@ uint8 Player::CanUnequipItems( uint32 item, uint32 count ) const
                 return EQUIP_ERR_OK;
         }
     }
-    for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; i++)
+    for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; ++i)
     {
         pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pItem && pItem->GetEntry() == item )
@@ -8066,12 +8069,12 @@ uint8 Player::CanUnequipItems( uint32 item, uint32 count ) const
         }
     }
     Bag *pBag;
-    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pBag )
         {
-            for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+            for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
             {
                 pItem = GetItemByPos( i, j );
                 if( pItem && pItem->GetEntry() == item )
@@ -8091,19 +8094,19 @@ uint8 Player::CanUnequipItems( uint32 item, uint32 count ) const
 uint32 Player::GetItemCount( uint32 item, bool inBankAlso, Item* skipItem ) const
 {
     uint32 count = 0;
-    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; i++)
+    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; ++i)
     {
         Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pItem && pItem != skipItem &&  pItem->GetEntry() == item )
             count += pItem->GetCount();
     }
-    for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; i++)
+    for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; ++i)
     {
         Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pItem && pItem != skipItem && pItem->GetEntry() == item )
             count += pItem->GetCount();
     }
-    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pBag )
@@ -8112,7 +8115,7 @@ uint32 Player::GetItemCount( uint32 item, bool inBankAlso, Item* skipItem ) cons
 
     if(skipItem && skipItem->GetProto()->GemProperties)
     {
-        for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; i++)
+        for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; ++i)
         {
             Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
             if( pItem && pItem != skipItem && pItem->GetProto()->Socket[0].Color )
@@ -8122,13 +8125,13 @@ uint32 Player::GetItemCount( uint32 item, bool inBankAlso, Item* skipItem ) cons
 
     if(inBankAlso)
     {
-        for(int i = BANK_SLOT_ITEM_START; i < BANK_SLOT_ITEM_END; i++)
+        for(int i = BANK_SLOT_ITEM_START; i < BANK_SLOT_ITEM_END; ++i)
         {
             Item* pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
             if( pItem && pItem != skipItem && pItem->GetEntry() == item )
                 count += pItem->GetCount();
         }
-        for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; i++)
+        for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; ++i)
         {
             Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i );
             if( pBag )
@@ -8137,7 +8140,7 @@ uint32 Player::GetItemCount( uint32 item, bool inBankAlso, Item* skipItem ) cons
 
         if(skipItem && skipItem->GetProto()->GemProperties)
         {
-            for(int i = BANK_SLOT_ITEM_START; i < BANK_SLOT_ITEM_END; i++)
+            for(int i = BANK_SLOT_ITEM_START; i < BANK_SLOT_ITEM_END; ++i)
             {
                 Item* pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
                 if( pItem && pItem != skipItem && pItem->GetProto()->Socket[0].Color )
@@ -8151,25 +8154,25 @@ uint32 Player::GetItemCount( uint32 item, bool inBankAlso, Item* skipItem ) cons
 
 Item* Player::GetItemByGuid( uint64 guid ) const
 {
-    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; i++)
+    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; ++i)
     {
         Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pItem && pItem->GetGUID() == guid )
             return pItem;
     }
-    for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; i++)
+    for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; ++i)
     {
         Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pItem && pItem->GetGUID() == guid )
             return pItem;
     }
 
-    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         Bag *pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pBag )
         {
-            for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+            for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
             {
                 Item* pItem = pBag->GetItemByPos( j );
                 if( pItem && pItem->GetGUID() == guid )
@@ -8177,12 +8180,12 @@ Item* Player::GetItemByGuid( uint64 guid ) const
             }
         }
     }
-    for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; i++)
+    for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; ++i)
     {
         Bag *pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pBag )
         {
-            for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+            for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
             {
                 Item* pItem = pBag->GetItemByPos( j );
                 if( pItem && pItem->GetGUID() == guid )
@@ -8392,7 +8395,7 @@ bool Player::IsValidPos( uint8 bag, uint8 slot )
 bool Player::HasItemCount( uint32 item, uint32 count, bool inBankAlso ) const
 {
     uint32 tempcount = 0;
-    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; i++)
+    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_ITEM_END; ++i)
     {
         Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pItem && pItem->GetEntry() == item )
@@ -8402,7 +8405,7 @@ bool Player::HasItemCount( uint32 item, uint32 count, bool inBankAlso ) const
                 return true;
         }
     }
-    for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; i++)
+    for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; ++i)
     {
         Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pItem && pItem->GetEntry() == item )
@@ -8412,11 +8415,11 @@ bool Player::HasItemCount( uint32 item, uint32 count, bool inBankAlso ) const
                 return true;
         }
     }
-    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         if(Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
         {
-            for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+            for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
             {
                 Item* pItem = GetItemByPos( i, j );
                 if( pItem && pItem->GetEntry() == item )
@@ -8431,7 +8434,7 @@ bool Player::HasItemCount( uint32 item, uint32 count, bool inBankAlso ) const
 
     if(inBankAlso)
     {
-        for(int i = BANK_SLOT_ITEM_START; i < BANK_SLOT_ITEM_END; i++)
+        for(int i = BANK_SLOT_ITEM_START; i < BANK_SLOT_ITEM_END; ++i)
         {
             Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
             if( pItem && pItem->GetEntry() == item )
@@ -8441,11 +8444,11 @@ bool Player::HasItemCount( uint32 item, uint32 count, bool inBankAlso ) const
                     return true;
             }
         }
-        for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; i++)
+        for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; ++i)
         {
             if(Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
             {
-                for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+                for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
                 {
                     Item* pItem = GetItemByPos( i, j );
                     if( pItem && pItem->GetEntry() == item )
@@ -8690,7 +8693,7 @@ uint8 Player::_CanStoreItem_InBag( uint8 bag, ItemPosCountVec &dest, ItemPrototy
     if( !ItemCanGoIntoBag(pProto,pBagProto) )
         return EQUIP_ERR_ITEM_DOESNT_GO_INTO_BAG;
 
-    for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+    for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
     {
         // skip specific slot already processed in first called _CanStoreItem_InSpecificSlot
         if(j==skip_slot)
@@ -8747,7 +8750,7 @@ uint8 Player::_CanStoreItem_InBag( uint8 bag, ItemPosCountVec &dest, ItemPrototy
 
 uint8 Player::_CanStoreItem_InInventorySlots( uint8 slot_begin, uint8 slot_end, ItemPosCountVec &dest, ItemPrototype const *pProto, uint32& count, bool merge, Item* pSrcItem, uint8 skip_bag, uint8 skip_slot ) const
 {
-    for(uint32 j = slot_begin; j < slot_end; j++)
+    for(uint32 j = slot_begin; j < slot_end; ++j)
     {
         // skip specific slot already processed in first called _CanStoreItem_InSpecificSlot
         if(INVENTORY_SLOT_BAG_0==skip_bag && j==skip_slot)
@@ -9078,7 +9081,7 @@ uint8 Player::_CanStoreItem( uint8 bag, uint8 slot, ItemPosCountVec &dest, uint3
 
         if( pProto->BagFamily )
         {
-            for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+            for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
             {
                 res = _CanStoreItem_InBag(i,dest,pProto,count,true,false,pItem,bag,slot);
                 if(res!=EQUIP_ERR_OK)
@@ -9096,7 +9099,7 @@ uint8 Player::_CanStoreItem( uint8 bag, uint8 slot, ItemPosCountVec &dest, uint3
             }
         }
 
-        for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+        for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
         {
             res = _CanStoreItem_InBag(i,dest,pProto,count,true,true,pItem,bag,slot);
             if(res!=EQUIP_ERR_OK)
@@ -9159,7 +9162,7 @@ uint8 Player::_CanStoreItem( uint8 bag, uint8 slot, ItemPosCountVec &dest, uint3
             }
         }
 
-        for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+        for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
         {
             res = _CanStoreItem_InBag(i,dest,pProto,count,false,false,pItem,bag,slot);
             if(res!=EQUIP_ERR_OK)
@@ -9196,7 +9199,7 @@ uint8 Player::_CanStoreItem( uint8 bag, uint8 slot, ItemPosCountVec &dest, uint3
         return EQUIP_ERR_CANT_CARRY_MORE_OF_THIS;
     }
 
-    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         res = _CanStoreItem_InBag(i,dest,pProto,count,false,true,pItem,bag,slot);
         if(res!=EQUIP_ERR_OK)
@@ -9235,7 +9238,7 @@ uint8 Player::CanStoreItems( Item **pItems,int count) const
     memset(inv_keys,0,sizeof(int)*(KEYRING_SLOT_END-KEYRING_SLOT_START));
     memset(inv_tokens,0,sizeof(int)*(CURRENCYTOKEN_SLOT_END-CURRENCYTOKEN_SLOT_START));
 
-    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; i++)
+    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; ++i)
     {
         pItem2 = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
 
@@ -9245,7 +9248,7 @@ uint8 Player::CanStoreItems( Item **pItems,int count) const
         }
     }
 
-    for(int i = KEYRING_SLOT_START; i < KEYRING_SLOT_END; i++)
+    for(int i = KEYRING_SLOT_START; i < KEYRING_SLOT_END; ++i)
     {
         pItem2 = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
 
@@ -9255,7 +9258,7 @@ uint8 Player::CanStoreItems( Item **pItems,int count) const
         }
     }
 
-    for(int i = CURRENCYTOKEN_SLOT_START; i < CURRENCYTOKEN_SLOT_END; i++)
+    for(int i = CURRENCYTOKEN_SLOT_START; i < CURRENCYTOKEN_SLOT_END; ++i)
     {
         pItem2 = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
 
@@ -9265,11 +9268,11 @@ uint8 Player::CanStoreItems( Item **pItems,int count) const
         }
     }
 
-    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         if(Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
         {
-            for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+            for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
             {
                 pItem2 = GetItemByPos( i, j );
                 if (pItem2 && !pItem2->IsInTrade())
@@ -9353,7 +9356,7 @@ uint8 Player::CanStoreItems( Item **pItems,int count) const
                 pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, t );
                 if( pBag )
                 {
-                    for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+                    for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
                     {
                         pItem2 = GetItemByPos( t, j );
                         if( pItem2 && pItem2->GetEntry() == pItem->GetEntry() && inv_bags[t-INVENTORY_SLOT_BAG_START][j] + pItem->GetCount() <= pProto->GetMaxStackSize())
@@ -9414,7 +9417,7 @@ uint8 Player::CanStoreItems( Item **pItems,int count) const
                     if( pBagProto && (pBagProto->Class != ITEM_CLASS_CONTAINER || pBagProto->SubClass != ITEM_SUBCLASS_CONTAINER) &&
                         ItemCanGoIntoBag(pProto,pBagProto) )
                     {
-                        for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+                        for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
                         {
                             if( inv_bags[t-INVENTORY_SLOT_BAG_START][j] == 0 )
                             {
@@ -9454,7 +9457,7 @@ uint8 Player::CanStoreItems( Item **pItems,int count) const
                 if( pBagProto && (pBagProto->Class != ITEM_CLASS_CONTAINER || pBagProto->SubClass != ITEM_SUBCLASS_CONTAINER))
                     continue;
 
-                for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+                for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
                 {
                     if( inv_bags[t-INVENTORY_SLOT_BAG_START][j] == 0 )
                     {
@@ -9779,7 +9782,7 @@ uint8 Player::CanBankItem( uint8 bag, uint8 slot, ItemPosCountVec &dest, Item *p
         // in special bags
         if( pProto->BagFamily )
         {
-            for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; i++)
+            for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; ++i)
             {
                 res = _CanStoreItem_InBag(i,dest,pProto,count,true,false,pItem,bag,slot);
                 if(res!=EQUIP_ERR_OK)
@@ -9790,7 +9793,7 @@ uint8 Player::CanBankItem( uint8 bag, uint8 slot, ItemPosCountVec &dest, Item *p
             }
         }
 
-        for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; i++)
+        for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; ++i)
         {
             res = _CanStoreItem_InBag(i,dest,pProto,count,true,true,pItem,bag,slot);
             if(res!=EQUIP_ERR_OK)
@@ -9804,7 +9807,7 @@ uint8 Player::CanBankItem( uint8 bag, uint8 slot, ItemPosCountVec &dest, Item *p
     // search free place in special bag
     if( pProto->BagFamily )
     {
-        for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; i++)
+        for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; ++i)
         {
             res = _CanStoreItem_InBag(i,dest,pProto,count,false,false,pItem,bag,slot);
             if(res!=EQUIP_ERR_OK)
@@ -9823,7 +9826,7 @@ uint8 Player::CanBankItem( uint8 bag, uint8 slot, ItemPosCountVec &dest, Item *p
     if(count==0)
         return EQUIP_ERR_OK;
 
-    for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; i++)
+    for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; ++i)
     {
         res = _CanStoreItem_InBag(i,dest,pProto,count,false,true,pItem,bag,slot);
         if(res!=EQUIP_ERR_OK)
@@ -10029,22 +10032,22 @@ Item* Player::_StoreItem( uint16 pos, Item *pItem, uint32 count, bool clone, boo
 
     Item *pItem2 = GetItemByPos( bag, slot );
 
-    if( !pItem2 )
+    if (!pItem2)
     {
-        if(clone)
+        if (clone)
             pItem = pItem->CloneItem(count,this);
         else
             pItem->SetCount(count);
 
-        if(!pItem)
+        if (!pItem)
             return NULL;
 
-        if( pItem->GetProto()->Bonding == BIND_WHEN_PICKED_UP ||
+        if (pItem->GetProto()->Bonding == BIND_WHEN_PICKED_UP ||
             pItem->GetProto()->Bonding == BIND_QUEST_ITEM ||
-            pItem->GetProto()->Bonding == BIND_WHEN_EQUIPED && IsBagPos(pos) )
+            (pItem->GetProto()->Bonding == BIND_WHEN_EQUIPED && IsBagPos(pos)))
             pItem->SetBinding( true );
 
-        if( bag == INVENTORY_SLOT_BAG_0 )
+        if (bag == INVENTORY_SLOT_BAG_0)
         {
             m_items[slot] = pItem;
             SetUInt64Value( (uint16)(PLAYER_FIELD_INV_SLOT_HEAD + (slot * 2) ), pItem->GetGUID() );
@@ -10058,7 +10061,7 @@ Item* Player::_StoreItem( uint16 pos, Item *pItem, uint32 count, bool clone, boo
             if (slot >= CURRENCYTOKEN_SLOT_START && slot < CURRENCYTOKEN_SLOT_END)
                 UpdateKnownCurrencies(pItem->GetEntry(),true);
 
-            if( IsInWorld() && update )
+            if (IsInWorld() && update)
             {
                 pItem->AddToWorld();
                 pItem->SendUpdateToPlayer( this );
@@ -10066,20 +10069,16 @@ Item* Player::_StoreItem( uint16 pos, Item *pItem, uint32 count, bool clone, boo
 
             pItem->SetState(ITEM_CHANGED, this);
         }
-        else
+        else if (Bag *pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, bag ))
         {
-            Bag *pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, bag );
-            if( pBag )
+            pBag->StoreItem( slot, pItem, update );
+            if( IsInWorld() && update )
             {
-                pBag->StoreItem( slot, pItem, update );
-                if( IsInWorld() && update )
-                {
-                    pItem->AddToWorld();
-                    pItem->SendUpdateToPlayer( this );
-                }
-                pItem->SetState(ITEM_CHANGED, this);
-                pBag->SetState(ITEM_CHANGED, this);
+                pItem->AddToWorld();
+                pItem->SendUpdateToPlayer( this );
             }
+            pItem->SetState(ITEM_CHANGED, this);
+            pBag->SetState(ITEM_CHANGED, this);
         }
 
         AddEnchantmentDurations(pItem);
@@ -10089,19 +10088,19 @@ Item* Player::_StoreItem( uint16 pos, Item *pItem, uint32 count, bool clone, boo
     }
     else
     {
-        if( pItem2->GetProto()->Bonding == BIND_WHEN_PICKED_UP ||
+        if (pItem2->GetProto()->Bonding == BIND_WHEN_PICKED_UP ||
             pItem2->GetProto()->Bonding == BIND_QUEST_ITEM ||
-            pItem2->GetProto()->Bonding == BIND_WHEN_EQUIPED && IsBagPos(pos) )
+            (pItem2->GetProto()->Bonding == BIND_WHEN_EQUIPED && IsBagPos(pos)))
             pItem2->SetBinding( true );
 
         pItem2->SetCount( pItem2->GetCount() + count );
-        if( IsInWorld() && update )
+        if (IsInWorld() && update)
             pItem2->SendUpdateToPlayer( this );
 
-        if(!clone)
+        if (!clone)
         {
             // delete item (it not in any slot currently)
-            if( IsInWorld() && update )
+            if (IsInWorld() && update)
             {
                 pItem->RemoveFromWorld();
                 pItem->DestroyForPlayer( this );
@@ -10113,6 +10112,7 @@ Item* Player::_StoreItem( uint16 pos, Item *pItem, uint32 count, bool clone, boo
             pItem->SetOwnerGUID(GetGUID());                 // prevent error at next SetState in case trade/mail/buy from vendor
             pItem->SetState(ITEM_REMOVED, this);
         }
+
         // AddItemDurations(pItem2); - pItem2 already have duration listed for player
         AddEnchantmentDurations(pItem2);
 
@@ -10124,14 +10124,12 @@ Item* Player::_StoreItem( uint16 pos, Item *pItem, uint32 count, bool clone, boo
 
 Item* Player::EquipNewItem( uint16 pos, uint32 item, bool update )
 {
-    Item *pItem = Item::CreateItem( item, 1, this );
-    if( pItem )
+    if (Item *pItem = Item::CreateItem( item, 1, this ))
     {
         ItemAddedQuestCheck( item, 1 );
-        Item * retItem = EquipItem( pos, pItem, update );
-
-        return retItem;
+        return EquipItem( pos, pItem, update );
     }
+
     return NULL;
 }
 
@@ -10436,7 +10434,7 @@ void Player::DestroyItem( uint8 bag, uint8 slot, bool update )
         // start from destroy contained items (only equipped bag can have its)
         if (pItem->IsBag() && pItem->IsEquipped())          // this also prevent infinity loop if empty bag stored in bag==slot
         {
-            for (int i = 0; i < MAX_BAG_SIZE; i++)
+            for (int i = 0; i < MAX_BAG_SIZE; ++i)
                 DestroyItem(slot,i,update);
         }
 
@@ -10506,7 +10504,7 @@ void Player::DestroyItemCount( uint32 item, uint32 count, bool update, bool uneq
     uint32 remcount = 0;
 
     // in inventory
-    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; i++)
+    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; ++i)
     {
         if (Item* pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
         {
@@ -10534,7 +10532,7 @@ void Player::DestroyItemCount( uint32 item, uint32 count, bool update, bool uneq
         }
     }
 
-    for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; i++)
+    for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; ++i)
     {
         if (Item* pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
         {
@@ -10563,11 +10561,11 @@ void Player::DestroyItemCount( uint32 item, uint32 count, bool update, bool uneq
     }
 
     // in inventory bags
-    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         if(Bag *pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
         {
-            for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+            for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
             {
                 if(Item* pItem = pBag->GetItemByPos(j))
                 {
@@ -10598,7 +10596,7 @@ void Player::DestroyItemCount( uint32 item, uint32 count, bool update, bool uneq
     }
 
     // in equipment and bag list
-    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         if (Item* pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
         {
@@ -10634,26 +10632,26 @@ void Player::DestroyZoneLimitedItem( bool update, uint32 new_zone )
     sLog.outDebug( "STORAGE: DestroyZoneLimitedItem in map %u and area %u", GetMapId(), new_zone );
 
     // in inventory
-    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; i++)
+    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; ++i)
         if (Item* pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
             if (pItem->IsLimitedToAnotherMapOrZone(GetMapId(),new_zone))
                 DestroyItem( INVENTORY_SLOT_BAG_0, i, update);
 
-    for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; i++)
+    for(int i = KEYRING_SLOT_START; i < QUESTBAG_SLOT_END; ++i)
         if (Item* pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
             if (pItem->IsLimitedToAnotherMapOrZone(GetMapId(),new_zone))
                 DestroyItem( INVENTORY_SLOT_BAG_0, i, update);
 
     // in inventory bags
-    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
         if (Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
-            for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+            for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
                 if (Item* pItem = pBag->GetItemByPos(j))
                     if (pItem->IsLimitedToAnotherMapOrZone(GetMapId(),new_zone))
                         DestroyItem( i, j, update);
 
     // in equipment and bag list
-    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_BAG_END; ++i)
         if (Item* pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
             if (pItem->IsLimitedToAnotherMapOrZone(GetMapId(),new_zone))
                 DestroyItem( INVENTORY_SLOT_BAG_0, i, update);
@@ -10666,21 +10664,21 @@ void Player::DestroyConjuredItems( bool update )
     sLog.outDebug( "STORAGE: DestroyConjuredItems" );
 
     // in inventory
-    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; i++)
+    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; ++i)
         if (Item* pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
             if (pItem->IsConjuredConsumable())
                 DestroyItem( INVENTORY_SLOT_BAG_0, i, update);
 
     // in inventory bags
-    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
         if (Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
-            for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+            for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
                 if (Item* pItem = pBag->GetItemByPos(j))
                     if (pItem->IsConjuredConsumable())
                         DestroyItem( i, j, update);
 
     // in equipment and bag list
-    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = EQUIPMENT_SLOT_START; i < INVENTORY_SLOT_BAG_END; ++i)
         if (Item* pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
             if (pItem->IsConjuredConsumable())
                 DestroyItem( INVENTORY_SLOT_BAG_0, i, update);
@@ -11262,7 +11260,7 @@ void Player::ClearTrade()
 {
     tradeGold = 0;
     acceptTrade = false;
-    for(int i = 0; i < TRADE_SLOT_COUNT; i++)
+    for(int i = 0; i < TRADE_SLOT_COUNT; ++i)
         tradeItems[i] = NULL_SLOT;
 }
 
@@ -11295,7 +11293,7 @@ void Player::UpdateItemDuration(uint32 time, bool realtimeonly)
 
     sLog.outDebug("Player::UpdateItemDuration(%u,%u)", time,realtimeonly);
 
-    for(ItemDurationList::iterator itr = m_itemDuration.begin();itr != m_itemDuration.end(); )
+    for(ItemDurationList::const_iterator itr = m_itemDuration.begin();itr != m_itemDuration.end(); )
     {
         Item* item = *itr;
         ++itr;                                              // current element can be erased in UpdateDuration
@@ -11382,7 +11380,7 @@ void Player::RemoveAllEnchantments(EnchantmentSlot slot)
     // remove enchants from inventory items
     // NOTE: no need to remove these from stats, since these aren't equipped
     // in inventory
-    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; i++)
+    for(int i = INVENTORY_SLOT_ITEM_START; i < INVENTORY_SLOT_ITEM_END; ++i)
     {
         Item* pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pItem && pItem->GetEnchantmentId(slot) )
@@ -11390,12 +11388,12 @@ void Player::RemoveAllEnchantments(EnchantmentSlot slot)
     }
 
     // in inventory bags
-    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; i++)
+    for(int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
     {
         Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i );
         if( pBag )
         {
-            for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+            for(uint32 j = 0; j < pBag->GetBagSize(); ++j)
             {
                 Item* pItem = pBag->GetItemByPos(j);
                 if( pItem && pItem->GetEnchantmentId(slot) )
@@ -11458,301 +11456,304 @@ void Player::ApplyEnchantment(Item *item,EnchantmentSlot slot,bool apply, bool a
     if(!ignore_condition && pEnchant->EnchantmentCondition && !((Player*)this)->EnchantmentFitsRequirements(pEnchant->EnchantmentCondition, -1))
         return;
 
-    for (int s=0; s<3; s++)
+    if (!item->IsBroken())
     {
-        uint32 enchant_display_type = pEnchant->type[s];
-        uint32 enchant_amount = pEnchant->amount[s];
-        uint32 enchant_spell_id = pEnchant->spellid[s];
-
-        switch(enchant_display_type)
+        for (int s=0; s<3; s++)
         {
-            case ITEM_ENCHANTMENT_TYPE_NONE:
-                break;
-            case ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL:
-                // processed in Player::CastItemCombatSpell
-                break;
-            case ITEM_ENCHANTMENT_TYPE_DAMAGE:
-                if (item->GetSlot() == EQUIPMENT_SLOT_MAINHAND)
-                    HandleStatModifier(UNIT_MOD_DAMAGE_MAINHAND, TOTAL_VALUE, float(enchant_amount), apply);
-                else if (item->GetSlot() == EQUIPMENT_SLOT_OFFHAND)
-                    HandleStatModifier(UNIT_MOD_DAMAGE_OFFHAND, TOTAL_VALUE, float(enchant_amount), apply);
-                else if (item->GetSlot() == EQUIPMENT_SLOT_RANGED)
-                    HandleStatModifier(UNIT_MOD_DAMAGE_RANGED, TOTAL_VALUE, float(enchant_amount), apply);
-                break;
-            case ITEM_ENCHANTMENT_TYPE_EQUIP_SPELL:
-                if(enchant_spell_id)
-                {
-                    if(apply)
+            uint32 enchant_display_type = pEnchant->type[s];
+            uint32 enchant_amount = pEnchant->amount[s];
+            uint32 enchant_spell_id = pEnchant->spellid[s];
+
+            switch(enchant_display_type)
+            {
+                case ITEM_ENCHANTMENT_TYPE_NONE:
+                    break;
+                case ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL:
+                    // processed in Player::CastItemCombatSpell
+                    break;
+                case ITEM_ENCHANTMENT_TYPE_DAMAGE:
+                    if (item->GetSlot() == EQUIPMENT_SLOT_MAINHAND)
+                        HandleStatModifier(UNIT_MOD_DAMAGE_MAINHAND, TOTAL_VALUE, float(enchant_amount), apply);
+                    else if (item->GetSlot() == EQUIPMENT_SLOT_OFFHAND)
+                        HandleStatModifier(UNIT_MOD_DAMAGE_OFFHAND, TOTAL_VALUE, float(enchant_amount), apply);
+                    else if (item->GetSlot() == EQUIPMENT_SLOT_RANGED)
+                        HandleStatModifier(UNIT_MOD_DAMAGE_RANGED, TOTAL_VALUE, float(enchant_amount), apply);
+                    break;
+                case ITEM_ENCHANTMENT_TYPE_EQUIP_SPELL:
+                    if(enchant_spell_id)
                     {
-                        int32 basepoints = 0;
-                        // Random Property Exist - try found basepoints for spell (basepoints depends from item suffix factor)
-                        if (item->GetItemRandomPropertyId())
+                        if(apply)
                         {
-                            ItemRandomSuffixEntry const *item_rand = sItemRandomSuffixStore.LookupEntry(abs(item->GetItemRandomPropertyId()));
-                            if (item_rand)
+                            int32 basepoints = 0;
+                            // Random Property Exist - try found basepoints for spell (basepoints depends from item suffix factor)
+                            if (item->GetItemRandomPropertyId())
                             {
-                                // Search enchant_amount
-                                for (int k=0; k<3; k++)
+                                ItemRandomSuffixEntry const *item_rand = sItemRandomSuffixStore.LookupEntry(abs(item->GetItemRandomPropertyId()));
+                                if (item_rand)
                                 {
-                                    if(item_rand->enchant_id[k] == enchant_id)
+                                    // Search enchant_amount
+                                    for (int k=0; k<3; k++)
                                     {
-                                        basepoints = int32((item_rand->prefix[k]*item->GetItemSuffixFactor()) / 10000 );
-                                        break;
+                                        if(item_rand->enchant_id[k] == enchant_id)
+                                        {
+                                            basepoints = int32((item_rand->prefix[k]*item->GetItemSuffixFactor()) / 10000 );
+                                            break;
+                                        }
                                     }
                                 }
                             }
+                            // Cast custom spell vs all equal basepoints getted from enchant_amount
+                            if (basepoints)
+                                CastCustomSpell(this,enchant_spell_id,&basepoints,&basepoints,&basepoints,true,item);
+                            else
+                                CastSpell(this,enchant_spell_id,true,item);
                         }
-                        // Cast custom spell vs all equal basepoints getted from enchant_amount
-                        if (basepoints)
-                            CastCustomSpell(this,enchant_spell_id,&basepoints,&basepoints,&basepoints,true,item);
                         else
-                            CastSpell(this,enchant_spell_id,true,item);
+                            RemoveAurasDueToItemSpell(item,enchant_spell_id);
                     }
-                    else
-                        RemoveAurasDueToItemSpell(item,enchant_spell_id);
-                }
-                break;
-            case ITEM_ENCHANTMENT_TYPE_RESISTANCE:
-                if (!enchant_amount)
-                {
-                    ItemRandomSuffixEntry const *item_rand = sItemRandomSuffixStore.LookupEntry(abs(item->GetItemRandomPropertyId()));
-                    if(item_rand)
+                    break;
+                case ITEM_ENCHANTMENT_TYPE_RESISTANCE:
+                    if (!enchant_amount)
                     {
-                        for (int k=0; k<3; k++)
+                        ItemRandomSuffixEntry const *item_rand = sItemRandomSuffixStore.LookupEntry(abs(item->GetItemRandomPropertyId()));
+                        if(item_rand)
                         {
-                            if(item_rand->enchant_id[k] == enchant_id)
+                            for (int k=0; k<3; k++)
                             {
-                                enchant_amount = uint32((item_rand->prefix[k]*item->GetItemSuffixFactor()) / 10000 );
-                                break;
+                                if(item_rand->enchant_id[k] == enchant_id)
+                                {
+                                    enchant_amount = uint32((item_rand->prefix[k]*item->GetItemSuffixFactor()) / 10000 );
+                                    break;
+                                }
                             }
                         }
                     }
-                }
 
-                HandleStatModifier(UnitMods(UNIT_MOD_RESISTANCE_START + enchant_spell_id), TOTAL_VALUE, float(enchant_amount), apply);
-                break;
-            case ITEM_ENCHANTMENT_TYPE_STAT:
-            {
-                if (!enchant_amount)
+                    HandleStatModifier(UnitMods(UNIT_MOD_RESISTANCE_START + enchant_spell_id), TOTAL_VALUE, float(enchant_amount), apply);
+                    break;
+                case ITEM_ENCHANTMENT_TYPE_STAT:
                 {
-                    ItemRandomSuffixEntry const *item_rand_suffix = sItemRandomSuffixStore.LookupEntry(abs(item->GetItemRandomPropertyId()));
-                    if(item_rand_suffix)
+                    if (!enchant_amount)
                     {
-                        for (int k=0; k<3; k++)
+                        ItemRandomSuffixEntry const *item_rand_suffix = sItemRandomSuffixStore.LookupEntry(abs(item->GetItemRandomPropertyId()));
+                        if(item_rand_suffix)
                         {
-                            if(item_rand_suffix->enchant_id[k] == enchant_id)
+                            for (int k=0; k<3; k++)
                             {
-                                enchant_amount = uint32((item_rand_suffix->prefix[k]*item->GetItemSuffixFactor()) / 10000 );
-                                break;
+                                if(item_rand_suffix->enchant_id[k] == enchant_id)
+                                {
+                                    enchant_amount = uint32((item_rand_suffix->prefix[k]*item->GetItemSuffixFactor()) / 10000 );
+                                    break;
+                                }
                             }
                         }
                     }
-                }
 
-                sLog.outDebug("Adding %u to stat nb %u",enchant_amount,enchant_spell_id);
-                switch (enchant_spell_id)
-                {
-                    case ITEM_MOD_AGILITY:
-                        sLog.outDebug("+ %u AGILITY",enchant_amount);
-                        HandleStatModifier(UNIT_MOD_STAT_AGILITY, TOTAL_VALUE, float(enchant_amount), apply);
-                        ApplyStatBuffMod(STAT_AGILITY, enchant_amount, apply);
-                        break;
-                    case ITEM_MOD_STRENGTH:
-                        sLog.outDebug("+ %u STRENGTH",enchant_amount);
-                        HandleStatModifier(UNIT_MOD_STAT_STRENGTH, TOTAL_VALUE, float(enchant_amount), apply);
-                        ApplyStatBuffMod(STAT_STRENGTH, enchant_amount, apply);
-                        break;
-                    case ITEM_MOD_INTELLECT:
-                        sLog.outDebug("+ %u INTELLECT",enchant_amount);
-                        HandleStatModifier(UNIT_MOD_STAT_INTELLECT, TOTAL_VALUE, float(enchant_amount), apply);
-                        ApplyStatBuffMod(STAT_INTELLECT, enchant_amount, apply);
-                        break;
-                    case ITEM_MOD_SPIRIT:
-                        sLog.outDebug("+ %u SPIRIT",enchant_amount);
-                        HandleStatModifier(UNIT_MOD_STAT_SPIRIT, TOTAL_VALUE, float(enchant_amount), apply);
-                        ApplyStatBuffMod(STAT_SPIRIT, enchant_amount, apply);
-                        break;
-                    case ITEM_MOD_STAMINA:
-                        sLog.outDebug("+ %u STAMINA",enchant_amount);
-                        HandleStatModifier(UNIT_MOD_STAT_STAMINA, TOTAL_VALUE, float(enchant_amount), apply);
-                        ApplyStatBuffMod(STAT_STAMINA, enchant_amount, apply);
-                        break;
-                    case ITEM_MOD_DEFENSE_SKILL_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_DEFENSE_SKILL, enchant_amount, apply);
-                        sLog.outDebug("+ %u DEFENCE", enchant_amount);
-                        break;
-                    case  ITEM_MOD_DODGE_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_DODGE, enchant_amount, apply);
-                        sLog.outDebug("+ %u DODGE", enchant_amount);
-                        break;
-                    case ITEM_MOD_PARRY_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_PARRY, enchant_amount, apply);
-                        sLog.outDebug("+ %u PARRY", enchant_amount);
-                        break;
-                    case ITEM_MOD_BLOCK_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_BLOCK, enchant_amount, apply);
-                        sLog.outDebug("+ %u SHIELD_BLOCK", enchant_amount);
-                        break;
-                    case ITEM_MOD_HIT_MELEE_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_HIT_MELEE, enchant_amount, apply);
-                        sLog.outDebug("+ %u MELEE_HIT", enchant_amount);
-                        break;
-                    case ITEM_MOD_HIT_RANGED_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_HIT_RANGED, enchant_amount, apply);
-                        sLog.outDebug("+ %u RANGED_HIT", enchant_amount);
-                        break;
-                    case ITEM_MOD_HIT_SPELL_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_HIT_SPELL, enchant_amount, apply);
-                        sLog.outDebug("+ %u SPELL_HIT", enchant_amount);
-                        break;
-                    case ITEM_MOD_CRIT_MELEE_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_CRIT_MELEE, enchant_amount, apply);
-                        sLog.outDebug("+ %u MELEE_CRIT", enchant_amount);
-                        break;
-                    case ITEM_MOD_CRIT_RANGED_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_CRIT_RANGED, enchant_amount, apply);
-                        sLog.outDebug("+ %u RANGED_CRIT", enchant_amount);
-                        break;
-                    case ITEM_MOD_CRIT_SPELL_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_CRIT_SPELL, enchant_amount, apply);
-                        sLog.outDebug("+ %u SPELL_CRIT", enchant_amount);
-                        break;
-//                    Values from ITEM_STAT_MELEE_HA_RATING to ITEM_MOD_HASTE_RANGED_RATING are never used
-//                    in Enchantments
-//                    case ITEM_MOD_HIT_TAKEN_MELEE_RATING:
-//                        ((Player*)this)->ApplyRatingMod(CR_HIT_TAKEN_MELEE, enchant_amount, apply);
-//                        break;
-//                    case ITEM_MOD_HIT_TAKEN_RANGED_RATING:
-//                        ((Player*)this)->ApplyRatingMod(CR_HIT_TAKEN_RANGED, enchant_amount, apply);
-//                        break;
-//                    case ITEM_MOD_HIT_TAKEN_SPELL_RATING:
-//                        ((Player*)this)->ApplyRatingMod(CR_HIT_TAKEN_SPELL, enchant_amount, apply);
-//                        break;
-//                    case ITEM_MOD_CRIT_TAKEN_MELEE_RATING:
-//                        ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_MELEE, enchant_amount, apply);
-//                        break;
-//                    case ITEM_MOD_CRIT_TAKEN_RANGED_RATING:
-//                        ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_RANGED, enchant_amount, apply);
-//                        break;
-//                    case ITEM_MOD_CRIT_TAKEN_SPELL_RATING:
-//                        ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_SPELL, enchant_amount, apply);
-//                        break;
-//                    case ITEM_MOD_HASTE_MELEE_RATING:
-//                        ((Player*)this)->ApplyRatingMod(CR_HASTE_MELEE, enchant_amount, apply);
-//                        break;
-//                    case ITEM_MOD_HASTE_RANGED_RATING:
-//                        ((Player*)this)->ApplyRatingMod(CR_HASTE_RANGED, enchant_amount, apply);
-//                        break;
-                    case ITEM_MOD_HASTE_SPELL_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_HASTE_SPELL, enchant_amount, apply);
-                        break;
-                    case ITEM_MOD_HIT_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_HIT_MELEE, enchant_amount, apply);
-                        ((Player*)this)->ApplyRatingMod(CR_HIT_RANGED, enchant_amount, apply);
-                        ((Player*)this)->ApplyRatingMod(CR_HIT_SPELL, enchant_amount, apply);
-                        sLog.outDebug("+ %u HIT", enchant_amount);
-                        break;
-                    case ITEM_MOD_CRIT_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_CRIT_MELEE, enchant_amount, apply);
-                        ((Player*)this)->ApplyRatingMod(CR_CRIT_RANGED, enchant_amount, apply);
-                        ((Player*)this)->ApplyRatingMod(CR_CRIT_SPELL, enchant_amount, apply);
-                        sLog.outDebug("+ %u CRITICAL", enchant_amount);
-                        break;
-//                    Values ITEM_MOD_HIT_TAKEN_RATING and ITEM_MOD_CRIT_TAKEN_RATING are never used in Enchantment
-//                    case ITEM_MOD_HIT_TAKEN_RATING:
-//                          ((Player*)this)->ApplyRatingMod(CR_HIT_TAKEN_MELEE, enchant_amount, apply);
-//                          ((Player*)this)->ApplyRatingMod(CR_HIT_TAKEN_RANGED, enchant_amount, apply);
-//                          ((Player*)this)->ApplyRatingMod(CR_HIT_TAKEN_SPELL, enchant_amount, apply);
-//                        break;
-//                    case ITEM_MOD_CRIT_TAKEN_RATING:
-//                          ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_MELEE, enchant_amount, apply);
-//                          ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_RANGED, enchant_amount, apply);
-//                          ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_SPELL, enchant_amount, apply);
-//                        break;
-                    case ITEM_MOD_RESILIENCE_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_MELEE, enchant_amount, apply);
-                        ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_RANGED, enchant_amount, apply);
-                        ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_SPELL, enchant_amount, apply);
-                        sLog.outDebug("+ %u RESILIENCE", enchant_amount);
-                        break;
-                    case ITEM_MOD_HASTE_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_HASTE_MELEE, enchant_amount, apply);
-                        ((Player*)this)->ApplyRatingMod(CR_HASTE_RANGED, enchant_amount, apply);
-                        ((Player*)this)->ApplyRatingMod(CR_HASTE_SPELL, enchant_amount, apply);
-                        sLog.outDebug("+ %u HASTE", enchant_amount);
-                        break;
-                    case ITEM_MOD_EXPERTISE_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_EXPERTISE, enchant_amount, apply);
-                        sLog.outDebug("+ %u EXPERTISE", enchant_amount);
-                        break;
-                    case ITEM_MOD_ATTACK_POWER:
-                        HandleStatModifier(UNIT_MOD_ATTACK_POWER, TOTAL_VALUE, float(enchant_amount), apply);
-                        HandleStatModifier(UNIT_MOD_ATTACK_POWER_RANGED, TOTAL_VALUE, float(enchant_amount), apply);
-                        sLog.outDebug("+ %u ATTACK_POWER", enchant_amount);
-                        break;
-                    case ITEM_MOD_RANGED_ATTACK_POWER:
-                        HandleStatModifier(UNIT_MOD_ATTACK_POWER_RANGED, TOTAL_VALUE, float(enchant_amount), apply);
-                        sLog.outDebug("+ %u RANGED_ATTACK_POWER", enchant_amount);
-                        break;
-                    case ITEM_MOD_FERAL_ATTACK_POWER:
-                        ((Player*)this)->ApplyFeralAPBonus(enchant_amount, apply);
-                        sLog.outDebug("+ %u FERAL_ATTACK_POWER", enchant_amount);
-                        break;
-                    case ITEM_MOD_SPELL_HEALING_DONE:
-                        ((Player*)this)->ApplySpellHealingBonus(enchant_amount, apply);
-                         sLog.outDebug("+ %u SPELL_HEALING_DONE", enchant_amount);
-                        break;
-                    case ITEM_MOD_SPELL_DAMAGE_DONE:
-                        ((Player*)this)->ApplySpellDamageBonus(enchant_amount, apply);
-                        sLog.outDebug("+ %u SPELL_DAMAGE_DONE", enchant_amount);
-                        break;
-                    case ITEM_MOD_MANA_REGENERATION:
-                        ((Player*)this)->ApplyManaRegenBonus(enchant_amount, apply);
-                        sLog.outDebug("+ %u MANA_REGENERATION", enchant_amount);
-                        break;
-                    case ITEM_MOD_ARMOR_PENETRATION_RATING:
-                        ((Player*)this)->ApplyRatingMod(CR_ARMOR_PENETRATION, enchant_amount, apply);
-                        sLog.outDebug("+ %u ARMOR PENETRATION", enchant_amount);
-                        break;
-                    case ITEM_MOD_SPELL_POWER:
-                        ((Player*)this)->ApplySpellHealingBonus(enchant_amount, apply);
-                        ((Player*)this)->ApplySpellDamageBonus(enchant_amount, apply);
-                        sLog.outDebug("+ %u SPELL_POWER", enchant_amount);
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            }
-            case ITEM_ENCHANTMENT_TYPE_TOTEM:               // Shaman Rockbiter Weapon
-            {
-                if(getClass() == CLASS_SHAMAN)
-                {
-                    float addValue = 0.0f;
-                    if(item->GetSlot() == EQUIPMENT_SLOT_MAINHAND)
+                    sLog.outDebug("Adding %u to stat nb %u",enchant_amount,enchant_spell_id);
+                    switch (enchant_spell_id)
                     {
-                        addValue = float(enchant_amount * item->GetProto()->Delay/1000.0f);
-                        HandleStatModifier(UNIT_MOD_DAMAGE_MAINHAND, TOTAL_VALUE, addValue, apply);
+                        case ITEM_MOD_AGILITY:
+                            sLog.outDebug("+ %u AGILITY",enchant_amount);
+                            HandleStatModifier(UNIT_MOD_STAT_AGILITY, TOTAL_VALUE, float(enchant_amount), apply);
+                            ApplyStatBuffMod(STAT_AGILITY, enchant_amount, apply);
+                            break;
+                        case ITEM_MOD_STRENGTH:
+                            sLog.outDebug("+ %u STRENGTH",enchant_amount);
+                            HandleStatModifier(UNIT_MOD_STAT_STRENGTH, TOTAL_VALUE, float(enchant_amount), apply);
+                            ApplyStatBuffMod(STAT_STRENGTH, enchant_amount, apply);
+                            break;
+                        case ITEM_MOD_INTELLECT:
+                            sLog.outDebug("+ %u INTELLECT",enchant_amount);
+                            HandleStatModifier(UNIT_MOD_STAT_INTELLECT, TOTAL_VALUE, float(enchant_amount), apply);
+                            ApplyStatBuffMod(STAT_INTELLECT, enchant_amount, apply);
+                            break;
+                        case ITEM_MOD_SPIRIT:
+                            sLog.outDebug("+ %u SPIRIT",enchant_amount);
+                            HandleStatModifier(UNIT_MOD_STAT_SPIRIT, TOTAL_VALUE, float(enchant_amount), apply);
+                            ApplyStatBuffMod(STAT_SPIRIT, enchant_amount, apply);
+                            break;
+                        case ITEM_MOD_STAMINA:
+                            sLog.outDebug("+ %u STAMINA",enchant_amount);
+                            HandleStatModifier(UNIT_MOD_STAT_STAMINA, TOTAL_VALUE, float(enchant_amount), apply);
+                            ApplyStatBuffMod(STAT_STAMINA, enchant_amount, apply);
+                            break;
+                        case ITEM_MOD_DEFENSE_SKILL_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_DEFENSE_SKILL, enchant_amount, apply);
+                            sLog.outDebug("+ %u DEFENCE", enchant_amount);
+                            break;
+                        case  ITEM_MOD_DODGE_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_DODGE, enchant_amount, apply);
+                            sLog.outDebug("+ %u DODGE", enchant_amount);
+                            break;
+                        case ITEM_MOD_PARRY_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_PARRY, enchant_amount, apply);
+                            sLog.outDebug("+ %u PARRY", enchant_amount);
+                            break;
+                        case ITEM_MOD_BLOCK_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_BLOCK, enchant_amount, apply);
+                            sLog.outDebug("+ %u SHIELD_BLOCK", enchant_amount);
+                            break;
+                        case ITEM_MOD_HIT_MELEE_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_HIT_MELEE, enchant_amount, apply);
+                            sLog.outDebug("+ %u MELEE_HIT", enchant_amount);
+                            break;
+                        case ITEM_MOD_HIT_RANGED_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_HIT_RANGED, enchant_amount, apply);
+                            sLog.outDebug("+ %u RANGED_HIT", enchant_amount);
+                            break;
+                        case ITEM_MOD_HIT_SPELL_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_HIT_SPELL, enchant_amount, apply);
+                            sLog.outDebug("+ %u SPELL_HIT", enchant_amount);
+                            break;
+                        case ITEM_MOD_CRIT_MELEE_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_CRIT_MELEE, enchant_amount, apply);
+                            sLog.outDebug("+ %u MELEE_CRIT", enchant_amount);
+                            break;
+                        case ITEM_MOD_CRIT_RANGED_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_CRIT_RANGED, enchant_amount, apply);
+                            sLog.outDebug("+ %u RANGED_CRIT", enchant_amount);
+                            break;
+                        case ITEM_MOD_CRIT_SPELL_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_CRIT_SPELL, enchant_amount, apply);
+                            sLog.outDebug("+ %u SPELL_CRIT", enchant_amount);
+                            break;
+//                        Values from ITEM_STAT_MELEE_HA_RATING to ITEM_MOD_HASTE_RANGED_RATING are never used
+//                        in Enchantments
+//                        case ITEM_MOD_HIT_TAKEN_MELEE_RATING:
+//                            ((Player*)this)->ApplyRatingMod(CR_HIT_TAKEN_MELEE, enchant_amount, apply);
+//                            break;
+//                        case ITEM_MOD_HIT_TAKEN_RANGED_RATING:
+//                            ((Player*)this)->ApplyRatingMod(CR_HIT_TAKEN_RANGED, enchant_amount, apply);
+//                            break;
+//                        case ITEM_MOD_HIT_TAKEN_SPELL_RATING:
+//                            ((Player*)this)->ApplyRatingMod(CR_HIT_TAKEN_SPELL, enchant_amount, apply);
+//                            break;
+//                        case ITEM_MOD_CRIT_TAKEN_MELEE_RATING:
+//                            ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_MELEE, enchant_amount, apply);
+//                            break;
+//                        case ITEM_MOD_CRIT_TAKEN_RANGED_RATING:
+//                            ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_RANGED, enchant_amount, apply);
+//                            break;
+//                        case ITEM_MOD_CRIT_TAKEN_SPELL_RATING:
+//                            ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_SPELL, enchant_amount, apply);
+//                            break;
+//                        case ITEM_MOD_HASTE_MELEE_RATING:
+//                            ((Player*)this)->ApplyRatingMod(CR_HASTE_MELEE, enchant_amount, apply);
+//                            break;
+//                        case ITEM_MOD_HASTE_RANGED_RATING:
+//                            ((Player*)this)->ApplyRatingMod(CR_HASTE_RANGED, enchant_amount, apply);
+//                            break;
+                        case ITEM_MOD_HASTE_SPELL_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_HASTE_SPELL, enchant_amount, apply);
+                            break;
+                        case ITEM_MOD_HIT_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_HIT_MELEE, enchant_amount, apply);
+                            ((Player*)this)->ApplyRatingMod(CR_HIT_RANGED, enchant_amount, apply);
+                            ((Player*)this)->ApplyRatingMod(CR_HIT_SPELL, enchant_amount, apply);
+                            sLog.outDebug("+ %u HIT", enchant_amount);
+                            break;
+                        case ITEM_MOD_CRIT_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_CRIT_MELEE, enchant_amount, apply);
+                            ((Player*)this)->ApplyRatingMod(CR_CRIT_RANGED, enchant_amount, apply);
+                            ((Player*)this)->ApplyRatingMod(CR_CRIT_SPELL, enchant_amount, apply);
+                            sLog.outDebug("+ %u CRITICAL", enchant_amount);
+                            break;
+//                        Values ITEM_MOD_HIT_TAKEN_RATING and ITEM_MOD_CRIT_TAKEN_RATING are never used in Enchantment
+//                        case ITEM_MOD_HIT_TAKEN_RATING:
+//                            ((Player*)this)->ApplyRatingMod(CR_HIT_TAKEN_MELEE, enchant_amount, apply);
+//                            ((Player*)this)->ApplyRatingMod(CR_HIT_TAKEN_RANGED, enchant_amount, apply);
+//                            ((Player*)this)->ApplyRatingMod(CR_HIT_TAKEN_SPELL, enchant_amount, apply);
+//                            break;
+//                        case ITEM_MOD_CRIT_TAKEN_RATING:
+//                            ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_MELEE, enchant_amount, apply);
+//                            ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_RANGED, enchant_amount, apply);
+//                            ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_SPELL, enchant_amount, apply);
+//                            break;
+                        case ITEM_MOD_RESILIENCE_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_MELEE, enchant_amount, apply);
+                            ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_RANGED, enchant_amount, apply);
+                            ((Player*)this)->ApplyRatingMod(CR_CRIT_TAKEN_SPELL, enchant_amount, apply);
+                            sLog.outDebug("+ %u RESILIENCE", enchant_amount);
+                            break;
+                        case ITEM_MOD_HASTE_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_HASTE_MELEE, enchant_amount, apply);
+                            ((Player*)this)->ApplyRatingMod(CR_HASTE_RANGED, enchant_amount, apply);
+                            ((Player*)this)->ApplyRatingMod(CR_HASTE_SPELL, enchant_amount, apply);
+                            sLog.outDebug("+ %u HASTE", enchant_amount);
+                            break;
+                        case ITEM_MOD_EXPERTISE_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_EXPERTISE, enchant_amount, apply);
+                            sLog.outDebug("+ %u EXPERTISE", enchant_amount);
+                            break;
+                        case ITEM_MOD_ATTACK_POWER:
+                            HandleStatModifier(UNIT_MOD_ATTACK_POWER, TOTAL_VALUE, float(enchant_amount), apply);
+                            HandleStatModifier(UNIT_MOD_ATTACK_POWER_RANGED, TOTAL_VALUE, float(enchant_amount), apply);
+                            sLog.outDebug("+ %u ATTACK_POWER", enchant_amount);
+                            break;
+                        case ITEM_MOD_RANGED_ATTACK_POWER:
+                            HandleStatModifier(UNIT_MOD_ATTACK_POWER_RANGED, TOTAL_VALUE, float(enchant_amount), apply);
+                            sLog.outDebug("+ %u RANGED_ATTACK_POWER", enchant_amount);
+                            break;
+                        case ITEM_MOD_FERAL_ATTACK_POWER:
+                            ((Player*)this)->ApplyFeralAPBonus(enchant_amount, apply);
+                            sLog.outDebug("+ %u FERAL_ATTACK_POWER", enchant_amount);
+                            break;
+                        case ITEM_MOD_SPELL_HEALING_DONE:
+                            ((Player*)this)->ApplySpellHealingBonus(enchant_amount, apply);
+                            sLog.outDebug("+ %u SPELL_HEALING_DONE", enchant_amount);
+                            break;
+                        case ITEM_MOD_SPELL_DAMAGE_DONE:
+                            ((Player*)this)->ApplySpellDamageBonus(enchant_amount, apply);
+                            sLog.outDebug("+ %u SPELL_DAMAGE_DONE", enchant_amount);
+                            break;
+                        case ITEM_MOD_MANA_REGENERATION:
+                            ((Player*)this)->ApplyManaRegenBonus(enchant_amount, apply);
+                            sLog.outDebug("+ %u MANA_REGENERATION", enchant_amount);
+                            break;
+                        case ITEM_MOD_ARMOR_PENETRATION_RATING:
+                            ((Player*)this)->ApplyRatingMod(CR_ARMOR_PENETRATION, enchant_amount, apply);
+                            sLog.outDebug("+ %u ARMOR PENETRATION", enchant_amount);
+                            break;
+                        case ITEM_MOD_SPELL_POWER:
+                            ((Player*)this)->ApplySpellHealingBonus(enchant_amount, apply);
+                            ((Player*)this)->ApplySpellDamageBonus(enchant_amount, apply);
+                            sLog.outDebug("+ %u SPELL_POWER", enchant_amount);
+                            break;
+                        default:
+                            break;
                     }
-                    else if(item->GetSlot() == EQUIPMENT_SLOT_OFFHAND )
-                    {
-                        addValue = float(enchant_amount * item->GetProto()->Delay/1000.0f);
-                        HandleStatModifier(UNIT_MOD_DAMAGE_OFFHAND, TOTAL_VALUE, addValue, apply);
-                    }
+                    break;
                 }
-                break;
-            }
-            case ITEM_ENCHANTMENT_TYPE_USE_SPELL:
-                // processed in Player::CastItemUseSpell
-                break;
-            case ITEM_ENCHANTMENT_TYPE_PRISMATIC_SOCKET:
-                // nothing do..
-                break;
-            default:
-                sLog.outError("Unknown item enchantment (id = %d) display type: %d", enchant_id, enchant_display_type);
-                break;
-        }                                                   /*switch(enchant_display_type)*/
-    }                                                       /*for*/
+                case ITEM_ENCHANTMENT_TYPE_TOTEM:           // Shaman Rockbiter Weapon
+                {
+                    if(getClass() == CLASS_SHAMAN)
+                    {
+                        float addValue = 0.0f;
+                        if(item->GetSlot() == EQUIPMENT_SLOT_MAINHAND)
+                        {
+                            addValue = float(enchant_amount * item->GetProto()->Delay/1000.0f);
+                            HandleStatModifier(UNIT_MOD_DAMAGE_MAINHAND, TOTAL_VALUE, addValue, apply);
+                        }
+                        else if(item->GetSlot() == EQUIPMENT_SLOT_OFFHAND )
+                        {
+                            addValue = float(enchant_amount * item->GetProto()->Delay/1000.0f);
+                            HandleStatModifier(UNIT_MOD_DAMAGE_OFFHAND, TOTAL_VALUE, addValue, apply);
+                        }
+                    }
+                    break;
+                }
+                case ITEM_ENCHANTMENT_TYPE_USE_SPELL:
+                    // processed in Player::CastItemUseSpell
+                    break;
+                case ITEM_ENCHANTMENT_TYPE_PRISMATIC_SOCKET:
+                    // nothing do..
+                    break;
+                default:
+                    sLog.outError("Unknown item enchantment (id = %d) display type: %d", enchant_id, enchant_display_type);
+                    break;
+            }                                               /*switch(enchant_display_type)*/
+        }                                                   /*for*/
+    }
 
     // visualize enchantment at player and equipped items
     if(slot < MAX_INSPECTED_ENCHANTMENT_SLOT)
@@ -11780,7 +11781,7 @@ void Player::ApplyEnchantment(Item *item,EnchantmentSlot slot,bool apply, bool a
 
 void Player::SendEnchantmentDurations()
 {
-    for(EnchantDurationList::iterator itr = m_enchantDuration.begin();itr != m_enchantDuration.end();++itr)
+    for(EnchantDurationList::const_iterator itr = m_enchantDuration.begin();itr != m_enchantDuration.end();++itr)
     {
         GetSession()->SendItemEnchantTimeUpdate(GetGUID(), itr->item->GetGUID(),itr->slot,uint32(itr->leftduration)/1000);
     }
@@ -11788,7 +11789,7 @@ void Player::SendEnchantmentDurations()
 
 void Player::SendItemDurations()
 {
-    for(ItemDurationList::iterator itr = m_itemDuration.begin();itr != m_itemDuration.end();++itr)
+    for(ItemDurationList::const_iterator itr = m_itemDuration.begin();itr != m_itemDuration.end();++itr)
     {
         (*itr)->SendTimeUpdate(this);
     }
@@ -12078,7 +12079,7 @@ bool Player::CanCompleteQuest( uint32 quest_id )
 
             if ( qInfo->HasFlag( QUEST_MANGOS_FLAGS_DELIVER ) )
             {
-                for(int i = 0; i < QUEST_OBJECTIVES_COUNT; i++)
+                for(int i = 0; i < QUEST_OBJECTIVES_COUNT; ++i)
                 {
                     if( qInfo->ReqItemCount[i]!= 0 && q_status.m_itemcount[i] < qInfo->ReqItemCount[i] )
                         return false;
@@ -12087,7 +12088,7 @@ bool Player::CanCompleteQuest( uint32 quest_id )
 
             if ( qInfo->HasFlag(QUEST_MANGOS_FLAGS_KILL_OR_CAST | QUEST_MANGOS_FLAGS_SPEAKTO) )
             {
-                for(int i = 0; i < QUEST_OBJECTIVES_COUNT; i++)
+                for(int i = 0; i < QUEST_OBJECTIVES_COUNT; ++i)
                 {
                     if( qInfo->ReqCreatureOrGOId[i] == 0 )
                         continue;
@@ -12128,7 +12129,7 @@ bool Player::CanCompleteRepeatableQuest( Quest const *pQuest )
         return false;
 
     if (pQuest->HasFlag( QUEST_MANGOS_FLAGS_DELIVER) )
-        for(int i = 0; i < QUEST_OBJECTIVES_COUNT; i++)
+        for(int i = 0; i < QUEST_OBJECTIVES_COUNT; ++i)
             if( pQuest->ReqItemId[i] && pQuest->ReqItemCount[i] && !HasItemCount(pQuest->ReqItemId[i],pQuest->ReqItemCount[i]) )
                 return false;
 
@@ -12155,7 +12156,7 @@ bool Player::CanRewardQuest( Quest const *pQuest, bool msg )
     // prevent receive reward with quest items in bank
     if ( pQuest->HasFlag( QUEST_MANGOS_FLAGS_DELIVER ) )
     {
-        for(int i = 0; i < QUEST_OBJECTIVES_COUNT; i++)
+        for(int i = 0; i < QUEST_OBJECTIVES_COUNT; ++i)
         {
             if( pQuest->ReqItemCount[i]!= 0 &&
                 GetItemCount(pQuest->ReqItemId[i]) < pQuest->ReqItemCount[i] )
@@ -12324,7 +12325,7 @@ void Player::RewardQuest( Quest const *pQuest, uint32 reward, Object* questGiver
 {
     uint32 quest_id = pQuest->GetQuestId();
 
-    for (int i = 0; i < QUEST_OBJECTIVES_COUNT; i++ )
+    for (int i = 0; i < QUEST_OBJECTIVES_COUNT; ++i )
     {
         if ( pQuest->ReqItemId[i] )
             DestroyItemCount( pQuest->ReqItemId[i], pQuest->ReqItemCount[i], true);
@@ -12636,7 +12637,7 @@ bool Player::SatisfyQuestPreviousQuest( Quest const* qInfo, bool msg )
     {
         uint32 prevId = abs(*iter);
 
-        QuestStatusMap::iterator i_prevstatus = mQuestStatus.find( prevId );
+        QuestStatusMap::const_iterator i_prevstatus = mQuestStatus.find( prevId );
         Quest const* qPrevInfo = objmgr.GetQuestTemplate(prevId);
 
         if( qPrevInfo && i_prevstatus != mQuestStatus.end() )
@@ -12650,8 +12651,8 @@ bool Player::SatisfyQuestPreviousQuest( Quest const* qInfo, bool msg )
 
                 // each-from-all exclusive group ( < 0)
                 // can be start if only all quests in prev quest exclusive group completed and rewarded
-                ObjectMgr::ExclusiveQuestGroups::iterator iter2 = objmgr.mExclusiveQuestGroups.lower_bound(qPrevInfo->GetExclusiveGroup());
-                ObjectMgr::ExclusiveQuestGroups::iterator end  = objmgr.mExclusiveQuestGroups.upper_bound(qPrevInfo->GetExclusiveGroup());
+                ObjectMgr::ExclusiveQuestGroups::const_iterator iter2 = objmgr.mExclusiveQuestGroups.lower_bound(qPrevInfo->GetExclusiveGroup());
+                ObjectMgr::ExclusiveQuestGroups::const_iterator end  = objmgr.mExclusiveQuestGroups.upper_bound(qPrevInfo->GetExclusiveGroup());
 
                 assert(iter2!=end);                         // always must be found if qPrevInfo->ExclusiveGroup != 0
 
@@ -12663,7 +12664,7 @@ bool Player::SatisfyQuestPreviousQuest( Quest const* qInfo, bool msg )
                     if(exclude_Id == prevId)
                         continue;
 
-                    QuestStatusMap::iterator i_exstatus = mQuestStatus.find( exclude_Id );
+                    QuestStatusMap::const_iterator i_exstatus = mQuestStatus.find( exclude_Id );
 
                     // alternative quest from group also must be completed and rewarded(reported)
                     if( i_exstatus == mQuestStatus.end() || !i_exstatus->second.m_rewarded )
@@ -12685,8 +12686,8 @@ bool Player::SatisfyQuestPreviousQuest( Quest const* qInfo, bool msg )
 
                 // each-from-all exclusive group ( < 0)
                 // can be start if only all quests in prev quest exclusive group active
-                ObjectMgr::ExclusiveQuestGroups::iterator iter2 = objmgr.mExclusiveQuestGroups.lower_bound(qPrevInfo->GetExclusiveGroup());
-                ObjectMgr::ExclusiveQuestGroups::iterator end  = objmgr.mExclusiveQuestGroups.upper_bound(qPrevInfo->GetExclusiveGroup());
+                ObjectMgr::ExclusiveQuestGroups::const_iterator iter2 = objmgr.mExclusiveQuestGroups.lower_bound(qPrevInfo->GetExclusiveGroup());
+                ObjectMgr::ExclusiveQuestGroups::const_iterator end  = objmgr.mExclusiveQuestGroups.upper_bound(qPrevInfo->GetExclusiveGroup());
 
                 assert(iter2!=end);                         // always must be found if qPrevInfo->ExclusiveGroup != 0
 
@@ -12698,7 +12699,7 @@ bool Player::SatisfyQuestPreviousQuest( Quest const* qInfo, bool msg )
                     if(exclude_Id == prevId)
                         continue;
 
-                    QuestStatusMap::iterator i_exstatus = mQuestStatus.find( exclude_Id );
+                    QuestStatusMap::const_iterator i_exstatus = mQuestStatus.find( exclude_Id );
 
                     // alternative quest from group also must be active
                     if( i_exstatus == mQuestStatus.end() ||
@@ -12760,7 +12761,7 @@ bool Player::SatisfyQuestReputation( Quest const* qInfo, bool msg )
 
 bool Player::SatisfyQuestStatus( Quest const* qInfo, bool msg )
 {
-    QuestStatusMap::iterator itr = mQuestStatus.find( qInfo->GetQuestId() );
+    QuestStatusMap::const_iterator itr = mQuestStatus.find( qInfo->GetQuestId() );
     if  ( itr != mQuestStatus.end() && itr->second.m_status != QUEST_STATUS_NONE )
     {
         if( msg )
@@ -12787,8 +12788,8 @@ bool Player::SatisfyQuestExclusiveGroup( Quest const* qInfo, bool msg )
     if(qInfo->GetExclusiveGroup() <= 0)
         return true;
 
-    ObjectMgr::ExclusiveQuestGroups::iterator iter = objmgr.mExclusiveQuestGroups.lower_bound(qInfo->GetExclusiveGroup());
-    ObjectMgr::ExclusiveQuestGroups::iterator end  = objmgr.mExclusiveQuestGroups.upper_bound(qInfo->GetExclusiveGroup());
+    ObjectMgr::ExclusiveQuestGroups::const_iterator iter = objmgr.mExclusiveQuestGroups.lower_bound(qInfo->GetExclusiveGroup());
+    ObjectMgr::ExclusiveQuestGroups::const_iterator end  = objmgr.mExclusiveQuestGroups.upper_bound(qInfo->GetExclusiveGroup());
 
     assert(iter!=end);                                      // always must be found if qInfo->ExclusiveGroup != 0
 
@@ -12829,7 +12830,7 @@ bool Player::SatisfyQuestNextChain( Quest const* qInfo, bool msg )
         return true;
 
     // next quest in chain already started or completed
-    QuestStatusMap::iterator itr = mQuestStatus.find( qInfo->GetNextQuestInChain() );
+    QuestStatusMap::const_iterator itr = mQuestStatus.find( qInfo->GetNextQuestInChain() );
     if( itr != mQuestStatus.end()
         && (itr->second.m_status == QUEST_STATUS_COMPLETE || itr->second.m_status == QUEST_STATUS_INCOMPLETE) )
     {
@@ -12854,7 +12855,7 @@ bool Player::SatisfyQuestPrevChain( Quest const* qInfo, bool msg )
     {
         uint32 prevId = *iter;
 
-        QuestStatusMap::iterator i_prevstatus = mQuestStatus.find( prevId );
+        QuestStatusMap::const_iterator i_prevstatus = mQuestStatus.find( prevId );
 
         if( i_prevstatus != mQuestStatus.end() )
         {
@@ -13117,7 +13118,7 @@ void Player::ItemAddedQuestCheck( uint32 entry, uint32 count )
         if( !qInfo || !qInfo->HasFlag( QUEST_MANGOS_FLAGS_DELIVER ) )
             continue;
 
-        for (int j = 0; j < QUEST_OBJECTIVES_COUNT; j++)
+        for (int j = 0; j < QUEST_OBJECTIVES_COUNT; ++j)
         {
             uint32 reqitem = qInfo->ReqItemId[j];
             if ( reqitem == entry )
@@ -13154,7 +13155,7 @@ void Player::ItemRemovedQuestCheck( uint32 entry, uint32 count )
         if( !qInfo->HasFlag( QUEST_MANGOS_FLAGS_DELIVER ) )
             continue;
 
-        for (int j = 0; j < QUEST_OBJECTIVES_COUNT; j++)
+        for (int j = 0; j < QUEST_OBJECTIVES_COUNT; ++j)
         {
             uint32 reqitem = qInfo->ReqItemId[j];
             if ( reqitem == entry )
@@ -13201,7 +13202,7 @@ void Player::KilledMonster( uint32 entry, uint64 guid )
         {
             if( qInfo->HasFlag( QUEST_MANGOS_FLAGS_KILL_OR_CAST) )
             {
-                for (int j = 0; j < QUEST_OBJECTIVES_COUNT; j++)
+                for (int j = 0; j < QUEST_OBJECTIVES_COUNT; ++j)
                 {
                     // skip GO activate objective or none
                     if(qInfo->ReqCreatureOrGOId[j] <=0)
@@ -13257,7 +13258,7 @@ void Player::CastedCreatureOrGO( uint32 entry, uint64 guid, uint32 spell_id )
         {
             if( qInfo->HasFlag( QUEST_MANGOS_FLAGS_KILL_OR_CAST ) )
             {
-                for (int j = 0; j < QUEST_OBJECTIVES_COUNT; j++)
+                for (int j = 0; j < QUEST_OBJECTIVES_COUNT; ++j)
                 {
                     // skip kill creature objective (0) or wrong spell casts
                     if(qInfo->ReqSpell[j] != spell_id )
@@ -13324,7 +13325,7 @@ void Player::TalkedToCreature( uint32 entry, uint64 guid )
         {
             if( qInfo->HasFlag( QUEST_MANGOS_FLAGS_KILL_OR_CAST | QUEST_MANGOS_FLAGS_SPEAKTO ) )
             {
-                for (int j = 0; j < QUEST_OBJECTIVES_COUNT; j++)
+                for (int j = 0; j < QUEST_OBJECTIVES_COUNT; ++j)
                 {
                                                             // skip spell casts and Gameobject objectives
                     if(qInfo->ReqSpell[j] > 0 || qInfo->ReqCreatureOrGOId[j] < 0)
@@ -13446,13 +13447,13 @@ bool Player::HasQuestForItem( uint32 itemid ) const
 
             // There should be no mixed ReqItem/ReqSource drop
             // This part for ReqItem drop
-            for (int j = 0; j < QUEST_OBJECTIVES_COUNT; j++)
+            for (int j = 0; j < QUEST_OBJECTIVES_COUNT; ++j)
             {
                 if(itemid == qinfo->ReqItemId[j] && q_status.m_itemcount[j] < qinfo->ReqItemCount[j] )
                     return true;
             }
             // This part - for ReqSource
-            for (int j = 0; j < QUEST_SOURCE_ITEM_IDS_COUNT; j++)
+            for (int j = 0; j < QUEST_SOURCE_ITEM_IDS_COUNT; ++j)
             {
                 // examined item is a source item
                 if (qinfo->ReqSourceId[j] == itemid)
@@ -13634,7 +13635,7 @@ bool Player::MinimalLoadFromDB( QueryResult *result, uint32 guid )
 
     if (delete_result) delete result;
 
-    for (int i = 0; i < PLAYER_SLOTS_COUNT; i++)
+    for (int i = 0; i < PLAYER_SLOTS_COUNT; ++i)
         m_items[i] = NULL;
 
     if( HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST) )
@@ -13793,7 +13794,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     m_name = fields[3].GetCppString();
 
     // check name limitations
-    if(!ObjectMgr::IsValidName(m_name) || GetSession()->GetSecurity() == SEC_PLAYER && objmgr.IsReservedName(m_name))
+    if(!ObjectMgr::IsValidName(m_name) || (GetSession()->GetSecurity() == SEC_PLAYER && objmgr.IsReservedName(m_name)))
     {
         delete result;
         CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login | '%u' WHERE guid ='%u'", uint32(AT_LOGIN_RENAME),guid);
@@ -13908,7 +13909,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
         if(currentBg && currentBg->IsPlayerInBattleGround(GetGUID()))
         {
             BattleGroundQueueTypeId bgQueueTypeId = sBattleGroundMgr.BGQueueTypeId(currentBg->GetTypeID(), currentBg->GetArenaType());
-            uint32 queueSlot = AddBattleGroundQueueId(bgQueueTypeId);
+            AddBattleGroundQueueId(bgQueueTypeId);
 
             SetBattleGroundId(currentBg->GetInstanceID(), currentBg->GetTypeID());
             SetBGTeam(bgteam);
@@ -13973,7 +13974,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
 
     if (transGUID != 0)
     {
-        for (MapManager::TransportSet::iterator iter = MapManager::Instance().m_Transports.begin(); iter != MapManager::Instance().m_Transports.end(); ++iter)
+        for (MapManager::TransportSet::const_iterator iter = MapManager::Instance().m_Transports.begin(); iter != MapManager::Instance().m_Transports.end(); ++iter)
         {
             if( (*iter)->GetGUIDLow() == transGUID)
             {
@@ -14369,7 +14370,7 @@ void Player::_LoadActions(QueryResult *result)
 void Player::_LoadAuras(QueryResult *result, uint32 timediff)
 {
     m_Auras.clear();
-    for (int i = 0; i < TOTAL_AURAS; i++)
+    for (int i = 0; i < TOTAL_AURAS; ++i)
         m_modAuras[i].clear();
 
     //QueryResult *result = CharacterDatabase.PQuery("SELECT caster_guid,spell,effect_index,stackcount,amount,maxduration,remaintime,remaincharges FROM character_aura WHERE guid = '%u'",GetGUIDLow());
@@ -14420,7 +14421,7 @@ void Player::_LoadAuras(QueryResult *result, uint32 timediff)
                 remaincharges = 0;
 
 
-            for(uint32 i=0; i<stackcount; i++)
+            for(uint32 i=0; i<stackcount; ++i)
             {
                 Aura* aura = CreateAura(spellproto, effindex, NULL, this, NULL);
                 if(!damage)
@@ -14602,7 +14603,7 @@ void Player::_LoadInventory(QueryResult *result, uint32 timediff)
             {
                 item->SetSlot(NULL_SLOT);
                 // the item is in a bag, find the bag
-                std::map<uint64, Bag*>::iterator itr = bagMap.find(bag_guid);
+                std::map<uint64, Bag*>::const_iterator itr = bagMap.find(bag_guid);
                 if(itr != bagMap.end())
                     itr->second->StoreItem(slot, item, true );
                 else
@@ -14944,7 +14945,7 @@ void Player::_LoadTutorials(QueryResult *result)
         {
             Field *fields = result->Fetch();
 
-            for (int iI=0; iI<8; iI++)
+            for (int iI=0; iI<8; ++iI)
                 m_Tutorials[iI] = fields[iI].GetUInt32();
         }
         while( result->NextRow() );
@@ -14978,7 +14979,7 @@ void Player::_LoadGroup(QueryResult *result)
 
 void Player::_LoadBoundInstances(QueryResult *result)
 {
-    for(uint8 i = 0; i < TOTAL_DIFFICULTIES; i++)
+    for(uint8 i = 0; i < TOTAL_DIFFICULTIES; ++i)
         m_boundInstances[i].clear();
 
     Group *group = GetGroup();
@@ -15092,7 +15093,7 @@ void Player::SendRaidInfo()
 
     for(int i = 0; i < TOTAL_DIFFICULTIES; ++i)
     {
-        for (BoundInstancesMap::iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); ++itr)
+        for (BoundInstancesMap::const_iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); ++itr)
         {
             if(itr->second.perm)
             {
@@ -15117,9 +15118,9 @@ void Player::SendSavedInstances()
     bool hasBeenSaved = false;
     WorldPacket data;
 
-    for(uint8 i = 0; i < TOTAL_DIFFICULTIES; i++)
+    for(uint8 i = 0; i < TOTAL_DIFFICULTIES; ++i)
     {
-        for (BoundInstancesMap::iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); ++itr)
+        for (BoundInstancesMap::const_iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); ++itr)
         {
             if(itr->second.perm)                                // only permanent binds are sent
             {
@@ -15137,9 +15138,9 @@ void Player::SendSavedInstances()
     if(!hasBeenSaved)
         return;
 
-    for(uint8 i = 0; i < TOTAL_DIFFICULTIES; i++)
+    for(uint8 i = 0; i < TOTAL_DIFFICULTIES; ++i)
     {
-        for (BoundInstancesMap::iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); ++itr)
+        for (BoundInstancesMap::const_iterator itr = m_boundInstances[i].begin(); itr != m_boundInstances[i].end(); ++itr)
         {
             if(itr->second.perm)
             {
@@ -15165,7 +15166,7 @@ void Player::ConvertInstancesToGroup(Player *player, Group *group, uint64 player
 
     if(player)
     {
-        for(uint8 i = 0; i < TOTAL_DIFFICULTIES; i++)
+        for(uint8 i = 0; i < TOTAL_DIFFICULTIES; ++i)
         {
             for (BoundInstancesMap::iterator itr = player->m_boundInstances[i].begin(); itr != player->m_boundInstances[i].end();)
             {
@@ -15312,7 +15313,7 @@ void Player::SaveToDB()
     }
 
     uint16 i;
-    for( i = 0; i < m_valuesCount; i++ )
+    for( i = 0; i < m_valuesCount; ++i )
     {
         ss << GetUInt32Value(i) << " ";
     }
@@ -15483,7 +15484,7 @@ void Player::_SaveAuras()
                 {
                     uint8 i;
                     // or apply at cast SPELL_AURA_MOD_SHAPESHIFT or SPELL_AURA_MOD_STEALTH auras
-                    for (i = 0; i < 3; i++)
+                    for (i = 0; i < 3; ++i)
                         if (spellInfo->EffectApplyAuraName[i] == SPELL_AURA_MOD_SHAPESHIFT ||
                         spellInfo->EffectApplyAuraName[i] == SPELL_AURA_MOD_STEALTH)
                             break;
@@ -15515,7 +15516,7 @@ void Player::_SaveInventory()
 {
     // force items in buyback slots to new state
     // and remove those that aren't already
-    for (uint8 i = BUYBACK_SLOT_START; i < BUYBACK_SLOT_END; i++)
+    for (uint8 i = BUYBACK_SLOT_START; i < BUYBACK_SLOT_END; ++i)
     {
         Item *item = m_items[i];
         if (!item || item->GetState() == ITEM_NEW) continue;
@@ -15525,7 +15526,7 @@ void Player::_SaveInventory()
     }
 
     // update enchantment durations
-    for(EnchantDurationList::iterator itr = m_enchantDuration.begin();itr != m_enchantDuration.end();++itr)
+    for(EnchantDurationList::const_iterator itr = m_enchantDuration.begin();itr != m_enchantDuration.end();++itr)
     {
         itr->item->SetEnchantmentDuration(itr->slot,itr->leftduration);
     }
@@ -15535,7 +15536,7 @@ void Player::_SaveInventory()
 
     // do not save if the update queue is corrupt
     bool error = false;
-    for(size_t i = 0; i < m_itemUpdateQueue.size(); i++)
+    for(size_t i = 0; i < m_itemUpdateQueue.size(); ++i)
     {
         Item *item = m_itemUpdateQueue[i];
         if(!item || item->GetState() == ITEM_REMOVED) continue;
@@ -15560,7 +15561,7 @@ void Player::_SaveInventory()
         return;
     }
 
-    for(size_t i = 0; i < m_itemUpdateQueue.size(); i++)
+    for(size_t i = 0; i < m_itemUpdateQueue.size(); ++i)
     {
         Item *item = m_itemUpdateQueue[i];
         if(!item) continue;
@@ -15602,7 +15603,7 @@ void Player::_SaveMail()
                 m->itemTextId, m->HasItems() ? 1 : 0, (uint64)m->expire_time, (uint64)m->deliver_time, m->money, m->COD, m->checked, m->messageID);
             if(m->removedItems.size())
             {
-                for(std::vector<uint32>::iterator itr2 = m->removedItems.begin(); itr2 != m->removedItems.end(); ++itr2)
+                for(std::vector<uint32>::const_iterator itr2 = m->removedItems.begin(); itr2 != m->removedItems.end(); ++itr2)
                     CharacterDatabase.PExecute("DELETE FROM mail_items WHERE item_guid = '%u'", *itr2);
                 m->removedItems.clear();
             }
@@ -15611,7 +15612,7 @@ void Player::_SaveMail()
         else if (m->state == MAIL_STATE_DELETED)
         {
             if (m->HasItems())
-                for(std::vector<MailItemInfo>::iterator itr2 = m->items.begin(); itr2 != m->items.end(); ++itr2)
+                for(std::vector<MailItemInfo>::const_iterator itr2 = m->items.begin(); itr2 != m->items.end(); ++itr2)
                     CharacterDatabase.PExecute("DELETE FROM item_instance WHERE guid = '%u'", itr2->item_guid);
             if (m->itemTextId)
                 CharacterDatabase.PExecute("DELETE FROM item_text WHERE id = '%u'", m->itemTextId);
@@ -15813,7 +15814,7 @@ void Player::SaveDataFieldToDB()
     std::ostringstream ss;
     ss<<"UPDATE characters SET data='";
 
-    for(uint16 i = 0; i < m_valuesCount; i++ )
+    for(uint16 i = 0; i < m_valuesCount; ++i )
     {
         ss << GetUInt32Value(i) << " ";
     }
@@ -16301,7 +16302,7 @@ void Player::PetSpellInitialize()
     data << uint8(charmInfo->GetReactState()) << uint8(charmInfo->GetCommandState()) << uint16(0);
 
     // action bar loop
-    for(uint32 i = 0; i < 10; i++)
+    for(uint32 i = 0; i < 10; ++i)
     {
         data << uint32(charmInfo->GetActionBarEntry(i)->Raw);
     }
@@ -16315,7 +16316,7 @@ void Player::PetSpellInitialize()
     if(pet->isControlled() && ((pet->getPetType() == HUNTER_PET) || ((pet->GetCreatureInfo()->type == CREATURE_TYPE_DEMON) && (getClass() == CLASS_WARLOCK))))
     {
         // spells loop
-        for (PetSpellMap::iterator itr = pet->m_spells.begin(); itr != pet->m_spells.end(); ++itr)
+        for (PetSpellMap::const_iterator itr = pet->m_spells.begin(); itr != pet->m_spells.end(); ++itr)
         {
             if(itr->second->state == PETSPELL_REMOVED)
                 continue;
@@ -16380,7 +16381,7 @@ void Player::PossessSpellInitialize()
     data << uint32(0);
     data << uint32(0);
 
-    for(uint32 i = 0; i < 10; i++)                          //40
+    for(uint32 i = 0; i < 10; ++i)                          //40
     {
         data << uint16(charmInfo->GetActionBarEntry(i)->SpellOrAction) << uint16(charmInfo->GetActionBarEntry(i)->Type);
     }
@@ -16434,7 +16435,7 @@ void Player::CharmSpellInitialize()
         data << uint8(0) << uint8(0);
     data << uint16(0);
 
-    for(uint32 i = 0; i < 10; i++)                          //40
+    for(uint32 i = 0; i < 10; ++i)                          //40
     {
         data << uint16(charmInfo->GetActionBarEntry(i)->SpellOrAction) << uint16(charmInfo->GetActionBarEntry(i)->Type);
     }
@@ -16493,7 +16494,7 @@ void Player::AddSpellMod(SpellModifier* mod, bool apply)
         if ( mod->mask & _mask || mod->mask2 & _mask2)
         {
             int32 val = 0;
-            for (SpellModList::iterator itr = m_spellMods[mod->op].begin(); itr != m_spellMods[mod->op].end(); ++itr)
+            for (SpellModList::const_iterator itr = m_spellMods[mod->op].begin(); itr != m_spellMods[mod->op].end(); ++itr)
             {
                 if ((*itr)->type == mod->type && ((*itr)->mask & _mask || (*itr)->mask2 & _mask2))
                     val += (*itr)->value;
@@ -16525,7 +16526,7 @@ void Player::RemoveSpellMods(Spell const* spell)
 
     for(int i=0;i<MAX_SPELLMOD;++i)
     {
-        for (SpellModList::iterator itr = m_spellMods[i].begin(); itr != m_spellMods[i].end();)
+        for (SpellModList::const_iterator itr = m_spellMods[i].begin(); itr != m_spellMods[i].end();)
         {
             SpellModifier *mod = *itr;
             ++itr;
@@ -17033,7 +17034,7 @@ bool Player::BuyItemFromVendor(uint64 vendorguid, uint32 item, uint8 count, uint
         }
         else
         {
-            for (int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END;i++)
+            for (int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END;++i)
             {
                 pBag = (Bag*)GetItemByPos(INVENTORY_SLOT_BAG_0,i);
                 if( pBag )
@@ -17425,7 +17426,7 @@ bool Player::EnchantmentFitsRequirements(uint32 enchantmentcondition, int8 slot)
 
     bool activate = true;
 
-    for(int i = 0; i < 5; i++)
+    for(int i = 0; i < 5; ++i)
     {
         if(!Condition->Color[i])
             continue;
@@ -17536,7 +17537,7 @@ void Player::LeaveBattleground(bool teleportToEntryPoint)
         bg->RemovePlayerAtLeave(GetGUID(), teleportToEntryPoint, true);
 
         // call after remove to be sure that player resurrected for correct cast
-        if( bg->isBattleGround() && sWorld.getConfig(CONFIG_BATTLEGROUND_CAST_DESERTER) )
+        if( bg->isBattleGround() && !isGameMaster() && sWorld.getConfig(CONFIG_BATTLEGROUND_CAST_DESERTER) )
         {
             if( bg->GetStatus() == STATUS_IN_PROGRESS || bg->GetStatus() == STATUS_WAIT_JOIN )
                 CastSpell(this, 26013, true);               // Deserter
@@ -18312,7 +18313,7 @@ bool Player::HasQuestForGO(int32 GOId) const
             if(GetGroup() && GetGroup()->isRaidGroup() && qinfo->GetType() != QUEST_TYPE_RAID)
                 continue;
 
-            for (int j = 0; j < QUEST_OBJECTIVES_COUNT; j++)
+            for (int j = 0; j < QUEST_OBJECTIVES_COUNT; ++j)
             {
                 if (qinfo->ReqCreatureOrGOId[j]>=0)         //skip non GO case
                     continue;
@@ -18332,7 +18333,7 @@ void Player::UpdateForQuestsGO()
 
     UpdateData udata;
     WorldPacket packet;
-    for(ClientGUIDs::iterator itr=m_clientGUIDs.begin(); itr!=m_clientGUIDs.end(); ++itr)
+    for(ClientGUIDs::const_iterator itr=m_clientGUIDs.begin(); itr!=m_clientGUIDs.end(); ++itr)
     {
         if(IS_GAMEOBJECT_GUID(*itr))
         {
@@ -18492,7 +18493,7 @@ bool Player::CanNoReagentCast(SpellEntry const* spellInfo) const
 void Player::RemoveItemDependentAurasAndCasts( Item * pItem )
 {
     AuraMap& auras = GetAuras();
-    for(AuraMap::iterator itr = auras.begin(); itr != auras.end(); )
+    for(AuraMap::const_iterator itr = auras.begin(); itr != auras.end(); )
     {
         Aura* aura = itr->second;
 
@@ -18517,7 +18518,7 @@ void Player::RemoveItemDependentAurasAndCasts( Item * pItem )
     }
 
     // currently casted spells can be dependent from item
-    for (uint32 i = 0; i < CURRENT_MAX_SPELL; i++)
+    for (uint32 i = 0; i < CURRENT_MAX_SPELL; ++i)
     {
         if( m_currentSpells[i] && m_currentSpells[i]->getState()!=SPELL_STATE_DELAYED &&
             !HasItemFitToSpellReqirements(m_currentSpells[i]->m_spellInfo,pItem) )
@@ -18732,7 +18733,7 @@ uint32 Player::GetBaseWeaponSkillValue (WeaponAttackType attType) const
         return 0;
 
     // weapon skill or (unarmed for base attack)
-    uint32  skill = item ? item->GetSkill() : SKILL_UNARMED;
+    uint32  skill = item ? item->GetSkill() : uint32(SKILL_UNARMED);
     return GetBaseSkillValue(skill);
 }
 
@@ -19355,7 +19356,7 @@ void Player::_LoadSkills()
     // Note: skill data itself loaded from `data` field. This is only cleanup part of load
 
     // reset skill modifiers and set correct unlearn flags
-    for (uint32 i = 0; i < PLAYER_MAX_SKILLS; i++)
+    for (uint32 i = 0; i < PLAYER_MAX_SKILLS; ++i)
     {
         SetUInt32Value(PLAYER_SKILL_BONUS_INDEX(i),0);
 
@@ -19599,7 +19600,7 @@ void Player::LearnTalent(uint32 talentId, uint32 talentRank)
         if(TalentEntry const *depTalentInfo = sTalentStore.LookupEntry(talentInfo->DependsOn))
         {
             bool hasEnoughRank = false;
-            for (int i = talentInfo->DependsOnRank; i < MAX_TALENT_RANK; i++)
+            for (int i = talentInfo->DependsOnRank; i < MAX_TALENT_RANK; ++i)
             {
                 if (depTalentInfo->RankID[i] != 0)
                     if (HasSpell(depTalentInfo->RankID[i]))
@@ -19617,7 +19618,7 @@ void Player::LearnTalent(uint32 talentId, uint32 talentRank)
     if (talentInfo->Row > 0)
     {
         unsigned int numRows = sTalentStore.GetNumRows();
-        for (unsigned int i = 0; i < numRows; i++)          // Loop through all talents.
+        for (unsigned int i = 0; i < numRows; ++i)          // Loop through all talents.
         {
             // Someday, someone needs to revamp
             const TalentEntry *tmpTalent = sTalentStore.LookupEntry(i);
@@ -19625,7 +19626,7 @@ void Player::LearnTalent(uint32 talentId, uint32 talentRank)
             {
                 if (tmpTalent->TalentTab == tTab)
                 {
-                    for (int j = 0; j < MAX_TALENT_RANK; j++)
+                    for (int j = 0; j < MAX_TALENT_RANK; ++j)
                     {
                         if (tmpTalent->RankID[j] != 0)
                         {
@@ -19734,7 +19735,7 @@ void Player::LearnPetTalent(uint64 petGuid, uint32 talentId, uint32 talentRank)
         if(TalentEntry const *depTalentInfo = sTalentStore.LookupEntry(talentInfo->DependsOn))
         {
             bool hasEnoughRank = false;
-            for (int i = talentInfo->DependsOnRank; i < MAX_TALENT_RANK; i++)
+            for (int i = talentInfo->DependsOnRank; i < MAX_TALENT_RANK; ++i)
             {
                 if (depTalentInfo->RankID[i] != 0)
                     if (pet->HasSpell(depTalentInfo->RankID[i]))
@@ -19760,7 +19761,7 @@ void Player::LearnPetTalent(uint64 petGuid, uint32 talentId, uint32 talentRank)
             {
                 if (tmpTalent->TalentTab == tTab)
                 {
-                    for (int j = 0; j < MAX_TALENT_RANK; j++)
+                    for (int j = 0; j < MAX_TALENT_RANK; ++j)
                     {
                         if (tmpTalent->RankID[j] != 0)
                         {
