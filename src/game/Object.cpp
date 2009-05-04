@@ -1503,7 +1503,7 @@ GameObject* WorldObject::SummonGameObject(uint32 id, float x, float y, float z, 
 {
 	GameObject* pGameObj = new GameObject;
 
-	if(!pGameObj->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), id, GetMap(), GetPhaseMask(), x, y, z, ang, 0, 0, 0, 0, 100, 1))
+	if(!pGameObj->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), id, GetMap(), GetPhaseMask(), x, y, z, ang, 0, 0, 0, 0, 100, GO_STATE_READY))
 	{
 		delete pGameObj;
 		return NULL;
