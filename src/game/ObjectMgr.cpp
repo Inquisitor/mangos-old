@@ -123,14 +123,6 @@ ObjectMgr::ObjectMgr()
     m_arenaTeamId       = 1;
     m_auctionid         = 1;
 
-    mGuildBankTabPrice.resize(GUILD_BANK_MAX_TABS);
-    mGuildBankTabPrice[0] = 100;
-    mGuildBankTabPrice[1] = 250;
-    mGuildBankTabPrice[2] = 500;
-    mGuildBankTabPrice[3] = 1000;
-    mGuildBankTabPrice[4] = 2500;
-    mGuildBankTabPrice[5] = 5000;
-
     // Only zero condition left, others will be added while loading DB tables
     mConditions.resize(1);
 }
@@ -447,7 +439,7 @@ void ObjectMgr::LoadPointOfInterestLocales()
 struct SQLCreatureLoader : public SQLStorageLoaderBase<SQLCreatureLoader>
 {
     template<class D>
-    void convert_from_str(uint32 field_pos, char *src, D &dst)
+    void convert_from_str(uint32 /*field_pos*/, char *src, D &dst)
     {
         dst = D(objmgr.GetScriptId(src));
     }
@@ -600,12 +592,12 @@ void ObjectMgr::LoadCreatureTemplates()
                 sLog.outErrorDb("Creature (Entry: %u) has non-existing PetSpellDataId (%u)", cInfo->Entry, cInfo->PetSpellDataId);
         }
 
-        for(int i = 0; i < CREATURE_MAX_SPELLS; ++i)
+        for(int j = 0; j < CREATURE_MAX_SPELLS; ++j)
         {
-            if(cInfo->spells[i] && !sSpellStore.LookupEntry(cInfo->spells[i]))
+            if(cInfo->spells[j] && !sSpellStore.LookupEntry(cInfo->spells[j]))
             {
-                sLog.outErrorDb("Creature (Entry: %u) has non-existing Spell%d (%u), set to 0", cInfo->Entry, i+1,cInfo->spells[i]);
-                const_cast<CreatureInfo*>(cInfo)->spells[i] = 0;
+                sLog.outErrorDb("Creature (Entry: %u) has non-existing Spell%d (%u), set to 0", cInfo->Entry, j+1,cInfo->spells[j]);
+                const_cast<CreatureInfo*>(cInfo)->spells[j] = 0;
             }
         }
 
@@ -1081,8 +1073,15 @@ void ObjectMgr::LoadGameobjects()
         data.rotation3      = fields[10].GetFloat();
         data.spawntimesecs  = fields[11].GetInt32();
         data.animprogress   = fields[12].GetUInt32();
-        data.go_state       = fields[13].GetUInt32();
-		data.ArtKit         = 0;
+        uint32 go_state     = fields[13].GetUInt32();
+        data.ArtKit         = 0;
+        if (go_state >= MAX_GO_STATE)
+        {
+            sLog.outErrorDb("Table `gameobject` have gameobject (GUID: %u Entry: %u) with invalid `state` (%u) value, skip",guid,data.id,go_state);
+            continue;
+        }
+        data.go_state       = GOState(go_state);
+
         data.spawnMask      = fields[14].GetUInt8();
         data.phaseMask      = fields[15].GetUInt16();
         int16 gameEvent     = fields[16].GetInt16();
@@ -1387,7 +1386,7 @@ void ObjectMgr::LoadItemLocales()
 struct SQLItemLoader : public SQLStorageLoaderBase<SQLItemLoader>
 {
     template<class D>
-    void convert_from_str(uint32 field_pos, char *src, D &dst)
+    void convert_from_str(uint32 /*field_pos*/, char *src, D &dst)
     {
         dst = D(objmgr.GetScriptId(src));
     }
@@ -2687,15 +2686,15 @@ void ObjectMgr::LoadGroups()
     result = CharacterDatabase.Query("SELECT memberGuid, assistant, subgroup, leaderGuid FROM group_member ORDER BY leaderGuid");
     if(!result)
     {
-        barGoLink bar( 1 );
-        bar.step();
+        barGoLink bar2( 1 );
+        bar2.step();
     }
     else
     {
-        barGoLink bar( result->GetRowCount() );
+        barGoLink bar2( result->GetRowCount() );
         do
         {
-            bar.step();
+            bar2.step();
             Field *fields = result->Fetch();
             count++;
             leaderGuid = MAKE_NEW_GUID(fields[3].GetUInt32(), 0, HIGHGUID_PLAYER);
@@ -2747,15 +2746,15 @@ void ObjectMgr::LoadGroups()
 
     if(!result)
     {
-        barGoLink bar( 1 );
-        bar.step();
+        barGoLink bar2( 1 );
+        bar2.step();
     }
     else
     {
-        barGoLink bar( result->GetRowCount() );
+        barGoLink bar2( result->GetRowCount() );
         do
         {
-            bar.step();
+            bar2.step();
             Field *fields = result->Fetch();
             count++;
             leaderGuid = MAKE_NEW_GUID(fields[0].GetUInt32(), 0, HIGHGUID_PLAYER);
@@ -3142,7 +3141,7 @@ void ObjectMgr::LoadQuests()
                 {
                     sLog.outErrorDb("Quest %u has `ReqSpellCast%d` = %u but spell %u does not exist, quest can't be done.",
                         qinfo->GetQuestId(),j+1,id,id);
-                    // no changes, quest can't be done for this requirement
+                    continue;
                 }
 
                 if(!qinfo->ReqCreatureOrGOId[j])
@@ -4146,7 +4145,7 @@ void ObjectMgr::LoadPageTextLocales()
 struct SQLInstanceLoader : public SQLStorageLoaderBase<SQLInstanceLoader>
 {
     template<class D>
-    void convert_from_str(uint32 field_pos, char *src, D &dst)
+    void convert_from_str(uint32 /*field_pos*/, char *src, D &dst)
     {
         dst = D(objmgr.GetScriptId(src));
     }
@@ -4860,8 +4859,10 @@ WorldSafeLocsEntry const *ObjectMgr::GetClosestGraveYard(float x, float y, float
         if(MapId != entry->map_id)
         {
             // if find graveyard at different map from where entrance placed (or no entrance data), use any first
-            if (!mapEntry || mapEntry->entrance_map < 0 || mapEntry->entrance_map != entry->map_id ||
-                mapEntry->entrance_x == 0 && mapEntry->entrance_y == 0)
+            if (!mapEntry ||
+                 mapEntry->entrance_map < 0 ||
+                 mapEntry->entrance_map != entry->map_id ||
+                (mapEntry->entrance_x == 0 && mapEntry->entrance_y == 0))
             {
                 // not have any corrdinates for check distance anyway
                 entryFar = entry;
@@ -5457,7 +5458,7 @@ void ObjectMgr::LoadGameObjectLocales()
 struct SQLGameObjectLoader : public SQLStorageLoaderBase<SQLGameObjectLoader>
 {
     template<class D>
-    void convert_from_str(uint32 field_pos, char *src, D &dst)
+    void convert_from_str(uint32 /*field_pos*/, char *src, D &dst)
     {
         dst = D(objmgr.GetScriptId(src));
     }
@@ -6915,6 +6916,8 @@ bool PlayerCondition::IsValid(ConditionType condition, uint32 value1, uint32 val
             }
             break;
         }
+        case CONDITION_NONE:
+            break;
     }
     return true;
 }

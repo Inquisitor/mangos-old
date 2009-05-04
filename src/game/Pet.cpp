@@ -38,8 +38,8 @@ char const* petTypeSuffix[MAX_PET_TYPE] =
 };
 
 Pet::Pet(PetType type) :
-Creature(), m_petType(type), m_removed(false), m_happinessTimer(7500), m_duration(0), m_bonusdamage(0),
-m_resetTalentsCost(0), m_resetTalentsTime(0), m_usedTalentCount(0), m_auraUpdateMask(0), m_loading(false),
+Creature(), m_removed(false), m_petType(type), m_happinessTimer(7500), m_duration(0), m_resetTalentsCost(0),
+m_bonusdamage(0), m_resetTalentsTime(0), m_usedTalentCount(0), m_auraUpdateMask(0), m_loading(false),
 m_declinedname(NULL)
 {
     m_isPet = true;
@@ -59,7 +59,7 @@ Pet::~Pet()
 {
     if(m_uint32Values)                                      // only for fully created Object
     {
-        for (PetSpellMap::iterator i = m_spells.begin(); i != m_spells.end(); ++i)
+        for (PetSpellMap::const_iterator i = m_spells.begin(); i != m_spells.end(); ++i)
             delete i->second;
         ObjectAccessor::Instance().RemoveObject(this);
     }
@@ -376,10 +376,10 @@ bool Pet::LoadPetFromDB( Player* owner, uint32 petentry, uint32 petnumber, bool 
                 delete m_declinedname;
 
             m_declinedname = new DeclinedName;
-            Field *fields = result->Fetch();
+            Field *fields2 = result->Fetch();
             for(int i = 0; i < MAX_DECLINED_NAME_CASES; ++i)
             {
-                m_declinedname->name[i] = fields[i].GetCppString();
+                m_declinedname->name[i] = fields2[i].GetCppString();
             }
         }
     }
@@ -472,14 +472,14 @@ void Pet::SavePetToDB(PetSaveMode mode)
             << curmana << ", "
             << GetPower(POWER_HAPPINESS) << ", '";
 
-        for(uint32 i = 0; i < 10; i++)
+        for(uint32 i = 0; i < 10; ++i)
             ss << uint32(m_charmInfo->GetActionBarEntry(i)->Type) << " " << uint32(m_charmInfo->GetActionBarEntry(i)->SpellOrAction) << " ";
         ss << "', '";
 
         //save spells the pet can teach to it's Master
         {
             int i = 0;
-            for(TeachSpellMap::iterator itr = m_teachspells.begin(); i < 4 && itr != m_teachspells.end(); ++i, ++itr)
+            for(TeachSpellMap::const_iterator itr = m_teachspells.begin(); i < 4 && itr != m_teachspells.end(); ++i, ++itr)
                 ss << itr->first << " " << itr->second << " ";
             for(; i < 4; ++i)
                 ss << uint32(0) << " " << uint32(0) << " ";
@@ -666,7 +666,7 @@ bool Pet::CanTakeMoreActiveSpells(uint32 spellid)
 
     chainstartstore[0] = spellmgr.GetFirstSpellInChain(spellid);
 
-    for (PetSpellMap::iterator itr = m_spells.begin(); itr != m_spells.end(); ++itr)
+    for (PetSpellMap::const_iterator itr = m_spells.begin(); itr != m_spells.end(); ++itr)
     {
         if(IsPassiveSpell(itr->first))
             continue;
@@ -972,7 +972,7 @@ bool Pet::InitStatsForLevel(uint32 petlevel)
                 SetModifierValue(UNIT_MOD_ARMOR, BASE_VALUE, float(pInfo->armor));
                 //SetModifierValue(UNIT_MOD_ATTACK_POWER, BASE_VALUE, float(cinfo->attackpower));
 
-                for( int i = STAT_STRENGTH; i < MAX_STATS; i++)
+                for( int i = STAT_STRENGTH; i < MAX_STATS; ++i)
                 {
                     SetCreateStat(Stats(i),  float(pInfo->stats[i]));
                 }
@@ -1164,7 +1164,7 @@ void Pet::_SaveSpells()
 void Pet::_LoadAuras(uint32 timediff)
 {
     m_Auras.clear();
-    for (int i = 0; i < TOTAL_AURAS; i++)
+    for (int i = 0; i < TOTAL_AURAS; ++i)
         m_modAuras[i].clear();
 
     QueryResult *result = CharacterDatabase.PQuery("SELECT caster_guid,spell,effect_index,stackcount,amount,maxduration,remaintime,remaincharges FROM pet_aura WHERE guid = '%u'",m_charmInfo->GetPetNumber());
@@ -1218,7 +1218,7 @@ void Pet::_LoadAuras(uint32 timediff)
             if (caster_guid != GetGUID() && IsSingleTargetSpell(spellproto))
                 continue;
 
-            for(uint32 i=0; i<stackcount; i++)
+            for(uint32 i=0; i<stackcount; ++i)
             {
                 Aura* aura = CreateAura(spellproto, effindex, NULL, this, NULL);
 
@@ -1260,7 +1260,7 @@ void Pet::_SaveAuras()
                 {
                     // skip all auras from spell that apply at cast SPELL_AURA_MOD_SHAPESHIFT or pet area auras.
                     uint8 i;
-                    for (i = 0; i < 3; i++)
+                    for (i = 0; i < 3; ++i)
                         if (spellInfo->EffectApplyAuraName[i] == SPELL_AURA_MOD_STEALTH ||
                             spellInfo->Effect[i] == SPELL_EFFECT_APPLY_AREA_AURA_OWNER ||
                             spellInfo->Effect[i] == SPELL_EFFECT_APPLY_AREA_AURA_PET )
@@ -1318,6 +1318,12 @@ bool Pet::addSpell(uint32 spell_id, uint16 active, PetSpellState state, PetSpell
         {
             // can be in case spell loading but learned at some previous spell loading
             itr->second->state = PETSPELL_UNCHANGED;
+
+            if(active == ACT_ENABLED)
+                ToggleAutocast(spell_id, true);
+            else if(active == ACT_DISABLED)
+                ToggleAutocast(spell_id, false);
+
             return false;
         }
         else
@@ -1361,19 +1367,19 @@ bool Pet::addSpell(uint32 spell_id, uint16 active, PetSpellState state, PetSpell
     }
     else if(uint32 chainstart = spellmgr.GetFirstSpellInChain(spell_id))
     {
-        for (PetSpellMap::iterator itr = m_spells.begin(); itr != m_spells.end(); ++itr)
+        for (PetSpellMap::const_iterator itr2 = m_spells.begin(); itr2 != m_spells.end(); ++itr2)
         {
-            if(itr->second->state == PETSPELL_REMOVED) continue;
+            if(itr2->second->state == PETSPELL_REMOVED) continue;
 
-            if(spellmgr.GetFirstSpellInChain(itr->first) == chainstart)
+            if(spellmgr.GetFirstSpellInChain(itr2->first) == chainstart)
             {
-                newspell->active = itr->second->active;
+                newspell->active = itr2->second->active;
 
                 if(newspell->active == ACT_ENABLED)
-                    ToggleAutocast(itr->first, false);
+                    ToggleAutocast(itr2->first, false);
 
-                oldspell_id = itr->first;
-                unlearnSpell(itr->first);
+                oldspell_id = itr2->first;
+                unlearnSpell(itr2->first);
                 break;
             }
         }
@@ -1616,7 +1622,7 @@ void Pet::InitPetCreateSpells()
 {
     m_charmInfo->InitPetActionBar();
 
-    for (PetSpellMap::iterator i = m_spells.begin(); i != m_spells.end(); ++i)
+    for (PetSpellMap::const_iterator i = m_spells.begin(); i != m_spells.end(); ++i)
         delete i->second;
     m_spells.clear();
 
@@ -1624,7 +1630,7 @@ void Pet::InitPetCreateSpells()
     PetCreateSpellEntry const* CreateSpells = objmgr.GetPetCreateSpellEntry(GetEntry());
     if(CreateSpells)
     {
-        for(uint8 i = 0; i < 4; i++)
+        for(uint8 i = 0; i < 4; ++i)
         {
             if(!CreateSpells->spellid[i])
                 break;
@@ -1717,7 +1723,7 @@ bool Pet::resetTalents(bool no_cost)
         }
     }
 
-    for (unsigned int i = 0; i < sTalentStore.GetNumRows(); i++)
+    for (unsigned int i = 0; i < sTalentStore.GetNumRows(); ++i)
     {
         TalentEntry const *talentInfo = sTalentStore.LookupEntry(i);
 
@@ -1734,7 +1740,7 @@ bool Pet::resetTalents(bool no_cost)
 
         for (int j = 0; j < MAX_TALENT_RANK; j++)
         {
-            for(PetSpellMap::iterator itr = m_spells.begin(); itr != m_spells.end();)
+            for(PetSpellMap::const_iterator itr = m_spells.begin(); itr != m_spells.end();)
             {
                 if(itr->second->state == PETSPELL_REMOVED)
                 {
@@ -1835,27 +1841,36 @@ void Pet::ToggleAutocast(uint32 spellid, bool apply)
 
     if(apply)
     {
-        for (i = 0; i < m_autospells.size() && m_autospells[i] != spellid; i++)
+        for (i = 0; i < m_autospells.size() && m_autospells[i] != spellid; ++i)
             ;                                               // just search
 
         if (i == m_autospells.size())
         {
             m_autospells.push_back(spellid);
-            itr->second->active = ACT_ENABLED;
-            itr->second->state = PETSPELL_CHANGED;
+
+            if(itr->second->active != ACT_ENABLED)
+            {
+                itr->second->active = ACT_ENABLED;
+                if(itr->second->state != PETSPELL_NEW)
+                    itr->second->state = PETSPELL_CHANGED;
+            }
         }
     }
     else
     {
         AutoSpellList::iterator itr2 = m_autospells.begin();
-        for (i = 0; i < m_autospells.size() && m_autospells[i] != spellid; i++, itr2++)
+        for (i = 0; i < m_autospells.size() && m_autospells[i] != spellid; ++i, itr2++)
             ;                                               // just search
 
         if (i < m_autospells.size())
         {
             m_autospells.erase(itr2);
-            itr->second->active = ACT_DISABLED;
-            itr->second->state = PETSPELL_CHANGED;
+            if(itr->second->active != ACT_DISABLED)
+            {
+                itr->second->active = ACT_DISABLED;
+                if(itr->second->state != PETSPELL_NEW)
+                    itr->second->state = PETSPELL_CHANGED;
+            }
         }
     }
 }
@@ -1916,7 +1931,7 @@ void Pet::CastPetAuras(bool current)
     if(getPetType() != HUNTER_PET && (getPetType() != SUMMON_PET || owner->getClass() != CLASS_WARLOCK))
         return;
 
-    for(PetAuraSet::iterator itr = owner->m_petAuras.begin(); itr != owner->m_petAuras.end();)
+    for(PetAuraSet::const_iterator itr = owner->m_petAuras.begin(); itr != owner->m_petAuras.end();)
     {
         PetAura const* pa = *itr;
         ++itr;

@@ -666,7 +666,7 @@ bool ChatHandler::HandleReloadSpellScriptsCommand(const char* arg)
     return true;
 }
 
-bool ChatHandler::HandleReloadDbScriptStringCommand(const char* arg)
+bool ChatHandler::HandleReloadDbScriptStringCommand(const char* /*arg*/)
 {
     sLog.outString( "Re-Loading Script strings from `db_script_string`...");
     objmgr.LoadDbScriptStrings();
@@ -842,8 +842,8 @@ bool ChatHandler::HandleAccountSetGmLevelCommand(const char* args)
         return false;
 
     /// account can't set security to same or grater level, need more power GM or console
-    uint32 plSecurity = m_session ? m_session->GetSecurity() : SEC_CONSOLE;
-    if (uint32(gm) >= plSecurity )
+    AccountTypes plSecurity = m_session ? m_session->GetSecurity() : SEC_CONSOLE;
+    if (AccountTypes(gm) >= plSecurity )
     {
         SendSysMessage(LANG_YOURS_SECURITY_IS_LOW);
         SetSentErrorMessage(true);
@@ -854,7 +854,7 @@ bool ChatHandler::HandleAccountSetGmLevelCommand(const char* args)
     if(targetPlayer && m_session->GetPlayer()!=targetPlayer)
     {
         ChatHandler(targetPlayer).PSendSysMessage(LANG_YOURS_SECURITY_CHANGED,GetNameLink().c_str(), gm);
-        targetPlayer->GetSession()->SetSecurity(gm);
+        targetPlayer->GetSession()->SetSecurity(AccountTypes(gm));
     }
 
     PSendSysMessage(LANG_YOU_CHANGE_SECURITY, targetAccountName.c_str(), gm);
@@ -1759,7 +1759,7 @@ bool ChatHandler::HandleLearnAllMySpellsCommand(const char* /*args*/)
         return true;
     uint32 family = clsEntry->spellfamily;
 
-    for (uint32 i = 0; i < sSpellStore.GetNumRows(); i++)
+    for (uint32 i = 0; i < sSpellStore.GetNumRows(); ++i)
     {
         SpellEntry const *spellInfo = sSpellStore.LookupEntry(i);
         if(!spellInfo)
@@ -1798,7 +1798,7 @@ bool ChatHandler::HandleLearnAllMyTalentsCommand(const char* /*args*/)
     Player* player = m_session->GetPlayer();
     uint32 classMask = player->getClassMask();
 
-    for (uint32 i = 0; i < sTalentStore.GetNumRows(); i++)
+    for (uint32 i = 0; i < sTalentStore.GetNumRows(); ++i)
     {
         TalentEntry const *talentInfo = sTalentStore.LookupEntry(i);
         if(!talentInfo)
@@ -1873,7 +1873,7 @@ bool ChatHandler::HandleLearnAllMyPetTalentsCommand(const char* /*args*/)
         return false;
     }
 
-    for (uint32 i = 0; i < sTalentStore.GetNumRows(); i++)
+    for (uint32 i = 0; i < sTalentStore.GetNumRows(); ++i)
     {
         TalentEntry const *talentInfo = sTalentStore.LookupEntry(i);
         if(!talentInfo)
@@ -2010,7 +2010,7 @@ bool ChatHandler::HandleAddItemCommand(const char* args)
 
     if(args[0]=='[')                                        // [name] manual form
     {
-        char* citemName = citemName = strtok((char*)args, "]");
+        char* citemName = strtok((char*)args, "]");
 
         if(citemName && citemName[0])
         {
@@ -3423,7 +3423,7 @@ bool ChatHandler::HandleDamageCommand(const char * args)
     if(!spellid || !sSpellStore.LookupEntry(spellid))
         return false;
 
-    m_session->GetPlayer()->SpellNonMeleeDamageLog(target, spellid, damage, false);
+    m_session->GetPlayer()->SpellNonMeleeDamageLog(target, spellid, damage);
     return true;
 }
 
@@ -3508,7 +3508,7 @@ bool ChatHandler::HandleAuraCommand(const char* args)
     SpellEntry const *spellInfo = sSpellStore.LookupEntry( spellID );
     if(spellInfo)
     {
-        for(uint32 i = 0;i<3;i++)
+        for(uint32 i = 0;i<3;++i)
         {
             uint8 eff = spellInfo->Effect[i];
             if (eff>=TOTAL_SPELL_EFFECTS)
@@ -3874,7 +3874,7 @@ bool ChatHandler::HandleExploreCheatCommand(const char* args)
             ChatHandler(chr).PSendSysMessage(LANG_YOURS_EXPLORE_SET_NOTHING,GetNameLink().c_str());
     }
 
-    for (uint8 i=0; i<128; i++)
+    for (uint8 i=0; i<128; ++i)
     {
         if (flag != 0)
         {
@@ -3904,6 +3904,124 @@ bool ChatHandler::HandleHoverCommand(const char* args)
         SendSysMessage(LANG_HOVER_ENABLED);
     else
         SendSysMessage(LANG_HOVER_DISABLED);
+
+    return true;
+}
+
+void ChatHandler::HandleCharacterLevel(Player* player, uint64 player_guid, uint32 oldlevel, uint32 newlevel)
+{
+    if(player)
+    {
+        player->GiveLevel(newlevel);
+        player->InitTalentForLevel();
+        player->SetUInt32Value(PLAYER_XP,0);
+
+        if(needReportToTarget(player))
+        {
+            if(oldlevel == newlevel)
+                ChatHandler(player).PSendSysMessage(LANG_YOURS_LEVEL_PROGRESS_RESET,GetNameLink().c_str());
+            else if(oldlevel < newlevel)
+                ChatHandler(player).PSendSysMessage(LANG_YOURS_LEVEL_UP,GetNameLink().c_str(),newlevel);
+            else                                                // if(oldlevel > newlevel)
+                ChatHandler(player).PSendSysMessage(LANG_YOURS_LEVEL_DOWN,GetNameLink().c_str(),newlevel);
+        }
+    }
+    else
+    {
+        // update level and XP at level, all other will be updated at loading
+        Tokens values;
+        Player::LoadValuesArrayFromDB(values,player_guid);
+        Player::SetUInt32ValueInArray(values,UNIT_FIELD_LEVEL,newlevel);
+        Player::SetUInt32ValueInArray(values,PLAYER_XP,0);
+        Player::SaveValuesArrayInDB(values,player_guid);
+    }
+}
+
+bool ChatHandler::HandleCharacterLevelCommand(const char* args)
+{
+    char* px = strtok((char*)args, " ");
+    char* py = strtok((char*)NULL, " ");
+
+    // command format parsing
+    char* pname = (char*)NULL;
+    int32 newlevel = 0;
+
+    if(px && py)                                            // .character level $name #level
+    {
+        newlevel = atoi(py);
+        pname = px;
+    }
+    else if(px && !py)                                      // .character level $name OR .character level #level
+    {
+        if(isalpha(px[0]))                                  // .character level $name
+            pname = px;
+        else                                                // .character level #level
+            newlevel = atoi(px);
+    }
+    //                                                      // .character level - progress reset
+
+    if(newlevel < 1)
+        return false;                                       // invalid level
+
+    if(newlevel > STRONG_MAX_LEVEL)                         // hardcoded maximum level
+        newlevel = STRONG_MAX_LEVEL;
+
+    // player
+    Player *chr = NULL;
+    uint64 chr_guid = 0;
+
+    std::string name;
+
+    if(pname)                                               // player by name
+    {
+        name = extractPlayerNameFromLink(pname);
+        if(name.empty())
+        {
+            SendSysMessage(LANG_PLAYER_NOT_FOUND);
+            SetSentErrorMessage(true);
+            return false;
+        }
+
+        chr = objmgr.GetPlayer(name.c_str());
+        if(!chr)                                            // not in game
+        {
+            chr_guid = objmgr.GetPlayerGUIDByName(name);
+            if (chr_guid == 0)
+            {
+                SendSysMessage(LANG_PLAYER_NOT_FOUND);
+                SetSentErrorMessage(true);
+                return false;
+            }
+        }
+    }
+    else                                                    // player by selection
+    {
+        chr = getSelectedPlayer();
+
+        if (chr == NULL)
+        {
+            SendSysMessage(LANG_NO_CHAR_SELECTED);
+            SetSentErrorMessage(true);
+            return false;
+        }
+
+        name = chr->GetName();
+    }
+
+    assert(chr || chr_guid);
+
+    int32 oldlevel = chr ? chr->getLevel() : Player::GetUInt32ValueFromDB(UNIT_FIELD_LEVEL,chr_guid);
+
+    if(!px && !py)                                          // .character level - progress reset
+        newlevel = oldlevel;
+
+    HandleCharacterLevel(chr,chr_guid,oldlevel,newlevel);
+
+    if(m_session && m_session->GetPlayer() != chr)          // including player==NULL
+    {
+        std::string nameLink = playerLink(name);
+        PSendSysMessage(LANG_YOU_CHANGE_LVL,nameLink.c_str(),newlevel);
+    }
 
     return true;
 }
@@ -3982,36 +4100,14 @@ bool ChatHandler::HandleLevelUpCommand(const char* args)
     if(newlevel > STRONG_MAX_LEVEL)                         // hardcoded maximum level
         newlevel = STRONG_MAX_LEVEL;
 
-    if(chr)
-    {
-        chr->GiveLevel(newlevel);
-        chr->InitTalentForLevel();
-        chr->SetUInt32Value(PLAYER_XP,0);
+    HandleCharacterLevel(chr,chr_guid,oldlevel,newlevel);
 
-        if(oldlevel == newlevel)
-            ChatHandler(chr).SendSysMessage(LANG_YOURS_LEVEL_PROGRESS_RESET);
-        else
-        if(oldlevel < newlevel)
-            ChatHandler(chr).PSendSysMessage(LANG_YOURS_LEVEL_UP,newlevel-oldlevel);
-        else
-        if(oldlevel > newlevel)
-            ChatHandler(chr).PSendSysMessage(LANG_YOURS_LEVEL_DOWN,newlevel-oldlevel);
-    }
-    else
-    {
-        // update level and XP at level, all other will be updated at loading
-        Tokens values;
-        Player::LoadValuesArrayFromDB(values,chr_guid);
-        Player::SetUInt32ValueInArray(values,UNIT_FIELD_LEVEL,newlevel);
-        Player::SetUInt32ValueInArray(values,PLAYER_XP,0);
-        Player::SaveValuesArrayInDB(values,chr_guid);
-    }
-
-    if(m_session->GetPlayer() != chr)                       // including chr==NULL
+    if(m_session && m_session->GetPlayer() != chr)          // including chr==NULL
     {
         std::string nameLink = playerLink(name);
         PSendSysMessage(LANG_YOU_CHANGE_LVL,nameLink.c_str(),newlevel);
     }
+
     return true;
 }
 
@@ -4432,7 +4528,7 @@ bool ChatHandler::HandleListAurasCommand (const char * /*args*/)
                 IS_PLAYER_GUID(itr->second->GetCasterGUID()) ? "player" : "creature",GUID_LOPART(itr->second->GetCasterGUID()));
         }
     }
-    for (int i = 0; i < TOTAL_AURAS; i++)
+    for (int i = 0; i < TOTAL_AURAS; ++i)
     {
         Unit::AuraList const& uAuraList = unit->GetAurasByType(AuraType(i));
         if (uAuraList.empty()) continue;
@@ -4827,7 +4923,7 @@ bool ChatHandler::HandleResetAllCommand(const char * args)
     return true;
 }
 
-bool ChatHandler::HandleServerShutDownCancelCommand(const char* args)
+bool ChatHandler::HandleServerShutDownCancelCommand(const char* /*args*/)
 {
     sWorld.ShutdownCancel();
     return true;
@@ -4844,7 +4940,7 @@ bool ChatHandler::HandleServerShutDownCommand(const char* args)
     int32 time = atoi (time_str);
 
     ///- Prevent interpret wrong arg value as 0 secs shutdown time
-    if(time == 0 && (time_str[0]!='0' || time_str[1]!='\0') || time < 0)
+    if ((time == 0 && (time_str[0]!='0' || time_str[1]!='\0')) || time < 0)
         return false;
 
     if (exitcode_str)
@@ -5125,7 +5221,7 @@ bool ChatHandler::HandleQuestComplete(const char* args)
     }
 
     // All creature/GO slain/casted (not required, but otherwise it will display "Creature slain 0/10")
-    for(uint8 i = 0; i < QUEST_OBJECTIVES_COUNT; i++)
+    for(uint8 i = 0; i < QUEST_OBJECTIVES_COUNT; ++i)
     {
         uint32 creature = pQuest->ReqCreatureOrGOId[i];
         uint32 creaturecount = pQuest->ReqCreatureOrGOCount[i];
@@ -5929,7 +6025,7 @@ bool ChatHandler::HandleMovegensCommand(const char* /*args*/)
     return true;
 }
 
-bool ChatHandler::HandlePLimitCommand(const char *args)
+bool ChatHandler::HandleServerPLimitCommand(const char *args)
 {
     if(*args)
     {
@@ -6236,10 +6332,10 @@ bool ChatHandler::HandleInstanceListBindsCommand(const char* /*args*/)
     Player* player = getSelectedPlayer();
     if (!player) player = m_session->GetPlayer();
     uint32 counter = 0;
-    for(uint8 i = 0; i < TOTAL_DIFFICULTIES; i++)
+    for(uint8 i = 0; i < TOTAL_DIFFICULTIES; ++i)
     {
         Player::BoundInstancesMap &binds = player->GetBoundInstances(i);
-        for(Player::BoundInstancesMap::iterator itr = binds.begin(); itr != binds.end(); ++itr)
+        for(Player::BoundInstancesMap::const_iterator itr = binds.begin(); itr != binds.end(); ++itr)
         {
             InstanceSave *save = itr->second.save;
             std::string timeleft = GetTimeString(save->GetResetTime() - time(NULL));
@@ -6252,10 +6348,10 @@ bool ChatHandler::HandleInstanceListBindsCommand(const char* /*args*/)
     Group *group = player->GetGroup();
     if(group)
     {
-        for(uint8 i = 0; i < TOTAL_DIFFICULTIES; i++)
+        for(uint8 i = 0; i < TOTAL_DIFFICULTIES; ++i)
         {
             Group::BoundInstancesMap &binds = group->GetBoundInstances(i);
-            for(Group::BoundInstancesMap::iterator itr = binds.begin(); itr != binds.end(); ++itr)
+            for(Group::BoundInstancesMap::const_iterator itr = binds.begin(); itr != binds.end(); ++itr)
             {
                 InstanceSave *save = itr->second.save;
                 std::string timeleft = GetTimeString(save->GetResetTime() - time(NULL));
@@ -6280,7 +6376,7 @@ bool ChatHandler::HandleInstanceUnbindCommand(const char* args)
         Player* player = getSelectedPlayer();
         if (!player) player = m_session->GetPlayer();
         uint32 counter = 0;
-        for(uint8 i = 0; i < TOTAL_DIFFICULTIES; i++)
+        for(uint8 i = 0; i < TOTAL_DIFFICULTIES; ++i)
         {
             Player::BoundInstancesMap &binds = player->GetBoundInstances(i);
             for(Player::BoundInstancesMap::iterator itr = binds.begin(); itr != binds.end();)
@@ -6719,7 +6815,7 @@ bool ChatHandler::HandleModifyGenderCommand(const char *args)
 
     if(!player)
     {
-        PSendSysMessage(LANG_NO_PLAYER);
+        PSendSysMessage(LANG_PLAYER_NOT_FOUND);
         SetSentErrorMessage(true);
         return false;
     }

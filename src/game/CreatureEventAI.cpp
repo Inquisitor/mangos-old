@@ -37,12 +37,12 @@ int CreatureEventAI::Permissible(const Creature *creature)
     return PERMIT_BASE_NO;
 }
 
-CreatureEventAI::CreatureEventAI(Creature *c ) : CreatureAI(c), InCombat(false)
+CreatureEventAI::CreatureEventAI(Creature *c ) : CreatureAI(c)
 {
-    CreatureEventAI_Event_Map::iterator CreatureEvents = CreatureEAI_Mgr.GetCreatureEventAIMap().find(m_creature->GetEntry());
+    CreatureEventAI_Event_Map::const_iterator CreatureEvents = CreatureEAI_Mgr.GetCreatureEventAIMap().find(m_creature->GetEntry());
     if (CreatureEvents != CreatureEAI_Mgr.GetCreatureEventAIMap().end())
     {
-        std::vector<CreatureEventAI_Event>::iterator i;
+        std::vector<CreatureEventAI_Event>::const_iterator i;
         for (i = (*CreatureEvents).second.begin(); i != (*CreatureEvents).second.end(); ++i)
         {
 
@@ -65,7 +65,7 @@ CreatureEventAI::CreatureEventAI(Creature *c ) : CreatureAI(c), InCombat(false)
         }
         //EventMap had events but they were not added because they must be for instance
         if (CreatureEventAIList.empty())
-            sLog.outError("CreatureEventAI: CreatureId has events but no events added to list because of instance flags.", m_creature->GetEntry());
+            sLog.outError("CreatureEventAI: Creature %u has events but no events added to list because of instance flags.", m_creature->GetEntry());
     }
     else
         sLog.outError("CreatureEventAI: EventMap for Creature %u is empty but creature is using CreatureEventAI.", m_creature->GetEntry());
@@ -105,41 +105,17 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
     if (pHolder.Event.event_chance <= rnd % 100)
         return false;
 
-    union
-    {
-        uint32 param1;
-        int32 param1_s;
-    };
-
-    union
-    {
-        uint32 param2;
-        int32 param2_s;
-    };
-
-    union
-    {
-        uint32 param3;
-        int32 param3_s;
-    };
-
-    union
-    {
-        uint32 param4;
-        int32 param4_s;
-    };
-
-    param1 = pHolder.Event.event_param1;
-    param2 = pHolder.Event.event_param2;
-    param3 = pHolder.Event.event_param3;
-    param4 = pHolder.Event.event_param4;
+    uint32 param1 = pHolder.Event.event_param1;
+    uint32 param2 = pHolder.Event.event_param2;
+    uint32 param3 = pHolder.Event.event_param3;
+    uint32 param4 = pHolder.Event.event_param4;
 
     //Check event conditions based on the event type, also reset events
     switch (pHolder.Event.event_type)
     {
         case EVENT_T_TIMER:
         {
-            if (!InCombat)
+            if (!m_creature->isInCombat())
                 return false;
 
             //Repeat Timers
@@ -158,7 +134,7 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
         break;
         case EVENT_T_TIMER_OOC:
         {
-            if (InCombat)
+            if (m_creature->isInCombat())
                 return false;
 
             //Repeat Timers
@@ -178,7 +154,7 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
         break;
         case EVENT_T_HP:
         {
-            if (!InCombat || !m_creature->GetMaxHealth())
+            if (!m_creature->isInCombat() || !m_creature->GetMaxHealth())
                 return false;
 
             uint32 perc = (m_creature->GetHealth()*100) / m_creature->GetMaxHealth();
@@ -203,7 +179,7 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
         break;
         case EVENT_T_MANA:
         {
-            if (!InCombat || !m_creature->GetMaxPower(POWER_MANA))
+            if (!m_creature->isInCombat() || !m_creature->GetMaxPower(POWER_MANA))
                 return false;
 
             uint32 perc = (m_creature->GetPower(POWER_MANA)*100) / m_creature->GetMaxPower(POWER_MANA);
@@ -313,7 +289,7 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
         break;
         case EVENT_T_TARGET_HP:
         {
-            if (!InCombat || !m_creature->getVictim() || !m_creature->getVictim()->GetMaxHealth())
+            if (!m_creature->isInCombat() || !m_creature->getVictim() || !m_creature->getVictim()->GetMaxHealth())
                 return false;
 
             uint32 perc = (m_creature->getVictim()->GetHealth()*100) / m_creature->getVictim()->GetMaxHealth();
@@ -338,7 +314,7 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
         break;
         case EVENT_T_TARGET_CASTING:
         {
-            if (!InCombat || !m_creature->getVictim() || !m_creature->getVictim()->IsNonMeleeSpellCasted(false, false, true))
+            if (!m_creature->isInCombat() || !m_creature->getVictim() || !m_creature->getVictim()->IsNonMeleeSpellCasted(false, false, true))
                 return false;
 
             //Repeat Timers
@@ -358,7 +334,7 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
         break;
         case EVENT_T_FRIENDLY_HP:
         {
-            if (!InCombat)
+            if (!m_creature->isInCombat())
                 return false;
 
             Unit* pUnit = DoSelectLowestHpFriendly(param2, param1);
@@ -385,7 +361,7 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
         break;
         case EVENT_T_FRIENDLY_IS_CC:
         {
-            if (!InCombat)
+            if (!m_creature->isInCombat())
                 return false;
 
             std::list<Creature*> pList;
@@ -519,13 +495,12 @@ void CreatureEventAI::ProcessAction(uint16 type, uint32 param1, uint32 param2, u
             if (temp)
             {
                 Unit* target = NULL;
-                Unit* owner = NULL;
 
                 if (pActionInvoker)
                 {
                     if (pActionInvoker->GetTypeId() == TYPEID_PLAYER)
                         target = pActionInvoker;
-                    else if (owner = pActionInvoker->GetOwner())
+                    else if (Unit* owner = pActionInvoker->GetOwner())
                     {
                         if (owner->GetTypeId() == TYPEID_PLAYER)
                             target = owner;
@@ -534,13 +509,9 @@ void CreatureEventAI::ProcessAction(uint16 type, uint32 param1, uint32 param2, u
                 else if (target = m_creature->getVictim())
                 {
                     if (target->GetTypeId() != TYPEID_PLAYER)
-                    {
-                        if (owner = target->GetOwner())
-                        {
+                        if (Unit* owner = target->GetOwner())
                             if (owner->GetTypeId() == TYPEID_PLAYER)
                                 target = owner;
-                        }
-                    }
                 }
 
                 DoScriptText(temp, m_creature, target);
@@ -622,7 +593,7 @@ void CreatureEventAI::ProcessAction(uint16 type, uint32 param1, uint32 param2, u
             }
 
             //Allowed to cast only if not casting (unless we interrupt ourself) or if spell is triggered
-            bool canCast = !(caster->IsNonMeleeSpellCasted(false) && (param3 & CAST_TRIGGERED | CAST_INTURRUPT_PREVIOUS));
+            bool canCast = !caster->IsNonMeleeSpellCasted(false) || (param3 & (CAST_TRIGGERED | CAST_INTURRUPT_PREVIOUS));
 
             // If cast flag CAST_AURA_NOT_PRESENT is active, check if target already has aura on them
             if(param3 & CAST_AURA_NOT_PRESENT)
@@ -678,9 +649,9 @@ void CreatureEventAI::ProcessAction(uint16 type, uint32 param1, uint32 param2, u
             Creature* pCreature = NULL;
 
             if (param3)
-                pCreature = m_creature->SummonCreature(param1, 0, 0, 0, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, param3);
+                pCreature = m_creature->SummonCreature(param1, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, param3);
             else
-                pCreature = m_creature->SummonCreature(param1, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 0);
+                pCreature = m_creature->SummonCreature(param1, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 0);
 
             if (!pCreature)
             {
@@ -912,8 +883,8 @@ void CreatureEventAI::ProcessAction(uint16 type, uint32 param1, uint32 param2, u
                 //if not available, use pActionInvoker
                 if (Unit* pTarget = GetTargetByType(param2, pActionInvoker))
                 {
-                    if (Player* pPlayer = pTarget->GetCharmerOrOwnerPlayerOrPlayerItself())
-                        pPlayer->RewardPlayerAndGroupAtEvent(param1, m_creature);
+                    if (Player* pPlayer2 = pTarget->GetCharmerOrOwnerPlayerOrPlayerItself())
+                        pPlayer2->RewardPlayerAndGroupAtEvent(param1, m_creature);
                 }
             }
         }
@@ -989,7 +960,6 @@ void CreatureEventAI::ProcessAction(uint16 type, uint32 param1, uint32 param2, u
 
 void CreatureEventAI::JustRespawned()
 {
-    InCombat = false;
     Reset();
 
     if (bEmptyList)
@@ -1069,8 +1039,6 @@ void CreatureEventAI::EnterEvadeMode()
 
     m_creature->SetLootRecipient(NULL);
 
-    InCombat = false;
-
     if (bEmptyList)
         return;
 
@@ -1084,7 +1052,6 @@ void CreatureEventAI::EnterEvadeMode()
 
 void CreatureEventAI::JustDied(Unit* killer)
 {
-    InCombat = false;
     Reset();
 
     if (bEmptyList)
@@ -1122,7 +1089,7 @@ void CreatureEventAI::JustSummoned(Creature* pUnit)
     }
 }
 
-void CreatureEventAI::Aggro(Unit *who)
+void CreatureEventAI::EnterCombat(Unit *enemy)
 {
     //Check for on combat start events
     if (!bEmptyList)
@@ -1133,7 +1100,7 @@ void CreatureEventAI::Aggro(Unit *who)
             {
                 case EVENT_T_AGGRO:
                     (*i).Enabled = true;
-                    ProcessEvent(*i, who);
+                    ProcessEvent(*i, enemy);
                     break;
                     //Reset all in combat timers
                 case EVENT_T_TIMER:
@@ -1174,12 +1141,6 @@ void CreatureEventAI::AttackStart(Unit *who)
         m_creature->SetInCombatWith(who);
         who->SetInCombatWith(m_creature);
 
-        if (!InCombat)
-        {
-            InCombat = true;
-            Aggro(who);
-        }
-
         if (CombatMovementEnabled)
         {
             m_creature->GetMotionMaster()->MoveChase(who, AttackDistance, AttackAngle);
@@ -1219,7 +1180,7 @@ void CreatureEventAI::MoveInLineOfSight(Unit *who)
         }
     }
 
-    if (m_creature->isCivilian() && m_creature->IsNeutralToAll())
+    if (m_creature->isCivilian() || m_creature->IsNeutralToAll())
         return;
 
     if (!m_creature->hasUnitState(UNIT_STAT_STUNNED) && who->isTargetableForAttack() &&
@@ -1238,8 +1199,8 @@ void CreatureEventAI::MoveInLineOfSight(Unit *who)
             }
             else if (m_creature->GetMap()->IsDungeon())
             {
-                who->SetInCombatWith(m_creature);
                 m_creature->AddThreat(who, 0.0f);
+                who->SetInCombatWith(m_creature);
             }
         }
     }
@@ -1268,7 +1229,7 @@ void CreatureEventAI::SpellHit(Unit* pUnit, const SpellEntry* pSpell)
 void CreatureEventAI::UpdateAI(const uint32 diff)
 {
     //Check if we are in combat (also updates calls threat update code)
-    bool Combat = InCombat ? (m_creature->SelectHostilTarget() && m_creature->getVictim()) : false;
+    bool Combat = m_creature->SelectHostilTarget() && m_creature->getVictim();
 
     //Must return if creature isn't alive. Normally select hostil target and get victim prevent this
     if (!m_creature->isAlive())

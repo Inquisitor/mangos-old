@@ -553,7 +553,7 @@ bool ChatHandler::HandleGameObjectDeleteCommand(const char* args)
     if(owner_guid)
     {
         Unit* owner = ObjectAccessor::GetUnit(*m_session->GetPlayer(),owner_guid);
-        if(!owner && !IS_PLAYER_GUID(owner_guid))
+        if(!owner || !IS_PLAYER_GUID(owner_guid))
         {
             PSendSysMessage(LANG_COMMAND_DELOBJREFERCREATURE, GUID_LOPART(owner_guid), obj->GetGUIDLow());
             SetSentErrorMessage(true);
@@ -740,7 +740,7 @@ bool ChatHandler::HandleGameObjectAddCommand(const char* args)
     GameObject* pGameObj = new GameObject;
     uint32 db_lowGUID = objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT);
 
-    if(!pGameObj->Create(db_lowGUID, goI->id, map, chr->GetPhaseMaskForSpawn(), x, y, z, o, 0.0f, 0.0f, 0.0f, 0.0f, 0, 1))
+    if(!pGameObj->Create(db_lowGUID, goI->id, map, chr->GetPhaseMaskForSpawn(), x, y, z, o, 0.0f, 0.0f, 0.0f, 0.0f, 0, GO_STATE_READY))
     {
         delete pGameObj;
         return false;
@@ -1375,7 +1375,7 @@ bool ChatHandler::HandleNpcMoveCommand(const char* args)
         if(!cId)
             return false;
 
-        uint32 lowguid = atoi(cId);
+        lowguid = atoi(cId);
 
         /* FIXME: impossibel without entry
         if(lowguid)
@@ -1915,7 +1915,7 @@ bool ChatHandler::HandleNpcNameCommand(const char* /*args*/)
         return true;
     }
 
-    for (uint8 i = 0; i < strlen(args); i++)
+    for (uint8 i = 0; i < strlen(args); ++i)
     {
         if(!isalpha(args[i]) && args[i]!=' ')
         {
@@ -3656,7 +3656,7 @@ bool ChatHandler::HandleWpImportCommand(const char *args)
 }
 
 //rename characters
-bool ChatHandler::HandleRenameCommand(const char* args)
+bool ChatHandler::HandleCharacterRenameCommand(const char* args)
 {
     Player* target = NULL;
     uint64 targetGUID = 0;
@@ -3718,7 +3718,7 @@ bool ChatHandler::HandleRenameCommand(const char* args)
 }
 
 // customize characters
-bool ChatHandler::HandleCustomizeCommand(const char* args)
+bool ChatHandler::HandleCharacterCustomizeCommand(const char* args)
 {
     Player* target = NULL;
     uint64 targetGUID = 0;
