@@ -8932,45 +8932,18 @@ bool Unit::isVisibleForOrDetect(Unit const* u, bool detect, bool inVisibleList, 
     }
     else if(GetTypeId()==TYPEID_PLAYER)                     // distance for show player
     {
-		if( GetMap()->Instanceable() ) // If we are in any kind of instance (Dungeon/Raid or Arena/Bg) get range value from table
-		{
-			uint32 range = 0;
-			if( GetMap()->IsDungeon() )
-			{
-				InstanceTemplate const* iTemplate = objmgr.GetInstanceTemplate( u->GetMapId() );
-				range = iTemplate->view_range;
-			}
-			else if( ((Player *)this)->GetBattleGround() )
-				range = ((Player *)this)->GetBattleGround()->GetViewRange();
-
-			if(u->GetTypeId()==TYPEID_PLAYER)
-			{
-				// Players far than max visible distance for player or not in our map are not visible too
-				if (!at_same_transport && !IsWithinDistInMap(u, range +(inVisibleList ? World::GetVisibleUnitGreyDistance() : 0.0f), is3dDistance))
-					return false;
-			}
-			else
-			{
-				// Units far than max visible distance for creature or not in our map are not visible too
-				if (!IsWithinDistInMap(u, range +(inVisibleList ? World::GetVisibleUnitGreyDistance() : 0.0f), is3dDistance))
-					return false;
-			}
-		}
-		else // If we are in normal map Outlands etc; get value from conf file
-		{
-			if(u->GetTypeId()==TYPEID_PLAYER)
-			{
-				 // Players far than max visible distance for player or not in our map are not visible too
-				if (!at_same_transport && !IsWithinDistInMap(u,World::GetMaxVisibleDistanceForPlayer()+(inVisibleList ? World::GetVisibleUnitGreyDistance() : 0.0f), is3dDistance))
-					return false;
-			}
-			else
-			{
-				// Units far than max visible distance for creature or not in our map are not visible too
-				if (!IsWithinDistInMap(u,World::GetMaxVisibleDistanceForCreature()+(inVisibleList ? World::GetVisibleUnitGreyDistance() : 0.0f), is3dDistance))
-					return false;
-			}
-		}
+        if(u->GetTypeId()==TYPEID_PLAYER)
+        {
+            // Players far than max visible distance for player or not in our map are not visible too
+            if (!at_same_transport && !IsWithinDistInMap(u,World::GetMaxVisibleDistanceForPlayer()+(inVisibleList ? World::GetVisibleUnitGreyDistance() : 0.0f), is3dDistance))
+                return false;
+        }
+        else
+        {
+            // Units far than max visible distance for creature or not in our map are not visible too
+            if (!IsWithinDistInMap(u,World::GetMaxVisibleDistanceForCreature()+(inVisibleList ? World::GetVisibleUnitGreyDistance() : 0.0f), is3dDistance))
+                return false;
+        }
     }
     else if(GetCharmerOrOwnerGUID())                        // distance for show pet/charmed
     {
@@ -8978,30 +8951,11 @@ bool Unit::isVisibleForOrDetect(Unit const* u, bool detect, bool inVisibleList, 
         if (!IsWithinDistInMap(u,World::GetMaxVisibleDistanceForPlayer()+(inVisibleList ? World::GetVisibleUnitGreyDistance() : 0.0f), is3dDistance))
             return false;
     }
-    else                                                    // distance for show creature FEANOR TODO
+    else                                                    // distance for show creature
     {
-		if( GetMap()->Instanceable() ) // If we are in any kind of instance (Dungeon/Raid or Arena/Bg) get range value from table
-		{
-			uint32 range = 0;
-			if( GetMap()->IsDungeon() )
-			{
-				InstanceTemplate const* iTemplate = objmgr.GetInstanceTemplate( u->GetMapId() );
-				range = iTemplate->view_range;
-			}
-			//else if( ((Player *)this)->GetBattleGround() )
-			//	range = ((Player *)this)->GetBattleGround()->GetViewRange();
-			
-			// Units far than max visible distance for creature or not in our map are not visible too
-			if (!IsWithinDistInMap(u, range >0 ? range : World::GetMaxVisibleDistanceForCreature() +(inVisibleList ? World::GetVisibleUnitGreyDistance() : 0.0f), is3dDistance))
-				return false;
-
-		}
-		else
-		{
-			// Units far than max visible distance for creature or not in our map are not visible too
-			if (!IsWithinDistInMap(u,World::GetMaxVisibleDistanceForCreature()+(inVisibleList ? World::GetVisibleUnitGreyDistance() : 0.0f), is3dDistance))
-				return false;
-		}
+        // Units far than max visible distance for creature or not in our map are not visible too
+        if (!IsWithinDistInMap(u,World::GetMaxVisibleDistanceForCreature()+(inVisibleList ? World::GetVisibleUnitGreyDistance() : 0.0f), is3dDistance))
+            return false;
     }
 
     // Visible units, always are visible for all units, except for units under invisibility and phases
