@@ -5292,6 +5292,28 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 }
                 return false;
             }
+            // King of Jungles 
+            if (dummySpell->SpellIconID == 2850) 
+            { 
+                if (!procSpell) 
+                    return false; 
+ 
+                if (effIndex!=0) 
+                    return true; 
+ 
+                if (procSpell->SpellFamilyFlags & 0x0000000000080000LL) 
+                { 
+                    triggered_spell_id = 51185; 
+                    basepoints0 = triggerAmount; 
+                    break; 
+                } 
+                if (procSpell->SpellFamilyFlags2 & 0x00000800LL) 
+                { 
+                    triggered_spell_id = 51178; 
+                    basepoints0 = 4*triggerAmount; 
+                    break; 
+                } 
+            }
             // Living Seed
             else if (dummySpell->SpellIconID == 2860)
             {
