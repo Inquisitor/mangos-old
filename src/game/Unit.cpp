@@ -7769,6 +7769,10 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
         if (pVictim->isFrozen())
             DoneTotalMod *= 3.0f;
     }
+    //Glyph of Shadow Word: Pain
+    Aura *dummy = GetDummyAura(55687);
+    if ( dummy && pVictim->GetAura(SPELL_AURA_PERIODIC_DAMAGE, SPELLFAMILY_PRIEST, 0x0000000000008000LL, 0, GetGUID()))
+         DoneTotalMod *= (dummy->GetModifier()->m_amount+100.0f)/100.0f;
 
     // ..taken
     AuraList const& mModDamagePercentTaken = pVictim->GetAurasByType(SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN);
