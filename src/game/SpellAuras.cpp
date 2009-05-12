@@ -1221,7 +1221,13 @@ bool Aura::isAffectedOnSpell(SpellEntry const *spell) const
     if (spell->SpellFamilyName != m_spellProto->SpellFamilyName)
         return false;
     // Check EffectClassMask
-    uint32 const *ptr = getAuraSpellClassMask();
+     uint32 const *ptr;
+     SpellAffectEntry const *spellAffect = spellmgr.GetSpellAffect(GetId(), GetEffIndex());
+     if (spellAffect)
+         ptr = &spellAffect->SpellClassMask[0];
+     else
+         ptr = getAuraSpellClassMask();
+
     if (((uint64*)ptr)[0] & spell->SpellFamilyFlags)
         return true;
     if (ptr[2] & spell->SpellFamilyFlags2)

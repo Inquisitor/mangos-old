@@ -736,15 +736,6 @@ void SpellMgr::LoadSpellAffects()
             continue;
         }
 
-        if( spellInfo->Effect[effectId] != SPELL_EFFECT_APPLY_AURA ||
-            spellInfo->EffectApplyAuraName[effectId] != SPELL_AURA_ADD_FLAT_MODIFIER &&
-            spellInfo->EffectApplyAuraName[effectId] != SPELL_AURA_ADD_PCT_MODIFIER  &&
-            spellInfo->EffectApplyAuraName[effectId] != SPELL_AURA_ADD_TARGET_TRIGGER )
-        {
-            sLog.outErrorDb("Spell %u listed in `spell_affect` have not SPELL_AURA_ADD_FLAT_MODIFIER (%u) or SPELL_AURA_ADD_PCT_MODIFIER (%u) or SPELL_AURA_ADD_TARGET_TRIGGER (%u) for effect index (%u)", entry,SPELL_AURA_ADD_FLAT_MODIFIER,SPELL_AURA_ADD_PCT_MODIFIER,SPELL_AURA_ADD_TARGET_TRIGGER,effectId);
-            continue;
-        }
-
         SpellAffectEntry affect;
         affect.SpellClassMask[0] = fields[2].GetUInt32();
         affect.SpellClassMask[1] = fields[3].GetUInt32();
@@ -764,7 +755,7 @@ void SpellMgr::LoadSpellAffects()
         {
             char text[]="ABC";
             sLog.outErrorDb("Spell %u listed in `spell_affect` have redundant (same with EffectSpellClassMask%c) data for effect index (%u) and not needed, skipped.", entry, text[effectId], effectId);
-            continue;
+            //continue;
         }
 
         mSpellAffectMap[(entry<<8) + effectId] = affect;
