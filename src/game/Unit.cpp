@@ -4445,6 +4445,27 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
     {
         case SPELLFAMILY_GENERIC:
         {
+            //Master Shapeshifter
+            if (dummySpell->SpellIconID == 2851)
+            {
+                if (!procSpell)
+                    return false;
+
+                Unit *caster = triggeredByAura->GetCaster();
+                if (caster)
+                {
+                    switch(caster->m_form)
+                    {
+                        case FORM_BEAR:
+                        case FORM_DIREBEAR: triggered_spell_id = 48418; break;
+                        case FORM_CAT: triggered_spell_id = 48420; break;
+                        case FORM_MOONKIN: triggered_spell_id = 48421; break;
+                        case FORM_TREE: triggered_spell_id = 48422; break;
+                    }
+                    basepoints0 = triggerAmount;
+                    break;
+                }
+            }
             switch (dummySpell->Id)
             {
                 // Eye for an Eye
