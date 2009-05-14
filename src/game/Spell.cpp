@@ -2375,6 +2375,12 @@ void Spell::cast(bool skipCheck)
                 m_preCastSpell = 11196;                                // Recently Bandaged
             break;
         }
+        case SPELLFAMILY_DRUID:
+        {
+            if (m_spellInfo->SpellIconID == 2852 && (m_spellInfo->AttributesEx & 0x28020)) // Berserk
+                m_preCastSpell = 58923; // Hit 3 targets at once with mangle in dire bear form
+            break;
+        }
         case SPELLFAMILY_MAGE:
         {
             if (m_spellInfo->SpellFamilyFlags&0x0000008000000000LL)    // Ice Block
