@@ -405,6 +405,17 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
             }
             case SPELLFAMILY_WARLOCK:
             {
+                 //shadowflame mask = 0x1000000000000LL
+				if (m_spellInfo->Id == 47897)                    //shadowflame rank1
+				{
+				    m_caster->CastSpell(unitTarget,47960,true) ;        
+				    break;
+				}
+				if (m_spellInfo->Id == 61290)                    //shadowflame rank2
+				{
+				    m_caster->CastSpell(unitTarget,61291,true) ;        
+				    break;
+				}
                 // Incinerate Rank 1 & 2
                 if((m_spellInfo->SpellFamilyFlags & 0x00004000000000LL) && m_spellInfo->SpellIconID==2128)
                 {
