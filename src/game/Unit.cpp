@@ -8194,7 +8194,7 @@ uint32 Unit::SpellCriticalHealingBonus(SpellEntry const *spellProto, uint32 dama
 uint32 Unit::SpellHealingBonus(Unit *pVictim, SpellEntry const *spellProto, uint32 healamount, DamageEffectType damagetype, uint32 stack)
 {
     // No heal amount for this class spells
-    if (spellProto->DmgClass == SPELL_DAMAGE_CLASS_NONE)
+    if (spellProto->DmgClass == SPELL_DAMAGE_CLASS_NONE && spellProto->SpellFamilyName == SPELLFAMILY_GENERIC)
         return healamount;
 
     // For totems get healing bonus from owner (statue isn't totem in fact)

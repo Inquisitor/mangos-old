@@ -528,7 +528,7 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                 // Gouge
                 else if(m_spellInfo->SpellFamilyFlags & 0x0000000000000008LL)
                 {
-                    damage += int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK)*0.02f);
+                    damage += int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK)*0.21f);
                 }
                 // Instant Poison
                 else if(m_spellInfo->SpellFamilyFlags & 0x0000000000002000LL)
@@ -1683,12 +1683,15 @@ void Spell::EffectDummy(uint32 i)
 
             switch(m_spellInfo->Id)
             {
-                // Judgement of Righteousness (0.2*$AP+0.32*$SPH) holy added in spellDamagBonus
+                 // Judgement of Righteousness (0.2*$AP+0.32*$SPH)
                 case 20187:
                 {
                     if (!unitTarget)
                         return;
-                    m_damage+=int32(0.2f*m_caster->GetTotalAttackPowerValue(BASE_ATTACK));
+
+                    int32 holy = SpellBaseDamageBonus(SPELL_SCHOOL_MASK_HOLY) +
+                             SpellBaseDamageBonusForVictim(SPELL_SCHOOL_MASK_HOLY, pVictim);
+                    m_damage+=int32(holy*0.32f + 0.2f*m_caster->GetTotalAttackPowerValue(BASE_ATTACK));
                     return;
                 }
                 case 31789:                                 // Righteous Defense (step 1)
