@@ -656,24 +656,25 @@ struct CalcDamageInfo
 
 // Spell damage info structure based on structure sending in SMSG_SPELLNONMELEEDAMAGELOG opcode
 struct SpellNonMeleeDamage{
- SpellNonMeleeDamage(Unit *_attacker, Unit *_target, uint32 _SpellID, uint32 _schoolMask)
-    : target(_target), attacker(_attacker), SpellID(_SpellID), damage(0), schoolMask(_schoolMask),
-    absorb(0), resist(0), phusicalLog(false), unused(false), blocked(0), HitInfo(0), cleanDamage(0)
- {}
+    SpellNonMeleeDamage(Unit *_attacker, Unit *_target, uint32 _SpellID, uint32 _schoolMask)
+        : target(_target), attacker(_attacker), SpellID(_SpellID), damage(0), overkill(0), schoolMask(_schoolMask),
+        absorb(0), resist(0), physicalLog(false), unused(false), blocked(0), HitInfo(0), cleanDamage(0)
+    {}
 
- Unit   *target;
- Unit   *attacker;
- uint32 SpellID;
- uint32 damage;
- uint32 schoolMask;
- uint32 absorb;
- uint32 resist;
- bool   phusicalLog;
- bool   unused;
- uint32 blocked;
- uint32 HitInfo;
- // Used for help
- uint32 cleanDamage;
+    Unit   *target;
+    Unit   *attacker;
+    uint32 SpellID;
+    uint32 damage;
+    uint32 overkill;
+    uint32 schoolMask;
+    uint32 absorb;
+    uint32 resist;
+    bool   physicalLog;
+    bool   unused;
+    uint32 blocked;
+    uint32 HitInfo;
+    // Used for help
+    uint32 cleanDamage;
 };
 
 uint32 createProcExtendMask(SpellNonMeleeDamage *damageInfo, SpellMissInfo missCondition);
@@ -952,6 +953,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void Unmount();
 
         uint16 GetMaxSkillValueForLevel(Unit const* target = NULL) const { return (target ? getLevelForTarget(target) : getLevel()) * 5; }
+        void DealDamageMods(Unit *pVictim, uint32 &damage, uint32* absorb);
         uint32 DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDamage, DamageEffectType damagetype, SpellSchoolMask damageSchoolMask, SpellEntry const *spellProto, bool durabilityLoss);
         int32 DealHeal(Unit *pVictim, uint32 addhealth, SpellEntry const *spellProto, bool critical = false);
 
@@ -1239,9 +1241,9 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         float GetWeaponDamageRange(WeaponAttackType attType ,WeaponDamageRange type) const;
         void SetBaseWeaponDamage(WeaponAttackType attType ,WeaponDamageRange damageRange, float value) { m_weaponDamage[attType][damageRange] = value; }
 
-        bool isInFront(Unit const* target,float distance, float arc = M_PI) const;
+        bool isInFrontInMap(Unit const* target,float distance, float arc = M_PI) const;
         void SetInFront(Unit const* target);
-        bool isInBack(Unit const* target, float distance, float arc = M_PI) const;
+        bool isInBackInMap(Unit const* target, float distance, float arc = M_PI) const;
 
         // Visibility system
         UnitVisibility GetVisibility() const { return m_Visibility; }
@@ -1413,7 +1415,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         uint32 GetUnitMovementFlags() const { return m_unit_movement_flags; }
         void SetUnitMovementFlags(uint32 f) { m_unit_movement_flags = f; }
 
-        void SetFeared(bool apply, uint64 casterGUID = 0, uint32 spellID = 0);
+        void SetFeared(bool apply, uint64 casterGUID = 0, uint32 spellID = 0, uint32 time = 0);
         void SetConfused(bool apply, uint64 casterGUID = 0, uint32 spellID = 0);
 
         void AddComboPointHolder(uint32 lowguid) { m_ComboPointHolders.insert(lowguid); }

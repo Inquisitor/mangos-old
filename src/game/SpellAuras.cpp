@@ -45,6 +45,7 @@
 #include "Util.h"
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
+#include "Vehicle.h"
 #include "CellImpl.h"
 
 #define NULL_AURA_SLOT 0xFF
@@ -195,7 +196,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleRangedAmmoHaste,                           //141 SPELL_AURA_MOD_RANGED_AMMO_HASTE
     &Aura::HandleAuraModBaseResistancePCT,                  //142 SPELL_AURA_MOD_BASE_RESISTANCE_PCT
     &Aura::HandleAuraModResistanceExclusive,                //143 SPELL_AURA_MOD_RESISTANCE_EXCLUSIVE
-    &Aura::HandleNoImmediateEffect,                         //144 SPELL_AURA_SAFE_FALL                  implemented in WorldSession::HandleMovementOpcodes
+    &Aura::HandleAuraSafeFall,                              //144 SPELL_AURA_SAFE_FALL                         implemented in WorldSession::HandleMovementOpcodes
     &Aura::HandleAuraModPetTalentsPoints,                   //145 SPELL_AURA_MOD_PET_TALENT_POINTS
     &Aura::HandleNoImmediateEffect,                         //146 SPELL_AURA_ALLOW_TAME_PET_TYPE
     &Aura::HandleNULL,                                      //147 SPELL_AURA_ADD_CREATURE_IMMUNITY
@@ -241,7 +242,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleNoImmediateEffect,                         //187 SPELL_AURA_MOD_ATTACKER_MELEE_CRIT_CHANCE  implemented in Unit::GetUnitCriticalChance
     &Aura::HandleNoImmediateEffect,                         //188 SPELL_AURA_MOD_ATTACKER_RANGED_CRIT_CHANCE implemented in Unit::GetUnitCriticalChance
     &Aura::HandleModRating,                                 //189 SPELL_AURA_MOD_RATING
-    &Aura::HandleNULL,                                      //190 SPELL_AURA_MOD_FACTION_REPUTATION_GAIN
+    &Aura::HandleNoImmediateEffect,                         //190 SPELL_AURA_MOD_FACTION_REPUTATION_GAIN     implemented in Player::CalculateReputationGain
     &Aura::HandleAuraModUseNormalSpeed,                     //191 SPELL_AURA_USE_NORMAL_MOVEMENT_SPEED
     &Aura::HandleModMeleeRangedSpeedPct,                    //192 SPELL_AURA_HASTE_MELEE
     &Aura::HandleModCombatSpeedPct,                         //193 SPELL_AURA_MELEE_SLOW (in fact combat (any type attack) speed pct)
@@ -1076,6 +1077,7 @@ void Aura::_RemoveAura()
             m_target->ModifyAuraState(AURA_STATE_ENRAGE, false);
 
         uint32 removeState = 0;
+        uint64 removeFamilyFlag = m_spellProto->SpellFamilyFlags;
         switch(m_spellProto->SpellFamilyName)
         {
             case SPELLFAMILY_PALADIN:
@@ -1090,7 +1092,10 @@ void Aura::_RemoveAura()
                 if(m_spellProto->SpellFamilyFlags & 0x0000000000000400LL)
                     removeState = AURA_STATE_FAERIE_FIRE;   // Faerie Fire (druid versions)
                 else if(m_spellProto->SpellFamilyFlags & 0x50)
+                {
+                    removeFamilyFlag = 0x50;
                     removeState = AURA_STATE_SWIFTMEND;     // Swiftmend aura state
+                }
                 break;
             case SPELLFAMILY_WARRIOR:
                 if(m_spellProto->SpellFamilyFlags & 0x0004000000000000LL)
@@ -1114,7 +1119,7 @@ void Aura::_RemoveAura()
             {
                 SpellEntry const *auraSpellInfo = (*i).second->GetSpellProto();
                 if(auraSpellInfo->SpellFamilyName  == m_spellProto->SpellFamilyName &&
-                   auraSpellInfo->SpellFamilyFlags == m_spellProto->SpellFamilyFlags )
+                   auraSpellInfo->SpellFamilyFlags & removeFamilyFlag)
                 {
                     found = true;
                     break;
@@ -2355,6 +2360,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             switch(GetId())
             {
                 case 34246:                                 // Idol of the Emerald Queen
+                case 60779:                                 // Idol of Lush Moss
                 {
                     if (m_target->GetTypeId() != TYPEID_PLAYER)
                         return;
@@ -2445,29 +2451,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             }
         }
         case SPELLFAMILY_HUNTER:
-        {
-            // Improved Aspect of the Viper
-            if( GetId()==38390 && m_target->GetTypeId()==TYPEID_PLAYER )
-            {
-                if(apply)
-                {
-                    // + effect value for Aspect of the Viper
-                    SpellModifier *mod = new SpellModifier;
-                    mod->op = SPELLMOD_EFFECT1;
-                    mod->value = m_modifier.m_amount;
-                    mod->type = SPELLMOD_FLAT;
-                    mod->spellId = GetId();
-                    mod->mask = 0x4000000000000LL;
-                    mod->mask2= 0LL;
-
-                    m_spellmod = mod;
-                }
-
-                ((Player*)m_target)->AddSpellMod(m_spellmod, apply);
-                return;
-            }
             break;
-        }
         case SPELLFAMILY_SHAMAN:
         {
             // Improved Weapon Totems
@@ -5966,6 +5950,8 @@ void Aura::PeriodicTick()
             sLog.outDetail("PeriodicTick: %u (TypeId: %u) attacked %u (TypeId: %u) for %u dmg inflicted by %u abs is %u",
                 GUID_LOPART(GetCasterGUID()), GuidHigh2TypeId(GUID_HIPART(GetCasterGUID())), m_target->GetGUIDLow(), m_target->GetTypeId(), pdamage, GetId(),absorb);
 
+            pCaster->DealDamageMods(m_target,pdamage,&absorb);
+
             WorldPacket data(SMSG_PERIODICAURALOG, (21+16));// we guess size
             data.append(m_target->GetPackGUID());
             data.appendPackGUID(GetCasterGUID());
@@ -6144,10 +6130,13 @@ void Aura::PeriodicTick()
                 }
                 else
                 {
-                    pCaster->SendSpellNonMeleeDamageLog(pCaster, GetId(), gain, GetSpellSchoolMask(GetSpellProto()), 0, 0, false, 0, false);
+                    uint32 damage = gain;
+                    uint32 absorb = 0;
+                    pCaster->DealDamageMods(pCaster,damage,&absorb);
+                    pCaster->SendSpellNonMeleeDamageLog(pCaster, GetId(), damage, GetSpellSchoolMask(GetSpellProto()), absorb, 0, false, 0, false);
 
                     CleanDamage cleanDamage =  CleanDamage(0, BASE_ATTACK, MELEE_HIT_NORMAL );
-                    pCaster->DealDamage(pCaster, gain, &cleanDamage, NODAMAGE, GetSpellSchoolMask(GetSpellProto()), GetSpellProto(), true);
+                    pCaster->DealDamage(pCaster, damage, &cleanDamage, NODAMAGE, GetSpellSchoolMask(GetSpellProto()), GetSpellProto(), true);
                 }
             }
 
@@ -6339,6 +6328,9 @@ void Aura::PeriodicTick()
             //maybe has to be sent different to client, but not by SMSG_PERIODICAURALOG
             SpellNonMeleeDamage damageInfo(pCaster, m_target, spellProto->Id, spellProto->SchoolMask);
             pCaster->CalculateSpellDamage(&damageInfo, gain, spellProto);
+
+            pCaster->DealDamageMods(damageInfo.target,damageInfo.damage,&damageInfo.absorb);
+
             pCaster->SendSpellNonMeleeDamageLog(&damageInfo);
 
             // Set trigger flag
@@ -6856,19 +6848,35 @@ void Aura::HandleArenaPreparation(bool apply, bool Real)
         m_target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PREPARATION);
 }
 
-void Aura::HandleAuraControlVehicle(bool /*apply*/, bool Real)
+/**
+ * Such auras are applied from a caster(=player) to a vehicle.
+ * This has been verified using spell #49256
+ */
+void Aura::HandleAuraControlVehicle(bool apply, bool Real)
 {
     if(!Real)
         return;
 
-    if(m_target->GetTypeId() != TYPEID_PLAYER)
+    Unit *player = GetCaster();
+    Vehicle *vehicle = dynamic_cast<Vehicle*>(m_target);
+    if(!player || player->GetTypeId()!=TYPEID_PLAYER || !vehicle)
         return;
 
-    if(Pet *pet = m_target->GetPet())
-        pet->Remove(PET_SAVE_AS_CURRENT);
+    if (apply)
+    {
+        if(Pet *pet = player->GetPet())
+            pet->Remove(PET_SAVE_AS_CURRENT);
+        ((Player*)player)->EnterVehicle(vehicle);
+    }
+    else
+    {
+        SpellEntry const *spell = GetSpellProto();
 
-    WorldPacket data(SMSG_ON_CANCEL_EXPECTED_RIDE_VEHICLE_AURA, 0);
-    ((Player*)m_target)->GetSession()->SendPacket(&data);
+        // some SPELL_AURA_CONTROL_VEHICLE auras have a dummy effect on the player - remove them
+        player->RemoveAurasDueToSpell(spell->Id);
+
+        ((Player*)player)->ExitVehicle(vehicle);
+    }
 }
 
 void Aura::HandleAuraConvertRune(bool apply, bool Real)
@@ -6983,6 +6991,15 @@ void Aura::UnregisterSingleCastAura()
         }
         m_isSingleTargetAura = false;
     }
+}
+
+void Aura::HandleAuraSafeFall( bool Apply, bool Real )
+{
+    // implemented in WorldSession::HandleMovementOpcodes
+
+    // only special case
+    if(Apply && Real && GetId()==32474 && m_target->GetTypeId()==TYPEID_PLAYER)
+        ((Player*)m_target)->ActivateTaxiPathTo(506,GetId());
 }
 
 void Aura::HandleAllowOnlyAbility(bool apply, bool Real)

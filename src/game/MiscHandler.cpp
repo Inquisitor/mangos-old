@@ -681,9 +681,7 @@ void WorldSession::HandleCorpseReclaimOpcode(WorldPacket &recv_data)
     if(corpse->GetGhostTime() + GetPlayer()->GetCorpseReclaimDelay(corpse->GetType()==CORPSE_RESURRECTABLE_PVP) > time(NULL))
         return;
 
-    float dist = corpse->GetDistance2d(GetPlayer());
-    sLog.outDebug("Corpse 2D Distance: \t%f",dist);
-    if (dist > CORPSE_RECLAIM_RADIUS)
+    if (!corpse->IsWithinDist(GetPlayer(),CORPSE_RECLAIM_RADIUS,false))
         return;
 
     uint64 guid;
@@ -1635,21 +1633,6 @@ void WorldSession::HandleSetTaxiBenchmarkOpcode( WorldPacket & recv_data )
     recv_data >> mode;
 
     sLog.outDebug("Client used \"/timetest %d\" command", mode);
-}
-
-void WorldSession::HandleSpellClick( WorldPacket & recv_data )
-{
-    CHECK_PACKET_SIZE(recv_data, 8);
-
-    uint64 guid;
-    recv_data >> guid;
-
-    Vehicle *vehicle = ObjectAccessor::GetVehicle(guid);
-
-    if(!vehicle)
-        return;
-
-    _player->EnterVehicle(vehicle);
 }
 
 void WorldSession::HandleInspectAchievements( WorldPacket & recv_data )
