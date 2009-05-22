@@ -1817,6 +1817,9 @@ void Player::RewardRage( uint32 damage, uint32 weaponSpeedHitFactor, bool attack
 
 void Player::RegenerateAll()
 {
+    if (!isAlive())
+        return;
+
     uint32 now = getMSTime(); // in msec
     uint32 diff = getMSTimeDiff(m_lastRegenerate, now);
     uint32 regenDelay = 2000; // default time to next regenerate.
