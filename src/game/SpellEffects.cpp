@@ -1162,6 +1162,11 @@ void Spell::EffectDummy(uint32 i)
                     }
                     return;
                 }
+                case 52759:                                 // Ancestral Awakening
+                    if (!unitTarget)
+                        return;
+                    m_caster->CastCustomSpell(unitTarget, 52752, &damage, NULL, NULL, true);
+                    return;
                 case 53341:
                 case 53343:
                 {
@@ -1790,6 +1795,12 @@ void Spell::EffectDummy(uint32 i)
                         }
                     }
                 }
+                return;
+            }
+            // Cleansing Totem
+            if(m_spellInfo->SpellFamilyFlags & 0x0000000004000000LL && m_spellInfo->SpellIconID==1673)
+            {
+                m_caster->CastSpell(unitTarget, 52025, true);
                 return;
             }
             // Healing Stream Totem
@@ -4307,6 +4318,9 @@ void Spell::EffectSummonPet(uint32 i)
     if(m_caster->GetTypeId() == TYPEID_PLAYER)
         NewSummon->SetUInt32Value(UNIT_FIELD_FLAGS,UNIT_FLAG_PVP_ATTACKABLE);
 
+    if(m_caster->IsPvP())
+        NewSummon->SetPvP(true);
+
     NewSummon->InitStatsForLevel(petlevel);
     NewSummon->InitPetCreateSpells();
     NewSummon->InitLevelupSpellsForLevel();
@@ -5692,6 +5706,9 @@ void Spell::EffectSummonTotem(uint32 i)
 
     if(m_caster->GetTypeId() == TYPEID_PLAYER)
         pTotem->SetFlag(UNIT_FIELD_FLAGS,UNIT_FLAG_PVP_ATTACKABLE);
+
+    if(m_caster->IsPvP())
+        pTotem->SetPvP(true);
 
     pTotem->Summon(m_caster);
 
