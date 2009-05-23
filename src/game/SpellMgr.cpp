@@ -2678,6 +2678,14 @@ DiminishingGroup GetDiminishingReturnsGroupForSpell(SpellEntry const* spellproto
                 return DIMINISHING_LIMITONLY;
             break;
         }
+         case SPELLFAMILY_HUNTER:
+        {
+            // Freezing trap - 10 sec in pvp
+            // why wont 1<<MECHANIC_FREEZE work?
+            if (spellproto->SpellFamilyFlags & 0x00000000008LL)
+                return DIMINISHING_FREEZE;
+            break;
+        }
         default:
             break;
     }
