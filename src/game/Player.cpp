@@ -11640,7 +11640,7 @@ void Player::RemoveEnchantmentDurations(Item *item)
     }
 }
 
-void Player::RemoveAllEnchantments(EnchantmentSlot slot)
+void Player::RemoveAllEnchantments(EnchantmentSlot slot, bool inArena)
 {
     // remove enchantments from equipped items first to clean up the m_enchantDuration list
     for(EnchantDurationList::iterator itr = m_enchantDuration.begin(),next;itr != m_enchantDuration.end();itr=next)
@@ -11648,15 +11648,37 @@ void Player::RemoveAllEnchantments(EnchantmentSlot slot)
         next = itr;
         if(itr->slot==slot)
         {
-            if(itr->item && itr->item->GetEnchantmentId(slot))
+            Item* curItem = itr->item;
+
+             // remove from update list
+            next = m_enchantDuration.erase(itr);
+
+            // skip rogues poisons in arenas - is there a better way to check it?
+            if (inArena && slot == TEMP_ENCHANTMENT_SLOT && curItem)
+            {
+                uint32 enchant_id = curItem->GetEnchantmentId(slot);
+                if(!enchant_id)
+                    continue;
+
+                SpellItemEnchantmentEntry const* enchantEntry = sSpellItemEnchantmentStore.LookupEntry(enchant_id);
+                if(!enchantEntry)
+                    continue;
+
+                for(uint8 x = 0; x < 3; ++x)
+                {
+                    SpellEntry const *spell = sSpellStore.LookupEntry(enchantEntry->spellid[x]);
+                    if(spell && spell->SpellFamilyName == SPELLFAMILY_ROGUE && spell->SpellFamilyFlags & 0x000000101001E000LL)
+                        continue;
+                }
+            }
+
+            if(curItem && curItem->GetEnchantmentId(slot))
             {
                 // remove from stats
-                ApplyEnchantment(itr->item,slot,false,false);
+                ApplyEnchantment(curItem,slot,false,false);
                 // remove visual
-                itr->item->ClearEnchantment(slot);
+                curItem->ClearEnchantment(slot);
             }
-            // remove from update list
-            next = m_enchantDuration.erase(itr);
         }
         else
             ++next;
