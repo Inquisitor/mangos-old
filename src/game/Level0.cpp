@@ -179,51 +179,9 @@ bool ChatHandler::HandleGMListIngameCommand(const char* /*args*/)
 
 bool ChatHandler::HandleAccountPasswordCommand(const char* args)
 {
-    if(!*args)
-        return false;
-
-    char *old_pass = strtok ((char*)args, " ");
-    char *new_pass = strtok (NULL, " ");
-    char *new_pass_c  = strtok (NULL, " ");
-
-    if (!old_pass || !new_pass || !new_pass_c)
-        return false;
-
-    std::string password_old = old_pass;
-    std::string password_new = new_pass;
-    std::string password_new_c = new_pass_c;
-
-    if (password_new != password_new_c)
-    {
-        SendSysMessage (LANG_NEW_PASSWORDS_NOT_MATCH);
-        SetSentErrorMessage (true);
-        return false;
-    }
-
-    if (!accmgr.CheckPassword (m_session->GetAccountId(), password_old))
-    {
-        SendSysMessage (LANG_COMMAND_WRONGOLDPASSWORD);
-        SetSentErrorMessage (true);
-        return false;
-    }
-
-    AccountOpResult result = accmgr.ChangePassword(m_session->GetAccountId(), password_new);
-
-    switch(result)
-    {
-        case AOR_OK:
-            SendSysMessage(LANG_COMMAND_PASSWORD);
-            break;
-        case AOR_PASS_TOO_LONG:
-            SendSysMessage(LANG_PASSWORD_TOO_LONG);
-            SetSentErrorMessage(true);
-            return false;
-        case AOR_NAME_NOT_EXIST:                            // not possible case, don't want get account name for output
-        default:
-            SendSysMessage(LANG_COMMAND_NOTCHANGEPASSWORD);
-            SetSentErrorMessage(true);
-            return false;
-    }
+	PSendSysMessage("Due to security reasons you can only change your password through the forum. Please visit http://gamingconsortium.org/ for more informations.");
+	SetSentErrorMessage(true);
+	return false;
 
     return true;
 }
