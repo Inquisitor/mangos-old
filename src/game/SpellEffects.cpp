@@ -1176,6 +1176,14 @@ void Spell::EffectDummy(uint32 i)
                 case 58418:                                 // Portal to Orgrimmar
                 case 58420:                                 // Portal to Stormwind
                     return;                                 // implemented in EffectScript[0]
+				case 34063:
+					{
+						if( unitTarget && unitTarget->GetEntry() == 18688 )
+						{
+							unitTarget->SetEntry(19480);
+							unitTarget->AddThreat( m_caster, 1 );
+						}
+					}
 				case 45109:
 				{
 					if( !unitTarget || unitTarget->GetEntry() != 25084 && GetCaster()->GetTypeId() != TYPEID_PLAYER )
