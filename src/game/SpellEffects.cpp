@@ -3721,7 +3721,9 @@ void Spell::EffectSummonWild(uint32 i)
 
         TempSummonType summonType = (duration == 0) ? TEMPSUMMON_DEAD_DESPAWN : TEMPSUMMON_TIMED_OR_DEAD_DESPAWN;
 
-        m_caster->SummonCreature(creature_entry,px,py,pz,m_caster->GetOrientation(),summonType,duration);
+        Creature * m_summon =  m_caster->SummonCreature(creature_entry,px,py,pz,m_caster->GetOrientation(),summonType,duration);
+		if( m_summon && m_caster->GetTypeId() == TYPEID_PLAYER && m_summon->AI() )
+			m_summon->AI()->SummonedBySpell( (Player*)m_caster );
     }
 }
 
