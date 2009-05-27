@@ -2206,6 +2206,16 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
 			{
 				if( caster && GetTarget() && GetTarget()->GetEntry() == 18879 && (GetTarget()->GetHealth() * 100 / GetTarget()->GetMaxHealth() < 30) )
 					GetTarget()->SetEntry(19595);
+				return;
+			}
+			case 55360: // Living Bomb
+			case 55359:
+			case 44457:
+			{
+				if ( (GetAuraDuration() <= 0 || m_removeMode==AURA_REMOVE_BY_DISPEL) )
+				{
+					caster->CastSpell( GetTarget(), GetSpellProto()->EffectBasePoints[1]+1, true );
+				}
 			}
         }
 
