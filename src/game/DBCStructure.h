@@ -704,11 +704,13 @@ struct CreatureFamilyEntry
                                                             // 27       m_iconFile
 };
 
+#define MAX_CREATURE_SPELL_DATA_SLOT 4
+
 struct CreatureSpellDataEntry
 {
     uint32    ID;                                           // 0        m_ID
-    //uint32    spellId[4];                                 // 1-4      m_spells[4]
-    //uint32    availability[4];                            // 4-7      m_availability[4]
+    uint32    spellId[MAX_CREATURE_SPELL_DATA_SLOT];        // 1-4      m_spells[4]
+    //uint32    availability[MAX_CREATURE_SPELL_DATA_SLOT]; // 4-7      m_availability[4]
 };
 
 struct CreatureTypeEntry
@@ -733,7 +735,8 @@ struct CurrencyTypesEntry
 {
     //uint32    ID;                                         // 0        not used
     uint32    ItemId;                                       // 1        used as real index
-    uint32    BitIndex;                                     // 2        bit index in PLAYER_FIELD_KNOWN_CURRENCIES (1 << (index-1))
+    //uint32    Category;                                   // 2        may be category
+    uint32    BitIndex;                                     // 3        bit index in PLAYER_FIELD_KNOWN_CURRENCIES (1 << (index-1))
 };
 
 struct DurabilityCostsEntry
@@ -943,7 +946,7 @@ struct ItemEntry
 {
    uint32   ID;                                             // 0
    uint32   Class;                                          // 1
-   //uint32   SubClass;                                     // 2 some items have strnage subclasses
+   uint32   SubClass;                                       // 2 some items have strnage subclasses
    int32    Unk0;                                           // 3
    int32    Material;                                       // 4
    uint32   DisplayId;                                      // 5
@@ -997,8 +1000,8 @@ struct ItemLimitCategoryEntry
     uint32      ID;                                         // 0 Id
     //char*     name[16]                                    // 1-16     m_name_lang
                                                             // 17 name flags
-    uint32      maxCount;                                  // max allowed equipped as item or in gem slot
-    //uint32      unk;                                        // 1 for prismatic gems only...
+    uint32      maxCount;                                   // 18, max allowed equipped as item or in gem slot
+    //uint32      unk;                                      // 19, 1 for gems only...
 };
 
 struct ItemRandomPropertiesEntry
@@ -1136,7 +1139,7 @@ struct RandomPropertiesPointsEntry
 struct ScalingStatDistributionEntry
 {
     uint32  Id;
-    uint32  StatMod[10];
+    int32   StatMod[10];
     uint32  Modifier[10];
     uint32  MaxLevel;
 };
@@ -1145,7 +1148,58 @@ struct ScalingStatValuesEntry
 {
     uint32  Id;
     uint32  Level;
-    uint32  Multiplier[17];
+    uint32  ssdMultiplier[5];                               // Multiplier for ScalingStatDistribution
+    uint32  armorMod[4];                                    // Armor for level
+    uint32  dpsMod[6];                                      // DPS mod for level
+    uint32  spellBonus;                                     // not sure.. TODO: need more info about
+    uint32  feralBonus;                                     // Feral AP bonus
+
+    uint32  getssdMultiplier(uint32 mask) const
+    {
+        if (mask&0x001F)
+        {
+            if(mask & 0x00000001) return ssdMultiplier[0];
+            if(mask & 0x00000002) return ssdMultiplier[1];
+            if(mask & 0x00000004) return ssdMultiplier[2];
+            if(mask & 0x00000008) return ssdMultiplier[3];
+            if(mask & 0x00000010) return ssdMultiplier[4];
+        }
+        return 0;
+    }
+    uint32  getArmorMod(uint32 mask) const
+    {
+        if (mask&0x01E0)
+        {
+            if(mask & 0x00000020) return armorMod[0];
+            if(mask & 0x00000040) return armorMod[1];
+            if(mask & 0x00000080) return armorMod[2];
+            if(mask & 0x00000100) return armorMod[3];
+        }
+        return 0;
+    }
+    uint32 getDPSMod(uint32 mask) const
+    {
+        if (mask&0x7E00)
+        {
+            if(mask & 0x00000200) return dpsMod[0];
+            if(mask & 0x00000400) return dpsMod[1];
+            if(mask & 0x00000800) return dpsMod[2];
+            if(mask & 0x00001000) return dpsMod[3];
+            if(mask & 0x00002000) return dpsMod[4];
+            if(mask & 0x00004000) return dpsMod[5];
+        }
+        return 0;
+    }
+    uint32 getSpellBonus(uint32 mask) const
+    {
+        if (mask & 0x00008000) return spellBonus;
+        return 0;
+    }
+    uint32 getFeralBonus(uint32 mask) const
+    {
+        if (mask & 0x00010000) return feralBonus;
+        return 0;
+    }
 };
 
 //struct SkillLineCategoryEntry{
@@ -1458,7 +1512,7 @@ struct SummonPropertiesEntry
 {
     uint32  Id;                                             // 0
     uint32  Group;                                          // 1, enum SummonPropGroup,  0 - can't be controlled?, 1 - something guardian?, 2 - pet?, 3 - something controllable?, 4 - taxi/mount?
-    uint32  Unk2;                                           // 2,                        14 rows > 0
+    uint32  FactionId;                                      // 2,                        14 rows > 0
     uint32  Type;                                           // 3, enum SummonPropType
     uint32  Slot;                                           // 4,                        0-6
     uint32  Flags;                                          // 5, enum SummonPropFlags
@@ -1480,10 +1534,9 @@ struct TalentEntry
                                                             // 14-15 not used
     uint32    DependsOnRank;                                // 16
                                                             // 17-18 not used
-    //uint32  unk1;                                         // 19, 0 or 1
+    //uint32  needAddInSpellBook;                           // 19  also need disable higest ranks on reset talent tree
     //uint32  unk2;                                         // 20, all 0
-    //uint32  unkFlags1;                                    // 21, related to hunter pet talents
-    //uint32  unkFlags2;                                    // 22, related to hunter pet talents
+    //uint64  allowForPet;                                  // 21 its a 64 bit mask for pet 1<<m_categoryEnumID in CreatureFamily.dbc
 };
 
 struct TalentTabEntry
@@ -1506,7 +1559,7 @@ struct TaxiNodesEntry
     float     x;                                            // 2        m_x
     float     y;                                            // 3        m_y
     float     z;                                            // 4        m_z
-    //char*     name[16];                                   // 5-21     m_Name_lang
+    char*     name[16];                                     // 5-21     m_Name_lang
                                                             // 22 string flags
     uint32    MountCreatureID[2];                           // 23-24    m_MountCreatureID[2]
 };

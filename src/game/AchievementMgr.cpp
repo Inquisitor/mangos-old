@@ -128,6 +128,12 @@ bool AchievementCriteriaData::IsValid(AchievementCriteriaEntry const* criteria)
             }
             return true;
         case ACHIEVEMENT_CRITERIA_DATA_TYPE_T_PLAYER_DEAD:
+            if(player_dead.own_team_flag > 1)
+            {
+                sLog.outErrorDb( "Table `achievement_criteria_data` (Entry: %u Type: %u) for data type %s (%u) have wrong boolean value1 (%u).",
+                    criteria->ID, criteria->requiredType,dataType,player_dead.own_team_flag);
+                return false;
+            }
             return true;
         case ACHIEVEMENT_CRITERIA_DATA_TYPE_S_AURA:
         case ACHIEVEMENT_CRITERIA_DATA_TYPE_T_AURA:
@@ -193,7 +199,10 @@ bool AchievementCriteriaData::Meets(Player const* source, Unit const* target) co
                 return false;
             return target->GetHealth()*100 <= health.percent*target->GetMaxHealth();
         case ACHIEVEMENT_CRITERIA_DATA_TYPE_T_PLAYER_DEAD:
-            return target && target->GetTypeId() == TYPEID_PLAYER && !target->isAlive() && ((Player*)target)->GetDeathTimer() != 0;
+            if (!target || target->GetTypeId() != TYPEID_PLAYER || target->isAlive() || ((Player*)target)->GetDeathTimer() == 0)
+                return false;
+            // flag set == must be same team, not set == different team
+            return (((Player*)target)->GetTeam() == source->GetTeam()) == (player_dead.own_team_flag != 0);
         case ACHIEVEMENT_CRITERIA_DATA_TYPE_S_AURA:
             return source->HasAura(aura.spell_id,aura.effect_idx);
         case ACHIEVEMENT_CRITERIA_DATA_TYPE_S_AREA:
@@ -407,7 +416,14 @@ void AchievementMgr::LoadFromDB(QueryResult *achievementResult, QueryResult *cri
         do
         {
             Field *fields = achievementResult->Fetch();
-            CompletedAchievementData& ca = m_completedAchievements[fields[0].GetUInt32()];
+
+            uint32 achievement_id = fields[0].GetUInt32();
+
+            // don't must happen: cleanup at server startup in achievementmgr.LoadCompletedAchievements()
+            if(!sAchievementStore.LookupEntry(achievement_id))
+                continue;
+
+            CompletedAchievementData& ca = m_completedAchievements[achievement_id];
             ca.date = time_t(fields[1].GetUInt64());
             ca.changed = false;
         } while(achievementResult->NextRow());
@@ -425,7 +441,15 @@ void AchievementMgr::LoadFromDB(QueryResult *achievementResult, QueryResult *cri
             time_t date    = time_t(fields[2].GetUInt64());
 
             AchievementCriteriaEntry const* criteria = sAchievementCriteriaStore.LookupEntry(id);
-            if (!criteria || (criteria->timeLimit && time_t(date + criteria->timeLimit) < time(NULL)))
+            if (!criteria)
+            {
+                // we will remove not existed criteria for all characters
+                sLog.outError("Not existed achievement creataria %u data removed from table `character_achievement_progress`.",id);
+                CharacterDatabase.PExecute("DELETE FROM character_achievement_progress WHERE criteria = %u",id);
+                continue;
+            }
+
+            if (criteria->timeLimit && time_t(date + criteria->timeLimit) < time(NULL))
                 continue;
 
             CriteriaProgress& progress = m_criteriaProgress[id];
@@ -562,6 +586,12 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
         {
             // std. case: increment at 1
             case ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_DAILY_QUEST:
+            case ACHIEVEMENT_CRITERIA_TYPE_NUMBER_OF_TALENT_RESETS:
+            case ACHIEVEMENT_CRITERIA_TYPE_WIN_DUEL:
+            case ACHIEVEMENT_CRITERIA_TYPE_LOSE_DUEL:
+            case ACHIEVEMENT_CRITERIA_TYPE_QUEST_ABANDONED:
+            case ACHIEVEMENT_CRITERIA_TYPE_FLIGHT_PATHS_TAKEN:
+            case ACHIEVEMENT_CRITERIA_TYPE_ACCEPTED_SUMMONINGS:
                 // AchievementMgr::UpdateAchievementCriteria might also be called on login - skip in this case
                 if(!miscvalue1)
                     continue;
@@ -940,7 +970,7 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 break;
             }
             case ACHIEVEMENT_CRITERIA_TYPE_BUY_BANK_SLOT:
-                SetCriteriaProgress(achievementCriteria, GetPlayer()->GetByteValue(PLAYER_BYTES_2, 2)+1);
+                SetCriteriaProgress(achievementCriteria, GetPlayer()->GetBankBagSlotCount());
                 break;
             case ACHIEVEMENT_CRITERIA_TYPE_GAIN_REPUTATION:
             {
@@ -1125,6 +1155,21 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
             case ACHIEVEMENT_CRITERIA_TYPE_EARN_HONORABLE_KILL:
                 SetCriteriaProgress(achievementCriteria, GetPlayer()->GetUInt32Value(PLAYER_FIELD_LIFETIME_HONORBALE_KILLS));
                 break;
+            case ACHIEVEMENT_CRITERIA_TYPE_HK_CLASS:
+                if (!miscvalue1 || miscvalue1 != achievementCriteria->hk_class.classID)
+                    continue;
+
+                SetCriteriaProgress(achievementCriteria, 1, PROGRESS_ACCUMULATE);
+                break;
+            case ACHIEVEMENT_CRITERIA_TYPE_HK_RACE:
+                if (!miscvalue1 || miscvalue1 != achievementCriteria->hk_race.raceID)
+                    continue;
+
+                SetCriteriaProgress(achievementCriteria, 1, PROGRESS_ACCUMULATE);
+                break;
+            case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_GOLD_VALUE_OWNED:
+                SetCriteriaProgress(achievementCriteria, GetPlayer()->GetMoney(), PROGRESS_HIGHEST);
+                break;
             // std case: not exist in DBC, not triggered in code as result
             case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_HEALTH:
             case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_SPELLPOWER:
@@ -1147,27 +1192,18 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
             case ACHIEVEMENT_CRITERIA_TYPE_REACH_TEAM_RATING:
             case ACHIEVEMENT_CRITERIA_TYPE_OWN_RANK:
             case ACHIEVEMENT_CRITERIA_TYPE_EQUIP_EPIC_ITEM:
-            case ACHIEVEMENT_CRITERIA_TYPE_HK_CLASS:
-            case ACHIEVEMENT_CRITERIA_TYPE_HK_RACE:
             case ACHIEVEMENT_CRITERIA_TYPE_GET_KILLING_BLOWS:
             case ACHIEVEMENT_CRITERIA_TYPE_MONEY_FROM_VENDORS:
-            case ACHIEVEMENT_CRITERIA_TYPE_NUMBER_OF_TALENT_RESETS:
             case ACHIEVEMENT_CRITERIA_TYPE_SPECIAL_PVP_KILL:
             case ACHIEVEMENT_CRITERIA_TYPE_EARNED_PVP_TITLE:
-            case ACHIEVEMENT_CRITERIA_TYPE_WIN_DUEL:
-            case ACHIEVEMENT_CRITERIA_TYPE_LOSE_DUEL:
             case ACHIEVEMENT_CRITERIA_TYPE_KILL_CREATURE_TYPE:
             case ACHIEVEMENT_CRITERIA_TYPE_GOLD_EARNED_BY_AUCTIONS:
             case ACHIEVEMENT_CRITERIA_TYPE_CREATE_AUCTION:
             case ACHIEVEMENT_CRITERIA_TYPE_WON_AUCTIONS:
-            case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_GOLD_VALUE_OWNED:
             case ACHIEVEMENT_CRITERIA_TYPE_LOOT_EPIC_ITEM:
             case ACHIEVEMENT_CRITERIA_TYPE_RECEIVE_EPIC_ITEM:
             case ACHIEVEMENT_CRITERIA_TYPE_ROLL_NEED:
             case ACHIEVEMENT_CRITERIA_TYPE_ROLL_GREED:
-            case ACHIEVEMENT_CRITERIA_TYPE_QUEST_ABANDONED:
-            case ACHIEVEMENT_CRITERIA_TYPE_FLIGHT_PATHS_TAKEN:
-            case ACHIEVEMENT_CRITERIA_TYPE_ACCEPTED_SUMMONINGS:
             case ACHIEVEMENT_CRITERIA_TYPE_TOTAL:
                 break;                                   // Not implemented yet :(
         }
@@ -1234,14 +1270,15 @@ bool AchievementMgr::IsCompletedCriteria(AchievementCriteriaEntry const* achieve
         }
         case ACHIEVEMENT_CRITERIA_TYPE_REACH_SKILL_LEVEL:
             return progress->counter >= achievementCriteria->reach_skill_level.skillLevel;
-        case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILL_LEVEL:
-            return progress->counter >= (achievementCriteria->learn_skill_level.skillLevel * 75);
         case ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_ACHIEVEMENT:
             return progress->counter >= 1;
         case ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_QUEST_COUNT:
             return progress->counter >= achievementCriteria->complete_quest_count.totalQuestCount;
         case ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_QUESTS_IN_ZONE:
             return progress->counter >= achievementCriteria->complete_quests_in_zone.questCount;
+        case ACHIEVEMENT_CRITERIA_TYPE_DAMAGE_DONE:
+        case ACHIEVEMENT_CRITERIA_TYPE_HEALING_DONE:
+            return progress->counter >= achievementCriteria->healing_done.count;
         case ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_DAILY_QUEST:
             return progress->counter >= achievementCriteria->complete_daily_quest.questCount;
         case ACHIEVEMENT_CRITERIA_TYPE_FALL_WITHOUT_DYING:
@@ -1256,10 +1293,10 @@ bool AchievementMgr::IsCompletedCriteria(AchievementCriteriaEntry const* achieve
             return progress->counter >= achievementCriteria->cast_spell.castCount;
         case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SPELL:
             return progress->counter >= 1;
-        case ACHIEVEMENT_CRITERIA_TYPE_LOOT_TYPE:
-            return progress->counter >= achievementCriteria->loot_type.lootTypeCount;
         case ACHIEVEMENT_CRITERIA_TYPE_OWN_ITEM:
             return progress->counter >= achievementCriteria->own_item.itemCount;
+        case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILL_LEVEL:
+            return progress->counter >= (achievementCriteria->learn_skill_level.skillLevel * 75);
         case ACHIEVEMENT_CRITERIA_TYPE_USE_ITEM:
             return progress->counter >= achievementCriteria->use_item.itemCount;
         case ACHIEVEMENT_CRITERIA_TYPE_LOOT_ITEM:
@@ -1277,11 +1314,12 @@ bool AchievementMgr::IsCompletedCriteria(AchievementCriteriaEntry const* achieve
         case ACHIEVEMENT_CRITERIA_TYPE_ROLL_NEED_ON_LOOT:
         case ACHIEVEMENT_CRITERIA_TYPE_ROLL_GREED_ON_LOOT:
             return progress->counter >= achievementCriteria->roll_greed_on_loot.count;
+        case ACHIEVEMENT_CRITERIA_TYPE_HK_CLASS:
+            return progress->counter >= achievementCriteria->hk_class.count;
+        case ACHIEVEMENT_CRITERIA_TYPE_HK_RACE:
+            return progress->counter >= achievementCriteria->hk_race.count;
         case ACHIEVEMENT_CRITERIA_TYPE_DO_EMOTE:
             return progress->counter >= achievementCriteria->do_emote.count;
-        case ACHIEVEMENT_CRITERIA_TYPE_DAMAGE_DONE:
-        case ACHIEVEMENT_CRITERIA_TYPE_HEALING_DONE:
-            return progress->counter >= achievementCriteria->healing_done.count;
         case ACHIEVEMENT_CRITERIA_TYPE_EQUIP_ITEM:
             return progress->counter >= achievementCriteria->equip_item.count;
         case ACHIEVEMENT_CRITERIA_TYPE_MONEY_FROM_QUEST_REWARD:
@@ -1294,6 +1332,10 @@ bool AchievementMgr::IsCompletedCriteria(AchievementCriteriaEntry const* achieve
             return progress->counter >= achievementCriteria->fish_in_gameobject.lootCount;
         case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILLLINE_SPELLS:
             return progress->counter >= achievementCriteria->learn_skillline_spell.spellCount;
+        case ACHIEVEMENT_CRITERIA_TYPE_WIN_DUEL:
+            return progress->counter >= achievementCriteria->win_duel.duelCount;
+        case ACHIEVEMENT_CRITERIA_TYPE_LOOT_TYPE:
+            return progress->counter >= achievementCriteria->loot_type.lootTypeCount;
         case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILL_LINE:
             return progress->counter >= achievementCriteria->learn_skill_line.spellCount;
         case ACHIEVEMENT_CRITERIA_TYPE_EARN_HONORABLE_KILL:
@@ -1308,16 +1350,22 @@ bool AchievementMgr::IsCompletedCriteria(AchievementCriteriaEntry const* achieve
         case ACHIEVEMENT_CRITERIA_TYPE_KILLED_BY_PLAYER:
         case ACHIEVEMENT_CRITERIA_TYPE_DEATHS_FROM:
         case ACHIEVEMENT_CRITERIA_TYPE_GOLD_SPENT_FOR_TALENTS:
+        case ACHIEVEMENT_CRITERIA_TYPE_NUMBER_OF_TALENT_RESETS:
         case ACHIEVEMENT_CRITERIA_TYPE_GOLD_SPENT_AT_BARBER:
         case ACHIEVEMENT_CRITERIA_TYPE_GOLD_SPENT_FOR_MAIL:
+        case ACHIEVEMENT_CRITERIA_TYPE_LOSE_DUEL:
         case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_AUCTION_BID:
         case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_AUCTION_SOLD:
+        case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_GOLD_VALUE_OWNED:
         case ACHIEVEMENT_CRITERIA_TYPE_GAIN_REVERED_REPUTATION:
         case ACHIEVEMENT_CRITERIA_TYPE_GAIN_HONORED_REPUTATION:
         case ACHIEVEMENT_CRITERIA_TYPE_KNOWN_FACTIONS:
         case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_HEALTH:
         case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_SPELLPOWER:
         case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_ARMOR:
+        case ACHIEVEMENT_CRITERIA_TYPE_QUEST_ABANDONED:
+        case ACHIEVEMENT_CRITERIA_TYPE_FLIGHT_PATHS_TAKEN:
+        case ACHIEVEMENT_CRITERIA_TYPE_ACCEPTED_SUMMONINGS:
             return false;
     }
     return false;
@@ -1488,7 +1536,7 @@ void AchievementMgr::CompletedAchievement(AchievementEntry const* achievement)
         return;
 
     // titles
-    if(uint32 titleId = reward->titleId[GetPlayer()->GetTeam() == HORDE?0:1])
+    if(uint32 titleId = reward->titleId[GetPlayer()->GetTeam() == HORDE ? 0 : 1])
     {
         if(CharTitlesEntry const* titleEntry = sCharTitlesStore.LookupEntry(titleId))
             GetPlayer()->SetTitle(titleEntry);
@@ -1739,7 +1787,17 @@ void AchievementGlobalMgr::LoadCompletedAchievements()
     {
         bar.step();
         Field *fields = result->Fetch();
-        m_allCompletedAchievements.insert(fields[0].GetUInt32());
+
+        uint32 achievement_id = fields[0].GetUInt32();
+        if(!sAchievementStore.LookupEntry(achievement_id))
+        {
+            // we will remove not existed achievement for all characters
+            sLog.outError("Not existed achievement %u data removed from table `character_achievement`.",achievement_id);
+            CharacterDatabase.PExecute("DELETE FROM character_achievement WHERE achievement = %u",achievement_id);
+            continue;
+        }
+
+        m_allCompletedAchievements.insert(achievement_id);
     } while(result->NextRow());
 
     delete result;

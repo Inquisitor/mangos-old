@@ -147,6 +147,7 @@ struct ActionButton
 enum ActionButtonType
 {
     ACTION_BUTTON_SPELL = 0,
+    ACTION_BUTTON_EQSET = 32,
     ACTION_BUTTON_MACRO = 64,
     ACTION_BUTTON_CMACRO= 65,
     ACTION_BUTTON_ITEM  = 128
@@ -287,14 +288,32 @@ struct EnchantDuration
 typedef std::list<EnchantDuration> EnchantDurationList;
 typedef std::list<Item*> ItemDurationList;
 
+enum LfgType
+{
+    LFG_TYPE_NONE           = 0,
+    LFG_TYPE_DUNGEON        = 1,
+    LFG_TYPE_RAID           = 2,
+    LFG_TYPE_QUEST          = 3,
+    LFG_TYPE_ZONE           = 4,
+    LFG_TYPE_HEROIC_DUNGEON = 5
+};
+
+enum LfgRoles
+{
+    LEADER  = 1,
+    TANK    = 2,
+    HEALER  = 4,
+    DAMAGE  = 8
+};
+
 struct LookingForGroupSlot
 {
     LookingForGroupSlot() : entry(0), type(0) {}
     bool Empty() const { return !entry && !type; }
     void Clear() { entry = 0; type = 0; }
     void Set(uint32 _entry, uint32 _type ) { entry = _entry; type = _type; }
-    bool Is(uint32 _entry, uint32 _type) const { return entry==_entry && type==_type; }
-    bool canAutoJoin() const { return entry && (type == 1 || type == 5); }
+    bool Is(uint32 _entry, uint32 _type) const { return entry == _entry && type == _type; }
+    bool canAutoJoin() const { return entry && (type == LFG_TYPE_DUNGEON || type == LFG_TYPE_HEROIC_DUNGEON); }
 
     uint32 entry;
     uint32 type;
@@ -305,11 +324,11 @@ struct LookingForGroupSlot
 struct LookingForGroup
 {
     LookingForGroup() {}
-    bool HaveInSlot(LookingForGroupSlot const& slot) const { return HaveInSlot(slot.entry,slot.type); }
+    bool HaveInSlot(LookingForGroupSlot const& slot) const { return HaveInSlot(slot.entry, slot.type); }
     bool HaveInSlot(uint32 _entry, uint32 _type) const
     {
         for(int i = 0; i < MAX_LOOKING_FOR_GROUP_SLOT; ++i)
-            if(slots[i].Is(_entry,_type))
+            if(slots[i].Is(_entry, _type))
                 return true;
         return false;
     }
@@ -887,7 +906,8 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         PlayerTaxi m_taxi;
         void InitTaxiNodesForLevel() { m_taxi.InitTaxiNodesForLevel(getRace(), getClass(), getLevel()); }
-        bool ActivateTaxiPathTo(std::vector<uint32> const& nodes, uint32 mount_id = 0 , Creature* npc = NULL);
+        bool ActivateTaxiPathTo(std::vector<uint32> const& nodes, Creature* npc = NULL, uint32 spellid = 0);
+        bool ActivateTaxiPathTo(uint32 taxi_path_id, uint32 spellid = 0);
                                                             // mount_id can be used in scripting calls
         bool isAcceptTickets() const { return GetSession()->GetSecurity() >= SEC_GAMEMASTER && (m_ExtraFlags & PLAYER_EXTRA_GM_ACCEPT_TICKETS); }
         void SetAcceptTicket(bool on) { if(on) m_ExtraFlags |= PLAYER_EXTRA_GM_ACCEPT_TICKETS; else m_ExtraFlags &= ~PLAYER_EXTRA_GM_ACCEPT_TICKETS; }
@@ -905,6 +925,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         void GiveXP(uint32 xp, Unit* victim);
         void GiveLevel(uint32 level);
+
         void InitStatsForLevel(bool reapplyMods = false);
 
         // Played Time Stuff
@@ -961,7 +982,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         /*********************************************************/
 
         void SetVirtualItemSlot( uint8 i, Item* item);
-        void SetSheath( uint32 sheathed );
+        void SetSheath( SheathState sheathed );             // overwrite Unit version
         uint8 FindEquipSlot( ItemPrototype const* proto, uint32 slot, bool swap ) const;
         uint32 GetItemCount( uint32 item, bool inBankAlso = false, Item* skipItem = NULL ) const;
         Item* GetItemByGuid( uint64 guid ) const;
@@ -980,7 +1001,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         static bool IsBankPos( uint8 bag, uint8 slot );
         bool IsValidPos( uint16 pos ) { return IsBankPos(pos >> 8,pos & 255); }
         bool IsValidPos( uint8 bag, uint8 slot );
-        bool HasBankBagSlot( uint8 slot ) const;
+        uint8 GetBankBagSlotCount() const { return GetByteValue(PLAYER_BYTES_2, 2); }
+        void SetBankBagSlotCount(uint8 count) { SetByteValue(PLAYER_BYTES_2, 2, count); }
         bool HasItemCount( uint32 item, uint32 count, bool inBankAlso = false ) const;
         bool HasItemFitToSpellReqirements(SpellEntry const* spellInfo, Item const* ignoreItem = NULL);
         bool CanNoReagentCast(SpellEntry const* spellInfo) const;
@@ -1182,7 +1204,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void ReputationChanged(FactionEntry const* factionEntry );
         bool HasQuestForItem( uint32 itemid ) const;
         bool HasQuestForGO(int32 GOId) const;
-        void UpdateForQuestsGO();
+        void UpdateForQuestWorldObjects();
         bool CanShareQuest(uint32 quest_id) const;
 
         void SendQuestComplete( uint32 quest_id );
@@ -1263,6 +1285,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         {
             SetUInt32Value (PLAYER_FIELD_COINAGE, value);
             MoneyChanged( value );
+            UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_GOLD_VALUE_OWNED);
         }
 
         uint32 GetTutorialInt(uint32 intId )
@@ -1293,7 +1316,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void ClearComboPoints();
         void SendComboPoints();
 
-        void SendMailResult(uint32 mailId, uint32 mailAction, uint32 mailError, uint32 equipError = 0, uint32 item_guid = 0, uint32 item_count = 0);
+        void SendMailResult(uint32 mailId, MailResponseType mailAction, MailResponseResult mailError, uint32 equipError = 0, uint32 item_guid = 0, uint32 item_count = 0);
         void SendNewMail();
         void UpdateNextMailTimeAndUnreads();
         void AddNewMailDeliverTime(time_t deliver_time);
@@ -1376,7 +1399,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint32 GetGlyph(uint8 slot) { return GetUInt32Value(PLAYER_FIELD_GLYPHS_1 + slot); }
 
         uint32 GetFreePrimaryProffesionPoints() const { return GetUInt32Value(PLAYER_CHARACTER_POINTS2); }
-        void SetFreePrimaryProffesions(uint16 profs) { SetUInt32Value(PLAYER_CHARACTER_POINTS2,profs); }
+        void SetFreePrimaryProffesions(uint16 profs) { SetUInt32Value(PLAYER_CHARACTER_POINTS2, profs); }
         void InitPrimaryProffesions();
 
         PlayerSpellMap const& GetSpellMap() const { return m_spells; }
@@ -1402,7 +1425,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void AddSpellCooldown(uint32 spell_id, uint32 itemid, time_t end_time);
         void SendCooldownEvent(SpellEntry const *spellInfo, uint32 itemId = 0, Spell* spell = NULL);
         void ProhibitSpellScholl(SpellSchoolMask idSchoolMask, uint32 unTimeMs );
-        void RemoveSpellCooldown(uint32 spell_id) { m_spellCooldowns.erase(spell_id); }
+        void RemoveSpellCooldown(uint32 spell_id, bool update = false);
         void RemoveArenaSpellCooldowns();
         void RemoveAllSpellCooldown();
         void _LoadSpellCooldowns(QueryResult *result);
@@ -1436,7 +1459,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         bool addActionButton(uint8 button, uint16 action, uint8 type, uint8 misc);
         void removeActionButton(uint8 button);
-        void SendInitialActionButtons();
+        void SendInitialActionButtons() const;
 
         PvPInfo pvpInfo;
         void UpdatePvP(bool state, bool ovrride=false);
@@ -2047,6 +2070,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void SetTitle(CharTitlesEntry const* title);
 
         bool isActiveObject() const { return true; }
+        bool canSeeSpellClickOn(Creature const* creature) const;
     protected:
 
         /*********************************************************/
@@ -2280,7 +2304,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         Item* _StoreItem( uint16 pos, Item *pItem, uint32 count, bool clone, bool update );
 
         void UpdateKnownCurrencies(uint32 itemId, bool apply);
-        int32 CalculateReputationGain(uint32 creatureOrQuestLevel, int32 rep, bool for_quest);
+        int32 CalculateReputationGain(uint32 creatureOrQuestLevel, int32 rep, int32 faction, bool for_quest);
         void AdjustQuestReqItemCount( Quest const* pQuest, QuestStatusData& questStatusData );
 
         GridReference<Player> m_gridRef;

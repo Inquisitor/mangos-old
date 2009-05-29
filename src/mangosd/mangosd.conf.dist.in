@@ -678,14 +678,23 @@ TalentsInspecting = 1
 #                 1.5 - 150%
 #                 0   - off (0%)
 #
+#    CreatureFamilyFleeAssistanceRadius
+#        Radius which creature will use to seek for a near creature for assistance. Creature will flee to this creature.
+#        Default: 30
+#                 0   - off
+#
 #    CreatureFamilyAssistanceRadius
-#        Creature family assistance radius
+#        Radius which creature will use to call assistance without moving
 #        Default: 10
 #                 0   - off
 #
 #    CreatureFamilyAssistanceDelay
 #        Reaction time for creature assistance call
 #        Default: 1500 (1.5s)
+#
+#    CreatureFamilyFleeDelay
+#        Time during which creature can flee when no assistant found
+#        Default: 7000 (7s)
 #
 #    WorldBossLevelDiff
 #        Difference for boss dynamic level with target
@@ -743,8 +752,10 @@ TalentsInspecting = 1
 
 ThreatRadius = 100
 Rate.Creature.Aggro = 1
+CreatureFamilyFleeAssistanceRadius = 30
 CreatureFamilyAssistanceRadius = 10
 CreatureFamilyAssistanceDelay = 1500
+CreatureFamilyFleeDelay = 7000
 WorldBossLevelDiff = 3
 Corpse.Decay.NORMAL = 60
 Corpse.Decay.RARE = 300
@@ -1106,7 +1117,6 @@ Rate.Talent = 1
 Rate.Reputation.Gain = 1
 Rate.Reputation.LowLevel.Kill    = 1
 Rate.Reputation.LowLevel.Quest   = 1
-
 Rate.InstanceResetTime = 1
 SkillGain.Crafting = 1
 SkillGain.Defense = 1
@@ -1127,7 +1137,6 @@ Death.CorpseReclaimDelay.PvP = 1
 Death.CorpseReclaimDelay.PvE = 1
 Death.Bones.World = 1
 Death.Bones.BattlegroundOrArena = 1
-
 
 ###################################################################################################################
 # BATTLEGROUND CONFIG
@@ -1170,7 +1179,6 @@ Battleground.QueueAnnouncer.PlayerOnly = 0
 Battleground.InvitationType = 0
 BattleGround.PrematureFinishTimer = 300000
 BattleGround.PremadeGroupWaitForMatch = 1800000
-
 
 ###################################################################################################################
 # ARENA CONFIG
@@ -1220,7 +1228,6 @@ Arena.AutoDistributeInterval = 7
 Arena.QueueAnnouncer.Enable = 0
 Arena.ArenaSeason.ID = 1
 Arena.ArenaSeason.InProgress = 1
-
 
 ###################################################################################################################
 # NETWORK CONFIG
