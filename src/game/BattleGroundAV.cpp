@@ -842,7 +842,7 @@ const BG_AV_Nodes BattleGroundAV::GetNodeThroughPlayerPosition(Player* plr)
 {
     for(uint32 i=0; i<=BG_AV_NODES_MAX; ++i)
     {
-        if (plr->GetDistance2d(BG_AV_NodePositions[i][0], BG_AV_NodePositions[i][1]) < BG_AV_MAX_NODE_DISTANCE)
+        if (plr->IsWithinDist2d(BG_AV_NodePositions[i][0], BG_AV_NodePositions[i][1], BG_AV_MAX_NODE_DISTANCE))
             return BG_AV_Nodes(i);
     }
     sLog.outError("BattleGroundAV: player isn't near to any node maybe a cheater? or you spawned a banner not near to a node - or there is a bug in the code");
