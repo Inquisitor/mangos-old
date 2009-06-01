@@ -3115,14 +3115,20 @@ bool ChatHandler::HandleLookupTaxiNodeCommand(const char * args)
  */
 bool ChatHandler::HandleGuildCreateCommand(const char* args)
 {
-    char* nameStr;
-    char* guildStr;
-    extractOptFirstArg((char*)args,&nameStr,&guildStr);
-    if(!guildStr)
+    if(!*args)
         return false;
 
+    // if not guild name only (in "") then player name
     Player* target;
-    if(!extractPlayerTarget(nameStr,&target))
+    if(!extractPlayerTarget(*args!='"' ? (char*)args : NULL, &target))
+        return false;
+
+    char* tailStr = *args!='"' ? strtok(NULL, "") : (char*)args;
+    if(!tailStr)
+        return false;
+
+    char* guildStr = extractQuotedArg(tailStr);
+    if(!guildStr)
         return false;
 
     std::string guildname = guildStr;
@@ -3148,17 +3154,23 @@ bool ChatHandler::HandleGuildCreateCommand(const char* args)
 
 bool ChatHandler::HandleGuildInviteCommand(const char *args)
 {
-    char* nameStr;
-    char* guildNameStr;
-    extractOptFirstArg((char*)args,&nameStr,&guildNameStr);
-    if(!guildNameStr)
+    if(!*args)
         return false;
 
+    // if not guild name only (in "") then player name
     uint64 target_guid;
-    if(!extractPlayerTarget(nameStr,NULL,&target_guid))
+    if(!extractPlayerTarget(*args!='"' ? (char*)args : NULL, NULL, &target_guid))
         return false;
 
-    std::string glName = guildNameStr;
+    char* tailStr = *args!='"' ? strtok(NULL, "") : (char*)args;
+    if(!tailStr)
+        return false;
+
+    char* guildStr = extractQuotedArg(tailStr);
+    if(!guildStr)
+        return false;
+
+    std::string glName = guildStr;
     Guild* targetGuild = objmgr.GetGuildByName (glName);
     if (!targetGuild)
         return false;
@@ -3224,11 +3236,11 @@ bool ChatHandler::HandleGuildDeleteCommand(const char* args)
     if (!*args)
         return false;
 
-    char* par1 = strtok ((char*)args, " ");
-    if (!par1)
+    char* guildStr = extractQuotedArg((char*)args);
+    if(!guildStr)
         return false;
 
-    std::string gld = par1;
+    std::string gld = guildStr;
 
     Guild* targetGuild = objmgr.GetGuildByName (gld);
     if (!targetGuild)
@@ -6242,17 +6254,7 @@ bool ChatHandler::HandleSendItemsCommand(const char* args)
     if(!tail1)
         return false;
 
-    char* msgSubject;
-    if(*tail1=='"')
-        msgSubject = strtok(tail1+1, "\"");
-    else
-    {
-        char* space = strtok(tail1, "\"");
-        if(!space)
-            return false;
-        msgSubject = strtok(NULL, "\"");
-    }
-
+    char* msgSubject = extractQuotedArg(tail1);
     if (!msgSubject)
         return false;
 
@@ -6260,17 +6262,7 @@ bool ChatHandler::HandleSendItemsCommand(const char* args)
     if(!tail2)
         return false;
 
-    char* msgText;
-    if(*tail2=='"')
-        msgText = strtok(tail2+1, "\"");
-    else
-    {
-        char* space = strtok(tail2, "\"");
-        if(!space)
-            return false;
-        msgText = strtok(NULL, "\"");
-    }
-
+    char* msgText = extractQuotedArg(tail2);
     if (!msgText)
         return false;
 
@@ -6373,17 +6365,7 @@ bool ChatHandler::HandleSendMoneyCommand(const char* args)
     if (!tail1)
         return false;
 
-    char* msgSubject;
-    if (*tail1=='"')
-        msgSubject = strtok(tail1+1, "\"");
-    else
-    {
-        char* space = strtok(tail1, "\"");
-        if (!space)
-            return false;
-        msgSubject = strtok(NULL, "\"");
-    }
-
+    char* msgSubject = extractQuotedArg(tail1);
     if (!msgSubject)
         return false;
 
@@ -6391,17 +6373,7 @@ bool ChatHandler::HandleSendMoneyCommand(const char* args)
     if (!tail2)
         return false;
 
-    char* msgText;
-    if (*tail2=='"')
-        msgText = strtok(tail2+1, "\"");
-    else
-    {
-        char* space = strtok(tail2, "\"");
-        if (!space)
-            return false;
-        msgText = strtok(NULL, "\"");
-    }
-
+    char* msgText = extractQuotedArg(tail2);
     if (!msgText)
         return false;
 

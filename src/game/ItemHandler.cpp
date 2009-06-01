@@ -842,7 +842,7 @@ void WorldSession::HandleBuyBankSlotOpcode(WorldPacket& recvPacket)
         return;
     }
 
-    uint32 slot = _player->GetByteValue(PLAYER_BYTES_2, 2);
+    uint32 slot = _player->GetBankBagSlotCount();
 
     // next slot
     ++slot;
@@ -860,7 +860,7 @@ void WorldSession::HandleBuyBankSlotOpcode(WorldPacket& recvPacket)
         return;
 
     _player->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_BUY_BANK_SLOT, slot);
-    _player->SetByteValue(PLAYER_BYTES_2, 2, slot);
+    _player->SetBankBagSlotCount(slot);
     _player->ModifyMoney(-int32(price));
 }
 
@@ -1007,7 +1007,7 @@ void WorldSession::HandleItemNameQueryOpcode(WorldPacket & recv_data)
         return;
     }
     else
-        sLog.outDebug("WORLD: CMSG_ITEM_NAME_QUERY for item %u failed (unknown item)", itemid);
+        sLog.outErrorDb("WORLD: CMSG_ITEM_NAME_QUERY for item %u failed (unknown item)", itemid);
 }
 
 void WorldSession::HandleWrapItemOpcode(WorldPacket& recv_data)
@@ -1319,7 +1319,7 @@ void WorldSession::HandleSocketOpcode(WorldPacket& recv_data)
     _player->ToggleMetaGemsActive(slot, true);              //turn on all metagems (except for target item)
 }
 
-void WorldSession::HandleCancelTempItemEnchantmentOpcode(WorldPacket& recv_data)
+void WorldSession::HandleCancelTempEnchantmentOpcode(WorldPacket& recv_data)
 {
     sLog.outDebug("WORLD: CMSG_CANCEL_TEMP_ENCHANTMENT");
 

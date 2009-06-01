@@ -643,7 +643,7 @@ bool ChatHandler::HandleModifyKnownTitlesCommand(const char* args)
 
     uint64 titles = 0;
 
-    sscanf((char*)args, I64FMTD, &titles);
+    sscanf((char*)args, UI64FMTD, &titles);
 
     Player *chr = getSelectedPlayer();
     if (!chr)
@@ -659,7 +659,7 @@ bool ChatHandler::HandleModifyKnownTitlesCommand(const char* args)
 
     uint64 titles2 = titles;
 
-    for(int i=1; i < sCharTitlesStore.GetNumRows(); ++i)
+    for(int i = 1; i < sCharTitlesStore.GetNumRows(); ++i)
         if(CharTitlesEntry const* tEntry = sCharTitlesStore.LookupEntry(i))
             titles2 &= ~(uint64(1) << tEntry->bit_index);
 
@@ -1987,17 +1987,7 @@ bool ChatHandler::HandleSendMailCommand(const char* args)
     if(!tail1)
         return false;
 
-    char* msgSubject;
-    if(*tail1=='"')
-        msgSubject = strtok(tail1+1, "\"");
-    else
-    {
-        char* space = strtok(tail1, "\"");
-        if(!space)
-            return false;
-        msgSubject = strtok(NULL, "\"");
-    }
-
+    char* msgSubject = extractQuotedArg(tail1);
     if (!msgSubject)
         return false;
 
@@ -2005,17 +1995,7 @@ bool ChatHandler::HandleSendMailCommand(const char* args)
     if(!tail2)
         return false;
 
-    char* msgText;
-    if(*tail2=='"')
-        msgText = strtok(tail2+1, "\"");
-    else
-    {
-        char* space = strtok(tail2, "\"");
-        if(!space)
-            return false;
-        msgText = strtok(NULL, "\"");
-    }
-
+    char* msgText = extractQuotedArg(tail2);
     if (!msgText)
         return false;
 
@@ -2045,7 +2025,7 @@ bool ChatHandler::HandleTeleNameCommand(const char * args)
     extractOptFirstArg((char*)args,&nameStr,&teleStr);
     if(!teleStr)
         return false;
-    
+
     Player* target;
     uint64 target_guid;
     std::string target_name;
