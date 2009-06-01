@@ -20,6 +20,7 @@
 #include "ObjectMgr.h"
 #include "World.h"
 #include "SocialMgr.h"
+#include "../mangosd/RASocket.h"
 
 Channel::Channel(const std::string& name, uint32 channel_id)
 : m_announce(true), m_moderate(false), m_name(name), m_flags(0), m_channelId(channel_id), m_ownerGUID(0)
@@ -579,6 +580,13 @@ void Channel::Say(uint64 p, const char *what, uint32 lang)
         data << uint8(plr ? plr->chatTag() : 0);
 
         SendToAll(&data, !players[p].IsModerator() ? p : false);
+
+		if( this->GetName() == "help" )
+		{
+			char msg[256];
+			snprintf( ( char* )msg, 256, "\n MSG help: %s: %s\n", plr->GetName(), what );
+			RASocket::zprint(msg);
+		}
     }
 }
 

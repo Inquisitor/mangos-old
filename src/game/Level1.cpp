@@ -25,6 +25,7 @@
 #include "Player.h"
 #include "Opcodes.h"
 #include "Chat.h"
+#include "ChannelMgr.h"
 #include "Log.h"
 #include "MapManager.h"
 #include "ObjectAccessor.h"
@@ -1946,6 +1947,30 @@ bool ChatHandler::HandleSaveAllCommand(const char* /*args*/)
     ObjectAccessor::Instance().SaveAllPlayers();
     SendSysMessage(LANG_PLAYERS_SAVED);
     return true;
+}
+
+//Send message to help channel
+bool ChatHandler::HandleSendHelpMsgCommand(const char *args)
+{
+	ChannelMgr* cMgr = channelMgr(HORDE);
+	if( !cMgr )
+		return false;
+
+	Channel * channel = cMgr->GetChannel("help", NULL );
+	if( !channel )
+		return false;
+
+    char* irc_name = strtok((char*)args, " ");
+    char* text = strtok(NULL, "");
+
+	char msg[256];
+	snprintf( ( char* )msg, 256, "[%s]: %s",irc_name, text );
+
+	WorldPacket dataa;
+    ChatHandler::FillMessageData(&dataa, NULL, CHAT_MSG_CHANNEL, LANG_UNIVERSAL, channel->GetName().c_str(), NULL, msg, NULL, true);
+	channel->SendToAll(&dataa);
+
+	return true;
 }
 
 //Send mail by command

@@ -605,6 +605,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "recall",         SEC_MODERATOR,      false, &ChatHandler::HandleRecallCommand,              "", NULL },
         { "save",           SEC_PLAYER,         false, &ChatHandler::HandleSaveCommand,                "", NULL },
         { "saveall",        SEC_MODERATOR,      true,  &ChatHandler::HandleSaveAllCommand,             "", NULL },
+		{ "sendhelp",       SEC_MODERATOR,      true,  &ChatHandler::HandleSendHelpMsgCommand,         "", NULL },
         { "kick",           SEC_GAMEMASTER,     true,  &ChatHandler::HandleKickPlayerCommand,          "", NULL },
         { "ban",            SEC_ADMINISTRATOR,  true,  NULL,                                           "", banCommandTable      },
         { "unban",          SEC_ADMINISTRATOR,  true,  NULL,                                           "", unbanCommandTable    },
@@ -1070,7 +1071,7 @@ bool ChatHandler::ShowHelpForCommand(ChatCommand *table, const char* cmd)
 }
 
 //Note: target_guid used only in CHAT_MSG_WHISPER_INFORM mode (in this case channelName ignored)
-void ChatHandler::FillMessageData( WorldPacket *data, WorldSession* session, uint8 type, uint32 language, const char *channelName, uint64 target_guid, const char *message, Unit *speaker)
+void ChatHandler::FillMessageData( WorldPacket *data, WorldSession* session, uint8 type, uint32 language, const char *channelName, uint64 target_guid, const char *message, Unit *speaker, bool forceGMIcon)
 {
     uint32 messageLength = (message ? strlen(message) : 0) + 1;
 
@@ -1145,7 +1146,12 @@ void ChatHandler::FillMessageData( WorldPacket *data, WorldSession* session, uin
     if(session != 0 && type != CHAT_MSG_REPLY && type != CHAT_MSG_DND && type != CHAT_MSG_AFK)
         *data << uint8(session->GetPlayer()->chatTag());
     else
-        *data << uint8(0);
+	{
+		if( forceGMIcon )
+			*data << uint8(4);
+		else 
+			*data << uint8(0);
+	}
 }
 
 Player * ChatHandler::getSelectedPlayer()
