@@ -6409,6 +6409,9 @@ bool ChatHandler::HandleSendMessageCommand(const char* args)
     if(!extractPlayerTarget((char*)args,&rPlayer,NULL,&rName))
         return false;
 
+    if (!rPlayer)
+        return false;
+
     char* msg_str = strtok(NULL, "");
     if(!msg_str)
         return false;
