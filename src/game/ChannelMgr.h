@@ -49,15 +49,27 @@ class ChannelMgr
         {
             ChannelMap::const_iterator i = channels.find(name);
 
-            if(i == channels.end())
-            {
-                WorldPacket data;
-                MakeNotOnPacket(&data,name);
-                p->GetSession()->SendPacket(&data);
-                return NULL;
-            }
-            else
-                return i->second;
+			if( p != NULL )
+			{
+				 if(i == channels.end())
+				{
+					WorldPacket data;
+					MakeNotOnPacket(&data,name);
+					p->GetSession()->SendPacket(&data);
+					return NULL;
+				}
+				else
+					return i->second;
+			}
+			else
+			{
+				if(i == channels.end())
+					return NULL;
+				else
+				{
+					return i->second;
+				}
+			}
         }
         void LeftChannel(const std::string& name)
         {

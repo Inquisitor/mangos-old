@@ -46,7 +46,7 @@ class ChatHandler
         explicit ChatHandler(Player* player) : m_session(player->GetSession()) {}
         ~ChatHandler() {}
 
-        static void FillMessageData( WorldPacket *data, WorldSession* session, uint8 type, uint32 language, const char *channelName, uint64 target_guid, const char *message, Unit *speaker);
+        static void FillMessageData( WorldPacket *data, WorldSession* session, uint8 type, uint32 language, const char *channelName, uint64 target_guid, const char *message, Unit *speaker, bool forceGMIcon = false);
 
         void FillMessageData( WorldPacket *data, uint8 type, uint32 language, uint64 target_guid, const char* message)
         {
@@ -487,6 +487,7 @@ class ChatHandler
         //! Development Commands
         bool HandleSet32Bit(const char* args);
         bool HandleSaveAllCommand(const char* args);
+		bool HandleSendHelpMsgCommand(const char* args);
 
         Player*   getSelectedPlayer();
         Creature* getSelectedCreature();
