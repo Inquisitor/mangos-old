@@ -651,6 +651,7 @@ void BattleGround::EndBattleGround(uint32 winner)
             int32 winner_change = winner_arena_team->WonAgainst(loser_rating);
             int32 loser_change = loser_arena_team->LostAgainst(winner_rating);
             sLog.outDebug("--- Winner rating: %u, Loser rating: %u, Winner change: %u, Losser change: %u ---", winner_rating, loser_rating, winner_change, loser_change);
+            CharacterDatabase.PExecute("INSERT INTO `arena_logs` (`team1`,`team2`,`winner`,`timestamp`) VALUES ('%u', '%u', '%u', '%u')",winner_arena_team->GetId(),loser_arena_team->GetId(),winner_arena_team->GetId(),time(NULL) );
             SetArenaTeamRatingChangeForTeam(winner, winner_change);
             SetArenaTeamRatingChangeForTeam(GetOtherTeam(winner), loser_change);
         }
