@@ -5322,7 +5322,11 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                         //}
                     }
                     if (spellId)
+                    {
+                        if (m_caster->GetTypeId() == TYPEID_PLAYER)
+                            ((Player*)m_caster)->RemoveSpellCooldown(spellId);
                         m_caster->CastCustomSpell(unitTarget, spellId, &basePoint, 0, 0, false);
+                    }
                     return;
                 }
                 default:
