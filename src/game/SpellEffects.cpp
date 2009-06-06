@@ -363,11 +363,6 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
 
             case SPELLFAMILY_MAGE:
             {
-                // Arcane Blast
-                if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x20000000))
-                {
-                    m_caster->CastSpell(m_caster, 36032, true);
-                }
                 break;
             }
             case SPELLFAMILY_WARRIOR:
@@ -1676,17 +1671,6 @@ void Spell::EffectDummy(uint32 i)
 
             switch(m_spellInfo->Id)
             {
-                 // Judgement of Righteousness (0.2*$AP+0.32*$SPH)
-                case 20187:
-                {
-                    if (!unitTarget)
-                        return;
-
-                    int32 holy = m_caster->SpellBaseDamageBonus(SPELL_SCHOOL_MASK_HOLY) +
-                             m_caster->SpellBaseDamageBonusForVictim(SPELL_SCHOOL_MASK_HOLY, unitTarget);
-                    m_damage+=int32(holy*0.32f + 0.2f*m_caster->GetTotalAttackPowerValue(BASE_ATTACK));
-                    return;
-                }
                 case 31789:                                 // Righteous Defense (step 1)
                 {
                     // 31989 -> dummy effect (step 1) + dummy effect (step 2) -> 31709 (taunt like spell for each target)
