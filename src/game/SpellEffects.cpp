@@ -1343,7 +1343,7 @@ void Spell::EffectDummy(uint32 i)
             {
                 if(!unitTarget)
                     return;
-                m_damage+=m_caster->CalculateDamage(m_attackType, false);
+                m_damage+=m_caster->CalculateDamage(m_attackType, false, true);
                 m_damage+=damage;
                 return;
             }
@@ -4424,7 +4424,7 @@ void Spell::EffectWeaponDmg(uint32 i)
     // multiple weapon dmg effect workaround
     // execute only the last weapon damage
     // and handle all effects at once
-    for (int j = 0; j < 3; ++j)
+    for (int j = i + 1; j < 3; ++j)
     {
         switch(m_spellInfo->Effect[j])
         {
@@ -4432,8 +4432,7 @@ void Spell::EffectWeaponDmg(uint32 i)
             case SPELL_EFFECT_WEAPON_DAMAGE_NOSCHOOL:
             case SPELL_EFFECT_NORMALIZED_WEAPON_DMG:
             case SPELL_EFFECT_WEAPON_PERCENT_DAMAGE:
-                if (j < i)                                  // we must calculate only at last weapon effect
-                    return;
+            return;
             break;
         }
     }
@@ -4454,7 +4453,7 @@ void Spell::EffectWeaponDmg(uint32 i)
             if(m_caster->GetTypeId()==TYPEID_PLAYER && (m_spellInfo->SpellFamilyFlags & UI64LIT(0x00000400000000)))
             {
                 if(((Player*)m_caster)->GetWeaponForAttack(OFF_ATTACK,true))
-                    spell_bonus += m_caster->CalculateDamage (OFF_ATTACK, normalized);
+                    spell_bonus += m_caster->CalculateDamage (OFF_ATTACK, normalized, true);
             }
             // Devastate bonus and sunder armor refresh
             else if(m_spellInfo->SpellFamilyFlags & 0x0000004000000000LL)
@@ -4579,12 +4578,17 @@ void Spell::EffectWeaponDmg(uint32 i)
             case RANGED_ATTACK: unitMod = UNIT_MOD_DAMAGE_RANGED;   break;
         }
 
-        float weapon_total_pct  = m_caster->GetModifierValue(unitMod, TOTAL_PCT);
+        float weapon_total_pct = 1.0f;
+        if ( m_spellInfo->SchoolMask & SPELL_SCHOOL_MASK_NORMAL )
+             weapon_total_pct = m_caster->GetModifierValue(unitMod, TOTAL_PCT);
         bonus = int32(bonus*weapon_total_pct);
     }
 
     // + weapon damage with applied weapon% dmg to base weapon damage in call
-    bonus += int32(m_caster->CalculateDamage(m_attackType, normalized)*weaponDamagePercentMod);
+    if ( m_spellInfo->SchoolMask & SPELL_SCHOOL_MASK_NORMAL )
+        bonus += int32(m_caster->CalculateDamage(m_attackType, normalized, true)*weaponDamagePercentMod);
+    else
+        bonus += int32(m_caster->CalculateDamage(m_attackType, normalized, false)*weaponDamagePercentMod);
 
     // total damage
     bonus = int32(bonus*totalDamagePercentMod);
@@ -4624,7 +4628,7 @@ void Spell::EffectWeaponDmg(uint32 i)
         else if(m_spellInfo->SpellIconID==2293)
         {
             int32 damagePoint  = m_damage * 10 / 100;
-            if(m_spellInfo->Id == 31893)
+            if(m_spellInfo->Id == 31892)
                 m_caster->CastCustomSpell(m_caster, 32221, &damagePoint, NULL, NULL, true);
             else
                 m_caster->CastCustomSpell(m_caster, 53718, &damagePoint, NULL, NULL, true);
