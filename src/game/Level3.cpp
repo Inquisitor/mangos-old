@@ -6405,8 +6405,7 @@ bool ChatHandler::HandleSendMessageCommand(const char* args)
 {
     ///- Find the player
     Player *rPlayer;
-    std::string rName;
-    if(!extractPlayerTarget((char*)args,&rPlayer,NULL,&rName))
+    if(!extractPlayerTarget((char*)args,&rPlayer))
         return false;
 
     if (!rPlayer)
@@ -6430,7 +6429,7 @@ bool ChatHandler::HandleSendMessageCommand(const char* args)
     rPlayer->GetSession()->SendAreaTriggerMessage("|cffff0000[Message from administrator]:|r");
 
     //Confirmation message
-    std::string nameLink = playerLink(rName);
+    std::string nameLink = GetNameLink(rPlayer);
     PSendSysMessage(LANG_SENDMESSAGE,nameLink.c_str(),msg_str);
     return true;
 }
