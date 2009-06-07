@@ -476,6 +476,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "mail",           SEC_MODERATOR,      true,  &ChatHandler::HandleSendMailCommand,            "", NULL },
         { "message",        SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleSendMessageCommand,         "", NULL },
         { "money",          SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleSendMoneyCommand,           "", NULL },
+		{ "channel",		SEC_MODERATOR,      true,  &ChatHandler::HandleSendChannelMsgCommand,      "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
@@ -605,7 +606,6 @@ ChatCommand * ChatHandler::getCommandTable()
         { "recall",         SEC_MODERATOR,      false, &ChatHandler::HandleRecallCommand,              "", NULL },
         { "save",           SEC_PLAYER,         false, &ChatHandler::HandleSaveCommand,                "", NULL },
         { "saveall",        SEC_MODERATOR,      true,  &ChatHandler::HandleSaveAllCommand,             "", NULL },
-		{ "sendhelp",       SEC_MODERATOR,      true,  &ChatHandler::HandleSendHelpMsgCommand,         "", NULL },
         { "kick",           SEC_GAMEMASTER,     true,  &ChatHandler::HandleKickPlayerCommand,          "", NULL },
         { "ban",            SEC_ADMINISTRATOR,  true,  NULL,                                           "", banCommandTable      },
         { "unban",          SEC_ADMINISTRATOR,  true,  NULL,                                           "", unbanCommandTable    },

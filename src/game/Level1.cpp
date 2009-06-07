@@ -1949,19 +1949,23 @@ bool ChatHandler::HandleSaveAllCommand(const char* /*args*/)
     return true;
 }
 
-//Send message to help channel
-bool ChatHandler::HandleSendHelpMsgCommand(const char *args)
+//Send message to channel
+bool ChatHandler::HandleSendChannelMsgCommand(const char *args)
 {
 	ChannelMgr* cMgr = channelMgr(HORDE);
 	if( !cMgr )
 		return false;
 
-	Channel * channel = cMgr->GetChannel("help", NULL );
-	if( !channel )
+    char* channel_name = strtok((char*)args, " ");
+    char* irc_name = strtok(NULL, " ");
+	char* text = strtok(NULL, " ");
+
+	if( !channel_name || !irc_name || !text )
 		return false;
 
-    char* irc_name = strtok((char*)args, " ");
-    char* text = strtok(NULL, "");
+	Channel * channel = cMgr->GetChannel(channel_name, NULL );
+	if( !channel )
+		return false;
 
 	char msg[256];
 	snprintf( ( char* )msg, 256, "[%s]: %s",irc_name, text );
