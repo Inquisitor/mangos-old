@@ -44,6 +44,12 @@ void WorldSession::HandleMoveWorldportAckOpcode()
     if(!GetPlayer()->IsBeingTeleportedFar())
         return;
 
+	float x,y,z;
+	uint32 map = GetPlayer()->GetMapId();
+	x = GetPlayer()->GetPositionX();
+	y = GetPlayer()->GetPositionY();
+	z = GetPlayer()->GetPositionZ();
+
     // get the teleport destination
     WorldLocation &loc = GetPlayer()->GetTeleportDest();
 
@@ -78,16 +84,35 @@ void WorldSession::HandleMoveWorldportAckOpcode()
     GetPlayer()->SendInitialPacketsBeforeAddToMap();
     // the CanEnter checks are done in TeleporTo but conditions may change
     // while the player is in transit, for example the map may get full
-    if(!GetPlayer()->GetMap()->Add(GetPlayer()))
+
+	Corpse *corpse = GetPlayer()->GetCorpse();
+
+    if(!GetPlayer()->GetMap()->Add(GetPlayer()) )
     {
-        sLog.outDebug("WORLD: teleport of player %s (%d) to location %d,%f,%f,%f,%f failed", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow(), loc.mapid, loc.x, loc.y, loc.z, loc.o);
-        // teleport the player home
-        if(!GetPlayer()->TeleportTo(GetPlayer()->m_homebindMapId, GetPlayer()->m_homebindX, GetPlayer()->m_homebindY, GetPlayer()->m_homebindZ, GetPlayer()->GetOrientation()))
-        {
-            // the player must always be able to teleport home
-            sLog.outError("WORLD: failed to teleport player %s (%d) to homebind location %d,%f,%f,%f,%f!", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow(), GetPlayer()->m_homebindMapId, GetPlayer()->m_homebindX, GetPlayer()->m_homebindY, GetPlayer()->m_homebindZ, GetPlayer()->GetOrientation());
-            assert(false);
-        }
+		// resurrect character at enter into instance where his corpse exist after add to map
+		if (corpse && corpse->GetType() != CORPSE_BONES && corpse->GetMapId() == GetPlayer()->GetMapId())
+		{
+			if( mEntry->IsDungeon() )
+			{
+				GetPlayer()->ResurrectPlayer(0.5f);
+				GetPlayer()->SpawnCorpseBones();
+				GetPlayer()->SaveToDB();
+			}
+		}
+
+		sLog.outDebug("WORLD: teleport of player %s (%d) to location %d,%f,%f,%f,%f failed", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow(), loc.mapid, loc.x, loc.y, loc.z, loc.o);
+		if(!GetPlayer()->TeleportTo(map, x, y, z, GetPlayer()->GetOrientation()))
+		{
+			sLog.outError("WORLD: failed to teleport player %s (%d) to his previous location location %d,%f,%f,%f,%f!", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow(), map, x, y, z, GetPlayer()->GetOrientation());
+			// teleport the player home
+			if(!GetPlayer()->TeleportTo(GetPlayer()->m_homebindMapId, GetPlayer()->m_homebindX, GetPlayer()->m_homebindY, GetPlayer()->m_homebindZ, GetPlayer()->GetOrientation()))
+			{
+				// the player must always be able to teleport home
+				sLog.outError("WORLD: failed to teleport player %s (%d) to homebind location %d,%f,%f,%f,%f!", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow(), GetPlayer()->m_homebindMapId, GetPlayer()->m_homebindX, GetPlayer()->m_homebindY, GetPlayer()->m_homebindZ, GetPlayer()->GetOrientation());
+				assert(false);
+			}
+		}
+
         return;
     }
 
@@ -129,7 +154,6 @@ void WorldSession::HandleMoveWorldportAckOpcode()
     }
 
     // resurrect character at enter into instance where his corpse exist after add to map
-    Corpse *corpse = GetPlayer()->GetCorpse();
     if (corpse && corpse->GetType() != CORPSE_BONES && corpse->GetMapId() == GetPlayer()->GetMapId())
     {
         if( mEntry->IsDungeon() )
