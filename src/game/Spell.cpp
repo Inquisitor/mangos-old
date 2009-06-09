@@ -1225,6 +1225,14 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
             }
         }
     }
+
+	if( m_caster->HasAura(44544, 0) && !m_IsTriggeredSpell && !m_CastItem ) // Fingers of Frost removing (after 2 spells)
+	{
+		Aura * FoF = m_caster->GetAura(44544, 0);
+		FoF->DropAuraCharge();
+		if( FoF->GetAuraCharges() == 0 )
+			m_caster->RemoveAura(44544, 0);
+	}
 }
 
 void Spell::DoAllEffectOnTarget(GOTargetInfo *target)
@@ -2408,6 +2416,7 @@ void Spell::cast(bool skipCheck)
             // Ice Block
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000008000000000))
                 m_preCastSpell = 41425;                                // Hypothermia
+			
             break;
         }
 		case SPELLFAMILY_WARRIOR:
