@@ -7926,7 +7926,7 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
     // Ice Lance
     if (spellProto->SpellFamilyName == SPELLFAMILY_MAGE && spellProto->SpellIconID == 186)
     {
-        if (pVictim->isFrozen())
+        if (pVictim->isFrozen() || HasAura(44544) )
             DoneTotalMod *= 3.0f;
     }
     //Glyph of Shadow Word: Pain

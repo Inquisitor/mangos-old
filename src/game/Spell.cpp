@@ -3833,7 +3833,14 @@ SpellCastResult Spell::CheckCast(bool strict)
         {
             // target state requirements (apply to non-self only), to allow cast affects to self like Dirty Deeds
             if(m_spellInfo->TargetAuraState && !target->HasAuraState(AuraState(m_spellInfo->TargetAuraState)))
-                return SPELL_FAILED_TARGET_AURASTATE;
+			{
+				if( (m_spellInfo->TargetAuraState == AURA_STATE_HEALTHLESS_20_PERCENT && !m_caster->HasAura(52437)) || 
+					( m_spellInfo->TargetAuraState == AURA_STATE_DEFENSE && !m_caster->HasAura(60503)) || 
+					( m_spellInfo->TargetAuraState == AURA_STATE_FROZEN && !m_caster->HasAura(44544)) )
+				{
+					return SPELL_FAILED_TARGET_AURASTATE;
+				}
+			}
 
             // Not allow casting on flying player
             if (target->isInFlight())
@@ -4146,8 +4153,9 @@ SpellCastResult Spell::CheckCast(bool strict)
             {
                 if(m_spellInfo->SpellIconID == 1648)        // Execute
                 {
-                    if(!m_targets.getUnitTarget() || m_targets.getUnitTarget()->GetHealth() > m_targets.getUnitTarget()->GetMaxHealth()*0.2)
-                        return SPELL_FAILED_BAD_TARGETS;
+					if( !m_caster->HasAura(52437) )
+						if( !m_targets.getUnitTarget() || m_targets.getUnitTarget()->GetHealth() > m_targets.getUnitTarget()->GetMaxHealth()*0.2)
+							return SPELL_FAILED_BAD_TARGETS;
                 }
                 else if (m_spellInfo->Id == 51582)          // Rocket Boots Engaged
                 {
