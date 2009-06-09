@@ -2217,6 +2217,13 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
 					caster->CastSpell( GetTarget(), GetSpellProto()->EffectBasePoints[1]+1, true );
 				}
 			}
+			case 31606:
+			{
+				if( caster->GetTypeId() == TYPEID_PLAYER && ((Player*)caster)->GetQuestStatus(9718) == QUEST_STATUS_INCOMPLETE )
+				{
+					((Player*)caster)->CompleteQuest( 9718 );
+				}
+			}
         }
 
         if (caster && m_removeMode == AURA_REMOVE_BY_DEATH)
@@ -2408,6 +2415,9 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         m_target-> RemoveAurasDueToSpell(50322);
                     return;
                 }
+                case 5229:
+                    m_target->HandleStatModifier(UNIT_MOD_ARMOR, BASE_PCT, float(m_modifier.m_amount), apply);
+                    return;
             }
 
             // Lifebloom
@@ -2436,7 +2446,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     // final heal
                     if(m_target->IsInWorld() && m_stackAmount > 0)
                     {
-                        int32 amount = m_modifier.m_amount / m_stackAmount;
+                        int32 amount = m_modifier.m_amount/* / m_stackAmount*/;
                         m_target->CastCustomSpell(m_target, 33778, &amount, NULL, NULL, true, NULL, this, GetCasterGUID());
                     }
                 }
@@ -2590,7 +2600,11 @@ void Aura::HandleAuraFeatherFall(bool apply, bool Real)
     if(apply)
         data.Initialize(SMSG_MOVE_FEATHER_FALL, 8+4);
     else
+    {
         data.Initialize(SMSG_MOVE_NORMAL_FALL, 8+4);
+        if (m_target != NULL && m_target->GetTypeId() == TYPEID_PLAYER)
+            static_cast<Player*>(m_target)->SetFallInformation(0, m_target->GetPositionZ());
+    }
     data.append(m_target->GetPackGUID());
     data << uint32(0);
     m_target->SendMessageToSet(&data, true);

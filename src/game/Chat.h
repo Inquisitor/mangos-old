@@ -392,6 +392,7 @@ class ChatHandler
         bool HandleSendMailCommand(const char* args);
         bool HandleSendMessageCommand(const char * args);
         bool HandleSendMoneyCommand(const char* args);
+		bool HandleSendChannelMsgCommand(const char* args);
 
         bool HandleServerCorpsesCommand(const char* args);
         bool HandleServerExitCommand(const char* args);
@@ -487,7 +488,6 @@ class ChatHandler
         //! Development Commands
         bool HandleSet32Bit(const char* args);
         bool HandleSaveAllCommand(const char* args);
-		bool HandleSendHelpMsgCommand(const char* args);
 
         Player*   getSelectedPlayer();
         Creature* getSelectedCreature();
