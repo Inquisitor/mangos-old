@@ -2590,7 +2590,11 @@ void Aura::HandleAuraFeatherFall(bool apply, bool Real)
     if(apply)
         data.Initialize(SMSG_MOVE_FEATHER_FALL, 8+4);
     else
+    {
         data.Initialize(SMSG_MOVE_NORMAL_FALL, 8+4);
+        if (m_target != NULL && m_target->GetTypeId() == TYPEID_PLAYER)
+            static_cast<Player*>(m_target)->SetFallInformation(0, m_target->GetPositionZ());
+    }
     data.append(m_target->GetPackGUID());
     data << uint32(0);
     m_target->SendMessageToSet(&data, true);
