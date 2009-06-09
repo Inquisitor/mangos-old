@@ -2217,6 +2217,13 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
 					caster->CastSpell( GetTarget(), GetSpellProto()->EffectBasePoints[1]+1, true );
 				}
 			}
+			case 31606:
+			{
+				if( caster->GetTypeId() == TYPEID_PLAYER && ((Player*)caster)->GetQuestStatus(9718) == QUEST_STATUS_INCOMPLETE )
+				{
+					((Player*)caster)->CompleteQuest( 9718 );
+				}
+			}
         }
 
         if (caster && m_removeMode == AURA_REMOVE_BY_DEATH)
