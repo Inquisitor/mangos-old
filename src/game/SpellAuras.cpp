@@ -2408,6 +2408,9 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         m_target-> RemoveAurasDueToSpell(50322);
                     return;
                 }
+                case 5229:
+                    m_target->HandleStatModifier(UNIT_MOD_ARMOR, BASE_PCT, float(m_modifier.m_amount), apply);
+                    return;
             }
 
             // Lifebloom
@@ -2436,7 +2439,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     // final heal
                     if(m_target->IsInWorld() && m_stackAmount > 0)
                     {
-                        int32 amount = m_modifier.m_amount / m_stackAmount;
+                        int32 amount = m_modifier.m_amount/* / m_stackAmount*/;
                         m_target->CastCustomSpell(m_target, 33778, &amount, NULL, NULL, true, NULL, this, GetCasterGUID());
                     }
                 }
