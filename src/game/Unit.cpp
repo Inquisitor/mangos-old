@@ -5586,6 +5586,22 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 basepoints0 = GetCreateMana() * 0.15;
                 break;
             }
+            // Heart of the Crusader
+            if (dummySpell->SpellIconID == 237)
+            {
+                if (!procSpell)
+                    return false;
+
+                switch(dummySpell->Id)
+                {
+                    case 20335: triggered_spell_id = 21183; break;
+                    case 20336: triggered_spell_id = 54498; break;
+                    case 20337: triggered_spell_id = 54499; break;
+                    default:
+                         return false;
+                }
+                break;                
+            }
             // Seal of Righteousness - melee proc dummy (addition ${$MWS*(0.022*$AP+0.044*$SPH)} damage)
             if ((dummySpell->SpellFamilyFlags & UI64LIT(0x000000008000000)) && effIndex==0)
             {
