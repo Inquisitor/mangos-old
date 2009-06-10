@@ -1331,14 +1331,24 @@ void Spell::EffectDummy(uint32 i)
                     return;
 
                 uint32 rage = m_caster->GetPower(POWER_RAGE);
+                uint32 rage_left = 0;
+                bool from_sudden = m_caster->HasAura(52437);
+
                 // Glyph of Execution bonus
                 if (Aura *aura = m_caster->GetDummyAura(58367))
                     rage+=aura->GetModifier()->m_amount;
 
+                // Sudden Death - limit to 30 rage
+                if (from_sudden && rage > 300)
+                {
+                    rage_left = 100; // lower ranks should give less
+                    rage = 300;
+                }
+
                 int32 basePoints0 = damage+int32(rage * m_spellInfo->DmgMultiplier[i] +
                                                  m_caster->GetTotalAttackPowerValue(BASE_ATTACK)*0.2f);
                 m_caster->CastCustomSpell(unitTarget, 20647, &basePoints0, NULL, NULL, true, 0);
-                m_caster->SetPower(POWER_RAGE, 0);
+                m_caster->SetPower(POWER_RAGE, rage_left);
                 return;
             }
             // Slam
