@@ -5879,6 +5879,30 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
             m_modifier.m_amount += (int32)DoneActualBenefit;
         }
     }
+
+	if( !apply )
+	{
+		switch( m_spellProto->SpellFamilyName )
+		{
+			case SPELLFAMILY_MAGE:
+			{
+				if ( m_spellProto->SpellFamilyFlags == UI64LIT(0x100000000) && (GetAuraDuration() > 0 && m_removeMode != AURA_REMOVE_BY_CANCEL) )
+				{
+					if( GetCaster()->HasSpell(54787) )
+					{
+						GetCaster()->CastSpell( GetCaster(), 55080, true );
+						break;
+					}
+					if( GetCaster()->HasSpell(44745) && rand()%2 > 0 )
+					{
+						GetCaster()->CastSpell( GetCaster(), 55080, true );
+						break;
+					}
+				}
+			}
+			break;
+		}
+	}
 }
 
 void Aura::PeriodicTick()
