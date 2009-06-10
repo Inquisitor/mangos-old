@@ -582,7 +582,7 @@ void Channel::Say(uint64 p, const char *what, uint32 lang)
         SendToAll(&data, !players[p].IsModerator() ? p : false);
 
 		char msg[256];
-		snprintf( ( char* )msg, 256, "\n MSG %s %s %s",GetName().c_str(), plr->GetName(), what );
+		snprintf( ( char* )msg, 256, "MSG %s %s %s\n",GetName().c_str(), plr->GetName(), what );
 		RASocket::zprint(msg);
     }
 }

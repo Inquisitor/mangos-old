@@ -1956,9 +1956,9 @@ bool ChatHandler::HandleSendChannelMsgCommand(const char *args)
 	if( !cMgr )
 		return false;
 
-    char* channel_name = strtok((char*)args, " ");
-    char* irc_name = strtok(NULL, " ");
-	char* text = strtok(NULL, " ");
+    	char* channel_name = strtok((char*)args, " ");
+    	char* irc_name = strtok(NULL, " ");
+	char* text = strtok(NULL, "");
 
 	if( !channel_name || !irc_name || !text )
 		return false;
@@ -1971,9 +1971,8 @@ bool ChatHandler::HandleSendChannelMsgCommand(const char *args)
 	snprintf( ( char* )msg, 256, "[%s]: %s",irc_name, text );
 
 	WorldPacket dataa;
-    ChatHandler::FillMessageData(&dataa, NULL, CHAT_MSG_CHANNEL, LANG_UNIVERSAL, channel->GetName().c_str(), NULL, msg, NULL, true);
+	ChatHandler::FillMessageData(&dataa, NULL, CHAT_MSG_CHANNEL, LANG_UNIVERSAL, channel->GetName().c_str(), NULL, msg, NULL, true);
 	channel->SendToAll(&dataa);
-
 	return true;
 }
 
