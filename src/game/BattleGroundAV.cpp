@@ -1043,7 +1043,7 @@ void BattleGroundAV::SendMineWorldStates(uint32 mine)
     assert(m_Mine_PrevOwner[mine] == ALLIANCE || m_Mine_PrevOwner[mine] == HORDE || m_Mine_PrevOwner[mine] == BG_AV_NEUTRAL_TEAM);
     assert(m_Mine_Owner[mine] == ALLIANCE || m_Mine_Owner[mine] == HORDE || m_Mine_Owner[mine] == BG_AV_NEUTRAL_TEAM);
 
-    uint8 owner,prevowner;                                  // those variables are needed to access the right worldstate in the BG_AV_MineWorldStates array
+    uint8 owner, prevowner;                                  // those variables are needed to access the right worldstate in the BG_AV_MineWorldStates array
     if (m_Mine_PrevOwner[mine] == ALLIANCE)
         prevowner = 0;
     else if (m_Mine_PrevOwner[mine] == HORDE)
@@ -1131,7 +1131,7 @@ void BattleGroundAV::AssaultNode(BG_AV_Nodes node, uint32 team)
     assert(m_Nodes[node].State != POINT_DESTROYED);
     assert(m_Nodes[node].State != POINT_ASSAULTED || !m_Nodes[node].TotalOwner ); // only assault an assaulted node if no totalowner exists
     // the timer gets another time, if the previous owner was 0 == Neutral
-    m_Nodes[node].Timer      = (m_Nodes[node].PrevOwner) ? BG_AV_CAPTIME : BG_AV_SNOWFALL_FIRSTCAP;
+    m_Nodes[node].Timer      = (m_Nodes[node].PrevOwner != BG_AV_NEUTRAL_TEAM) ? BG_AV_CAPTIME : BG_AV_SNOWFALL_FIRSTCAP;
     m_Nodes[node].PrevOwner  = m_Nodes[node].Owner;
     m_Nodes[node].Owner      = team;
     m_Nodes[node].PrevState  = m_Nodes[node].State;
@@ -1153,7 +1153,7 @@ void BattleGroundAV::InitNode(BG_AV_Nodes node, uint32 team, bool tower)
 {
     m_Nodes[node].TotalOwner = team;
     m_Nodes[node].Owner      = team;
-    m_Nodes[node].PrevOwner  = 0;
+    m_Nodes[node].PrevOwner  = team;
     m_Nodes[node].State      = POINT_CONTROLLED;
     m_Nodes[node].PrevState  = m_Nodes[node].State;
     m_Nodes[node].State      = POINT_CONTROLLED;
