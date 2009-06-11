@@ -3401,7 +3401,7 @@ void Aura::HandleModFear(bool apply, bool Real)
     m_target->SetFeared(apply, GetCasterGUID(), GetId());
 
     // Improved Fear
-	if(!apply && m_spellProto->SpellFamilyName == SPELLFAMILY_WARLOCK)
+    if(!apply && m_spellProto->SpellFamilyName == SPELLFAMILY_WARLOCK && m_spellProto->SpellIconID == 98)
     {
        Unit* caster = GetCaster();
        int32 spell_id = 0;
