@@ -2028,6 +2028,56 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
     }
 
     *absorb = damage - RemainingDamage - *resist;
+
+	if( *absorb > 0 )
+	{
+		for( int i = 1; i < 4; ++i )
+		{
+			if( pVictim->GetDummyAura(44393+i) )
+			{
+				int32 absorbval = (*absorb * (i*5))/100;
+				//int32 dmgApplied = 0;
+
+				SpellEntry *spellInfo = (SpellEntry*)GetSpellStore()->LookupEntry(44413);
+				spellInfo->StackAmount = 100; // Hacky..ye...
+
+				AuraMap const& AurasOn = pVictim->GetAuras();
+                for(AuraMap::const_iterator itr = AurasOn.begin(); itr != AurasOn.end(); ++itr)
+                {
+					if (itr->second->GetId() == 44413 )
+					{
+						//dmgApplied += itr->second->GetBasePoints() * itr->second->GetStackAmount();
+						if( itr->second->GetModifier()->m_amount > pVictim->GetMaxHealth() * 5 / 100 )
+							return;
+					}
+                }
+
+				Aura * Aur = CreateAura(spellInfo, 0, &absorbval, pVictim );
+				if( !Aur )
+					return;
+
+				pVictim->AddAura( Aur );
+
+			/*
+				AuraType aurName = Aur->GetModifier()->m_auraname;
+				if( !pVictim->HasAura( 44413 ) )
+					Aur->_AddAura();
+				else
+				{
+					Aur->SetAuraSlot( pVictim->GetAura( 44413, 0 )->GetAuraSlot() );
+					Aur->SendAuraUpdate( false );
+				}
+
+				m_Auras.insert(AuraMap::value_type(spellEffectPair(Aur->GetId(), Aur->GetEffIndex()), Aur));
+				if (aurName < TOTAL_AURAS)
+				{
+					m_modAuras[aurName].push_back(Aur);
+				}
+				Aur->ApplyModifier(true,true);
+			*/
+			}
+		}
+	}
 }
 
 void Unit::AttackerStateUpdate (Unit *pVictim, WeaponAttackType attType, bool extra )
