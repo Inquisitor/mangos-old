@@ -558,9 +558,9 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                 {
                     int32 base = irand((int32)m_caster->GetWeaponDamageRange(RANGED_ATTACK, MINDAMAGE),(int32)m_caster->GetWeaponDamageRange(RANGED_ATTACK, MAXDAMAGE));
                     if(m_caster->GetTypeId()==TYPEID_PLAYER)
-                        base += ((Player*)m_caster)->GetAmmoDPS() * m_caster->GetAttackTime(RANGED_ATTACK)/1000;
+                        base += ((Player*)m_caster)->GetAmmoDPS();
 
-                    damage += int32(float(base) + m_caster->GetTotalAttackPowerValue(RANGED_ATTACK)*0.1f);
+                    damage += int32(float(base)/m_caster->GetAttackTime(RANGED_ATTACK)*2800 + m_caster->GetTotalAttackPowerValue(RANGED_ATTACK)*0.1f);
                 }
                 // Explosive Trap Effect
                 else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x00000004))
@@ -627,6 +627,14 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                 }
                 break;
             }
+        }
+
+        if ((m_spellInfo->DmgClass == SPELL_DAMAGE_CLASS_RANGED || m_spellInfo->DmgClass == SPELL_DAMAGE_CLASS_MELEE)
+            && SpellSchoolMask(m_spellInfo->SchoolMask) & SPELL_SCHOOL_MASK_NORMAL )
+        {
+            uint32 eff_damage = uint32(damage > 0 ? damage : 0);
+            m_caster->MeleeDamageBonus(unitTarget, &eff_damage, m_attackType, m_spellInfo, true);
+            damage = eff_damage;
         }
 
         if(damage >= 0)
@@ -941,7 +949,7 @@ void Spell::EffectDummy(uint32 i)
                     return;
                 }
                 case 29858:                                 // Soulshatter
-                    if (unitTarget && unitTarget->GetTypeId() == TYPEID_UNIT && unitTarget->IsHostileTo(m_caster))
+                    if (unitTarget && unitTarget->GetTypeId() == TYPEID_UNIT && unitTarget->IsHostileTo(m_caster) && unitTarget->getThreatManager().getThreat(m_caster) > 0.0f)
                         m_caster->CastSpell(unitTarget,32835,true);
                     return;
                 case 30458:                                 // Nigh Invulnerability
@@ -1331,14 +1339,24 @@ void Spell::EffectDummy(uint32 i)
                     return;
 
                 uint32 rage = m_caster->GetPower(POWER_RAGE);
+                uint32 rage_left = 0;
+                bool from_sudden = m_caster->HasAura(52437);
+
                 // Glyph of Execution bonus
                 if (Aura *aura = m_caster->GetDummyAura(58367))
                     rage+=aura->GetModifier()->m_amount;
 
+                // Sudden Death - limit to 30 rage
+                if (from_sudden && rage > 300)
+                {
+                    rage_left = 100; // lower ranks should give less
+                    rage = 300;
+                }
+
                 int32 basePoints0 = damage+int32(rage * m_spellInfo->DmgMultiplier[i] +
                                                  m_caster->GetTotalAttackPowerValue(BASE_ATTACK)*0.2f);
                 m_caster->CastCustomSpell(unitTarget, 20647, &basePoints0, NULL, NULL, true, 0);
-                m_caster->SetPower(POWER_RAGE, 0);
+                m_caster->SetPower(POWER_RAGE, rage_left);
                 return;
             }
             // Slam
