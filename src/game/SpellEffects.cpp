@@ -629,6 +629,14 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
             }
         }
 
+        if ((m_spellInfo->DmgClass == SPELL_DAMAGE_CLASS_RANGED || m_spellInfo->DmgClass == SPELL_DAMAGE_CLASS_MELEE)
+            && SpellSchoolMask(m_spellInfo->SchoolMask) & SPELL_SCHOOL_MASK_NORMAL )
+        {
+            uint32 eff_damage = uint32(damage > 0 ? damage : 0);
+            m_caster->MeleeDamageBonus(unitTarget, &eff_damage, m_attackType, m_spellInfo, true);
+            damage = eff_damage;
+        }
+
         if(damage >= 0)
             m_damage += damage;
     }
