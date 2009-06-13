@@ -2139,6 +2139,24 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 m_modifier.m_amount = caster->SpellHealingBonus(m_target, GetSpellProto(), m_modifier.m_amount, SPELL_DIRECT_DAMAGE);
             return;
         }
+
+		if (caster && m_target && GetSpellProto()->SpellFamilyName == SPELLFAMILY_PALADIN && GetSpellProto()->SpellIconID == 237)
+		{
+			switch (m_modifier.m_amount)
+			{
+			case 1:
+				caster->CastCustomSpell(m_target, 21183, 0, 0, 0, true);
+				break;
+			case 2:
+				caster->CastCustomSpell(m_target, 54498, 0, 0, 0, true);
+				break;
+			case 3:
+				caster->CastCustomSpell(m_target, 54499, 0, 0, 0, true);
+				break;
+			}
+
+			return;
+		}
     }
     // AT REMOVE
     else
