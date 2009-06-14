@@ -983,6 +983,12 @@ void Channel::JoinNotify(uint64 guid)
     data << uint32(GetNumPlayers());
     data << GetName();
     SendToAll(&data);
+    std::string name = "";
+    if(!objmgr.GetPlayerNameByGUID(guid, name) || name.empty())
+        name = "UNKNOWN";
+    char msg[256];
+    snprintf( ( char* )msg, 256, "JOIN %s %s\n",GetName().c_str(), name.data());
+    RASocket::zprint(msg);
 }
 
 void Channel::LeaveNotify(uint64 guid)
@@ -993,4 +999,10 @@ void Channel::LeaveNotify(uint64 guid)
     data << uint32(GetNumPlayers());
     data << GetName();
     SendToAll(&data);
+    std::string name = "";
+    if(!objmgr.GetPlayerNameByGUID(guid, name) || name.empty())
+            name = "UNKNOWN";
+    char msg[256];
+    snprintf( ( char* )msg, 256, "PART %s %s\n",GetName().c_str(), name.data());
+    RASocket::zprint(msg);
 }
