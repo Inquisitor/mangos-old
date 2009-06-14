@@ -5498,7 +5498,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
             // Deadly Brew
             if( dummySpell->SpellIconID == 2963 )
             {
-                triggered_spell_id = 25809;
+                triggered_spell_id = 44289;
                 break;
             }
             // Quick Recovery
@@ -5696,9 +5696,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 case 25899:                                 // Greater Blessing of Sanctuary
                 case 20911:                                 // Blessing of Sanctuary
                 {
-                    if (target->GetTypeId() != TYPEID_PLAYER)
-                        return false;
-
                     target = this;
                     switch (target->getPowerType())
                     {
