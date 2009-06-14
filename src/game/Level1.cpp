@@ -1952,28 +1952,31 @@ bool ChatHandler::HandleSaveAllCommand(const char* /*args*/)
 //Send message to channel
 bool ChatHandler::HandleSendChannelMsgCommand(const char *args)
 {
-	ChannelMgr* cMgr = channelMgr(HORDE);
-	if( !cMgr )
-		return false;
+    ChannelMgr* cMgr = channelMgr(HORDE);
+    if( !cMgr )
+        return false;
 
-    	char* channel_name = strtok((char*)args, " ");
-    	char* irc_name = strtok(NULL, " ");
-	char* text = strtok(NULL, "");
+    char* channel_name = strtok((char*)args, " ");
+    char* irc_name = strtok(NULL, " ");
+    char* arg_GM = strtok(NULL, " ");
+    char* text = strtok(NULL, "");
 
-	if( !channel_name || !irc_name || !text )
-		return false;
+    if( !channel_name || !irc_name || !text || !arg_GM )
+        return false;
 
-	Channel * channel = cMgr->GetChannel(channel_name, NULL );
-	if( !channel )
-		return false;
+    Channel * channel = cMgr->GetChannel(channel_name, NULL );
+    if( !channel )
+        return false;
 
-	char msg[256];
-	snprintf( ( char* )msg, 256, "[%s]: %s",irc_name, text );
-
-	WorldPacket dataa;
-	ChatHandler::FillMessageData(&dataa, NULL, CHAT_MSG_CHANNEL, LANG_UNIVERSAL, channel->GetName().c_str(), NULL, msg, NULL, true);
-	channel->SendToAll(&dataa);
-	return true;
+    char msg[256];
+    snprintf( ( char* )msg, 256, "[%s]: %s",irc_name, text );
+    bool isGM = false;
+    if(!strcmp(arg_GM,"GM"))
+        isGM = true;
+    WorldPacket dataa;
+    ChatHandler::FillMessageData(&dataa, NULL, CHAT_MSG_CHANNEL, LANG_UNIVERSAL, channel->GetName().c_str(), NULL, msg, NULL, isGM);
+    channel->SendToAll(&dataa);
+    return true;
 }
 
 //Send mail by command

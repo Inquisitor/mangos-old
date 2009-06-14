@@ -2111,7 +2111,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
 					int32 roll = rand()%100;
 					if( roll > 20 )
 					{
-						for(int x =0; x < (rand()%2 > 0 ? 2 : 3); ++x)
+						for(uint32 x =0; x < (rand()%2 > 0 ? 2 : 3); ++x)
 						{
 							caster->SummonCreature(rand()%2 > 0 ? 22482 : 22483, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
 						}
@@ -2120,6 +2120,11 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
 						caster->SummonCreature(22038, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
 					return;
 				}
+			case 55198: // Tidal Force
+			{
+				for(uint32 x = 0; x < 3; ++x ) // 3 charges
+					m_target->CastSpell( m_target, 55166, true );
+			}
             case 46699:                                     // Requires No Ammo
                 if(m_target->GetTypeId() == TYPEID_PLAYER)
                     ((Player*)m_target)->RemoveAmmo();      // not use ammo and not allow use
@@ -2134,6 +2139,24 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 m_modifier.m_amount = caster->SpellHealingBonus(m_target, GetSpellProto(), m_modifier.m_amount, SPELL_DIRECT_DAMAGE);
             return;
         }
+
+		if (caster && m_target && GetSpellProto()->SpellFamilyName == SPELLFAMILY_PALADIN && GetSpellProto()->SpellIconID == 237)
+		{
+			switch (m_modifier.m_amount)
+			{
+			case 1:
+				caster->CastCustomSpell(m_target, 21183, 0, 0, 0, true);
+				break;
+			case 2:
+				caster->CastCustomSpell(m_target, 54498, 0, 0, 0, true);
+				break;
+			case 3:
+				caster->CastCustomSpell(m_target, 54499, 0, 0, 0, true);
+				break;
+			}
+
+			return;
+		}
     }
     // AT REMOVE
     else

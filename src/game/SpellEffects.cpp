@@ -1195,7 +1195,7 @@ void Spell::EffectDummy(uint32 i)
 							unitTarget->AddThreat( m_caster, 1 );
 						}
 					}
-				case 45109:
+				case 45109: // Q: Disrupt the Greengill Coast
 				{
 					if( !unitTarget || unitTarget->GetEntry() != 25084 && GetCaster()->GetTypeId() != TYPEID_PLAYER )
 						return;
@@ -1245,7 +1245,7 @@ void Spell::EffectDummy(uint32 i)
 					}
 					return;
 				}
-				case 33655:
+				case 33655: // Q: Mission: Gateways Murketh and Shaadraz
 				{
 					if( m_caster->GetTypeId() != TYPEID_PLAYER )
 						return;
@@ -1256,6 +1256,12 @@ void Spell::EffectDummy(uint32 i)
 						((Player*)m_caster)->KilledMonster( 19291, 0 );
 					if( m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -304.408, 1524.45, 37.9685 ) < 25 )
 						((Player*)m_caster)->KilledMonster( 19292, 0 );
+					return;
+				}
+				case 21332: // Q: Poisoned Water
+				{
+					if( unitTarget->GetEntry() == 8521 || unitTarget->GetEntry() == 8519 || unitTarget->GetEntry() == 8522 || unitTarget->GetEntry() == 8520 )
+						unitTarget->SetEntry(13279);
 					return;
 				}
             }
