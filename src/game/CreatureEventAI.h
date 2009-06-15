@@ -56,6 +56,8 @@ enum EventAI_Type
     EVENT_T_QUEST_COMPLETE          = 20,                   //
     EVENT_T_REACHED_HOME            = 21,                   // NONE
     EVENT_T_RECEIVE_EMOTE           = 22,                   // EmoteId, Condition, CondValue1, CondValue2
+    EVENT_T_BUFFED                  = 23,                   // Param1 = SpellID, Param2 = Number of Time STacked, Param3/4 Repeat Min/Max
+    EVENT_T_TARGET_BUFFED           = 24,                   // Param1 = SpellID, Param2 = Number of Time STacked, Param3/4 Repeat Min/Max
 
     EVENT_T_END,
 };
@@ -193,7 +195,7 @@ struct CreatureEventAI_Action
         // ACTION_T_MORPH_TO_ENTRY_OR_MODEL                 = 3
         struct
         {
-            uint32 creatireId;                              // set one from fields (or 0 for both to demorph)
+            uint32 creatureId;                              // set one from fields (or 0 for both to demorph)
             uint32 modelId;
         } morph;
         // ACTION_T_SOUND                                   = 4
@@ -230,7 +232,7 @@ struct CreatureEventAI_Action
         // ACTION_T_SUMMON                                  = 12
         struct
         {
-            uint32 creatured;
+            uint32 creatureId;
             uint32 target;
             uint32 duration;
         } summon;
@@ -281,6 +283,7 @@ struct CreatureEventAI_Action
         struct
         {
             uint32 state;                                   // 0 = stop combat based movement, anything else continue attacking
+            uint32 melee;                                   // if set: at stop send melee combat stop if in combat, use for terminate melee fighting state for switch to ranged
         } combat_movement;
         // ACTION_T_SET_PHASE                               = 22
         struct
@@ -500,6 +503,15 @@ struct CreatureEventAI_Event
             uint32 conditionValue1;
             uint32 conditionValue2;
         } receive_emote;
+        // EVENT_T_BUFFED                                   = 23
+        // EVENT_T_TARGET_BUFFED                            = 24
+        struct
+        {
+            uint32 spellId;
+            uint32 amount;
+            uint32 repeatMin;
+            uint32 repeatMax;
+        } buffed;
 
         // RAW
         struct
