@@ -770,6 +770,9 @@ void Spell::prepareDataForTriggerSystem()
             case SPELLFAMILY_MAGE:    // Arcane Missles / Blizzard triggers need do it
                 if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000200080) || m_spellInfo->SpellIconID == 212)
                     m_canTrigger = true;
+                // Clearcasting trigger need do it
+                else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000200000000) && m_spellInfo->SpellFamilyFlags2 & 0x8)
+                    m_canTrigger = true;
                 break;
             case SPELLFAMILY_WARLOCK: // For Hellfire Effect / Rain of Fire / Seed of Corruption triggers need do it
                 if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000800000000060))
@@ -2934,18 +2937,26 @@ void Spell::SendCastResult(SpellCastResult result)
     if(((Player*)m_caster)->GetSession()->PlayerLoading())  // don't send cast results at loading time
         return;
 
+    SendCastResult((Player*)m_caster,m_spellInfo,m_cast_count,result);
+}
+
+void Spell::SendCastResult(Player* caster, SpellEntry const* spellInfo, uint8 cast_count, SpellCastResult result)
+{
+    if(result == SPELL_CAST_OK)
+        return;
+
     WorldPacket data(SMSG_CAST_FAILED, (4+1+1));
-    data << uint8(m_cast_count);                            // single cast or multi 2.3 (0/1)
-    data << uint32(m_spellInfo->Id);
+    data << uint8(cast_count);                              // single cast or multi 2.3 (0/1)
+    data << uint32(spellInfo->Id);
     data << uint8(result);                                  // problem
     switch (result)
     {
         case SPELL_FAILED_REQUIRES_SPELL_FOCUS:
-            data << uint32(m_spellInfo->RequiresSpellFocus);
+            data << uint32(spellInfo->RequiresSpellFocus);
             break;
         case SPELL_FAILED_REQUIRES_AREA:
             // hardcode areas limitation case
-            switch(m_spellInfo->Id)
+            switch(spellInfo->Id)
             {
                 case 41617:                                 // Cenarion Mana Salve
                 case 41619:                                 // Cenarion Healing Salve
@@ -2964,26 +2975,26 @@ void Spell::SendCastResult(SpellCastResult result)
             }
             break;
         case SPELL_FAILED_TOTEMS:
-            if(m_spellInfo->Totem[0])
-                data << uint32(m_spellInfo->Totem[0]);
-            if(m_spellInfo->Totem[1])
-                data << uint32(m_spellInfo->Totem[1]);
+            if(spellInfo->Totem[0])
+                data << uint32(spellInfo->Totem[0]);
+            if(spellInfo->Totem[1])
+                data << uint32(spellInfo->Totem[1]);
             break;
         case SPELL_FAILED_TOTEM_CATEGORY:
-            if(m_spellInfo->TotemCategory[0])
-                data << uint32(m_spellInfo->TotemCategory[0]);
-            if(m_spellInfo->TotemCategory[1])
-                data << uint32(m_spellInfo->TotemCategory[1]);
+            if(spellInfo->TotemCategory[0])
+                data << uint32(spellInfo->TotemCategory[0]);
+            if(spellInfo->TotemCategory[1])
+                data << uint32(spellInfo->TotemCategory[1]);
             break;
         case SPELL_FAILED_EQUIPPED_ITEM_CLASS:
-            data << uint32(m_spellInfo->EquippedItemClass);
-            data << uint32(m_spellInfo->EquippedItemSubClassMask);
-            //data << uint32(m_spellInfo->EquippedItemInventoryTypeMask);
+            data << uint32(spellInfo->EquippedItemClass);
+            data << uint32(spellInfo->EquippedItemSubClassMask);
+            //data << uint32(spellInfo->EquippedItemInventoryTypeMask);
             break;
         default:
             break;
     }
-    ((Player*)m_caster)->GetSession()->SendPacket(&data);
+    caster->GetSession()->SendPacket(&data);
 }
 
 void Spell::SendSpellStart()
@@ -3291,7 +3302,6 @@ void Spell::SendLogExecute()
                     data << uint32(0);
                     break;
                 case SPELL_EFFECT_OPEN_LOCK:
-                case SPELL_EFFECT_OPEN_LOCK_ITEM:
                     if(Item *item = m_targets.getItemTarget())
                         data.append(item->GetPackGUID());
                     else
@@ -3817,7 +3827,7 @@ SpellCastResult Spell::CheckCast(bool strict)
     if( m_caster->GetTypeId()==TYPEID_PLAYER && ((Player*)m_caster)->isMoving() )
     {
         // skip stuck spell to allow use it in falling case and apply spell limitations at movement
-        if( (!m_caster->HasUnitMovementFlag(MOVEMENTFLAG_FALLING) || m_spellInfo->Effect[0] != SPELL_EFFECT_STUCK) &&
+        if( (!((Player*)m_caster)->m_movementInfo.HasMovementFlag(MOVEMENTFLAG_FALLING) || m_spellInfo->Effect[0] != SPELL_EFFECT_STUCK) &&
             (IsAutoRepeat() || (m_spellInfo->AuraInterruptFlags & AURA_INTERRUPT_FLAG_NOT_SEATED) != 0) )
             return SPELL_FAILED_MOVING;
     }
@@ -4350,7 +4360,11 @@ SpellCastResult Spell::CheckCast(bool strict)
                 // get the lock entry
                 uint32 lockId = 0;
                 if (GameObject* go = m_targets.getGOTarget())
+                {
                     lockId = go->GetLockId();
+                    if (!lockId)
+                        return SPELL_FAILED_BAD_TARGETS;
+                }
                 else if(Item* itm = m_targets.getItemTarget())
                     lockId = itm->GetProto()->LockID;
 
@@ -4803,8 +4817,9 @@ bool Spell::CanAutoCast(Unit* target)
             }
             else
             {
-                if( target->GetAuras().count(Unit::spellEffectPair(m_spellInfo->Id, j)) >= m_spellInfo->StackAmount)
-                    return false;
+                if(Aura* aura = target->GetAura(m_spellInfo->Id, j))
+                    if(aura->GetStackAmount() >= m_spellInfo->StackAmount)
+                        return false;
             }
         }
         else if ( IsAreaAuraEffect( m_spellInfo->Effect[j] ))
