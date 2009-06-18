@@ -5278,6 +5278,15 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 37378;
                     break;
                 }
+                //Siphon Life
+                case 63108:
+                {
+                    if(procSpell->SpellFamilyFlags & UI64LIT(0x0000000000000002))
+                        basepoints0 = int32(damage * triggerAmount/100);
+                        target = this;
+                        triggered_spell_id = 63106;
+                    break;
+                }
             }
             break;
         }
@@ -10097,7 +10106,7 @@ void Unit::IncrDiminishing(DiminishingGroup group)
     m_Diminishing.push_back(DiminishingReturn(group,getMSTime(),DIMINISHING_LEVEL_2));
 }
 
-void Unit::ApplyDiminishingToDuration(DiminishingGroup group, int32 &duration,Unit* caster,DiminishingLevels Level)
+void Unit::ApplyDiminishingToDuration(SpellEntry const *spellProto, DiminishingGroup group, int32 &duration,Unit* caster,DiminishingLevels Level)
 {
     if(duration == -1 || group == DIMINISHING_NONE || caster->IsFriendlyTo(this) )
         return;
@@ -10114,6 +10123,10 @@ void Unit::ApplyDiminishingToDuration(DiminishingGroup group, int32 &duration,Un
 
         if(target->GetTypeId() == TYPEID_PLAYER && source->GetTypeId() == TYPEID_PLAYER)
             duration = 10000;
+
+        // Repentance
+		if(spellProto->SpellFamilyName == SPELLFAMILY_PALADIN && spellProto->SpellFamilyFlags & UI64LIT(0x0000000000000004))
+		    duration = 6000;
     }
 
     float mod = 1.0f;
