@@ -5354,6 +5354,32 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
                     break;
                 }
+                // Improved Devouring Plague
+                case 63625:
+                case 63626:
+                case 63627:
+                {
+                    uint32 perDamage = 0;
+                    if( GetTypeId()!= TYPEID_PLAYER )
+					    break;
+
+				    //find highest learned rank of "Devouring Plague"
+				    uint32 spell = 48300; // rank 9
+				    while( spell && !((Player*)this)->HasActiveSpell(spell) )
+					    spell = spellmgr.GetPrevSpellInChain(spell);
+
+				    SpellEntry const *sp = sSpellStore.LookupEntry(spell);
+				    if(sp)
+                    {
+                        int32 tick = SpellDamageBonus(pVictim, sp, sp->EffectBasePoints[0], DOT);
+                        int32 tickcount = GetSpellDuration(sp) / sp->EffectAmplitude[0];
+                        perDamage = tick*tickcount;
+                    }
+
+                    basepoints0 = int32(perDamage*triggerAmount/100);
+                    triggered_spell_id = 63675;
+                    break;
+                }
                 // Oracle Healing Bonus ("Garments of the Oracle" set)
                 case 26169:
                 {
