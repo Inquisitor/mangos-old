@@ -2380,6 +2380,18 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 ((Player*)m_target)->AddSpellMod(m_spellmod, apply);
                 return;
             }
+
+            // Vampiric Touch - dispell damage dummy - only for 3rd effect ( has 2 dummies )
+            if (!apply && GetSpellProto()->SpellFamilyFlags & UI64LIT(0x40000000000) && GetEffIndex() == 2)
+            {
+                // only on dispell
+                if ( caster && m_removeMode == AURA_REMOVE_BY_DISPEL )
+                {
+                    // amount equal to 12 sec worth of ticks, or 4 ticks
+                    int32 amount = 4 * caster->SpellDamageBonus(m_target, GetSpellProto(), GetSpellProto()->EffectBasePoints[1], DOT);
+                    m_target->CastCustomSpell(m_target, 64085, &amount, NULL, NULL, true, NULL, this, GetCasterGUID());
+                }
+            }
             break;
         }
         case SPELLFAMILY_DRUID:
