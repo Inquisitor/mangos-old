@@ -2448,6 +2448,8 @@ void Spell::cast(bool skipCheck)
                 m_preCastSpell = 6788;                                 // Weakened Soul
             if (m_spellInfo->Id == 47585)                              // Dispersion (transform)
                 m_preCastSpell = 60069;                                // Dispersion (mana regen)
+            if (m_spellInfo->Id == 60069)                              // Dispersion (transform)
+                m_preCastSpell = 63230;                                // Dispersion (immunity)
             break;
         }
         case SPELLFAMILY_PALADIN:
