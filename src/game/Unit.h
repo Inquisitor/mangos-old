@@ -717,8 +717,8 @@ struct SpellNonMeleeDamage{
 
 struct SpellPeriodicAuraLogInfo
 {
-    SpellPeriodicAuraLogInfo(Aura *_aura, uint32 _damage, uint32 _overDamage, uint32 _absorb, uint32 _resist, float _multiplier)
-        : aura(_aura), damage(_damage), overDamage(_overDamage), absorb(_absorb), resist(_resist), multiplier(_multiplier) {}
+    SpellPeriodicAuraLogInfo(Aura *_aura, uint32 _damage, uint32 _overDamage, uint32 _absorb, uint32 _resist, float _multiplier, bool _isCrit)
+        : aura(_aura), damage(_damage), overDamage(_overDamage), absorb(_absorb), resist(_resist), multiplier(_multiplier), isCrit(_isCrit) {}
 
     Aura   *aura;
     uint32 damage;
@@ -726,6 +726,7 @@ struct SpellPeriodicAuraLogInfo
     uint32 resist;
     uint32 overDamage;                                      // overkill/overheal
     float  multiplier;
+    bool isCrit;
 };
 
 uint32 createProcExtendMask(SpellNonMeleeDamage *damageInfo, SpellMissInfo missCondition);
@@ -1430,6 +1431,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         bool   isSpellBlocked(Unit *pVictim, SpellEntry const *spellProto, WeaponAttackType attackType = BASE_ATTACK);
         bool   isSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolMask schoolMask, WeaponAttackType attackType = BASE_ATTACK);
         uint32 SpellCriticalDamageBonus(SpellEntry const *spellProto, uint32 damage, Unit *pVictim);
+        uint32 SpellPeriodicCritChance(SpellEntry const *spellProto);
         uint32 SpellCriticalHealingBonus(SpellEntry const *spellProto, uint32 damage, Unit *pVictim);
 
         void SetLastManaUse(uint32 spellCastTime)

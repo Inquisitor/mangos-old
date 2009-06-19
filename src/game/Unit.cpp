@@ -4365,13 +4365,13 @@ void Unit::SendPeriodicAuraLog(SpellPeriodicAuraLogInfo *pInfo)
             data << uint32(GetSpellSchoolMask(aura->GetSpellProto()));
             data << uint32(pInfo->absorb);                  // absorb
             data << uint32(pInfo->resist);                  // resist
-            data << uint8(0);                               // new 3.1.2
+            data << uint8(pInfo->isCrit?1:0);               // critical
             break;
         case SPELL_AURA_PERIODIC_HEAL:
         case SPELL_AURA_OBS_MOD_HEALTH:
             data << uint32(pInfo->damage);                  // damage
             data << uint32(pInfo->overDamage);              // overheal?
-            data << uint8(0);                               // new 3.1.2
+            data << uint8(pInfo->isCrit?1:0);               // critical
             break;
         case SPELL_AURA_OBS_MOD_MANA:
         case SPELL_AURA_PERIODIC_ENERGIZE:
@@ -8453,6 +8453,21 @@ uint32 Unit::SpellCriticalDamageBonus(SpellEntry const *spellProto, uint32 damag
         damage += crit_bonus;
 
     return damage;
+}
+
+uint32 Unit::SpellPeriodicCritChance(SpellEntry const *spellProto)
+{
+    uint32 s_crit_chance = 0;
+    AuraList const& auraCrit = GetAurasByType(SPELL_AURA_ALLOW_CRIT_PERIODIC_DAMAGE);
+    for(AuraList::const_iterator i = auraCrit.begin(); i != auraCrit.end(); ++i)
+    {
+         if (!((*i)->isAffectedOnSpell(spellProto)))
+            continue;
+
+         s_crit_chance += (*i)->GetModifier()->m_amount;
+    }
+    
+    return s_crit_chance;
 }
 
 uint32 Unit::SpellCriticalHealingBonus(SpellEntry const *spellProto, uint32 damage, Unit *pVictim)

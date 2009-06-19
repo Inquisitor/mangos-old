@@ -338,7 +338,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleNoImmediateEffect,                         //283 SPELL_AURA_MOD_HEALING_RECEIVED       implemented in Unit::SpellHealingBonus
     &Aura::HandleUnused,                                    //284 not used by any spells (3.08a)
     &Aura::HandleAuraModAttackPowerOfArmor,                 //285 SPELL_AURA_MOD_ATTACK_POWER_OF_ARMOR  implemented in Player::UpdateAttackPowerAndDamage
-    &Aura::HandleUnused,                                    //286 not used by any spells (3.08a)
+    &Aura::HandleNoImmediateEffect,                         //286 SPELL_AURA_ALLOW_CRIT_PERIODIC_DAMAGE implemented  Aura::PeriodicTick
     &Aura::HandleNoImmediateEffect,                         //287 SPELL_AURA_DEFLECT_SPELLS             implemented in Unit::MagicSpellHitResult and Unit::MeleeSpellHitResult
     &Aura::HandleUnused,                                    //288 not used by any spells (3.09) except 1 test spell.
     &Aura::HandleUnused,                                    //289 unused
@@ -5988,6 +5988,7 @@ void Aura::PeriodicTick()
             uint32 amount = m_modifier.m_amount > 0 ? m_modifier.m_amount : 0;
 
             uint32 pdamage;
+            bool crit = false;
 
             if(m_modifier.m_auraname == SPELL_AURA_PERIODIC_DAMAGE)
             {
@@ -6020,6 +6021,18 @@ void Aura::PeriodicTick()
             else
                 pdamage = uint32(m_target->GetMaxHealth()*amount/100);
 
+            // some modifilers allow dots to crit
+            uint32 s_crit_chance = pCaster->SpellPeriodicCritChance(GetSpellProto());
+            // some of those auras take caster's crit chance ( shadowform/Pandemic etc )
+            // some give fixed value ( Glyph of Living Bomb, etc )
+            if ( s_crit_chance < 100 )
+                crit = roll_chance_i(s_crit_chance);
+            else
+                crit = pCaster->isSpellCrit(m_target, GetSpellProto(), GetSpellSchoolMask(GetSpellProto()));
+
+            if (crit)
+                pdamage = pCaster->SpellCriticalDamageBonus(GetSpellProto(), pdamage, m_target);
+
             // As of 2.2 resilience reduces damage from DoT ticks as much as the chance to not be critically hit
             // Reduce dot damage from resilience for players
             if (m_target->GetTypeId() == TYPEID_PLAYER)
@@ -6032,7 +6045,7 @@ void Aura::PeriodicTick()
 
             pCaster->DealDamageMods(m_target, pdamage, &absorb);
 
-            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, absorb, resist, 0.0f);
+            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, absorb, resist, 0.0f, crit);
             m_target->SendPeriodicAuraLog(&pInfo);
 
             Unit* target = m_target;                        // aura can be deleted in DealDamage
@@ -6146,6 +6159,7 @@ void Aura::PeriodicTick()
             uint32 amount = m_modifier.m_amount > 0 ? m_modifier.m_amount : 0;
 
             uint32 pdamage;
+            bool crit = false;
 
             if(m_modifier.m_auraname==SPELL_AURA_OBS_MOD_HEALTH)
                 pdamage = uint32(m_target->GetMaxHealth() * amount / 100);
@@ -6157,7 +6171,19 @@ void Aura::PeriodicTick()
             sLog.outDetail("PeriodicTick: %u (TypeId: %u) heal of %u (TypeId: %u) for %u health inflicted by %u",
                 GUID_LOPART(GetCasterGUID()), GuidHigh2TypeId(GUID_HIPART(GetCasterGUID())), m_target->GetGUIDLow(), m_target->GetTypeId(), pdamage, GetId());
 
-            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0, 0.0f);
+            // some modifilers allow dots to crit
+            uint32 s_crit_chance = pCaster->SpellPeriodicCritChance(GetSpellProto());
+            // some of those auras take caster's crit chance ( shadowform/Pandemic etc )
+            // some give fixed value ( Glyph of Living Bomb, etc )
+            if ( s_crit_chance < 100 )
+                crit = roll_chance_i(s_crit_chance);
+            else
+                crit = pCaster->isSpellCrit(m_target, GetSpellProto(), GetSpellSchoolMask(GetSpellProto()));
+
+            if (crit)
+                pdamage = pCaster->SpellCriticalDamageBonus(GetSpellProto(), pdamage, m_target);
+
+            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0, 0.0f, crit);
             m_target->SendPeriodicAuraLog(&pInfo);
 
             int32 gain = m_target->ModifyHealth(pdamage);
@@ -6280,7 +6306,7 @@ void Aura::PeriodicTick()
                     modOwner->ApplySpellMod(GetId(), SPELLMOD_MULTIPLE_VALUE, gain_multiplier);
             }
 
-            SpellPeriodicAuraLogInfo pInfo(this, drain_amount, 0, 0, 0, gain_multiplier);
+            SpellPeriodicAuraLogInfo pInfo(this, drain_amount, 0, 0, 0, gain_multiplier, false);
             m_target->SendPeriodicAuraLog(&pInfo);
 
             int32 gain_amount = int32(drain_amount * gain_multiplier);
@@ -6308,7 +6334,7 @@ void Aura::PeriodicTick()
             if(m_target->GetMaxPower(power) == 0)
                 break;
 
-            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0, 0.0f);
+            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0, 0.0f, false);
             m_target->SendPeriodicAuraLog(&pInfo);
 
             int32 gain = m_target->ModifyPower(power,pdamage);
@@ -6330,7 +6356,7 @@ void Aura::PeriodicTick()
             if(m_target->GetMaxPower(POWER_MANA) == 0)
                 break;
 
-            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0, 0.0f);
+            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0, 0.0f, false);
             m_target->SendPeriodicAuraLog(&pInfo);
 
             int32 gain = m_target->ModifyPower(POWER_MANA, pdamage);
