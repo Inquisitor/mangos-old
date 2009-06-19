@@ -5526,10 +5526,18 @@ void Aura::HandleShapeshiftBoosts(bool apply)
             spellId  = 27792;
             spellId2 = 27795;                               // must be second, this important at aura remove to prevent to early iterator invalidation.
             break;
+       case FORM_SHADOW:
+            spellId  = 49868;
+            if ( m_target->GetTypeId()==TYPEID_PLAYER )
+            {
+                // noth spells have category cd set
+                ((Player*)m_target)->RemoveSpellCooldown(49868);
+                ((Player*)m_target)->RemoveSpellCooldown(15473);
+            }
+            break;
         case FORM_GHOSTWOLF:
         case FORM_AMBIENT:
         case FORM_GHOUL:
-        case FORM_SHADOW:
         case FORM_STEALTH:
         case FORM_CREATURECAT:
         case FORM_CREATUREBEAR:
