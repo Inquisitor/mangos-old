@@ -3852,16 +3852,18 @@ SpellCastResult Spell::CheckCast(bool strict)
 
         if(target != m_caster)
         {
+            Unit::AuraList const& ignoreReqAuras = m_caster->GetAurasByType(SPELL_AURA_IGNORE_TARGET_AURA_STATE);
+            for(Unit::AuraList::const_iterator i = ignoreReqAuras.begin(); i != ignoreReqAuras.end(); ++i)
+            {
+                if (!(*i)->isAffectedOnSpell(m_spellInfo))
+                    continue;
+
+                return SPELL_CAST_OK;
+            }
+
             // target state requirements (apply to non-self only), to allow cast affects to self like Dirty Deeds
             if(m_spellInfo->TargetAuraState && !target->HasAuraState(AuraState(m_spellInfo->TargetAuraState)))
-			{
-				if( (m_spellInfo->TargetAuraState == AURA_STATE_HEALTHLESS_20_PERCENT && !m_caster->HasAura(52437)) || 
-					( m_spellInfo->TargetAuraState == AURA_STATE_DEFENSE && !m_caster->HasAura(60503)) || 
-					( m_spellInfo->TargetAuraState == AURA_STATE_FROZEN && !m_caster->HasAura(44544)) )
-				{
-					return SPELL_FAILED_TARGET_AURASTATE;
-				}
-			}
+                return SPELL_FAILED_TARGET_AURASTATE;
 
             // Not allow casting on flying player
             if (target->isInFlight())
