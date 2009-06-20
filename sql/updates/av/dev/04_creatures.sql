@@ -147,7 +147,6 @@ VALUES(14777,30,-1358.02, -228.998, 98.868, 3.87768);
 
 
 -- hack for herald, if no alliance has joined:
-INSERT INTO creature VALUES (143817,11997,30,1,1,0,0,-1539.03,-763.518,-0.000621079,1.17101,25,0,0,3000,0,0,0);
+INSERT INTO creature(id,map,position_x,position_y,position_z,orientation) VALUES (11997,30,-1539.03,-763.518,-0.000621079,1.17101);
 -- on official server i think they use another (invisible) creature for yelling
 -- but at the place where i spawned this creature it's the same like invisible
--- (i only hope that the creature will now be loaded after horde enters
