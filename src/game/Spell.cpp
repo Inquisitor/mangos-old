@@ -2310,8 +2310,11 @@ void Spell::cast(bool skipCheck)
     {
         case SPELLFAMILY_GENERIC:
         {
-            if (m_spellInfo->Mechanic == MECHANIC_BANDAGE)             // Bandages
-                m_preCastSpell = 11196;                                // Recently Bandaged
+            if (m_spellInfo->Mechanic == MECHANIC_BANDAGE)  // Bandages
+                m_preCastSpell = 11196;                     // Recently Bandaged
+            else if(m_spellInfo->SpellIconID == 1662 && m_spellInfo->AttributesEx & 0x20)
+                                                            // Blood Fury (Racial)
+                m_preCastSpell = 23230;                     // Blood Fury - Healing Reduction
             break;
         }
         case SPELLFAMILY_DRUID:
@@ -2324,8 +2327,7 @@ void Spell::cast(bool skipCheck)
         {
             // Ice Block
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000008000000000))
-                m_preCastSpell = 41425;                                // Hypothermia
-			
+                m_preCastSpell = 41425;                     // Hypothermia
             break;
         }
 		case SPELLFAMILY_WARRIOR:
@@ -2349,12 +2351,14 @@ void Spell::cast(bool skipCheck)
 		}
         case SPELLFAMILY_PRIEST:
         {
+            // Power Word: Shield
             if (m_spellInfo->Mechanic == MECHANIC_SHIELD &&
-                m_spellInfo->SpellIconID == 566)                       // Power Word: Shield
-                m_preCastSpell = 6788;                                 // Weakened Soul
-            if (m_spellInfo->Id == 47585)                              // Dispersion (transform)
+                (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000000001)))
+                m_preCastSpell = 6788;                      // Weakened Soul
+            // Dispersion (transform)
+            if (m_spellInfo->Id == 47585)
                 m_preCastSpell = 60069;                                // Dispersion (mana regen)
-            if (m_spellInfo->Id == 60069)                              // Dispersion (transform)
+            if (m_spellInfo->Id == 60069)
                 m_preCastSpell = 63230;                                // Dispersion (immunity)
             break;
         }
@@ -2362,17 +2366,19 @@ void Spell::cast(bool skipCheck)
         {
             // Divine Shield, Divine Protection or Hand of Protection
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000400080))
-                m_preCastSpell = 25771;                                // Forbearance
+                m_preCastSpell = 25771;                     // Forbearance
              else if (m_spellInfo->Id == 31884)
-                m_preCastSpell = 61987;                                // Avenging Wrath Marker
+                m_preCastSpell = 61987;                     // Avenging Wrath Marker
             break;
         }
         case SPELLFAMILY_SHAMAN:
         {
-            if (m_spellInfo->Id == 2825)                               // Bloodlust
-                m_preCastSpell = 57724;                                // Sated
-            else if (m_spellInfo->Id == 32182)                         // Heroism
-                m_preCastSpell = 57723;                                // Exhaustion
+            // Bloodlust
+            if (m_spellInfo->Id == 2825)
+                m_preCastSpell = 57724;                     // Sated
+            // Heroism
+            else if (m_spellInfo->Id == 32182)
+                m_preCastSpell = 57723;                     // Exhaustion
             break;
         }
         default:
