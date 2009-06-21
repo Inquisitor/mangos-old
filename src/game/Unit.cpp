@@ -5263,13 +5263,12 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 37378;
                     break;
                 }
-                //Siphon Life
+                // Siphon Life
                 case 63108:
                 {
-                    if(procSpell->SpellFamilyFlags & UI64LIT(0x0000000000000002))
-                        basepoints0 = int32(damage * triggerAmount/100);
-                        target = this;
-                        triggered_spell_id = 63106;
+                    basepoints0 = int32(damage * triggerAmount / 100);
+                    triggered_spell_id = 63106;
+                    target = this;
                     break;
                 }
             }
@@ -5558,7 +5557,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 case 32748:
                 {
                     // Prevent cast Deadly Throw Interrupt on self from last effect (apply dummy) of Deadly Throw
-                    if(this == pVictim)
+                    if (this == pVictim)
                         return false;
 
                     triggered_spell_id = 32747;
@@ -5566,7 +5565,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 }
             }
             // Cut to the Chase
-            if( dummySpell->SpellIconID == 2909 )
+            if (dummySpell->SpellIconID == 2909)
             {
                 // "refresh your Slice and Dice duration to its 5 combo point maximum"
                 // lookup Slice and Dice
@@ -5585,20 +5584,20 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 return false;
             }
             // Deadly Brew
-            if( dummySpell->SpellIconID == 2963 )
+            if (dummySpell->SpellIconID == 2963)
             {
                 triggered_spell_id = 44289;
                 break;
             }
             // Quick Recovery
-            if( dummySpell->SpellIconID == 2116 )
+            if (dummySpell->SpellIconID == 2116)
             {
                 if(!procSpell)
                     return false;
 
                 // energy cost save
                 basepoints0 = procSpell->manaCost * triggerAmount/100;
-                if(basepoints0 <= 0)
+                if (basepoints0 <= 0)
                     return false;
 
                 target = this;
@@ -5790,12 +5789,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     {
                         case POWER_MANA:
                             triggered_spell_id = 57319;
-                            break;
-                        case POWER_RAGE:
-                            triggered_spell_id = 57320;
-                            break;
-                        case POWER_RUNIC_POWER:
-                            triggered_spell_id = 57321;
                             break;
                         default:
                             return false;
@@ -7815,7 +7808,7 @@ void Unit::RemoveGuardians()
     }
 }
 
-bool Unit::HasGuardianWithEntry(uint32 entry)
+Pet* Unit::FindGuardianWithEntry(uint32 entry)
 {
     // pet guid middle part is entry (and creature also)
     // and in guardian list must be guardians with same entry _always_
@@ -7823,10 +7816,10 @@ bool Unit::HasGuardianWithEntry(uint32 entry)
     {
         if(Pet* pet = ObjectAccessor::GetPet(*itr))
             if (pet->GetEntry() == entry)
-                return true;
+                return pet;
     }
 
-    return false;
+    return NULL;
 }
 
 void Unit::UnsummonAllTotems()
@@ -11300,33 +11293,6 @@ void Unit::SendPetTalk (uint32 pettalk)
     WorldPacket data(SMSG_PET_ACTION_SOUND, 8 + 4);
     data << uint64(GetGUID());
     data << uint32(pettalk);
-    ((Player*)owner)->GetSession()->SendPacket(&data);
-}
-
-void Unit::SendPetSpellCooldown (uint32 spellid, time_t cooltime)
-{
-    Unit* owner = GetOwner();
-    if(!owner || owner->GetTypeId() != TYPEID_PLAYER)
-        return;
-
-    WorldPacket data(SMSG_SPELL_COOLDOWN, 8+1+4+4);
-    data << uint64(GetGUID());
-    data << uint8(0x0);                                     // flags (0x1, 0x2)
-    data << uint32(spellid);
-    data << uint32(cooltime);
-
-    ((Player*)owner)->GetSession()->SendPacket(&data);
-}
-
-void Unit::SendPetClearCooldown (uint32 spellid)
-{
-    Unit* owner = GetOwner();
-    if(!owner || owner->GetTypeId() != TYPEID_PLAYER)
-        return;
-
-    WorldPacket data(SMSG_CLEAR_COOLDOWN, 4+8);
-    data << uint32(spellid);
-    data << uint64(GetGUID());
     ((Player*)owner)->GetSession()->SendPacket(&data);
 }
 
