@@ -2795,7 +2795,11 @@ void Spell::DoCreateItem(uint32 i, uint32 itemtype)
 
         // send info to the client
         if(pItem)
+        {
+            if(itemTarget && (itemTarget->IsArmorVellum() || itemTarget->IsWeaponVellum()))
+               player->DestroyItemCount(itemTarget->GetEntry(), 1, true);
             player->SendNewItem(pItem, num_to_add, true, true);
+        }
 
         // we succeeded in creating at least one item, so a levelup is possible
         player->UpdateCraftSkill(m_spellInfo->Id);
@@ -3953,6 +3957,19 @@ void Spell::EffectEnchantItemPerm(uint32 effect_idx)
     SpellItemEnchantmentEntry const *pEnchant = sSpellItemEnchantmentStore.LookupEntry(enchant_id);
     if(!pEnchant)
         return;
+
+    ItemPrototype const* targetProto = itemTarget->GetProto();
+    // EffectItemType serves as the entry of the item to be created.
+    if(m_spellInfo->EffectItemType[effect_idx])
+    {
+        if((m_spellInfo->EquippedItemClass == ITEM_CLASS_ARMOR && itemTarget->IsArmorVellum()) ||
+           (m_spellInfo->EquippedItemClass == ITEM_CLASS_WEAPON && itemTarget->IsWeaponVellum()))
+        {
+             unitTarget = m_caster;
+             DoCreateItem(effect_idx,m_spellInfo->EffectItemType[effect_idx]);
+             return;
+        }
+    }
 
     // item can be in trade slot and have owner diff. from caster
     Player* item_owner = itemTarget->GetOwner();
