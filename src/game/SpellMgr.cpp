@@ -308,6 +308,9 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
 
     switch(spellproto->Effect[effIndex])
     {
+        // consider dispel as always negative effect (explicit check will be performed later)
+        case SPELL_EFFECT_DISPEL:
+            return false;
         // always positive effects (check before target checks that provided non-positive result in some case for positive effects)
         case SPELL_EFFECT_HEAL:
         case SPELL_EFFECT_LEARN_SPELL:
