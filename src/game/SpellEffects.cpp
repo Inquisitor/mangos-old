@@ -366,6 +366,10 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
 
             case SPELLFAMILY_MAGE:
             {
+                if (m_spellInfo->SchoolMask & SPELL_SCHOOL_MASK_ARCANE && !(m_spellInfo->SpellFamilyFlags & UI64LIT(0x20000000)))
+                {
+                    m_caster->RemoveAurasDueToSpell(36032);
+                }
                 break;
             }
             case SPELLFAMILY_WARRIOR:
