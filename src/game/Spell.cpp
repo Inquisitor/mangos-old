@@ -5442,6 +5442,13 @@ bool Spell::CheckTargetCreatureType(Unit* target) const
 
         spellCreatureTargetMask = 0x7FF;
     }
+    // Exorcism
+    if(m_spellInfo->SpellFamilyName==SPELLFAMILY_PALADIN && m_spellInfo->SpellFamilyFlags == UI64LIT(0x200000000))
+    {
+        // not allow cast at player
+        if(target->GetTypeId()==TYPEID_PLAYER)
+            return false;
+    }
 
     // Dismiss Pet and Taming Lesson skipped
     if(m_spellInfo->Id == 2641 || m_spellInfo->Id == 23356)
