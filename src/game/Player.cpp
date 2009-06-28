@@ -10355,6 +10355,9 @@ Item* Player::_StoreItem( uint16 pos, Item *pItem, uint32 count, bool clone, boo
         }
         else if (Bag *pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, bag ))
         {
+            if (slot > pBag->GetBagSize())
+                return NULL;
+
             pBag->StoreItem( slot, pItem, update );
             if( IsInWorld() && update )
             {
