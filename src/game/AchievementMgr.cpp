@@ -958,6 +958,9 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
             case ACHIEVEMENT_CRITERIA_TYPE_CAST_SPELL:
                 if (!miscvalue1 || miscvalue1 != achievementCriteria->cast_spell.spellID)
                     continue;
+				if( miscvalue1 == 8690 && achievementCriteria->ID == 10391 && ( !GetPlayer()->GetMiniPet() || GetPlayer()->GetMiniPet()->GetEntry() != 14305 ) )
+					continue;
+
                 SetCriteriaProgress(achievementCriteria, 1, PROGRESS_ACCUMULATE);
                 break;
             case ACHIEVEMENT_CRITERIA_TYPE_LEARN_SPELL:
