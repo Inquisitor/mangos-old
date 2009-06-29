@@ -2727,11 +2727,13 @@ SpellMissInfo Unit::SpellHitResult(Unit *pVictim, SpellEntry const *spell, bool 
     if (pVictim->GetTypeId()==TYPEID_UNIT && ((Creature*)pVictim)->IsInEvadeMode())
         return SPELL_MISS_EVADE;
 
-    // Check for immune
     // Dispel is positive when casted on friendly target and negative otherwise
-    if (IsDispelSpell(spell))
-        if (this->IsFriendlyTo(pVictim))
-            return SPELL_MISS_NONE;
+    if (IsDispelSpell(spell) && IsFriendlyTo(pVictim))
+        return SPELL_MISS_NONE;
+
+    // Check for immune
+    if (pVictim->IsImmunedToSpell(spell))
+        return SPELL_MISS_IMMUNE;
 
     // All positive spells can`t miss
     // TODO: client not show miss log for this spells - so need find info for this in dbc and use it!
@@ -3554,6 +3556,7 @@ bool Unit::AddAura(Aura *Aur)
                     case SPELL_AURA_PERIODIC_ENERGIZE:
                     case SPELL_AURA_OBS_MOD_MANA:
                     case SPELL_AURA_POWER_BURN_MANA:
+                    case SPELL_AURA_PERIODIC_TRIGGER_SPELL_WITH_VALUE:
                         break;
                     default:                            // not allow
                         // can be only single (this check done at _each_ aura add
