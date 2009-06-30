@@ -5018,8 +5018,8 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                 // Improved Sprint
                 case 30918:
                 {
-                    RemoveSpellsCausingAura(SPELL_AURA_MOD_ROOT);
-                    RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
+                    unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_ROOT);
+                    unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
                 }
                 // Flame Crash
                 case 41126:
