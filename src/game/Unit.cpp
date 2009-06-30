@@ -6982,6 +6982,12 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                 return false;
             break;
         }
+        // Improved Stormstrike
+        case 63375:
+        {
+            basepoints0 = GetCreateMana() * 0.2f;
+            break;
+        }
         // Brain Freeze
         case 57761:
         {
