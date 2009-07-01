@@ -6849,8 +6849,12 @@ void Aura::PeriodicDummyTick()
         {
             switch (spell->Id)
             {
+                // Killing Spree
                 case 51690:
                 {
+                    if(caster->hasUnitState(UNIT_STAT_STUNNED) || caster->HasAuraType(SPELL_AURA_MOD_FEAR))
+                        return;
+
                     std::list<Unit*> targets;
                     {
                         // eff_radius ==0
@@ -6883,14 +6887,6 @@ void Aura::PeriodicDummyTick()
                     caster->CastSpell(target, 57841, true);
                     return;
                 }
-                // Master of Subtlety
-//                case 31666: break;
-                // Killing Spree
-//                case 51690: break;
-                // Overkill
-//                case 58428: break;
-//                default:
-//                    break;
             }
             break;
         }
