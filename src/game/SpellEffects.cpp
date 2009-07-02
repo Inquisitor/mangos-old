@@ -5051,6 +5051,7 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                 {
                     unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_ROOT);
                     unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
+					break;
                 }
                 // Flame Crash
                 case 41126:
