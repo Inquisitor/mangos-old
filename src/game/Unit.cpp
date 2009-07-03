@@ -6864,6 +6864,15 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
     // Custom triggered spells
     switch (auraSpellInfo->Id)
     {
+        // Decimation
+        case 63156:
+        case 63158:
+        {
+            // Only below 35%
+            if(!pVictim->HasAuraState(AURA_STATE_HEALTHLESS_35_PERCENT))
+                return false;
+            break;
+        }
         // Persistent Shield (Scarab Brooch trinket)
         // This spell originally trigger 13567 - Dummy Trigger (vs dummy efect)
         case 26467:
