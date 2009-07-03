@@ -8106,6 +8106,47 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
         }
     }
 
+   	// custom scripted mod from dummy
+	AuraList const& mDummy = owner->GetAurasByType(SPELL_AURA_DUMMY);
+	for(AuraList::const_iterator i = mDummy.begin(); i != mDummy.end(); ++i)
+	{
+		SpellEntry const *spell = (*i)->GetSpellProto();
+		//Fire and Brimstone
+		if (spell->SpellFamilyName == SPELLFAMILY_WARLOCK && spell->SpellIconID == 3173)
+		{
+			if (pVictim->HasAuraState(AURA_STATE_IMMOLATE) && (spellProto->SpellFamilyName == SPELLFAMILY_WARLOCK && spellProto->SpellFamilyFlags & UI64LIT(0x0002004000000000)))
+			{
+				DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f) / 100.0f;
+				break;
+			}
+		}
+		// Torment the Weak
+		if (spell->SpellFamilyName == SPELLFAMILY_MAGE && spell->SpellIconID == 3263)
+		{
+			if (!(*i)->isAffectedOnSpell(spellProto))
+				continue;
+
+		    bool found = false;
+			// Search MECHANIC_SNARE on pVictim
+			AuraMap const& mech = pVictim->GetAuras(); 
+			for(AuraMap::const_iterator itr = mech.begin();itr != mech.end(); ++itr) 
+			{ 
+				SpellEntry const* f_spell = itr->second->GetSpellProto(); 
+				if (GetSpellMechanicMask(f_spell, itr->second->GetEffIndex()) & (1<<MECHANIC_SNARE)) 
+				{
+					found = true;
+					break;
+				} 
+			} 
+			// found mechanic and increase damage
+			if (found)
+			{
+				DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f) / 100.0f;
+				break;
+			}
+		}
+	}
+
     // Custom scripted damage
     // Ice Lance
     if (spellProto->SpellFamilyName == SPELLFAMILY_MAGE && spellProto->SpellIconID == 186)
