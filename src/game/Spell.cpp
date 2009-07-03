@@ -2330,21 +2330,9 @@ void Spell::cast(bool skipCheck)
         }
 		case SPELLFAMILY_WARRIOR:
 		{
-			if(m_spellInfo->SpellFamilyFlags & 0x0000004000000000LL)	//Devastate
-			{
-				if( m_caster->GetTypeId()!= TYPEID_PLAYER )
-					break;
+			if(m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000004000000000))	//Devastate
+				m_preCastSpell = 58567;
 
-				//find highest learned rank of "Sunder Armor", start with rank 7
-				uint32 spell = 47467;
-				while( spell && !((Player*)m_caster)->HasActiveSpell(spell) )
-					spell = spellmgr.GetPrevSpellInChain(spell);
-
-				// get trigger spell if found
-				SpellEntry const *SaInfo = sSpellStore.LookupEntry(spell);
-				if( SaInfo )
-					m_preCastSpell = SaInfo->EffectTriggerSpell[0];
-			}
 			break;
 		}
         case SPELLFAMILY_PRIEST:
