@@ -6033,18 +6033,16 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
 		{
 			case SPELLFAMILY_MAGE:
 			{
-				if ( m_spellProto->SpellFamilyFlags == UI64LIT(0x100000000) && (GetAuraDuration() > 0 && m_removeMode != AURA_REMOVE_BY_CANCEL) )
+                // Shattered Barrier
+				if ( m_spellProto->SpellFamilyFlags == UI64LIT(0x100000000) && GetAuraDuration() > 0
+                    && ( m_removeMode == AURA_REMOVE_BY_DEFAULT || m_removeMode == AURA_REMOVE_BY_DISPEL))
 				{
 					if( GetCaster()->HasSpell(54787) )
-					{
 						GetCaster()->CastSpell( GetCaster(), 55080, true );
-						break;
-					}
-					if( GetCaster()->HasSpell(44745) && rand()%2 > 0 )
-					{
+					else if( GetCaster()->HasSpell(44745) && rand()%2 > 0 )
 						GetCaster()->CastSpell( GetCaster(), 55080, true );
-						break;
-					}
+
+                    break;
 				}
 			}
 			break;
