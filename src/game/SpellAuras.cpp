@@ -1907,13 +1907,18 @@ void Aura::TriggerSpell()
                 break;
             }
 
-//            case SPELLFAMILY_HUNTER:
-//            {
-//                switch(auraId)
-//                {
-//                    //Frost Trap Aura
-//                    case 13810:
-//                        return;
+            case SPELLFAMILY_HUNTER:
+            {
+                switch(auraId)
+                {
+                    //Frost Trap Aura
+                    case 13810:
+                        return;
+                    //Sniper Training
+                    case 53304: /*trigger_spell_id = 64420; */break;
+                    case 53303: /*trigger_spell_id = 64419; */break;
+                    case 53302: /*trigger_spell_id = 64418; */break;
+
 //                    //Rizzle's Frost Trap
 //                    case 39900:
 //                        return;
@@ -1939,9 +1944,9 @@ void Aura::TriggerSpell()
 //                        return;
 //                    default:
 //                        break;
-//                }
-//                break;
-//            }
+                }
+                break;
+            }
             case SPELLFAMILY_SHAMAN:
             {
                 switch(auraId)
