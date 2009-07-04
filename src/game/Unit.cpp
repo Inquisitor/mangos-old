@@ -4620,8 +4620,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 25997;
                     break;
                 }
-                // Sweeping Strikes
-                case 12328:
+                // Sweeping Strikes - generic
                 case 18765:
                 case 35429:
                 {
@@ -5129,6 +5128,20 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
         }
         case SPELLFAMILY_WARRIOR:
         {
+            switch(dummySpell->Id)
+            {
+                // Sweeping Strikes
+                case 12328:
+                {
+                    target = SelectNearbyTarget();
+                    if(!target)
+                        return false;
+
+                    triggered_spell_id = 26654;
+                    break;
+                }
+            }
+
             // Retaliation
             if (dummySpell->SpellFamilyFlags == UI64LIT(0x0000000800000000))
             {
