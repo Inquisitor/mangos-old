@@ -1281,6 +1281,9 @@ void Aura::HandleAddModifier(bool apply, bool Real)
             case 57761:    // Fireball!
                 SetAuraCharges(1);
                 break;
+			case 55166:    // Tidal Force
+				SetAuraCharges(0);
+			break;
         }
 
         SpellModifier *mod = new SpellModifier;
@@ -2134,11 +2137,11 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
 						caster->SummonCreature(22038, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
 					return;
 				}
-			case 55198: // Tidal Force
-			{
-				for(uint32 x = 0; x < 3; ++x ) // 3 charges
-					m_target->CastSpell( m_target, 55166, true );
-			}
+			case 55198:                                     // Tidal Force
+				m_target->CastSpell(m_target, 55166, true);
+				if (Aura *aur = m_target->GetAura(55166, 0))
+					aur->SetStackAmount(3);
+				return;
             case 46699:                                     // Requires No Ammo
                 if(m_target->GetTypeId() == TYPEID_PLAYER)
                     ((Player*)m_target)->RemoveAmmo();      // not use ammo and not allow use
