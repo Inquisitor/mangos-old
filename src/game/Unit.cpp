@@ -6650,6 +6650,23 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                 //    trigger_spell_id = ????;
             }
             case SPELLFAMILY_HUNTER:
+                if (auraSpellInfo->SpellIconID == 3247)     // Piercing Shots
+                {
+                    switch (auraSpellInfo->Id)
+                    {
+                        case 53234:  // Rank 1
+                        case 53237:  // Rank 2
+						case 53238:  // Rank 3
+						{
+							basepoints0 = damage * triggerAmount / 100 / 8;
+                            trigger_spell_id = 63468;
+                            break;
+						}
+                        default:
+                            sLog.outError("Unit::HandleProcTriggerSpell: Spell %u miss posibly Piercing Shots",auraSpellInfo->Id);
+                            return false;
+                    }
+                }
                 break;
             case SPELLFAMILY_PALADIN:
             {
