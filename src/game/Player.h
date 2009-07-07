@@ -2040,6 +2040,10 @@ class MANGOS_DLL_SPEC Player : public Unit
         void SendCinematicStart(uint32 CinematicSequenceId);
         void SendMovieStart(uint32 MovieId);
 
+		// Combo adding hack for talents like Ruthlessness
+		uint32 m_comboCountAfterCalc;
+
+
         /*********************************************************/
         /***                 INSTANCE SYSTEM                   ***/
         /*********************************************************/

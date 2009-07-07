@@ -7046,6 +7046,11 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
         case 14189: // Seal Fate (Netherblade set)
         case 14157: // Ruthlessness
         {
+			target = pVictim;
+			if( this->GetTypeId() == TYPEID_PLAYER )
+			{
+				((Player*)this)->m_comboCountAfterCalc = 1;
+			}
             // Need add combopoint AFTER finish movie (or they dropped in finish phase)
             break;
         }
