@@ -2794,7 +2794,19 @@ void Spell::finish(bool ok)
                 break;
             }
         if (needDrop)
+		{
+			Unit * ComboTarget = m_caster->GetGUID() == ((Player*)m_caster)->GetComboTarget() ? NULL : ObjectAccessor::GetUnit(*m_caster, ((Player*)m_caster)->GetComboTarget());
             ((Player*)m_caster)->ClearComboPoints();
+			if( ((Player*)m_caster)->m_comboCountAfterCalc > 0 )
+			{
+                if (ComboTarget != NULL && ComboTarget->isAlive())
+				{
+					((Player*)m_caster)->AddComboPoints( ComboTarget, ((Player*)m_caster)->m_comboCountAfterCalc);
+					((Player*)m_caster)->m_comboCountAfterCalc = 0;
+					ComboTarget = NULL;
+				}
+			}
+		}
     }
 
     // potions disabled by client, send event "not in combat" if need
