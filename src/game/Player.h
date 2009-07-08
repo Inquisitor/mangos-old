@@ -1323,12 +1323,18 @@ class MANGOS_DLL_SPEC Player : public Unit
         const uint64& GetSelection( ) const { return m_curSelection; }
         void SetSelection(const uint64 &guid) { m_curSelection = guid; SetUInt64Value(UNIT_FIELD_TARGET, guid); }
 
-        uint8 GetComboPoints() { return m_comboPoints; }
-        const uint64& GetComboTarget() const { return m_comboTarget; }
+        typedef UNORDERED_MAP<const uint64, int8> ComboPointMap;
+        ComboPointMap mComboPointMap;     
+
+		int8 GetComboPoints(const Unit * target) 
+		{
+			ComboPointMap::iterator itr = mComboPointMap.find(target->GetGUID());
+			return itr != mComboPointMap.end() ? itr->second : 0;
+		}
 
         void AddComboPoints(Unit* target, int8 count);
-        void ClearComboPoints();
-        void SendComboPoints();
+        void ClearComboPoints(Unit * target);
+        void SendComboPoints(Unit * target);
 
         void SendMailResult(uint32 mailId, MailResponseType mailAction, MailResponseResult mailError, uint32 equipError = 0, uint32 item_guid = 0, uint32 item_count = 0);
         void SendNewMail();
@@ -2225,9 +2231,6 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         uint32 m_ExtraFlags;
         uint64 m_curSelection;
-
-        uint64 m_comboTarget;
-        int8 m_comboPoints;
 
         QuestStatusMap mQuestStatus;
 

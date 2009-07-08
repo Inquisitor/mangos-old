@@ -10172,7 +10172,9 @@ int32 Unit::CalculateSpellDamage(SpellEntry const* spellProto, uint8 effect_inde
 {
     Player* unitPlayer = (GetTypeId() == TYPEID_PLAYER) ? (Player*)this : NULL;
 
-    uint8 comboPoints = unitPlayer ? unitPlayer->GetComboPoints() : 0;
+	uint8 comboPoints = 0;
+	if( unitPlayer )
+		comboPoints = unitPlayer->GetComboPoints(target);
 
     int32 level = int32(getLevel());
     if (level > (int32)spellProto->maxLevel && spellProto->maxLevel > 0)
@@ -10194,7 +10196,7 @@ int32 Unit::CalculateSpellDamage(SpellEntry const* spellProto, uint8 effect_inde
 
     int32 value = basePoints + randvalue;
     //random damage
-    if(comboDamage != 0 && unitPlayer && target && (target->GetGUID() == unitPlayer->GetComboTarget()))
+    if(comboDamage != 0 && unitPlayer && target)
         value += (int32)(comboDamage * comboPoints);
 
     if(Player* modOwner = GetSpellModOwner())
@@ -10228,7 +10230,9 @@ int32 Unit::CalculateSpellDuration(SpellEntry const* spellProto, uint8 effect_in
 {
     Player* unitPlayer = (GetTypeId() == TYPEID_PLAYER) ? (Player*)this : NULL;
 
-    uint8 comboPoints = unitPlayer ? unitPlayer->GetComboPoints() : 0;
+	uint8 comboPoints = 0;
+	if( unitPlayer )
+		comboPoints = unitPlayer->GetComboPoints(target);
 
     int32 minduration = GetSpellDuration(spellProto);
     int32 maxduration = GetSpellMaxDuration(spellProto);
@@ -11628,17 +11632,17 @@ void Unit::SetDisplayId(uint32 modelId)
     }
 }
 
-void Unit::ClearComboPointHolders()
+void Unit::ClearComboPointHolders(/*Unit * who*/)
 {
     while(!m_ComboPointHolders.empty())
     {
         uint32 lowguid = *m_ComboPointHolders.begin();
 
         Player* plr = objmgr.GetPlayer(MAKE_NEW_GUID(lowguid, 0, HIGHGUID_PLAYER));
-        if(plr && plr->GetComboTarget()==GetGUID())         // recheck for safe
-            plr->ClearComboPoints();                        // remove also guid from m_ComboPointHolders;
+        if(plr)													// recheck for safe
+            plr->ClearComboPoints(this);                        // remove also guid from m_ComboPointHolders;
         else
-            m_ComboPointHolders.erase(lowguid);             // or remove manually
+            m_ComboPointHolders.erase(lowguid);					// or remove manually
     }
 }
 
@@ -11652,7 +11656,7 @@ void Unit::ClearAllReactives()
     if (getClass() == CLASS_HUNTER && HasAuraState( AURA_STATE_HUNTER_PARRY))
         ModifyAuraState(AURA_STATE_HUNTER_PARRY, false);
     if(getClass() == CLASS_WARRIOR && GetTypeId() == TYPEID_PLAYER)
-        ((Player*)this)->ClearComboPoints();
+		((Player*)this)->mComboPointMap.clear();
 }
 
 void Unit::UpdateReactives( uint32 p_time )
@@ -11680,7 +11684,7 @@ void Unit::UpdateReactives( uint32 p_time )
                     break;
                 case REACTIVE_OVERPOWER:
                     if(getClass() == CLASS_WARRIOR && GetTypeId() == TYPEID_PLAYER)
-                        ((Player*)this)->ClearComboPoints();
+						((Player*)this)->mComboPointMap.clear();
                     break;
                 default:
                     break;
