@@ -767,7 +767,7 @@ BG_AV_Nodes BattleGroundAV::GetNodeThroughNodeEvent(uint8 eventId)
 
     if (eventId > BG_AV_MAX_NODE_EVENTS-1 || eventId == 0)
     {
-        sLog.outError("BattleGroundAV: GetNodeThroughNodeEvent received a wrong event %u", eventId);
+        sLog.outDebug("BattleGroundAV: GetNodeThroughNodeEvent received a wrong event %u", eventId);
         return BG_AV_NODES_ERROR;
     }
     sLog.outDebug("BattleGroundAV GetNodeThroughNodeEvent event: %u", uint8( (eventId - 1) / 4) );
