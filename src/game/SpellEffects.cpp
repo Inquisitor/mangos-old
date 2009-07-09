@@ -424,6 +424,9 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                     if(unitTarget->HasAuraState(AURA_STATE_IMMOLATE))
                         damage += int32(damage*0.25f);
                 }
+				// Haunt
+                else if(m_spellInfo->SpellFamilyFlags & UI64LIT(0x4000000000000))
+                    m_caster->CastCustomSpell(unitTarget, 50091, &damage, NULL, NULL, true);
                 // Conflagrate - consumes immolate
                 if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x80000000000000)) && (m_spellInfo->TargetAuraState == AURA_STATE_IMMOLATE) && m_targets.getUnitTarget())
                 {
@@ -464,7 +467,7 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                     // converts each extra point of energy into ($f1+$AP/410) additional damage, not more than 30 energy
                     float ap = m_caster->GetTotalAttackPowerValue(BASE_ATTACK);
                     float multiple = ap / 410 + m_spellInfo->DmgMultiplier[effect_idx];
-                    damage += int32(((Player*)m_caster)->GetComboPoints() * ap * 7 / 100);
+                    damage += int32(((Player*)m_caster)->GetComboPoints(unitTarget) * ap * 7 / 100);
                     if (m_caster->GetPower(POWER_ENERGY) > 30)
                     {
                         damage += int32(30 * multiple);
@@ -506,7 +509,7 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                 if (m_caster->GetTypeId()==TYPEID_PLAYER && (m_spellInfo->SpellFamilyFlags & UI64LIT(0x800000000)))
                 {
                     // consume from stack dozes not more that have combo-points
-                    if(uint32 combo = ((Player*)m_caster)->GetComboPoints())
+                    if(uint32 combo = ((Player*)m_caster)->GetComboPoints(unitTarget))
                     {
                         Aura *poison = 0;
                         // Lookup for Deadly poison (only attacker applied)
@@ -533,13 +536,13 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                         }
                         // Eviscerate and Envenom Bonus Damage (item set effect)
                         if(m_caster->GetDummyAura(37169))
-                            damage += ((Player*)m_caster)->GetComboPoints()*40;
+                            damage += ((Player*)m_caster)->GetComboPoints(unitTarget)*40;
                     }
                 }
                 // Eviscerate
                 else if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x00020000)) && m_caster->GetTypeId()==TYPEID_PLAYER)
                 {
-                    if(uint32 combo = ((Player*)m_caster)->GetComboPoints())
+                    if(uint32 combo = ((Player*)m_caster)->GetComboPoints(unitTarget))
                     {
                         float ap = m_caster->GetTotalAttackPowerValue(BASE_ATTACK);
                         damage += irand(int32(ap * combo * 0.03f), int32(ap * combo * 0.07f));
@@ -1142,6 +1145,12 @@ void Spell::EffectDummy(uint32 i)
                 {
                     // Emissary of Hate Credit
                     m_caster->CastSpell(m_caster, 45088, true);
+                    return;
+                }
+				case 50091:                                 // Haunt
+                {
+                    if (Aura *haunt = unitTarget->GetAura(SPELL_AURA_DUMMY, SPELLFAMILY_WARLOCK, UI64LIT(0x4000000000000), 0, m_caster->GetGUID()))
+                        haunt->GetModifier()->m_amount = damage;
                     return;
                 }
                 case 50243:                                 // Teach Language
@@ -2655,6 +2664,15 @@ void Spell::EffectHeal( uint32 /*i*/ )
                 }
             }
         }
+		// Chain Heal consumes Riptide
+        else if(m_spellInfo->SpellFamilyName == SPELLFAMILY_SHAMAN && m_spellInfo->SpellFamilyFlags == UI64LIT(0x100))
+        {
+            if (Aura *riptide = unitTarget->GetAura(SPELL_AURA_PERIODIC_HEAL, SPELLFAMILY_SHAMAN, 0, 0x10, m_caster->GetGUID()))
+            {
+                addhealth += addhealth * riptide->GetSpellProto()->EffectBasePoints[2] / 100;
+                unitTarget->RemoveAurasDueToSpell(riptide->GetId());
+            }
+        }
         else
             addhealth = caster->SpellHealingBonus(unitTarget, m_spellInfo, addhealth, HEAL);
 
@@ -3349,6 +3367,7 @@ void Spell::EffectSummonType(uint32 i)
         case SUMMON_TYPE_POSESSED2:
         case SUMMON_TYPE_FORCE_OF_NATURE:
         case SUMMON_TYPE_GUARDIAN2:
+		case SUMMON_TYPE_SNAKES:
             EffectSummonGuardian(i);
             break;
         case SUMMON_TYPE_WILD:
