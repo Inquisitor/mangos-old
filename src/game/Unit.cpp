@@ -5138,6 +5138,17 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     CastSpell(this, 28682, true, castItem, triggeredByAura);
                     return (procEx & PROC_EX_CRITICAL_HIT);// charge update only at crit hits, no hidden cooldowns
                 }
+				// Glyph of Improved Scorch
+				case 12873:
+				{
+					if( HasAura(56371, 0) && pVictim )
+					{
+						Aura * aur = pVictim->GetAura(22959, 0);
+						if( aur )
+							aur->SetStackAmount(5);
+					}
+					break;
+				}
             }
             break;
         }
