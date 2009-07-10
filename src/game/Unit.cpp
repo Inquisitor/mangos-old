@@ -6426,6 +6426,7 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
     uint32 trigger_spell_id = auraSpellInfo->EffectTriggerSpell[triggeredByAura->GetEffIndex()];
     Unit*  target = NULL;
     int32  basepoints0 = 0;
+	int32  basepoints1 = 0;
 
     if(triggeredByAura->GetModifier()->m_auraname == SPELL_AURA_PROC_TRIGGER_SPELL_WITH_VALUE)
         basepoints0 = triggerAmount;
@@ -7037,6 +7038,25 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
     // dummy basepoints or other customs
     switch(trigger_spell_id)
     {
+		// Demonic Pact
+		case 48090:
+		{
+			if( !GetOwner() )
+				return false;
+
+			AuraMap const& ownerAuras = GetOwner()->GetAuras();
+            for (AuraMap::const_iterator itr = ownerAuras.begin(); itr != ownerAuras.end(); ++itr)
+			{
+				SpellEntry const* m_spell = itr->second->GetSpellProto();
+				if (m_spell->SpellFamilyName == SPELLFAMILY_WARLOCK && m_spell->SpellIconID == 3220)
+				{
+					basepoints0 = GetOwner()->SpellBaseDamageBonus(SPELL_SCHOOL_MASK_SPELL) * (m_spell->EffectBasePoints[0] + 1) / 100;
+					basepoints1 = GetOwner()->SpellBaseDamageBonus(SPELL_SCHOOL_MASK_SPELL) * (m_spell->EffectBasePoints[0] + 1) / 100;
+					break;
+				}
+			}
+			break;
+		}
         // Cast positive spell on enemy target
         case 7099:  // Curse of Mending
         case 39647: // Curse of Mending
@@ -7158,7 +7178,7 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
         return false;
 
     if(basepoints0)
-        CastCustomSpell(target,trigger_spell_id,&basepoints0,NULL,NULL,true,castItem,triggeredByAura);
+		CastCustomSpell(target,trigger_spell_id,&basepoints0, basepoints1 ? &basepoints1 : NULL ,NULL,true,castItem,triggeredByAura);
     else
         CastSpell(target,trigger_spell_id,true,castItem,triggeredByAura);
 
