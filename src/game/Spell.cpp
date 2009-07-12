@@ -2794,11 +2794,16 @@ void Spell::finish(bool ok)
             }
         if (needDrop)
 		{
-			((Player*)m_caster)->ClearComboPoints(m_targets.getUnitTarget());
+			Unit * ComboTarget = m_caster->GetGUID() == ((Player*)m_caster)->GetComboTarget() ? NULL : ObjectAccessor::GetUnit(*m_caster, ((Player*)m_caster)->GetComboTarget());
+            ((Player*)m_caster)->ClearComboPoints();
 			if( ((Player*)m_caster)->m_comboCountAfterCalc > 0 )
 			{
-				((Player*)m_caster)->AddComboPoints( m_targets.getUnitTarget() == m_caster ? NULL : m_targets.getUnitTarget(), ((Player*)m_caster)->m_comboCountAfterCalc);
-				((Player*)m_caster)->m_comboCountAfterCalc = 0;
+				if (ComboTarget != NULL && ComboTarget->isAlive())
+				{
+				  ((Player*)m_caster)->AddComboPoints( ComboTarget, ((Player*)m_caster)->m_comboCountAfterCalc);
+				  ((Player*)m_caster)->m_comboCountAfterCalc = 0;
+				  ComboTarget = NULL;
+				}
 			}
 		}
     }
