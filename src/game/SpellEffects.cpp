@@ -5405,6 +5405,17 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     }
                     return;
                 }
+				case 53412: // Invigoration
+				{
+					if( m_caster->GetOwner() )
+					{
+						if( m_caster->GetOwner()->HasAura(53253,0) )
+							m_caster->GetOwner()->CastSpell( m_caster->GetOwner(), 53398, true );
+						else if( m_caster->GetOwner()->HasAura(53252,0) && rand()%2==0 )
+							m_caster->GetOwner()->CastSpell( m_caster->GetOwner(), 53398, true );
+					}
+					break;
+				}
                 default:
                     break;
             }
