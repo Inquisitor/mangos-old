@@ -10210,7 +10210,7 @@ int32 Unit::CalculateSpellDamage(SpellEntry const* spellProto, uint8 effect_inde
     Player* unitPlayer = (GetTypeId() == TYPEID_PLAYER) ? (Player*)this : NULL;
 
 	uint8 comboPoints = 0;
-	if( unitPlayer )
+	if( unitPlayer && target )
 		comboPoints = unitPlayer->GetComboPoints(target);
 
     int32 level = int32(getLevel());
@@ -10268,7 +10268,7 @@ int32 Unit::CalculateSpellDuration(SpellEntry const* spellProto, uint8 effect_in
     Player* unitPlayer = (GetTypeId() == TYPEID_PLAYER) ? (Player*)this : NULL;
 
 	uint8 comboPoints = 0;
-	if( unitPlayer )
+	if( unitPlayer && target )
 		comboPoints = unitPlayer->GetComboPoints(target);
 
     int32 minduration = GetSpellDuration(spellProto);
