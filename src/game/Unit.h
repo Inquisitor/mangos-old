@@ -1171,6 +1171,11 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void SendMonsterMoveWithSpeed(float x, float y, float z, uint32 transitTime = 0, Player* player = NULL);
         void SendMonsterMoveWithSpeedToCurrentDestination(Player* player = NULL);
 
+		void SendChangeCurrentVictimOpcode(HostilReference* pHostilReference);
+        void SendClearThreatListOpcode();
+        void SendRemoveFromThreatListOpcode(HostilReference* pHostilReference);
+        void SendThreatListUpdate();
+
         virtual void MoveOutOfRange(Player &) {  };
 
         bool isAlive() const { return (m_deathState == ALIVE); };

@@ -467,7 +467,7 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                     // converts each extra point of energy into ($f1+$AP/410) additional damage, not more than 30 energy
                     float ap = m_caster->GetTotalAttackPowerValue(BASE_ATTACK);
                     float multiple = ap / 410 + m_spellInfo->DmgMultiplier[effect_idx];
-                    damage += int32(((Player*)m_caster)->GetComboPoints(unitTarget) * ap * 7 / 100);
+                    damage += int32(((Player*)m_caster)->GetComboPoints() * ap * 7 / 100);
                     if (m_caster->GetPower(POWER_ENERGY) > 30)
                     {
                         damage += int32(30 * multiple);
@@ -509,7 +509,7 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                 if (m_caster->GetTypeId()==TYPEID_PLAYER && (m_spellInfo->SpellFamilyFlags & UI64LIT(0x800000000)))
                 {
                     // consume from stack dozes not more that have combo-points
-                    if(uint32 combo = ((Player*)m_caster)->GetComboPoints(unitTarget))
+                    if(uint32 combo = ((Player*)m_caster)->GetComboPoints())
                     {
                         Aura *poison = 0;
                         // Lookup for Deadly poison (only attacker applied)
@@ -536,13 +536,13 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                         }
                         // Eviscerate and Envenom Bonus Damage (item set effect)
                         if(m_caster->GetDummyAura(37169))
-                            damage += ((Player*)m_caster)->GetComboPoints(unitTarget)*40;
+                            damage += ((Player*)m_caster)->GetComboPoints()*40;
                     }
                 }
                 // Eviscerate
                 else if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x00020000)) && m_caster->GetTypeId()==TYPEID_PLAYER)
                 {
-                    if(uint32 combo = ((Player*)m_caster)->GetComboPoints(unitTarget))
+                    if(uint32 combo = ((Player*)m_caster)->GetComboPoints())
                     {
                         float ap = m_caster->GetTotalAttackPowerValue(BASE_ATTACK);
                         damage += irand(int32(ap * combo * 0.03f), int32(ap * combo * 0.07f));
@@ -5405,6 +5405,17 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     }
                     return;
                 }
+				case 53412: // Invigoration
+				{
+					if( m_caster->GetOwner() )
+					{
+						if( m_caster->GetOwner()->HasAura(53253,0) )
+							m_caster->GetOwner()->CastSpell( m_caster->GetOwner(), 53398, true );
+						else if( m_caster->GetOwner()->HasAura(53252,0) && rand()%2==0 )
+							m_caster->GetOwner()->CastSpell( m_caster->GetOwner(), 53398, true );
+					}
+					break;
+				}
                 default:
                     break;
             }

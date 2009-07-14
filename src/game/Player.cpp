@@ -298,6 +298,9 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
     m_curSelection = 0;
     m_lootGuid = 0;
 
+	m_comboTarget = 0;
+	m_comboPoints = 0;
+
     m_usedTalentCount = 0;
     m_questRewardTalentCount = 0;
 
@@ -1369,7 +1372,7 @@ void Player::setDeathState(DeathState s)
         // drunken state is cleared on death
         SetDrunkValue(0);
         // lost combo points at any target (targeted combo points clear in Unit::setDeathState)
-		mComboPointMap.clear();
+		ClearComboPoints();
 
         clearResurrectRequestData();
 
@@ -6358,11 +6361,15 @@ void Player::DuelComplete(DuelCompleteType type)
         RemoveAurasDueToSpell(auras2remove[i]);
 
     // cleanup combo points
-        ClearComboPoints(duel->opponent);
-        ClearComboPoints(duel->opponent->GetPet());
+    if(GetComboTarget()==duel->opponent->GetGUID())
+        ClearComboPoints();
+    else if(GetComboTarget()==duel->opponent->GetPetGUID())
+        ClearComboPoints();
 
-        duel->opponent->ClearComboPoints(this);
-        duel->opponent->ClearComboPoints(this->GetPet());
+    if(duel->opponent->GetComboTarget()==GetGUID())
+        duel->opponent->ClearComboPoints();
+    else if(duel->opponent->GetComboTarget()==GetPetGUID())
+        duel->opponent->ClearComboPoints();
 
     //cleanups
     SetUInt64Value(PLAYER_DUEL_ARBITER, 0);
@@ -18040,14 +18047,15 @@ void Player::InitPrimaryProfessions()
     SetFreePrimaryProfessions(sWorld.getConfig(CONFIG_MAX_PRIMARY_TRADE_SKILL));
 }
 
-void Player::SendComboPoints(Unit * target)
+void Player::SendComboPoints()
 {
-    if (target)
+	Unit *combotarget = ObjectAccessor::GetUnit(*this, m_comboTarget);
+	if (combotarget)
     {
-			WorldPacket data(SMSG_UPDATE_COMBO_POINTS, target->GetPackGUID().size()+1);
-			data.append(target->GetPackGUID());
-			data << uint8( GetComboPoints(target) );
-			GetSession()->SendPacket(&data);
+		WorldPacket data(SMSG_UPDATE_COMBO_POINTS, combotarget->GetPackGUID().size()+1);
+        data.append(combotarget->GetPackGUID());
+        data << uint8(m_comboPoints);
+        GetSession()->SendPacket(&data);
     }
 }
 
@@ -18059,32 +18067,44 @@ void Player::AddComboPoints(Unit* target, int8 count)
     // without combo points lost (duration checked in aura)
     RemoveSpellsCausingAura(SPELL_AURA_RETAIN_COMBO_POINTS);
 
-	ComboPointMap::iterator itr = mComboPointMap.find(target->GetGUID());
-	if( itr != mComboPointMap.end() )
-	{
-		itr->second = itr->second+count;
-		if( itr->second > 5 ) itr->second = 5;
-		if( itr->second < 0 ) itr->second = 0;
-	}
-	else
-		mComboPointMap.insert(std::make_pair(target->GetGUID(), count ));
+    if(target->GetGUID() == m_comboTarget)
+    {
+        m_comboPoints += count;
+    }
+    else
+    {
+        if(m_comboTarget)
+            if(Unit* target2 = ObjectAccessor::GetUnit(*this,m_comboTarget))
+                target2->RemoveComboPointHolder(GetGUIDLow());
 
-    SendComboPoints(target);
+        m_comboTarget = target->GetGUID();
+        m_comboPoints = count;
+
+        target->AddComboPointHolder(GetGUIDLow());
+    }
+
+    if (m_comboPoints > 5) m_comboPoints = 5;
+    if (m_comboPoints < 0) m_comboPoints = 0;
+
+    SendComboPoints();
 }
 
-void Player::ClearComboPoints(Unit * target)
+void Player::ClearComboPoints()
 {
-    if(!target)
+    if(!m_comboTarget)
         return;
 
     // without combopoints lost (duration checked in aura)
     RemoveSpellsCausingAura(SPELL_AURA_RETAIN_COMBO_POINTS);
 
-	mComboPointMap.erase(target->GetGUID());
+	m_comboPoints = 0;
 
-    SendComboPoints(target);
+    SendComboPoints();
 
-    target->RemoveComboPointHolder(GetGUIDLow());
+    if(Unit* target = ObjectAccessor::GetUnit(*this,m_comboTarget))
+        target->RemoveComboPointHolder(GetGUIDLow());
+
+	m_comboTarget = 0;
 }
 
 void Player::SetGroup(Group *group, int8 subgroup)

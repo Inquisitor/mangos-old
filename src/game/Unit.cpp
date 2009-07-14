@@ -191,6 +191,9 @@ void Unit::Update( uint32 p_time )
     m_Events.Update( p_time );
     _UpdateSpells( p_time );
 
+	if (CanHaveThreatList() && getThreatManager().isNeedUpdateToClient(p_time))
+        SendThreatListUpdate();
+
     // update combat timer only for players and pets
     if (isInCombat() && (GetTypeId() == TYPEID_PLAYER || ((Creature*)this)->isPet() || ((Creature*)this)->isCharmed()))
     {
@@ -10077,6 +10080,9 @@ void Unit::AddThreat(Unit* pVictim, float threat, SpellSchoolMask schoolMask, Sp
 
 void Unit::DeleteThreatList()
 {
+	if(CanHaveThreatList() && !m_ThreatManager.isThreatListEmpty())
+        SendClearThreatListOpcode();
+
     m_ThreatManager.clearReferences();
 }
 
@@ -10227,9 +10233,7 @@ int32 Unit::CalculateSpellDamage(SpellEntry const* spellProto, uint8 effect_inde
 {
     Player* unitPlayer = (GetTypeId() == TYPEID_PLAYER) ? (Player*)this : NULL;
 
-	uint8 comboPoints = 0;
-	if( unitPlayer )
-		comboPoints = unitPlayer->GetComboPoints(target);
+	uint8 comboPoints = unitPlayer ? unitPlayer->GetComboPoints() : 0;
 
     int32 level = int32(getLevel());
     if (level > (int32)spellProto->maxLevel && spellProto->maxLevel > 0)
@@ -10251,7 +10255,7 @@ int32 Unit::CalculateSpellDamage(SpellEntry const* spellProto, uint8 effect_inde
 
     int32 value = basePoints + randvalue;
     //random damage
-    if(comboDamage != 0 && unitPlayer && target)
+    if(comboDamage != 0 && unitPlayer && target && (target->GetGUID() == unitPlayer->GetComboTarget()))
         value += (int32)(comboDamage * comboPoints);
 
     if(Player* modOwner = GetSpellModOwner())
@@ -10285,9 +10289,7 @@ int32 Unit::CalculateSpellDuration(SpellEntry const* spellProto, uint8 effect_in
 {
     Player* unitPlayer = (GetTypeId() == TYPEID_PLAYER) ? (Player*)this : NULL;
 
-	uint8 comboPoints = 0;
-	if( unitPlayer )
-		comboPoints = unitPlayer->GetComboPoints(target);
+	uint8 comboPoints = unitPlayer ? unitPlayer->GetComboPoints() : 0;
 
     int32 minduration = GetSpellDuration(spellProto);
     int32 maxduration = GetSpellMaxDuration(spellProto);
@@ -11687,17 +11689,17 @@ void Unit::SetDisplayId(uint32 modelId)
     }
 }
 
-void Unit::ClearComboPointHolders(/*Unit * who*/)
+void Unit::ClearComboPointHolders()
 {
     while(!m_ComboPointHolders.empty())
     {
         uint32 lowguid = *m_ComboPointHolders.begin();
 
         Player* plr = objmgr.GetPlayer(MAKE_NEW_GUID(lowguid, 0, HIGHGUID_PLAYER));
-        if(plr)													// recheck for safe
-            plr->ClearComboPoints(this);                        // remove also guid from m_ComboPointHolders;
+        if(plr && plr->GetComboTarget()==GetGUID())         // recheck for safe
+            plr->ClearComboPoints();                        // remove also guid from m_ComboPointHolders;
         else
-            m_ComboPointHolders.erase(lowguid);					// or remove manually
+            m_ComboPointHolders.erase(lowguid);				// or remove manually
     }
 }
 
@@ -11711,7 +11713,7 @@ void Unit::ClearAllReactives()
     if (getClass() == CLASS_HUNTER && HasAuraState( AURA_STATE_HUNTER_PARRY))
         ModifyAuraState(AURA_STATE_HUNTER_PARRY, false);
     if(getClass() == CLASS_WARRIOR && GetTypeId() == TYPEID_PLAYER)
-		((Player*)this)->mComboPointMap.clear();
+		((Player*)this)->ClearComboPoints();
 }
 
 void Unit::UpdateReactives( uint32 p_time )
@@ -11739,7 +11741,7 @@ void Unit::UpdateReactives( uint32 p_time )
                     break;
                 case REACTIVE_OVERPOWER:
                     if(getClass() == CLASS_WARRIOR && GetTypeId() == TYPEID_PLAYER)
-						((Player*)this)->mComboPointMap.clear();
+						((Player*)this)->ClearComboPoints();
                     break;
                 default:
                     break;
@@ -12270,4 +12272,58 @@ void Unit::SetPvP( bool state )
         if(m_TotemSlot[i])
             if(Creature *totem = GetMap()->GetCreature(m_TotemSlot[i]))
                 totem->SetPvP(state);
+}
+
+void Unit::SendThreatListUpdate()
+{
+    if (uint32 count = getThreatManager().getThreatList().size())
+    {
+        sLog.outDebug( "WORLD: Send SMSG_THREAT_UPDATE Message" );
+        WorldPacket data(SMSG_THREAT_UPDATE, 8 + count * 8);
+        data.append(GetPackGUID());
+        data << uint32(count);
+        std::list<HostilReference*>& tlist = getThreatManager().getThreatList();
+        for (std::list<HostilReference*>::const_iterator itr = tlist.begin(); itr != tlist.end(); ++itr)
+        {
+            data.appendPackGUID((*itr)->getUnitGuid());
+            data << uint32((*itr)->getThreat());
+        }
+        SendMessageToSet(&data, false);
+    }
+}
+
+void Unit::SendChangeCurrentVictimOpcode(HostilReference* pHostilReference)
+{
+    if (uint32 count = getThreatManager().getThreatList().size())
+    {
+        sLog.outDebug( "WORLD: Send SMSG_HIGHEST_THREAT_UPDATE Message" );
+        WorldPacket data(SMSG_HIGHEST_THREAT_UPDATE, 8 + 8 + count * 8);
+        data.append(GetPackGUID());
+        data.appendPackGUID(pHostilReference->getUnitGuid());
+        data << uint32(count);
+        std::list<HostilReference*>& tlist = getThreatManager().getThreatList();
+        for (std::list<HostilReference*>::const_iterator itr = tlist.begin(); itr != tlist.end(); ++itr)
+        {
+            data.appendPackGUID((*itr)->getUnitGuid());
+            data << uint32((*itr)->getThreat());
+        }
+        SendMessageToSet(&data, false);
+    }
+}
+
+void Unit::SendClearThreatListOpcode()
+{
+    sLog.outDebug( "WORLD: Send SMSG_THREAT_CLEAR Message" );
+    WorldPacket data(SMSG_THREAT_CLEAR, 8);
+    data.append(GetPackGUID());
+    SendMessageToSet(&data, false);
+}
+
+void Unit::SendRemoveFromThreatListOpcode(HostilReference* pHostilReference)
+{
+    sLog.outDebug( "WORLD: Send SMSG_THREAT_REMOVE Message" );
+    WorldPacket data(SMSG_THREAT_REMOVE, 8 + 8);
+    data.append(GetPackGUID());
+    data.appendPackGUID(pHostilReference->getUnitGuid());
+    SendMessageToSet(&data, false);
 }

@@ -2435,7 +2435,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 if ( caster && m_removeMode == AURA_REMOVE_BY_DISPEL )
                 {
                     // amount equal to 12 sec worth of ticks, or 4 ticks
-                    int32 amount = 4 * caster->SpellDamageBonus(m_target, GetSpellProto(), GetSpellProto()->EffectBasePoints[1], DOT);
+                    int32 amount = caster->SpellDamageBonus(m_target, GetSpellProto(), GetSpellProto()->EffectBasePoints[1]*4, DOT);
                     m_target->CastCustomSpell(m_target, 64085, &amount, NULL, NULL, true, NULL, this, GetCasterGUID());
                 }
             }
@@ -4609,7 +4609,7 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
                     if (caster->GetTypeId() != TYPEID_PLAYER)
                         return;
 
-                    uint8 cp = ((Player*)caster)->GetComboPoints(m_target);
+                    uint8 cp = ((Player*)caster)->GetComboPoints();
 
                     // Idol of Feral Shadows. Cant be handled as SpellMod in SpellAura:Dummy due its dependency from CPs
                     Unit::AuraList const& dummyAuras = caster->GetAurasByType(SPELL_AURA_DUMMY);
@@ -4646,7 +4646,7 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
                     //4 points: ${($m1+$b1*4+0.03428571*$AP)*7} damage over 14 secs
                     //5 points: ${($m1+$b1*5+0.0375*$AP)*8} damage over 16 secs
                     float AP_per_combo[6] = {0.0f, 0.015f, 0.024f, 0.03f, 0.03428571f, 0.0375f};
-                    uint8 cp = ((Player*)caster)->GetComboPoints(m_target);
+                    uint8 cp = ((Player*)caster)->GetComboPoints();
                     if (cp > 5) cp = 5;
                     m_modifier.m_amount += int32(caster->GetTotalAttackPowerValue(BASE_ATTACK) * AP_per_combo[cp]);
                     return;
@@ -5897,9 +5897,9 @@ void Aura::HandleAuraRetainComboPoints(bool apply, bool Real)
 
     // combo points was added in SPELL_EFFECT_ADD_COMBO_POINTS handler
     // remove only if aura expire by time (in case combo points amount change aura removed without combo points lost)
-	if( !apply && m_duration==0 && target->GetSelection())
-        if(Unit* unit = ObjectAccessor::GetUnit(*m_target, target->GetSelection()))
-			target->AddComboPoints(unit, -m_modifier.m_amount);
+	if( !apply && m_duration==0 && target->GetComboTarget())
+        if(Unit* unit = ObjectAccessor::GetUnit(*m_target,target->GetComboTarget()))
+            target->AddComboPoints(unit, -m_modifier.m_amount);
 }
 
 void Aura::HandleModUnattackable( bool Apply, bool Real )
