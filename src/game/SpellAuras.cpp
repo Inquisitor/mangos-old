@@ -2435,7 +2435,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 if ( caster && m_removeMode == AURA_REMOVE_BY_DISPEL )
                 {
                     // amount equal to 12 sec worth of ticks, or 4 ticks
-                    int32 amount = 4 * caster->SpellDamageBonus(m_target, GetSpellProto(), GetSpellProto()->EffectBasePoints[1], DOT);
+                    int32 amount = caster->SpellDamageBonus(m_target, GetSpellProto(), GetSpellProto()->EffectBasePoints[1]*4, DOT);
                     m_target->CastCustomSpell(m_target, 64085, &amount, NULL, NULL, true, NULL, this, GetCasterGUID());
                 }
             }
