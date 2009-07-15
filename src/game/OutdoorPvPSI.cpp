@@ -200,7 +200,7 @@ bool OutdoorPvPSI::HandleDropFlag(Player *plr, uint32 spellId)
                     {
                         // he dropped it further, summon mound
                         GameObject * go = new GameObject;
-                        Map * map = MapManager::Instance().GetMap(plr->GetMapId(), plr);
+                        Map * map = MapManager::Instance().CreateMap(plr->GetMapId(), plr);
                         if(!map)
                             return true;
                         if(!go->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT),SI_SILITHYST_MOUND, map,PHASEMASK_NORMAL, plr->GetPositionX(),plr->GetPositionY(),plr->GetPositionZ(),plr->GetOrientation(),0,0,0,0,100,GO_STATE_READY))
@@ -226,7 +226,7 @@ bool OutdoorPvPSI::HandleDropFlag(Player *plr, uint32 spellId)
                     {
                         // he dropped it further, summon mound
                         GameObject * go = new GameObject;
-                        Map * map = MapManager::Instance().GetMap(plr->GetMapId(), plr);
+                        Map * map = MapManager::Instance().CreateMap(plr->GetMapId(), plr);
                         if(!map)
                             return true;
                         if(!go->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT),SI_SILITHYST_MOUND, map, PHASEMASK_NORMAL ,plr->GetPositionX(),plr->GetPositionY(),plr->GetPositionZ(),plr->GetOrientation(),0,0,0,0,100,GO_STATE_READY))

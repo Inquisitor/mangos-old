@@ -32,6 +32,7 @@
 #include "GridNotifiersImpl.h"
 #include "CellImpl.h"
 #include "Language.h"
+#include "MapManager.h"
 
 #include "Policies/SingletonImp.h"
 
@@ -137,7 +138,7 @@ bool AchievementCriteriaData::IsValid(AchievementCriteriaEntry const* criteria)
         case ACHIEVEMENT_CRITERIA_DATA_TYPE_T_PLAYER_DEAD:
             if (player_dead.own_team_flag > 1)
             {
-                sLog.outErrorDb( "Table `achievement_criteria_data` (Entry: %u Type: %u) for data type %s (%u) have wrong boolean value1 (%u).",
+                sLog.outErrorDb( "Table `achievement_criteria_data` (Entry: %u Type: %u) for data type ACHIEVEMENT_CRITERIA_DATA_TYPE_T_PLAYER_DEAD (%u) have wrong boolean value1 (%u).",
                     criteria->ID, criteria->requiredType,dataType,player_dead.own_team_flag);
                 return false;
             }
@@ -825,8 +826,8 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 if(!miscvalue1)
                     continue;
 
-                Map const* map = GetPlayer()->GetMap();
-                if(!map->IsDungeon())
+                Map const* map = GetPlayer()->IsInWorld() ? GetPlayer()->GetMap() : MapManager::Instance().FindMap(GetPlayer()->GetMapId(), GetPlayer()->GetInstanceId());
+                if(!map || !map->IsDungeon())
                     continue;
 
                 // search case
