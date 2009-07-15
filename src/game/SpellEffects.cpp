@@ -4574,10 +4574,6 @@ void Spell::EffectWeaponDmg(uint32 i)
 
                 if (stack)
                     spell_bonus += stack * CalculateDamage(2, unitTarget);
-                if (!stack || stack < spellInfo->StackAmount)
-                    // Devastate causing Sunder Armor Effect
-                    // and no need to cast over max stack amount
-                    m_caster->CastSpell(unitTarget, 58567, true);
             }
             break;
         }
