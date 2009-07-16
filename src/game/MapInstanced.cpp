@@ -123,8 +123,13 @@ Map* MapInstanced::CreateInstance(const uint32 mapId, Player * player)
         NewInstanceId = player->GetBattleGroundId();
         ASSERT(NewInstanceId);
         map = _FindMap(NewInstanceId);
-        if(!map)
+        if (!map)
+        {
             map = CreateBattleGround(NewInstanceId);
+            // add a pointer to the battleground to the map
+            ((BattleGroundMap*)map)->SetBG(player->GetBattleGround());
+        }
+        assert(((BattleGroundMap*)map)->GetBG());
     }
     else
     {
@@ -153,73 +158,10 @@ Map* MapInstanced::CreateInstance(const uint32 mapId, Player * player)
         }
         else
         {
-<<<<<<< HEAD:src/game/MapInstanced.cpp
-            uint32 NewInstanceId = 0;                       // instanceId of the resulting map
-            Player* player = (Player*)obj;
-
-            if(IsBattleGroundOrArena())
-            {
-                // instantiate or find existing bg map for player
-                // the instance id is set in battlegroundid
-                NewInstanceId = player->GetBattleGroundId();
-                assert(NewInstanceId);
-                map = _FindMap(NewInstanceId);
-                if(!map)
-                {
-                    map = CreateBattleGround(NewInstanceId);
-                    ((BattleGroundMap*)map)->SetBG(player->GetBattleGround());
-                }
-                if(!((BattleGroundMap*)map)->GetBG())
-                {
-                    sLog.outError("The bg-class couldn't be assigned (very early) to the battlegroundmap, it's possible, that some db-spawned creatures are now not handled right this is related to battleground alterac valley (av) - please post bugreport, and add information how this bg was created (if you don't have information, report it also) Player: %s (%u) in map:%u requested map:%u", player->GetName(), player->GetGUIDLow(), player->GetMapId(), GetId());
-                    if(player->GetBattleGround())
-                    {
-                        sLog.outError("somehow the battleground was found, but please report also - i end this bg now..");
-                        ((BattleGroundMap*)map)->SetBG(player->GetBattleGround());
-                        player->GetBattleGround()->EndBattleGround(0); //to avoid the assert
-                    }
-                    //assert(false);
-                }
-                return map;
-            }
-
-            InstancePlayerBind *pBind = player->GetBoundInstance(GetId(), player->GetDifficulty());
-            InstanceSave *pSave = pBind ? pBind->save : NULL;
-
-            // the player's permanet player bind is taken into consideration first
-            // then the player's group bind and finally the solo bind.
-            if(!pBind || !pBind->perm)
-            {
-                InstanceGroupBind *groupBind = NULL;
-                Group *group = player->GetGroup();
-                // use the player's difficulty setting (it may not be the same as the group's)
-                if(group && (groupBind = group->GetBoundInstance(GetId(), player->GetDifficulty())))
-                    pSave = groupBind->save;
-            }
-
-            if(pSave)
-            {
-                // solo/perm/group
-                NewInstanceId = pSave->GetInstanceId();
-                map = _FindMap(NewInstanceId);
-                // it is possible that the save exists but the map doesn't
-                if(!map)
-                    map = CreateInstance(NewInstanceId, pSave, pSave->GetDifficulty());
-                return map;
-            }
-            else
-            {
-                // if no instanceId via group members or instance saves is found
-                // the instance will be created for the first time
-                NewInstanceId = MapManager::Instance().GenerateInstanceId();
-                return CreateInstance(NewInstanceId, NULL, player->GetDifficulty());
-            }
-=======
             // if no instanceId via group members or instance saves is found
             // the instance will be created for the first time
             NewInstanceId = MapManager::Instance().GenerateInstanceId();
             map = CreateInstance(NewInstanceId, NULL, player->GetDifficulty());
->>>>>>> origin/master:src/game/MapInstanced.cpp
         }
     }
 

@@ -7340,19 +7340,15 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
 
         if (go->getLootState() == GO_READY)
         {
-<<<<<<< HEAD:src/game/Player.cpp
-            uint32 lootid =  go->GetLootId();
-            if((go->GetEntry() == BG_AV_OBJECTID_MINE_N || go->GetEntry() == BG_AV_OBJECTID_MINE_S))
-                if( BattleGround *bg = GetBattleGround())
-                    if(bg->GetTypeID() == BATTLEGROUND_AV)
-                        if(!(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(go->GetEntry(),GetTeam())))
+            uint32 lootid =  go->GetGOInfo()->GetLootId();
+            if ((go->GetEntry() == BG_AV_OBJECTID_MINE_N || go->GetEntry() == BG_AV_OBJECTID_MINE_S))
+                if (BattleGround *bg = GetBattleGround())
+                    if (bg->GetTypeID() == BATTLEGROUND_AV)
+                        if (!(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(go->GetEntry(), GetTeam())))
                         {
                             SendLootRelease(guid);
                             return;
                         }
-=======
-            uint32 lootid =  go->GetGOInfo()->GetLootId();
->>>>>>> origin/master:src/game/Player.cpp
 
             if (lootid)
             {
