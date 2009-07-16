@@ -229,11 +229,11 @@ class Spell
         void EffectQuestComplete(uint32 i);
         void EffectCreateItem(uint32 i);
         void EffectCreateItem2(uint32 i);
+        void EffectCreateRandomItem(uint32 i);
         void EffectPersistentAA(uint32 i);
         void EffectEnergize(uint32 i);
         void EffectOpenLock(uint32 i);
         void EffectSummonChangeItem(uint32 i);
-        void EffectOpenSecretSafe(uint32 i);
         void EffectProficiency(uint32 i);
         void EffectApplyAreaAura(uint32 i);
         void EffectSummonType(uint32 i);
@@ -288,6 +288,7 @@ class Spell
         void EffectSelfResurrect(uint32 i);
         void EffectSkinning(uint32 i);
         void EffectCharge(uint32 i);
+        void EffectCharge2(uint32 i);
         void EffectProspecting(uint32 i);
         void EffectMilling(uint32 i);
         void EffectRenamePet(uint32 i);
@@ -366,7 +367,11 @@ class Spell
         typedef std::list<Unit*> UnitList;
         void FillTargetMap();
         void SetTargetMap(uint32 i,uint32 cur,UnitList& TagUnitMap);
+
         void FillAreaTargets( UnitList& TagUnitMap, float x, float y, float radius, SpellNotifyPushType pushType, SpellTargets spellTargets );
+        void FillRaidOrPartyTargets( UnitList &TagUnitMap, Unit* target, float radius, bool raid, bool withPets, bool withcaster );
+        void FillRaidOrPartyManaPriorityTargets( UnitList &TagUnitMap, Unit* target, float radius, uint32 count, bool raid, bool withPets, bool withcaster );
+        void FillRaidOrPartyHealthPriorityTargets( UnitList &TagUnitMap, Unit* target, float radius, uint32 count, bool raid, bool withPets, bool withcaster );
 
         template<typename T> WorldObject* FindCorpseUsing();
 
@@ -394,7 +399,6 @@ class Spell
         Item* m_CastItem;
         uint8 m_cast_count;
         uint32 m_glyphIndex;
-        uint32 m_preCastSpell;
         SpellCastTargets m_targets;
 
         int32 GetCastTime() const { return m_casttime; }
@@ -435,6 +439,7 @@ class Spell
         bool CheckTargetCreatureType(Unit* target) const;
 
         void AddTriggeredSpell(SpellEntry const* spell) { m_TriggerSpells.push_back(spell); }
+        void AddPrecastSpell(uint32 spellId) { m_preCastSpells.push_back(spellId); }
 
         void CleanupTargetList();
     protected:
@@ -554,7 +559,9 @@ class Spell
 
         //List For Triggered Spells
         typedef std::list<SpellEntry const*> TriggerSpells;
+        typedef std::list<uint32>            SpellPrecasts;
         TriggerSpells m_TriggerSpells;
+        SpellPrecasts m_preCastSpells;
 
         uint32 m_spellState;
         uint32 m_timer;

@@ -61,17 +61,35 @@ GameObject::GameObject() : WorldObject()
 
 GameObject::~GameObject()
 {
+    CleanupsBeforeDelete();
+}
+
+void GameObject::CleanupsBeforeDelete()
+{
     if(m_uint32Values)                                      // field array can be not exist if GameOBject not loaded
     {
         // Possible crash at access to deleted GO in Unit::m_gameobj
-        uint64 owner_guid = GetOwnerGUID();
-        if(owner_guid)
+        if(uint64 owner_guid = GetOwnerGUID())
         {
-            Unit* owner = ObjectAccessor::GetUnit(*this,owner_guid);
+            Unit* owner = NULL;
+            if(IS_PLAYER_GUID(owner_guid))
+                owner = ObjectAccessor::GetObjectInWorld(owner_guid, (Player*)NULL);
+            else
+                owner = ObjectAccessor::GetUnit(*this,owner_guid);
+
             if(owner)
                 owner->RemoveGameObject(this,false);
-            else if(!IS_PLAYER_GUID(owner_guid))
-                sLog.outError("Delete GameObject (GUID: %u Entry: %u ) that have references in not found creature %u GO list. Crash possible later.",GetGUIDLow(),GetGOInfo()->id,GUID_LOPART(owner_guid));
+            else
+            {
+                const char * ownerType = "creature";
+                if(IS_PLAYER_GUID(owner_guid))
+                    ownerType = "player";
+                else if(IS_PET_GUID(owner_guid))
+                    ownerType = "pet";
+
+                sLog.outError("Delete GameObject (GUID: %u Entry: %u SpellId %u LinkedGO %u) that lost references to owner (GUID %u Type '%s') GO list. Crash possible later.",
+                    GetGUIDLow(), GetGOInfo()->id, m_spellId, GetGOInfo()->GetLinkedGameObjectEntry(), GUID_LOPART(owner_guid), ownerType);
+            }
         }
     }
 }
@@ -92,9 +110,9 @@ void GameObject::RemoveFromWorld()
 
 bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint32 animprogress, GOState go_state)
 {
+    ASSERT(map);
     Relocate(x,y,z,ang);
-    SetMapId(map->GetId());
-    SetInstanceId(map->GetInstanceId());
+    SetMap(map);
     SetPhaseMask(phaseMask,false);
 
     if(!IsPositionValid())
@@ -366,7 +384,7 @@ void GameObject::Update(uint32 /*p_time*/)
             {
                 case GAMEOBJECT_TYPE_DOOR:
                 case GAMEOBJECT_TYPE_BUTTON:
-                    if (GetAutoCloseTime() && (m_cooldownTime < time(NULL)))
+                    if (GetGOInfo()->GetAutoCloseTime() && (m_cooldownTime < time(NULL)))
                         ResetDoorOrButton();
                     break;
             }
@@ -406,7 +424,7 @@ void GameObject::Update(uint32 /*p_time*/)
             }
 
             //burning flags in some battlegrounds, if you find better condition, just add it
-            if (GetGoAnimProgress() > 0)
+            if (GetGOInfo()->IsDespawnAtAction() || GetGoAnimProgress() > 0)
             {
                 SendObjectDeSpawnAnim(GetGUID());
                 //reset flags
@@ -585,7 +603,7 @@ bool GameObject::LoadFromDB(uint32 guid, Map *map)
     if (!Create(guid,entry, map, phaseMask, x, y, z, ang, rotation0, rotation1, rotation2, rotation3, animprogress, go_state) )
         return false;
 
-    if(!GetDespawnPossibility())
+    if(!GetGOInfo()->GetDespawnPossibility() && !GetGOInfo()->IsDespawnAtAction())
     {
         SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_NODESPAWN);
         m_spawnedByDefault = true;
@@ -629,22 +647,6 @@ void GameObject::DeleteFromDB()
 GameObjectInfo const *GameObject::GetGOInfo() const
 {
     return m_goInfo;
-}
-
-uint32 GameObject::GetLootId(GameObjectInfo const* ginfo)
-{
-    if (!ginfo)
-        return 0;
-
-    switch(ginfo->type)
-    {
-        case GAMEOBJECT_TYPE_CHEST:
-            return ginfo->chest.lootId;
-        case GAMEOBJECT_TYPE_FISHINGHOLE:
-            return ginfo->fishinghole.lootId;
-        default:
-            return 0;
-    }
 }
 
 /*********************************************************/
@@ -741,6 +743,7 @@ bool GameObject::ActivateToQuest( Player *pTarget)const
         // scan GO chest with loot including quest items
         case GAMEOBJECT_TYPE_CHEST:
         {
+<<<<<<< HEAD:src/game/GameObject.cpp
             if(LootTemplates_Gameobject.HaveQuestLootForPlayer(GetLootId(), pTarget))
             {
                 //look for battlegroundAV for some objects which are only activated after mine gots captured by own team
@@ -748,6 +751,9 @@ bool GameObject::ActivateToQuest( Player *pTarget)const
                     if(BattleGround *bg = pTarget->GetBattleGround())
                         if(bg->GetTypeID() == BATTLEGROUND_AV && !(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(GetEntry(),pTarget->GetTeam())))
                             return false;
+=======
+            if(LootTemplates_Gameobject.HaveQuestLootForPlayer(GetGOInfo()->GetLootId(), pTarget))
+>>>>>>> origin/master:src/game/GameObject.cpp
                 return true;
             }
             break;
@@ -833,7 +839,7 @@ void GameObject::UseDoorOrButton(uint32 time_to_restore, bool alternative /* = f
         return;
 
     if(!time_to_restore)
-        time_to_restore = GetAutoCloseTime();
+        time_to_restore = GetGOInfo()->GetAutoCloseTime();
 
     SwitchDoorOrButton(true,alternative);
     SetLootState(GO_ACTIVATED);
@@ -1285,7 +1291,7 @@ void GameObject::Use(Unit* user)
         return;
     }
 
-    Spell *spell = new Spell(spellCaster, spellInfo, triggered);
+    Spell *spell = new Spell(spellCaster, spellInfo, triggered,GetGUID());
 
     // spell target is user of GO
     SpellCastTargets targets;

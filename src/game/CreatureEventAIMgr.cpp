@@ -473,9 +473,8 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Scripts()
                                     action.morph.modelId = 0;
                                 }
                             }
-
-                            break;
                         }
+                        break;
                     case ACTION_T_SOUND:
                         if (!sSoundEntriesStore.LookupEntry(action.sound.soundId))
                             sLog.outErrorDb("CreatureEventAI:  Event %u Action %u uses non-existant SoundID %u.", i, j+1, action.sound.soundId);
@@ -666,6 +665,7 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Scripts()
                     case ACTION_T_FLEE_FOR_ASSIST:          //No Params
                     case ACTION_T_DIE:                      //No Params
                     case ACTION_T_ZONE_COMBAT_PULSE:        //No Params
+                    case ACTION_T_FORCE_DESPAWN:            //No Params
                     case ACTION_T_AUTO_ATTACK:              //AllowAttackState (0 = stop attack, anything else means continue attacking)
                     case ACTION_T_COMBAT_MOVEMENT:          //AllowCombatMovement (0 = stop combat based movement, anything else continue attacking)
                     case ACTION_T_RANGED_MOVEMENT:          //Distance, Angle
