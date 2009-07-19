@@ -8599,8 +8599,17 @@ bool Unit::isSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolM
                         }
                     break;
                     case SPELLFAMILY_PALADIN:
+                        // Exorcism
+                        if(spellProto->SpellFamilyFlags & UI64LIT(0x0200000000))
+                        {
+                            if(pVictim->GetTypeId() != TYPEID_PLAYER &&
+                                (pVictim->GetCreatureType() == CREATURE_TYPE_DEMON || pVictim->GetCreatureType() == CREATURE_TYPE_UNDEAD))
+                                return true;
+
+                            break;
+                        }
                         // Sacred Shield
-                        if (spellProto->SpellFamilyFlags & UI64LIT(0x0000000040000000))
+                        else if (spellProto->SpellFamilyFlags & UI64LIT(0x0000000040000000))
                         {
                             Aura *aura = pVictim->GetDummyAura(58597);
                             if (aura && aura->GetCasterGUID() == GetGUID())
