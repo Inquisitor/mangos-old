@@ -151,7 +151,6 @@ bool ChatHandler::HandleReloadAllSpellCommand(const char*)
 {
     HandleReloadSkillDiscoveryTemplateCommand("a");
     HandleReloadSkillExtraItemTemplateCommand("a");
-    HandleReloadSpellAffectCommand("a");
     HandleReloadSpellAreaCommand("a");
     HandleReloadSpellChainCommand("a");
     HandleReloadSpellElixirCommand("a");
@@ -479,14 +478,6 @@ bool ChatHandler::HandleReloadSkillFishingBaseLevelCommand(const char* /*args*/)
     sLog.outString( "Re-Loading Skill Fishing base level requirements..." );
     objmgr.LoadFishingBaseSkillLevel();
     SendGlobalSysMessage("DB table `skill_fishing_base_level` (fishing base level for zone/subzone) reloaded.");
-    return true;
-}
-
-bool ChatHandler::HandleReloadSpellAffectCommand(const char*)
-{
-    sLog.outString( "Re-Loading SpellAffect definitions..." );
-    spellmgr.LoadSpellAffects();
-    SendGlobalSysMessage("DB table `spell_affect` (spell mods apply requirements) reloaded.");
     return true;
 }
 
@@ -4317,6 +4308,8 @@ bool ChatHandler::HandleResetLevelCommand(const char * args)
         ? sWorld.getConfig(CONFIG_START_PLAYER_LEVEL)
         : sWorld.getConfig(CONFIG_START_HEROIC_PLAYER_LEVEL);
 
+    target->_ApplyAllLevelScaleItemMods(false);
+
     target->SetLevel(start_level);
     target->InitRunes();
     target->InitStatsForLevel(true);
@@ -4324,6 +4317,8 @@ bool ChatHandler::HandleResetLevelCommand(const char * args)
     target->InitGlyphsForLevel();
     target->InitTalentForLevel();
     target->SetUInt32Value(PLAYER_XP,0);
+
+    target->_ApplyAllLevelScaleItemMods(true);
 
     // reset level for pet
     if(Pet* pet = target->GetPet())
@@ -4781,8 +4776,9 @@ bool ChatHandler::HandleQuestComplete(const char* args)
         }
         else if(creature > 0)
         {
-            for(uint16 z = 0; z < creaturecount; ++z)
-                player->KilledMonster(creature,0);
+            if(CreatureInfo const* cInfo = objmgr.GetCreatureTemplate(creature))
+                for(uint16 z = 0; z < creaturecount; ++z)
+                    player->KilledMonster(cInfo,0);
         }
         else if(creature < 0)
         {
