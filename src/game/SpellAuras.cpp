@@ -3599,7 +3599,6 @@ void Aura::HandleAuraModDisarm(bool apply, bool Real)
     uint32 flags = 0;
     uint32 field = 0;
     WeaponAttackType attack_type = BASE_ATTACK;
-    uint32 slot = EQUIPMENT_SLOT_OFFHAND;
 
     switch (GetModifier()->m_auraname)
     {
@@ -3607,7 +3606,6 @@ void Aura::HandleAuraModDisarm(bool apply, bool Real)
         {
             field = UNIT_FIELD_FLAGS;    
             flags = UNIT_FLAG_DISARMED;
-            slot = EQUIPMENT_SLOT_MAINHAND;
         }
     break;
     case SPELL_AURA_MOD_DISARM_SHIELD:
@@ -3643,9 +3641,6 @@ void Aura::HandleAuraModDisarm(bool apply, bool Real)
         m_target->SetAttackTime(attack_type, BASE_ATTACK_TIME);
     else
         ((Player *)m_target)->SetRegularAttackTime();
-
-    if(Item *_item = ((Player*)m_target)->GetItemByPos( INVENTORY_SLOT_BAG_0, slot ))
-        ((Player*)m_target)->_ApplyItemMods(_item, slot, !apply);
 
     m_target->UpdateDamagePhysical(attack_type);
 }
