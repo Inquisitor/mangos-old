@@ -5087,9 +5087,28 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                 // Improved Sprint
                 case 30918:
                 {
-                    unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_ROOT);
-                    unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
-					break;
+                     // Removes snares and roots.
+                    uint32 mechanic_mask = (1<<MECHANIC_ROOT) | (1<<MECHANIC_SNARE) | (1<<MECHANIC_FREEZE);
+                    Unit::AuraMap& Auras = unitTarget->GetAuras();
+                    for(Unit::AuraMap::iterator iter = Auras.begin(), next; iter != Auras.end(); iter = next)
+                    {
+                        next = iter;
+                        ++next;
+                        Aura *aur = iter->second;
+                        if (!aur->IsPositive())             //only remove negative spells
+                        {
+                            // check for mechanic mask
+                            if(GetSpellMechanicMask(aur->GetSpellProto(), aur->GetEffIndex()) & mechanic_mask)
+                            {
+                                unitTarget->RemoveAurasDueToSpell(aur->GetId());
+                                if(Auras.empty())
+                                    break;
+                                else
+                                    next = Auras.begin();
+                            }
+                        }
+                    }
+                    break;
                 }
                 // Flame Crash
                 case 41126:
