@@ -6359,7 +6359,7 @@ void Aura::PeriodicTick()
             if(!pCaster)
                 return;
 
-			if (m_target->IsImmunedToSpell(GetSpellProto()))
+            if (GetSpellProto()->SpellFamilyName != SPELLFAMILY_GENERIC && m_target->IsImmunedToSpell(GetSpellProto()))
 				return;
 
             // heal for caster damage (must be alive)
