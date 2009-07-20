@@ -9200,8 +9200,8 @@ void Unit::MeleeDamageBonus(Unit *pVictim, uint32 *pdamage,WeaponAttackType attT
     {
         uint32 mechanicMask = GetAllSpellMechanicMask(spellProto);
 
-        // Shred also have bonus as MECHANIC_BLEED damages
-        if(spellProto->SpellFamilyName==SPELLFAMILY_DRUID && (spellProto->SpellFamilyFlags & UI64LIT(0x00008000)))
+        // Shred/Maul also have bonus as MECHANIC_BLEED damages
+        if(spellProto->SpellFamilyName==SPELLFAMILY_DRUID && ((spellProto->SpellFamilyFlags & UI64LIT(0x00008000)) || (spellProto->SpellFamilyFlags & UI64LIT(0x00000800)) ))
             mechanicMask |= (1 << MECHANIC_BLEED);
 
         // Mod damage from spell mechanic
