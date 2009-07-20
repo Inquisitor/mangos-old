@@ -44,12 +44,6 @@ void WorldSession::HandleMoveWorldportAckOpcode()
     if(!GetPlayer()->IsBeingTeleportedFar())
         return;
 
-	float x,y,z;
-	uint32 map = GetPlayer()->GetMapId();
-	x = GetPlayer()->GetPositionX();
-	y = GetPlayer()->GetPositionY();
-	z = GetPlayer()->GetPositionZ();
-
     // get the teleport destination
     WorldLocation &loc = GetPlayer()->GetTeleportDest();
 
@@ -77,11 +71,9 @@ void WorldSession::HandleMoveWorldportAckOpcode()
     GetPlayer()->SendInitialPacketsBeforeAddToMap();
     // the CanEnter checks are done in TeleporTo but conditions may change
     // while the player is in transit, for example the map may get full
-
-	Corpse *corpse = GetPlayer()->GetCorpse();
-
-    if(!GetPlayer()->GetMap()->Add(GetPlayer()) )
+    if(!GetPlayer()->GetMap()->Add(GetPlayer()))
     {
+        //if player wasn't added to map, reset his map pointer!
         GetPlayer()->ResetMap();
 
         sLog.outDebug("WORLD: teleport of player %s (%d) to location %d, %f, %f, %f, %f failed", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow(), loc.mapid, loc.coord_x, loc.coord_y, loc.coord_z, loc.orientation);
@@ -134,6 +126,7 @@ void WorldSession::HandleMoveWorldportAckOpcode()
     }
 
     // resurrect character at enter into instance where his corpse exist after add to map
+    Corpse *corpse = GetPlayer()->GetCorpse();
     if (corpse && corpse->GetType() != CORPSE_BONES && corpse->GetMapId() == GetPlayer()->GetMapId())
     {
         if( mEntry->IsDungeon() )

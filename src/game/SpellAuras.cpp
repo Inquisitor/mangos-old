@@ -3519,21 +3519,6 @@ void Aura::HandleModFear(bool apply, bool Real)
        if(spell_id)
           m_target->CastSpell(m_target, spell_id, false);
     }
-	// Psychic Horror
-	else if(!apply && m_spellProto->SpellFamilyName == SPELLFAMILY_PRIEST)
-    {
-       Unit* caster = GetCaster();
-       int32 spell_id = 0;
-       if(caster && caster->GetTypeId() == TYPEID_PLAYER)
-       {
-           if(caster->HasAura(47571, 0))
-              spell_id = 59980;
-           else if(caster->HasAura(47572, 0))
-              spell_id = 59981;
-       }
-       if(spell_id)
-          m_target->CastSpell(m_target, spell_id, false);
-    }
 }
 
 void Aura::HandleFeignDeath(bool apply, bool Real)
@@ -4244,13 +4229,6 @@ void Aura::HandleAuraModUseNormalSpeed(bool /*apply*/, bool Real)
 
 void Aura::HandleModMechanicImmunity(bool apply, bool /*Real*/)
 {
-	//Forbearance(right immune mechanic)
-    if (GetId()==25771)
-    {
-        m_modifier.m_miscvalue = MECHANIC_IMMUNE_SHIELD;
-        m_target->CastSpell(m_target,61987,true);
-    }
-
     // cache values in local vars for prevent access to possible deleted aura data
     SpellEntry const* spellInfo = GetSpellProto();
     uint32 misc  = m_modifier.m_miscvalue;
@@ -4721,14 +4699,6 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
         // Parasitic Shadowfiend - handle summoning of two Shadowfiends on DoT expire
         if(m_spellProto->Id == 41917)
             m_target->CastSpell(m_target, 41915, true);
-
-        // Curse of Doom - Summon at duration end
-        if (m_spellProto->SpellFamilyName == SPELLFAMILY_WARLOCK && GetSpellProto()->SpellFamilyFlags & UI64LIT(0x200000000))
-        {
-            Unit *caster = GetCaster();
-            if (caster)
-                caster->CastSpell(caster, 18662, true, NULL, this, GetCasterGUID());
-        }
     }
 }
 

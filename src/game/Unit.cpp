@@ -2092,24 +2092,6 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
 					return;
 
 				pVictim->AddAura( Aur );
-
-			/*
-				AuraType aurName = Aur->GetModifier()->m_auraname;
-				if( !pVictim->HasAura( 44413 ) )
-					Aur->_AddAura();
-				else
-				{
-					Aur->SetAuraSlot( pVictim->GetAura( 44413, 0 )->GetAuraSlot() );
-					Aur->SendAuraUpdate( false );
-				}
-
-				m_Auras.insert(AuraMap::value_type(spellEffectPair(Aur->GetId(), Aur->GetEffIndex()), Aur));
-				if (aurName < TOTAL_AURAS)
-				{
-					m_modAuras[aurName].push_back(Aur);
-				}
-				Aur->ApplyModifier(true,true);
-			*/
 			}
 		}
 	}
@@ -5720,15 +5702,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
         }
         case SPELLFAMILY_PALADIN:
         {
-            //Judgements of the wise 
-            if (dummySpell->SpellIconID == 3017) 
-            {
-                triggered_spell_id = 31930;
-                target = this;
-                CastSpell(this, 57669, true, NULL, GetDummyAura(dummySpell->Id), GetGUID());
-                basepoints0 = GetCreateMana() * 0.15;
-                break;
-            }
             // Heart of the Crusader
             if (dummySpell->SpellIconID == 237)
             {

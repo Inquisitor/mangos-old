@@ -1580,12 +1580,6 @@ void Spell::SetTargetMap(uint32 i,uint32 cur,UnitList& TagUnitMap)
         }
         case TARGET_CHAIN_DAMAGE:
         {
-            // Charge casted on self
-            if (m_spellInfo->Effect[i] == SPELL_EFFECT_CHARGE)
-            {
-                TagUnitMap.push_back(m_caster);
-                break;
-            }
             if (EffectChainTarget <= 1)
             {
                 if(Unit* pUnitTarget = m_caster->SelectMagnetTarget(m_targets.getUnitTarget(), m_spellInfo))
@@ -3764,10 +3758,6 @@ SpellCastResult Spell::CheckCast(bool strict)
 
     if(Unit *target = m_targets.getUnitTarget())
     {
-         // Paladin immunity spells & Avenging wrath
-        if((m_spellInfo->Id == 642 || m_spellInfo->Id == 498 || m_spellInfo->Id == 1022 || m_spellInfo->Id == 5599 || m_spellInfo->Id == 10278) && target->HasAura(61987))
-            return SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
-
         // target state requirements (not allowed state), apply to self also
         if(m_spellInfo->TargetAuraStateNot && target->HasAuraState(AuraState(m_spellInfo->TargetAuraStateNot)))
             return SPELL_FAILED_TARGET_AURASTATE;
