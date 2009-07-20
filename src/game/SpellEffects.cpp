@@ -6307,10 +6307,6 @@ void Spell::EffectCharge(uint32 /*i*/)
     if (!unitTarget)
         return;
 
-    Unit *chargeTarget = m_targets.getUnitTarget();
-    if (!chargeTarget)
-        return;
-
     float x, y, z;
     unitTarget->GetContactPoint(m_caster, x, y, z);
     if (unitTarget->GetTypeId() != TYPEID_PLAYER)
