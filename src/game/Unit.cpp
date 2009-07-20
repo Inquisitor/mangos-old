@@ -5973,13 +5973,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                         }
                     return true;
                 }
-                // Glyph of Flash of Light
-                case 54936:
-                {
-                    triggered_spell_id = 54957;
-                    basepoints0 = triggerAmount*damage/100;
-                    break;
-                }
                 // Glyph of Holy Light
                 case 54937:
                 {
