@@ -123,8 +123,13 @@ Map* MapInstanced::CreateInstance(const uint32 mapId, Player * player)
         NewInstanceId = player->GetBattleGroundId();
         ASSERT(NewInstanceId);
         map = _FindMap(NewInstanceId);
-        if(!map)
+        if (!map)
+        {
             map = CreateBattleGround(NewInstanceId);
+            // add a pointer to the battleground to the map
+            ((BattleGroundMap*)map)->SetBG(player->GetBattleGround());
+        }
+        assert(((BattleGroundMap*)map)->GetBG());
     }
     else
     {

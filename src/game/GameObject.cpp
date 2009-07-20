@@ -757,7 +757,6 @@ bool GameObject::ActivateToQuest( Player *pTarget)const
                     if(BattleGround *bg = pTarget->GetBattleGround())
                         if(bg->GetTypeID() == BATTLEGROUND_AV && !(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(GetEntry(),pTarget->GetTeam())))
                             return false;
-
                 return true;
             }
             break;
