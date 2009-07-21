@@ -2309,6 +2309,10 @@ void Spell::cast(bool skipCheck)
         {
             if (m_spellInfo->SpellIconID == 2852 && (m_spellInfo->AttributesEx & 0x28020)) // Berserk
                 AddPrecastSpell(58923); // Hit 3 targets at once with mangle in dire bear form
+
+            if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x00000000400))
+                && (m_caster->m_form == FORM_BEAR || m_caster->m_form == FORM_DIREBEAR))
+                AddPrecastSpell(60089);                     // Faerie Fire (Feral)
             break;
         }
         case SPELLFAMILY_MAGE:

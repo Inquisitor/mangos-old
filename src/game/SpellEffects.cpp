@@ -489,6 +489,11 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                 {
                     damage += int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK)*0.08f);
                 }
+                //Faerie Fire (Feral) damage
+                else if(m_spellInfo->Id == 60089)
+                {
+                    damage += int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK)*0.15f);
+                }
                 break;
             }
             case SPELLFAMILY_ROGUE:
