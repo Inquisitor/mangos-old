@@ -1,0 +1,1 @@
+ALTER TABLE db_version CHANGE COLUMN required_8212_01_mangos_spell_proc_event required_8213_01_mangos_spell_bonus_data bit;

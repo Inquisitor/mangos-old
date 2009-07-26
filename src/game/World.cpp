@@ -77,14 +77,6 @@ float World::m_MaxVisibleDistanceInFlight     = DEFAULT_VISIBILITY_DISTANCE;
 float World::m_VisibleUnitGreyDistance        = 0;
 float World::m_VisibleObjectGreyDistance      = 0;
 
-struct ScriptAction
-{
-    uint64 sourceGUID;
-    uint64 targetGUID;
-    uint64 ownerGUID;                                       // owner of source if source is item
-    ScriptInfo const* script;                               // pointer to static script data
-};
-
 /// World constructor
 World::World()
 {
@@ -98,6 +90,7 @@ World::World()
     m_maxQueuedSessionCount = 0;
     m_resultQueue = NULL;
     m_NextDailyQuestReset = 0;
+    m_scheduledScripts = 0;
 
     m_defaultDbcLocale = LOCALE_enUS;
     m_availableDbcLocaleMask = 0;
@@ -1149,6 +1142,9 @@ void World::SetInitialWorldSettings()
     sLog.outString( "Loading Spell Bonus Data..." );
     spellmgr.LoadSpellBonusess();
 
+    sLog.outString( "Loading Spell Proc Item Enchant..." );
+    spellmgr.LoadSpellProcItemEnchant();                    // must be after LoadSpellChains
+
     sLog.outString( "Loading Aggro Spells Definitions...");
     spellmgr.LoadSpellThreats();
 
@@ -1590,10 +1586,6 @@ void World::Update(uint32 diff)
         m_timers[WUPDATE_OBJECTS].Reset();
         ///- Update objects when the timer has passed (maps, transport, creatures,...)
         MapManager::Instance().Update(diff);                // As interval = 0
-
-        ///- Process necessary scripts
-        if (!m_scriptSchedule.empty())
-            ScriptsProcess();
 
         sBattleGroundMgr.Update(diff);
 
