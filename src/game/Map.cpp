@@ -55,6 +55,9 @@ struct ScriptAction
 Map::~Map()
 {
     UnloadAll(true);
+
+    if(!m_scriptSchedule.empty())
+        sWorld.DecreaseScheduledScriptCount(m_scriptSchedule.size());
 }
 
 bool Map::ExistMap(uint32 mapid,int gx,int gy)
@@ -2659,7 +2662,7 @@ void Map::ScriptsStart(ScriptMapMap const& scripts, uint32 id, Object* source, O
         sa.ownerGUID  = ownerGUID;
 
         sa.script = &iter->second;
-        m_scriptSchedule.insert(std::pair<time_t, ScriptAction>(sWorld.GetGameTime() + iter->first, sa));
+        m_scriptSchedule.insert(std::pair<time_t, ScriptAction>(time_t(sWorld.GetGameTime() + iter->first), sa));
         if (iter->first == 0)
             immedScript = true;
 
@@ -2685,7 +2688,7 @@ void Map::ScriptCommandStart(ScriptInfo const& script, uint32 delay, Object* sou
     sa.ownerGUID  = ownerGUID;
 
     sa.script = &script;
-    m_scriptSchedule.insert(std::pair<time_t, ScriptAction>(sWorld.GetGameTime() + delay, sa));
+    m_scriptSchedule.insert(std::pair<time_t, ScriptAction>(time_t(sWorld.GetGameTime() + delay), sa));
 
     sWorld.IncreaseScheduledScriptsCount();
 
@@ -2713,7 +2716,7 @@ void Map::ScriptsProcess()
         {
             switch(GUID_HIPART(step.sourceGUID))
             {
-            case HIGHGUID_ITEM:
+                case HIGHGUID_ITEM:
                 // case HIGHGUID_CONTAINER: ==HIGHGUID_ITEM
                 {
                     Player* player = HashMapHolder<Player>::Find(step.ownerGUID);
@@ -2721,27 +2724,27 @@ void Map::ScriptsProcess()
                         source = player->GetItemByGuid(step.sourceGUID);
                     break;
                 }
-            case HIGHGUID_UNIT:
-                source = HashMapHolder<Creature>::Find(step.sourceGUID);
-                break;
-            case HIGHGUID_PET:
-                source = HashMapHolder<Pet>::Find(step.sourceGUID);
-                break;
-            case HIGHGUID_VEHICLE:
-                source = HashMapHolder<Vehicle>::Find(step.sourceGUID);
-                break;
-            case HIGHGUID_PLAYER:
-                source = HashMapHolder<Player>::Find(step.sourceGUID);
-                break;
-            case HIGHGUID_GAMEOBJECT:
-                source = HashMapHolder<GameObject>::Find(step.sourceGUID);
-                break;
-            case HIGHGUID_CORPSE:
-                source = HashMapHolder<Corpse>::Find(step.sourceGUID);
-                break;
-            default:
-                sLog.outError("*_script source with unsupported high guid value %u",GUID_HIPART(step.sourceGUID));
-                break;
+                case HIGHGUID_UNIT:
+                    source = HashMapHolder<Creature>::Find(step.sourceGUID);
+                    break;
+                case HIGHGUID_PET:
+                    source = HashMapHolder<Pet>::Find(step.sourceGUID);
+                    break;
+                case HIGHGUID_VEHICLE:
+                    source = HashMapHolder<Vehicle>::Find(step.sourceGUID);
+                    break;
+                case HIGHGUID_PLAYER:
+                    source = HashMapHolder<Player>::Find(step.sourceGUID);
+                    break;
+                case HIGHGUID_GAMEOBJECT:
+                    source = HashMapHolder<GameObject>::Find(step.sourceGUID);
+                    break;
+                case HIGHGUID_CORPSE:
+                    source = HashMapHolder<Corpse>::Find(step.sourceGUID);
+                    break;
+                default:
+                    sLog.outError("*_script source with unsupported high guid value %u",GUID_HIPART(step.sourceGUID));
+                    break;
             }
         }
 
@@ -2753,27 +2756,27 @@ void Map::ScriptsProcess()
         {
             switch(GUID_HIPART(step.targetGUID))
             {
-            case HIGHGUID_UNIT:
-                target = HashMapHolder<Creature>::Find(step.targetGUID);
-                break;
-            case HIGHGUID_PET:
-                target = HashMapHolder<Pet>::Find(step.targetGUID);
-                break;
-            case HIGHGUID_VEHICLE:
-                target = HashMapHolder<Vehicle>::Find(step.targetGUID);
-                break;
-            case HIGHGUID_PLAYER:                       // empty GUID case also
-                target = HashMapHolder<Player>::Find(step.targetGUID);
-                break;
-            case HIGHGUID_GAMEOBJECT:
-                target = HashMapHolder<GameObject>::Find(step.targetGUID);
-                break;
-            case HIGHGUID_CORPSE:
-                target = HashMapHolder<Corpse>::Find(step.targetGUID);
-                break;
-            default:
-                sLog.outError("*_script source with unsupported high guid value %u",GUID_HIPART(step.targetGUID));
-                break;
+                case HIGHGUID_UNIT:
+                    target = HashMapHolder<Creature>::Find(step.targetGUID);
+                    break;
+                case HIGHGUID_PET:
+                    target = HashMapHolder<Pet>::Find(step.targetGUID);
+                    break;
+                case HIGHGUID_VEHICLE:
+                    target = HashMapHolder<Vehicle>::Find(step.targetGUID);
+                    break;
+                case HIGHGUID_PLAYER:                       // empty GUID case also
+                    target = HashMapHolder<Player>::Find(step.targetGUID);
+                    break;
+                case HIGHGUID_GAMEOBJECT:
+                    target = HashMapHolder<GameObject>::Find(step.targetGUID);
+                    break;
+                case HIGHGUID_CORPSE:
+                    target = HashMapHolder<Corpse>::Find(step.targetGUID);
+                    break;
+                default:
+                    sLog.outError("*_script source with unsupported high guid value %u",GUID_HIPART(step.targetGUID));
+                    break;
             }
         }
 
@@ -2781,7 +2784,7 @@ void Map::ScriptsProcess()
 
         switch (step.script->command)
         {
-        case SCRIPT_COMMAND_TALK:
+            case SCRIPT_COMMAND_TALK:
             {
                 if(!source)
                 {
@@ -2800,106 +2803,106 @@ void Map::ScriptsProcess()
                 //datalong 0=normal say, 1=whisper, 2=yell, 3=emote text
                 switch(step.script->datalong)
                 {
-                case 0:                                 // Say
-                    ((Creature *)source)->Say(step.script->dataint, LANG_UNIVERSAL, unit_target);
-                    break;
-                case 1:                                 // Whisper
-                    if(!unit_target)
-                    {
-                        sLog.outError("SCRIPT_COMMAND_TALK attempt to whisper (%u) NULL, skipping.",step.script->datalong);
+                    case 0:                                 // Say
+                        ((Creature *)source)->Say(step.script->dataint, LANG_UNIVERSAL, unit_target);
                         break;
-                    }
-                    ((Creature *)source)->Whisper(step.script->dataint,unit_target);
-                    break;
-                case 2:                                 // Yell
-                    ((Creature *)source)->Yell(step.script->dataint, LANG_UNIVERSAL, unit_target);
-                    break;
-                case 3:                                 // Emote text
-                    ((Creature *)source)->TextEmote(step.script->dataint, unit_target);
-                    break;
-                default:
-                    break;                              // must be already checked at load
+                    case 1:                                 // Whisper
+                        if(!unit_target)
+                        {
+                            sLog.outError("SCRIPT_COMMAND_TALK attempt to whisper (%u) NULL, skipping.",step.script->datalong);
+                            break;
+                        }
+                        ((Creature *)source)->Whisper(step.script->dataint,unit_target);
+                        break;
+                    case 2:                                 // Yell
+                        ((Creature *)source)->Yell(step.script->dataint, LANG_UNIVERSAL, unit_target);
+                        break;
+                    case 3:                                 // Emote text
+                        ((Creature *)source)->TextEmote(step.script->dataint, unit_target);
+                        break;
+                    default:
+                        break;                              // must be already checked at load
                 }
                 break;
             }
 
-        case SCRIPT_COMMAND_EMOTE:
-            if(!source)
-            {
-                sLog.outError("SCRIPT_COMMAND_EMOTE call for NULL creature.");
-                break;
-            }
+            case SCRIPT_COMMAND_EMOTE:
+                if(!source)
+                {
+                    sLog.outError("SCRIPT_COMMAND_EMOTE call for NULL creature.");
+                    break;
+                }
 
-            if(source->GetTypeId()!=TYPEID_UNIT)
-            {
-                sLog.outError("SCRIPT_COMMAND_EMOTE call for non-creature (TypeId: %u), skipping.",source->GetTypeId());
-                break;
-            }
+                if(source->GetTypeId()!=TYPEID_UNIT)
+                {
+                    sLog.outError("SCRIPT_COMMAND_EMOTE call for non-creature (TypeId: %u), skipping.",source->GetTypeId());
+                    break;
+                }
 
-            ((Creature *)source)->HandleEmoteCommand(step.script->datalong);
-            break;
-        case SCRIPT_COMMAND_FIELD_SET:
-            if(!source)
-            {
-                sLog.outError("SCRIPT_COMMAND_FIELD_SET call for NULL object.");
+                ((Creature *)source)->HandleEmoteCommand(step.script->datalong);
                 break;
-            }
-            if(step.script->datalong <= OBJECT_FIELD_ENTRY || step.script->datalong >= source->GetValuesCount())
-            {
-                sLog.outError("SCRIPT_COMMAND_FIELD_SET call for wrong field %u (max count: %u) in object (TypeId: %u).",
-                    step.script->datalong,source->GetValuesCount(),source->GetTypeId());
-                break;
-            }
+            case SCRIPT_COMMAND_FIELD_SET:
+                if(!source)
+                {
+                    sLog.outError("SCRIPT_COMMAND_FIELD_SET call for NULL object.");
+                    break;
+                }
+                if(step.script->datalong <= OBJECT_FIELD_ENTRY || step.script->datalong >= source->GetValuesCount())
+                {
+                    sLog.outError("SCRIPT_COMMAND_FIELD_SET call for wrong field %u (max count: %u) in object (TypeId: %u).",
+                        step.script->datalong,source->GetValuesCount(),source->GetTypeId());
+                    break;
+                }
 
-            source->SetUInt32Value(step.script->datalong, step.script->datalong2);
-            break;
-        case SCRIPT_COMMAND_MOVE_TO:
-            if(!source)
-            {
-                sLog.outError("SCRIPT_COMMAND_MOVE_TO call for NULL creature.");
+                source->SetUInt32Value(step.script->datalong, step.script->datalong2);
                 break;
-            }
+            case SCRIPT_COMMAND_MOVE_TO:
+                if(!source)
+                {
+                    sLog.outError("SCRIPT_COMMAND_MOVE_TO call for NULL creature.");
+                    break;
+                }
 
-            if(source->GetTypeId()!=TYPEID_UNIT)
-            {
-                sLog.outError("SCRIPT_COMMAND_MOVE_TO call for non-creature (TypeId: %u), skipping.",source->GetTypeId());
+                if(source->GetTypeId()!=TYPEID_UNIT)
+                {
+                    sLog.outError("SCRIPT_COMMAND_MOVE_TO call for non-creature (TypeId: %u), skipping.",source->GetTypeId());
+                    break;
+                }
+                ((Creature*)source)->SendMonsterMoveWithSpeed(step.script->x, step.script->y, step.script->z, step.script->datalong2 );
+                ((Creature*)source)->GetMap()->CreatureRelocation(((Creature*)source), step.script->x, step.script->y, step.script->z, 0);
                 break;
-            }
-            ((Creature*)source)->SendMonsterMoveWithSpeed(step.script->x, step.script->y, step.script->z, step.script->datalong2 );
-            ((Creature*)source)->GetMap()->CreatureRelocation(((Creature*)source), step.script->x, step.script->y, step.script->z, 0);
-            break;
-        case SCRIPT_COMMAND_FLAG_SET:
-            if(!source)
-            {
-                sLog.outError("SCRIPT_COMMAND_FLAG_SET call for NULL object.");
-                break;
-            }
-            if(step.script->datalong <= OBJECT_FIELD_ENTRY || step.script->datalong >= source->GetValuesCount())
-            {
-                sLog.outError("SCRIPT_COMMAND_FLAG_SET call for wrong field %u (max count: %u) in object (TypeId: %u).",
-                    step.script->datalong,source->GetValuesCount(),source->GetTypeId());
-                break;
-            }
+            case SCRIPT_COMMAND_FLAG_SET:
+                if(!source)
+                {
+                    sLog.outError("SCRIPT_COMMAND_FLAG_SET call for NULL object.");
+                    break;
+                }
+                if(step.script->datalong <= OBJECT_FIELD_ENTRY || step.script->datalong >= source->GetValuesCount())
+                {
+                    sLog.outError("SCRIPT_COMMAND_FLAG_SET call for wrong field %u (max count: %u) in object (TypeId: %u).",
+                        step.script->datalong,source->GetValuesCount(),source->GetTypeId());
+                    break;
+                }
 
-            source->SetFlag(step.script->datalong, step.script->datalong2);
-            break;
-        case SCRIPT_COMMAND_FLAG_REMOVE:
-            if(!source)
-            {
-                sLog.outError("SCRIPT_COMMAND_FLAG_REMOVE call for NULL object.");
+                source->SetFlag(step.script->datalong, step.script->datalong2);
                 break;
-            }
-            if(step.script->datalong <= OBJECT_FIELD_ENTRY || step.script->datalong >= source->GetValuesCount())
-            {
-                sLog.outError("SCRIPT_COMMAND_FLAG_REMOVE call for wrong field %u (max count: %u) in object (TypeId: %u).",
-                    step.script->datalong,source->GetValuesCount(),source->GetTypeId());
+            case SCRIPT_COMMAND_FLAG_REMOVE:
+                if(!source)
+                {
+                    sLog.outError("SCRIPT_COMMAND_FLAG_REMOVE call for NULL object.");
+                    break;
+                }
+                if(step.script->datalong <= OBJECT_FIELD_ENTRY || step.script->datalong >= source->GetValuesCount())
+                {
+                    sLog.outError("SCRIPT_COMMAND_FLAG_REMOVE call for wrong field %u (max count: %u) in object (TypeId: %u).",
+                        step.script->datalong,source->GetValuesCount(),source->GetTypeId());
+                    break;
+                }
+
+                source->RemoveFlag(step.script->datalong, step.script->datalong2);
                 break;
-            }
 
-            source->RemoveFlag(step.script->datalong, step.script->datalong2);
-            break;
-
-        case SCRIPT_COMMAND_TELEPORT_TO:
+            case SCRIPT_COMMAND_TELEPORT_TO:
             {
                 // accept player in any one from target/source arg
                 if (!target && !source)
@@ -2921,7 +2924,7 @@ void Map::ScriptsProcess()
                 break;
             }
 
-        case SCRIPT_COMMAND_TEMP_SUMMON_CREATURE:
+            case SCRIPT_COMMAND_TEMP_SUMMON_CREATURE:
             {
                 if(!step.script->datalong)                  // creature not specified
                 {
@@ -2958,7 +2961,7 @@ void Map::ScriptsProcess()
                 break;
             }
 
-        case SCRIPT_COMMAND_RESPAWN_GAMEOBJECT:
+            case SCRIPT_COMMAND_RESPAWN_GAMEOBJECT:
             {
                 if(!step.script->datalong)                  // gameobject not specified
                 {
@@ -3018,7 +3021,7 @@ void Map::ScriptsProcess()
                 go->GetMap()->Add(go);
                 break;
             }
-        case SCRIPT_COMMAND_OPEN_DOOR:
+            case SCRIPT_COMMAND_OPEN_DOOR:
             {
                 if(!step.script->datalong)                  // door not specified
                 {
@@ -3074,7 +3077,7 @@ void Map::ScriptsProcess()
                     ((GameObject*)target)->UseDoorOrButton(time_to_close);
                 break;
             }
-        case SCRIPT_COMMAND_CLOSE_DOOR:
+            case SCRIPT_COMMAND_CLOSE_DOOR:
             {
                 if(!step.script->datalong)                  // guid for door not specified
                 {
@@ -3131,7 +3134,7 @@ void Map::ScriptsProcess()
 
                 break;
             }
-        case SCRIPT_COMMAND_QUEST_EXPLORED:
+            case SCRIPT_COMMAND_QUEST_EXPLORED:
             {
                 if(!source)
                 {
@@ -3188,7 +3191,7 @@ void Map::ScriptsProcess()
                 break;
             }
 
-        case SCRIPT_COMMAND_ACTIVATE_OBJECT:
+            case SCRIPT_COMMAND_ACTIVATE_OBJECT:
             {
                 if(!source)
                 {
@@ -3222,7 +3225,7 @@ void Map::ScriptsProcess()
                 break;
             }
 
-        case SCRIPT_COMMAND_REMOVE_AURA:
+            case SCRIPT_COMMAND_REMOVE_AURA:
             {
                 Object* cmdTarget = step.script->datalong2 ? source : target;
 
@@ -3242,7 +3245,7 @@ void Map::ScriptsProcess()
                 break;
             }
 
-        case SCRIPT_COMMAND_CAST_SPELL:
+            case SCRIPT_COMMAND_CAST_SPELL:
             {
                 if(!source)
                 {
@@ -3288,7 +3291,7 @@ void Map::ScriptsProcess()
                 break;
             }
 
-        case SCRIPT_COMMAND_PLAY_SOUND:
+            case SCRIPT_COMMAND_PLAY_SOUND:
             {
                 if(!source)
                 {
@@ -3329,9 +3332,9 @@ void Map::ScriptsProcess()
                     pSource->PlayDirectSound(step.script->datalong,pTarget);
                 break;
             }
-        default:
-            sLog.outError("Unknown script command %u called.",step.script->command);
-            break;
+            default:
+                sLog.outError("Unknown script command %u called.",step.script->command);
+                break;
         }
 
         m_scriptSchedule.erase(iter);
