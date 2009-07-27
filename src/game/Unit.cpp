@@ -7109,12 +7109,6 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                 return false;
             break;
         }
-        // Improved Stormstrike
-        case 63375:
-        {
-            basepoints0 = GetCreateMana() * 0.2f;
-            break;
-        }
         // Sword and Board
         case 50227:
         {
@@ -7188,6 +7182,10 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                 return false;
             break;
         }
+        // Improved Stormstrike
+        case 63375:
+            basepoints0 = int32(GetCreateMana() * triggerAmount / 100);
+            break;
     }
 
     if( cooldown && GetTypeId()==TYPEID_PLAYER && ((Player*)this)->HasSpellCooldown(trigger_spell_id))
