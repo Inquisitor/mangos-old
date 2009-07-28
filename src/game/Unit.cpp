@@ -7184,7 +7184,7 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
         }
         // Improved Stormstrike
         case 63375:
-            basepoints0 = int32(GetCreateMana() * triggerAmount / 100);
+            basepoints0 = int32(GetCreateMana() * 0.2f);
             break;
     }
 
