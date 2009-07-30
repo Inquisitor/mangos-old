@@ -2333,7 +2333,13 @@ void Spell::cast(bool skipCheck)
         {
             // Ice Block
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000008000000000))
+            {
                 AddPrecastSpell(41425);                     // Hypothermia
+
+                // Glyph of Ice Block
+                if(m_caster->GetTypeId() == TYPEID_PLAYER && m_caster->HasAura(56372))      
+                    ((Player*)m_caster)->RemoveSpellCategoryCooldown(35, true);
+            }
             break;
         }
 		case SPELLFAMILY_WARRIOR:

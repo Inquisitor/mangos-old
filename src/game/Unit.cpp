@@ -5110,23 +5110,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 12654;
                     break;
                 }
-                case 56372: // Glyph of Ice Block
-                    {
-                        if (GetTypeId ()!= TYPEID_PLAYER)
-                            return false;
-                        const PlayerSpellMap& sp_list = ((Player *)this)->GetSpellMap();
-                        for (PlayerSpellMap::const_iterator itr = sp_list.begin(); itr != sp_list.end(); ++itr)
-                        {
-                            uint32 classspell = itr->first;
-                            SpellEntry const *spellInfo = sSpellStore.LookupEntry(classspell);
-
-                            if (spellInfo->SpellFamilyName == SPELLFAMILY_MAGE
-                                && spellInfo->SpellFamilyFlags & 0x00000040LL
-                                && GetSpellRecoveryTime(spellInfo) > 0)
-                                ((Player*)this)->RemoveSpellCooldown(classspell);
-                        }
-                        break;
-                    }
                 // Combustion
                 case 11129:
                 {
