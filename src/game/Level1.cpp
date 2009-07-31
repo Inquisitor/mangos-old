@@ -1985,7 +1985,7 @@ bool ChatHandler::HandleSendChannelMsgCommand(const char *args)
     if( !channel_name || !irc_name || !text || !arg_GM )
         return false;
 
-    Channel * channel = cMgr->GetChannel(channel_name, NULL );
+    Channel * channel = cMgr->GetChannel(channel_name, NULL, false );
     if( !channel )
         return false;
 
