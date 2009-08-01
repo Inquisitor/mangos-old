@@ -1184,8 +1184,7 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
             }
 
             if(m_spellInfo->Effect[0] != SPELL_EFFECT_DISTRACT && m_spellInfo->SpellIconID != 686)
-                if(!(m_spellInfo->AttributesEx & SPELL_ATTR_EX_NOT_BREAK_STEALTH))
-                    unit->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
+                unit->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
 
             if (!(m_spellInfo->AttributesEx & SPELL_ATTR_EX_NO_INITIAL_AGGRO))
             {
