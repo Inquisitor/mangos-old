@@ -172,7 +172,7 @@ SpellSpecific GetSpellSpecific(uint32 spellId)
                 return SPELL_STING;
 
             // only hunter aspects have this (but not all aspects in hunter family)
-            if( spellInfo->SpellFamilyFlags & UI64LIT(0x0044000000380000) || spellInfo->SpellFamilyFlags2 & 0x00003010)
+            if( spellInfo->SpellFamilyFlags & UI64LIT(0x0044000000380000) || spellInfo->SpellFamilyFlags2 & 0x00001010)
                 return SPELL_ASPECT;
 
             if( spellInfo->SpellFamilyFlags2 & 0x00000002 )
@@ -188,15 +188,16 @@ SpellSpecific GetSpellSpecific(uint32 spellId)
             if (spellInfo->SpellFamilyFlags & UI64LIT(0x0000000011010002))
                 return SPELL_BLESSING;
 
+            if (spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000002190))
+                return SPELL_HAND;
+
             if ((spellInfo->SpellFamilyFlags & UI64LIT(0x00000800180400)) && (spellInfo->AttributesEx3 & 0x200))
                 return SPELL_JUDGEMENT;
 
-            for (int i = 0; i < 3; ++i)
-            {
-                // only paladin auras have this (for palaldin class family)
-                if (spellInfo->Effect[i] == SPELL_EFFECT_APPLY_AREA_AURA_RAID)
-                    return SPELL_AURA;
-            }
+            // only paladin auras have this (for palaldin class family)
+            if( spellInfo->SpellFamilyFlags2 & 0x00000020 )
+                return SPELL_AURA;
+
             break;
         }
         case SPELLFAMILY_SHAMAN:
@@ -211,7 +212,7 @@ SpellSpecific GetSpellSpecific(uint32 spellId)
             return spellmgr.GetSpellElixirSpecific(spellInfo->Id);
 
         case SPELLFAMILY_DEATHKNIGHT:
-            if ((spellInfo->Attributes & 0x10) && (spellInfo->AttributesEx2 & 0x10) && (spellInfo->AttributesEx4 & 0x200000))
+            if (spellInfo->Category == 47)
                 return SPELL_PRESENCE;
             break;
     }
@@ -240,6 +241,7 @@ bool IsSingleFromSpellSpecificPerCaster(SpellSpecific spellSpec1,SpellSpecific s
         case SPELL_POSITIVE_SHOUT:
         case SPELL_JUDGEMENT:
         case SPELL_PRESENCE:
+        case SPELL_HAND:
             return spellSpec1==spellSpec2;
         case SPELL_BATTLE_ELIXIR:
             return spellSpec2==SPELL_BATTLE_ELIXIR
@@ -263,6 +265,7 @@ bool IsSingleFromSpellSpecificRanksPerTarget(SpellSpecific spellId_spec, SpellSp
         case SPELL_BLESSING:
         case SPELL_AURA:
         case SPELL_CURSE:
+        case SPELL_HAND:
             return spellId_spec==i_spellId_spec;
         default:
             return false;
@@ -1618,9 +1621,15 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
             if( spellInfo_2->SpellFamilyName == SPELLFAMILY_PALADIN )
             {
                 // Paladin Seals
-                if( IsSealSpell(spellInfo_1) && IsSealSpell(spellInfo_2) )
+                if (IsSealSpell(spellInfo_1) && IsSealSpell(spellInfo_2))
                     return true;
+
+                // Swift Retribution / Improved Devotion Aura (talents) and Paladin Auras
+                if ((spellInfo_1->SpellFamilyFlags2 & 0x00000020) && (spellInfo_2->SpellIconID == 291 || spellInfo_2->SpellIconID == 3028) ||
+                    (spellInfo_2->SpellFamilyFlags2 & 0x00000020) && (spellInfo_1->SpellIconID == 291 || spellInfo_1->SpellIconID == 3028))
+                    return false;
             }
+
             // Combustion and Fire Protection Aura (multi-family check)
             if( spellInfo_2->Id == 11129 && spellInfo_1->SpellIconID == 33 && spellInfo_1->SpellVisual[0] == 321 )
                 return false;
@@ -1648,6 +1657,18 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
             // Bloodlust and Bloodthirst (multi-family check)
             if( spellInfo_1->Id == 2825 && spellInfo_2->SpellIconID == 38 && spellInfo_2->SpellVisual[0] == 0 )
                 return false;
+            break;
+        case SPELLFAMILY_DEATHKNIGHT:
+            if (spellInfo_2->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT)
+            {
+                // Frost Presence and Frost Presence (triggered)
+                if( spellInfo_1->SpellIconID == 2632 && spellInfo_2->SpellIconID == 2632 )
+                    return false;
+
+                // Unholy Presence and Unholy Presence (triggered)
+                if( spellInfo_1->SpellIconID == 2633 && spellInfo_2->SpellIconID == 2633 )
+                    return false;
+            }
             break;
         default:
             break;

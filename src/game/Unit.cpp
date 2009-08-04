@@ -687,7 +687,11 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
             if(!cVictim->isPet())
             {
                 cVictim->DeleteThreatList();
-                cVictim->SetUInt32Value(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+                // only lootable if it has loot or can drop gold
+                if(cVictim->GetCreatureInfo()->lootid || cVictim->GetCreatureInfo()->maxgold > 0)
+                    cVictim->SetUInt32Value(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
+                else
+                    cVictim->lootForBody = true;            // needed for skinning
             }
             // Call creature just died function
             if (cVictim->AI())
@@ -3630,6 +3634,10 @@ bool Unit::AddAura(Aura *Aur)
 
     Aur->ApplyModifier(true,true);
     sLog.outDebug("Aura %u now is in use", aurName);
+
+    if(IsSpellLastAuraEffect(aurSpellInfo,Aur->GetEffIndex()))
+        Aur->HandleSpellSpecificBoosts(true);
+
     return true;
 }
 
@@ -3975,13 +3983,24 @@ void Unit::RemoveAurasWithInterruptFlags(uint32 flags)
     }
 }
 
-void Unit::RemoveNotOwnSingleTargetAuras()
+void Unit::RemoveNotOwnSingleTargetAuras(uint32 newPhase)
 {
     // single target auras from other casters
     for (AuraMap::iterator iter = m_Auras.begin(); iter != m_Auras.end(); )
     {
         if (iter->second->GetCasterGUID()!=GetGUID() && IsSingleTargetSpell(iter->second->GetSpellProto()))
-            RemoveAura(iter);
+        {
+            if(!newPhase)
+                RemoveAura(iter);
+            else
+            {
+                Unit* caster = iter->second->GetCaster();
+                if(!caster || !caster->InSamePhase(newPhase))
+                    RemoveAura(iter);
+                else
+                    ++iter;
+            }
+        }
         else
             ++iter;
     }
@@ -3991,7 +4010,7 @@ void Unit::RemoveNotOwnSingleTargetAuras()
     for (AuraList::iterator iter = scAuras.begin(); iter != scAuras.end(); )
     {
         Aura* aura = *iter;
-        if (aura->GetTarget() != this)
+        if (aura->GetTarget() != this && !aura->GetTarget()->InSamePhase(newPhase))
         {
             scAuras.erase(iter);                            // explicitly remove, instead waiting remove in RemoveAura
             aura->GetTarget()->RemoveAura(aura);
@@ -4056,7 +4075,14 @@ void Unit::RemoveAura(AuraMap::iterator &i, AuraRemoveMode mode)
 
     sLog.outDebug("Aura %u now is remove mode %d",Aur->GetModifier()->m_auraname, mode);
     Aur->ApplyModifier(false,true);
-    Aur->_RemoveAura();
+
+    if(Aur->_RemoveAura())
+    {
+        // last aura in stack removed
+        if(IsSpellLastAuraEffect(Aur->GetSpellProto(),Aur->GetEffIndex()))
+            Aur->HandleSpellSpecificBoosts(false);
+    }
+
     delete Aur;
 
     if(caster_channeled)
@@ -4602,27 +4628,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
     {
         case SPELLFAMILY_GENERIC:
         {
-            //Master Shapeshifter
-            if (dummySpell->SpellIconID == 2851)
-            {
-                if (!procSpell)
-                    return false;
-
-                Unit *caster = triggeredByAura->GetCaster();
-                if (caster)
-                {
-                    switch(caster->m_form)
-                    {
-                        case FORM_BEAR:
-                        case FORM_DIREBEAR: triggered_spell_id = 48418; break;
-                        case FORM_CAT: triggered_spell_id = 48420; break;
-                        case FORM_MOONKIN: triggered_spell_id = 48421; break;
-                        case FORM_TREE: triggered_spell_id = 48422; break;
-                    }
-                    basepoints0 = triggerAmount;
-                    break;
-                }
-            }
             switch (dummySpell->Id)
             {
                 // Eye for an Eye
@@ -12261,6 +12266,12 @@ void Unit::RemoveAurasAtChanneledTarget(SpellEntry const* spellInfo)
 
 void Unit::SetPhaseMask(uint32 newPhaseMask, bool update)
 {
+    if(newPhaseMask==GetPhaseMask())
+        return;
+
+    if(IsInWorld())
+        RemoveNotOwnSingleTargetAuras(newPhaseMask);        // we can lost access to caster or target
+
     WorldObject::SetPhaseMask(newPhaseMask,update);
 
     if(IsInWorld())
