@@ -5102,6 +5102,8 @@ void Aura::HandleAuraModIncreaseHealth(bool apply, bool Real)
         case 28726:                                         // Nightmare Seed ( Nightmare Seed )
         case 34511:                                         // Valor (Bulwark of Kings, Bulwark of the Ancient Kings)
         case 44055:                                         // Tremendous Fortitude (Battlemaster's Alacrity)
+        case 55915:                                         // Battlemaster's trinket
+        case 55917:                                         // Battlemaster's trinket
         case 50322:                                         // Survival Instincts
         {
             if(Real)
