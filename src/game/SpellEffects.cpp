@@ -1992,6 +1992,28 @@ void Spell::EffectDummy(uint32 i)
                 m_caster->CastSpell(m_caster, 51209, true);
                 return;
             }
+            // Death Strike
+            else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000000010))
+            {
+                uint32 count = 0;
+                Unit::AuraMap const& auras = unitTarget->GetAuras();
+                for(Unit::AuraMap::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
+                {
+                    if(itr->second->GetSpellProto()->Dispel == DISPEL_DISEASE &&
+                        itr->second->GetCasterGUID() == m_caster->GetGUID() &&
+                        IsSpellLastAuraEffect(itr->second->GetSpellProto(), itr->second->GetEffIndex()))
+                    {
+                        ++count;
+                        // max. 15%
+                        if(count == 3)
+                            break;
+                    }
+                }
+
+                int32 bp = count * m_caster->GetMaxHealth() * m_spellInfo->DmgMultiplier[0] / 100;
+                m_caster->CastCustomSpell(m_caster, 45470, &bp, NULL, NULL, true);
+                return;
+            }
             break;
     }
 
@@ -2495,7 +2517,7 @@ void Spell::EffectApplyAura(uint32 i)
         return;
 
     // ghost spell check, allow apply any auras at player loading in ghost mode (will be cleanup after load)
-    if( !unitTarget->isAlive() && m_spellInfo->Id != 20584 && m_spellInfo->Id != 8326 &&
+    if( !unitTarget->isAlive() && !IsDeathPersistentSpell(m_spellInfo) &&
         (unitTarget->GetTypeId()!=TYPEID_PLAYER || !((Player*)unitTarget)->GetSession()->PlayerLoading()) )
         return;
 
@@ -4709,6 +4731,38 @@ void Spell::EffectWeaponDmg(uint32 i)
                     }
                 }
             }
+            break;
+        }
+        case SPELLFAMILY_DEATHKNIGHT:
+        {
+            // Blood Strike, Heart Strike, Obliterate
+            // Blood-Caked Strike, Scourge Strike
+            if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0002000001400000) ||
+                m_spellInfo->SpellIconID == 1736 || m_spellInfo->SpellIconID == 3143)
+            {
+                uint32 count = 0;
+                Unit::AuraMap const& auras = unitTarget->GetAuras();
+                for(Unit::AuraMap::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
+                {
+                    if(itr->second->GetSpellProto()->Dispel == DISPEL_DISEASE &&
+                        itr->second->GetCasterGUID() == m_caster->GetGUID() &&
+                        IsSpellLastAuraEffect(itr->second->GetSpellProto(), itr->second->GetEffIndex()))
+                        ++count;
+                }
+
+                if (count)
+                {
+                    // Effect 1(for Blood-Caked Strike)/3(other) damage is bonus
+                    double bonus = count * CalculateDamage(m_spellInfo->SpellIconID == 1736 ? 0 : 2, unitTarget) / 100.0f;
+                    // Blood Strike, Blood-Caked Strike and Obliterate store bonus*2
+                    if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0002000000400000) ||
+                        m_spellInfo->SpellIconID == 1736)
+                        bonus /= 2.0f;
+
+                    totalDamagePercentMod += bonus;
+                }
+            }
+            break;
         }
     }
 
@@ -5519,8 +5573,8 @@ void Spell::EffectScriptEffect(uint32 effIndex)
         }
         case SPELLFAMILY_PALADIN:
         {
-            // Judgement
-            if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000800000) || m_spellInfo->Category == 1210 /* <- Judgement of Justice hack*/)
+            // Judgement (seal trigger)
+            if (m_spellInfo->Category == SPELLCATEGORY_JUDGEMENT)
             {
                 if(!unitTarget || !unitTarget->isAlive())
                     return;
@@ -5530,12 +5584,12 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                 // Judgement self add switch
                 switch (m_spellInfo->Id)
                 {
-                    case 41467: break;                      // Judgement
                     case 53407: spellId1 = 20184; break;    // Judgement of Justice
                     case 20271:                             // Judgement of Light
                     case 57774: spellId1 = 20185; break;    // Judgement of Light
                     case 53408: spellId1 = 20186; break;    // Judgement of Wisdom
                     default:
+                        sLog.outError("Unsupported Judgement (seal trigger) spell (Id: %u) in Spell::EffectScriptEffect",m_spellInfo->Id);
                         return;
                 }
                 // all seals have aura dummy in 2 effect

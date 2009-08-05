@@ -4628,24 +4628,16 @@ SpellCastResult Spell::CheckCast(bool strict)
 
                 break;
             }
-             //SPELL_AURA_FLY means player can fly without a mount. Here we check only for flying shapeshifting
-            //If spell is shapeshifting we will go to SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED check.
             case SPELL_AURA_FLY:
-            {
-                if((m_spellInfo->AttributesEx4 & SPELL_ATTR_EX4_CAST_ONLY_IN_OUTLAND) == 0)
-                break;    //Perhaps this is not a mount
-            }
-            //check for flying mounts. mount, that has SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED also has SPELL_AURA_MOUNTED
-            //exception is spell 49851, wich is Blizz internal and not used
             case SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED:
             {
-                // not allow cast mount spells at old maps by players (all spells are self target)
-                if(m_caster->GetTypeId() == TYPEID_PLAYER)
+                // not allow cast fly spells if not have req. skills  (all spells is self target)
+                // allow always ghost flight spells
+                if (m_caster->GetTypeId() == TYPEID_PLAYER && m_caster->isAlive())
                 {
-                     if( !((Player*)m_caster)->IsAllowUseFlyMountsHere() )
-                        return SPELL_FAILED_NOT_HERE;
+                    if (!((Player*)m_caster)->IsKnowHowFlyIn(m_caster->GetMapId(),zone))
+                        return m_IsTriggeredSpell ? SPELL_FAILED_DONT_REPORT : SPELL_FAILED_NOT_HERE;
                 }
-
                 break;
             }
             case SPELL_AURA_PERIODIC_MANA_LEECH:
