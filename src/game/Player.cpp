@@ -5006,6 +5006,8 @@ void Player::ApplyRatingMod(CombatRating cr, int32 value, bool apply)
             }
             break;
         case CR_ARMOR_PENETRATION:
+            if(affectStats)
+                UpdateArmorPenetration();
             break;
     }
 }
