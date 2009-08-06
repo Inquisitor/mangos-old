@@ -2546,7 +2546,6 @@ void Spell::EffectApplyAura(uint32 i)
 
     // ghost spell check, allow apply any auras at player loading in ghost mode (will be cleanup after load)
     if( !unitTarget->isAlive() && !IsDeathPersistentSpell(m_spellInfo) &&
-        Aur->GetId() != 2584 &&                             // Waiting to Resurrect (not have death persistence flag)
         (unitTarget->GetTypeId()!=TYPEID_PLAYER || !((Player*)unitTarget)->GetSession()->PlayerLoading()) )
         return;
 
