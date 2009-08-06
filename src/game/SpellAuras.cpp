@@ -6112,15 +6112,6 @@ void Aura::HandleSpiritOfRedemption( bool apply, bool Real )
 
 void Aura::CleanupTriggeredSpells()
 {
-
-    if (m_spellProto->SpellFamilyName == SPELLFAMILY_WARRIOR && (m_spellProto->SpellFamilyFlags & UI64LIT(0x0000001000000020)))
-    {
-        // Blood Frenzy remove
-        m_target->RemoveAurasDueToSpell(30069);
-        m_target->RemoveAurasDueToSpell(30070);
-        return;
-    }
-
     uint32 tSpellId = m_spellProto->EffectTriggerSpell[GetEffIndex()];
     if(!tSpellId)
         return;
