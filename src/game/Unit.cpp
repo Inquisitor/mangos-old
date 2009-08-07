@@ -3517,8 +3517,7 @@ bool Unit::AddAura(Aura *Aur)
     SpellEntry const* aurSpellInfo = Aur->GetSpellProto();
 
     // ghost spell check, allow apply any auras at player loading in ghost mode (will be cleanup after load)
-    if( !isAlive() && !IsDeathPersistentSpell(aurSpellInfo) &&
-        Aur->GetId() != 2584 &&                             // Waiting to Resurrect (not have death persistence flag)
+    if( !isAlive() && Aur->GetId() != 20584 && Aur->GetId() != 8326 && Aur->GetId() != 2584 &&
         (GetTypeId()!=TYPEID_PLAYER || !((Player*)this)->GetSession()->PlayerLoading()) )
     {
         delete Aur;
@@ -8312,7 +8311,7 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
 			}
 		}
 		// Torment the Weak
-		if (spell->SpellFamilyName == SPELLFAMILY_MAGE && spell->SpellIconID == 3263)
+		if (spell->SpellFamilyName == SPELLFAMILY_GENERIC && spell->SpellIconID == 3263)
 		{
 			if (!(*i)->isAffectedOnSpell(spellProto))
 				continue;
@@ -10092,6 +10091,7 @@ void Unit::setDeathState(DeathState s)
     if (m_deathState != ALIVE && s == ALIVE)
     {
         //_ApplyAllAuraMods();
+        SetDisplayId(GetNativeDisplayId());
     }
     m_deathState = s;
 }
