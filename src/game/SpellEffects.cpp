@@ -3616,6 +3616,7 @@ void Spell::EffectSummonType(uint32 i)
         case SUMMON_TYPE_TOTEM_SLOT3:
         case SUMMON_TYPE_TOTEM_SLOT4:
         case SUMMON_TYPE_TOTEM:
+        case SUMMON_TYPE_TOTEM2:
             EffectSummonTotem(i);
             break;
         case SUMMON_TYPE_UNKNOWN1:
@@ -6082,6 +6083,7 @@ void Spell::EffectSummonTotem(uint32 i)
         case SUMMON_TYPE_TOTEM_SLOT3: slot = 2; break;
         case SUMMON_TYPE_TOTEM_SLOT4: slot = 3; break;
         // Battle standard case
+        case SUMMON_TYPE_TOTEM2:
         case SUMMON_TYPE_TOTEM:       slot = 254; break;
         // jewelery statue case, like totem without slot
         case SUMMON_TYPE_GUARDIAN:    slot = 255; break;
