@@ -2175,11 +2175,6 @@ void SpellMgr::LoadSpellScriptTarget()
         uint32 type        = fields[1].GetUInt32();
         uint32 targetEntry = fields[2].GetUInt32();
 
-        Unit* a_caster = ObjectAccessor::GetObjectInWorld(caster_guid, (Unit*)NULL);
-        if(!IS_PLAYER_GUID(caster_guid))
-            if(!a_caster || !a_caster->IsInWorld()) 
-                continue;
-
         SpellEntry const* spellProto = sSpellStore.LookupEntry(spellId);
 
         if(!spellProto)
