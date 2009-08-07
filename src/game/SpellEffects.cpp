@@ -720,7 +720,7 @@ void Spell::EffectDummy(uint32 i)
     if(!unitTarget && !gameObjTarget && !itemTarget)
         return;
 
-    // selection by spell family
+	// selection by spell family
     switch(m_spellInfo->SpellFamilyName)
     {
         case SPELLFAMILY_GENERIC:
@@ -1309,24 +1309,61 @@ void Spell::EffectDummy(uint32 i)
 					}
 					if( !creatureVector.empty() )
 					{	// Attack slave's master
-						bool found = false;
 						Creature * Myrmidon = creatureVector[ rand()%creatureVector.size()]; // Get random one from all possible
 						for( std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr )
 						{
 							if( (*itr)->GetEntry() == 25084 && (*itr)->GetDistance2d( m_targets.m_destX, m_targets.m_destY) < 10 )
 							{
-								found = true;
 								(*itr)->SetEntry(25085); // Change creature to Freed Murloc
 								(*itr)->AddThreat( Myrmidon, 10.0f );
 								(*itr)->SetInCombatWith( Myrmidon );
 								(*itr)->GetMotionMaster()->MoveChase( Myrmidon );
 								(*itr)->Attack( Myrmidon, true );
+								((Player*)GetCaster())->KilledMonsterCredit( 25086, 0 ); // Increment quest count
 							}
 						}
-						if( found )	((Player*)GetCaster())->KilledMonsterCredit( 25086, 0 ); // Increment quest count
 					}
 					return;
 				}
+
+				case 38173: // Q: On Spirit's Wings
+				{
+					if( !unitTarget || GetCaster()->GetTypeId() != TYPEID_PLAYER || ((Player*)GetCaster())->GetQuestStatus(10714) == QUEST_STATUS_COMPLETE )
+						return;
+
+					// Iterate for all creatures around cast place
+					CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+					Cell cell(pair);
+					cell.data.Part.reserved = ALL_DISTRICT;
+					cell.SetNoCreate();
+
+					std::list<Creature*> creatureList;
+
+					MaNGOS::AnyUnitInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10); // 10 yards check
+					MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
+					TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+					CellLock<GridReadGuard> cell_lock(cell, pair);
+					// Get Creatures
+					cell_lock->Visit(cell_lock, go_visit, *(unitTarget->GetMap()));
+
+					if (!creatureList.empty())
+					{
+						uint32 m_counted = 0;
+						for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+						{
+							if( (*itr)->GetEntry() == 22384 || (*itr)->GetEntry() == 22160 ) // Check if its Soothsayer or Taskmaster
+								++m_counted; // Increment if found
+						}
+						if( m_counted == 2 )// Complete quest if both were found (2 npcs)
+						{
+							GetCaster()->SummonCreature( 22492, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ+5, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000 );
+							((Player*)GetCaster())->CompleteQuest(10714); // Complete quest
+						}
+					}
+					return;
+				}
+
 				case 33655: // Q: Mission: Gateways Murketh and Shaadraz
 				{
 					if( m_caster->GetTypeId() != TYPEID_PLAYER )
