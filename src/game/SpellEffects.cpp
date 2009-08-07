@@ -4132,7 +4132,7 @@ void Spell::EffectSummonGuardian(uint32 i)
         }
 
         if(duration > 0)
-            spawnCreature->SetDuration(duration);
+            spawnCreature->SetDuration(duration + 1000);
 
         spawnCreature->SetOwnerGUID(m_caster->GetGUID());
         spawnCreature->setPowerType(POWER_MANA);
@@ -6134,7 +6134,7 @@ void Spell::EffectSummonTotem(uint32 i)
     int32 duration=GetSpellDuration(m_spellInfo);
     if(Player* modOwner = m_caster->GetSpellModOwner())
         modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DURATION, duration);
-    pTotem->SetDuration(duration);
+    pTotem->SetDuration(duration + 1000);
 
     if (damage)                                             // if not spell info, DB values used
     {
