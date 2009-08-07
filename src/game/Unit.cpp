@@ -8312,7 +8312,7 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
 			}
 		}
 		// Torment the Weak
-		if (spell->SpellFamilyName == SPELLFAMILY_MAGE && spell->SpellIconID == 3263)
+		if (spell->SpellFamilyName == SPELLFAMILY_GENERIC && spell->SpellIconID == 3263)
 		{
 			if (!(*i)->isAffectedOnSpell(spellProto))
 				continue;
