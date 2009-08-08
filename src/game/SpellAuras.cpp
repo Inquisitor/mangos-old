@@ -6197,6 +6197,18 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
         DoneActualBenefit *= LvlPenalty;
 
         m_modifier.m_amount += (int32)DoneActualBenefit;
+
+		// Glyph of Power Word: Shield
+		if( m_spellProto->SpellFamilyName == SPELLFAMILY_PRIEST && m_spellProto->Mechanic == MECHANIC_SHIELD &&
+			(m_spellProto->SpellFamilyFlags & UI64LIT(0x0000000000000001)) )
+		{
+			if (Aura *aura = caster->GetDummyAura(55672))
+			{
+				int32 basePoints0 = m_modifier.m_amount * aura->GetModifier()->m_amount / 100;
+				caster->CastCustomSpell(m_target, 56160, &basePoints0, 0, 0, true);
+			}
+		}
+			
     }
 
     // Ice Barrier (remove effect from Shattered Barrier)
