@@ -665,20 +665,7 @@ void Spell::FillTargetMap()
                     FillCustomTargetMap(i,tmpUnitMap);
                     break;
                 }
-                switch(m_spellInfo->EffectImplicitTargetB[i])
-                {
-                    case 0:
-                        SetTargetMap(i, m_spellInfo->EffectImplicitTargetA[i], tmpUnitMap);
-                        break;
-                    case TARGET_SCRIPT_COORDINATES:         // B case filled in CheckCast but we need fill unit list base at A case
-                        SetTargetMap(i, m_spellInfo->EffectImplicitTargetA[i], tmpUnitMap);
-                        break;
-                    default:
-                        SetTargetMap(i, m_spellInfo->EffectImplicitTargetA[i], tmpUnitMap);
-                        SetTargetMap(i, m_spellInfo->EffectImplicitTargetB[i], tmpUnitMap);
-                        break;
-                }
-                break;
+                // do not add break here, it is not typo
             default:
                 switch(m_spellInfo->EffectImplicitTargetB[i])
                 {
@@ -1543,7 +1530,11 @@ void Spell::SetTargetMap(uint32 i,uint32 cur,UnitList& TagUnitMap)
         case TARGET_SELF:
         case TARGET_SELF2:
         case TARGET_DYNAMIC_OBJECT:
-         case TARGET_AREAEFFECT_CUSTOM:
+        case TARGET_AREAEFFECT_CUSTOM_2:
+        case TARGET_SUMMON:
+            TagUnitMap.push_back(m_caster);
+            break;
+        case TARGET_AREAEFFECT_CUSTOM:
         {
             switch (m_spellInfo->SpellFamilyName)
             {
@@ -1597,10 +1588,6 @@ void Spell::SetTargetMap(uint32 i,uint32 cur,UnitList& TagUnitMap)
             }
             break;
         }
-        case TARGET_AREAEFFECT_CUSTOM_2:
-        case TARGET_SUMMON:
-            TagUnitMap.push_back(m_caster);
-            break;
         case TARGET_RANDOM_ENEMY_CHAIN_IN_AREA:
         {
             m_targets.m_targetMask = 0;
