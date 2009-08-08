@@ -819,6 +819,22 @@ namespace MaNGOS
             float i_range;
     };
 
+	class AnyUnitInPointRangeCheck
+    {
+        public:
+            AnyUnitInPointRangeCheck(float posX, float posY, float posZ, float range) : x(posX), y(posY), z(posZ), i_range(range) {}
+            bool operator()(Unit* u)
+            {
+				if(u->isAlive() && u->GetDistance(x, y, z) < i_range)
+                    return true;
+
+                return false;
+            }
+        private:
+			float x, y, z;
+            float i_range;
+    };
+
     // Success at unit in range, range update for next check (this can be use with UnitLastSearcher to find nearest unit)
     class NearestAttackableUnitInObjectRangeCheck
     {
