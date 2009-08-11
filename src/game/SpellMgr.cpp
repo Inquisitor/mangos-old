@@ -1667,6 +1667,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 return false;
             break;
         case SPELLFAMILY_DEATHKNIGHT:
+
+            // Presences and triggered effects
+            if( spellInfo_1->Category == 47 || spellInfo_2->Category == 47 )
+                return false;
+
             if (spellInfo_2->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT)
             {
                 // Frost Presence and Frost Presence (triggered)
