@@ -6640,7 +6640,7 @@ void Aura::PeriodicTick()
                 GUID_LOPART(GetCasterGUID()), GuidHigh2TypeId(GUID_HIPART(GetCasterGUID())), m_target->GetGUIDLow(), m_target->GetTypeId(), pdamage, GetId());
 
             int32 gain = m_target->ModifyHealth(pdamage);
-            SpellPeriodicAuraLogInfo pInfo(this, gain, (pdamage - gain), 0, 0, 0.0f, isCrit);
+            SpellPeriodicAuraLogInfo pInfo(this, pdamage, (pdamage - gain), 0, 0, 0.0f, isCrit);
             m_target->SendPeriodicAuraLog(&pInfo);
 
             // add HoTs to amount healed in bgs
