@@ -5922,14 +5922,10 @@ void Aura::HandleShapeshiftBoosts(bool apply)
     if (m_target->HasAura(63410) || m_target->HasAura(63411))
     {
         SpellEntry const *spellInfo = sSpellStore.LookupEntry(66530);
-        // Aura 66530 must not be revised if we (de)shift from/to Travel Form
-        if (spellInfo && !(spellInfo->Stances & (1<<form)))
-        {
-            if (apply) // We shapeshift to some form except Travel
-                m_target->RemoveAurasDueToSpell(66530);
-            else // We shapeshift to Caster form
-                m_target->CastSpell(m_target,66530,true);
-        }
+        if (!apply || (spellInfo && (spellInfo->Stances & (1<<(form-1))) ))
+            m_target->CastSpell(m_target, 66530, true);
+        else
+            m_target->RemoveAurasDueToSpell(66530);
     }
 
     /*double healthPercentage = (double)m_target->GetHealth() / (double)m_target->GetMaxHealth();
