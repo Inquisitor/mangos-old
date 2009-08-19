@@ -1340,6 +1340,7 @@ void Aura::HandleAddModifier(bool apply, bool Real)
             m_target->CastSpell(m_target, 45471, true);
     }
     // Improved Barkskin
+    /*
     else if(m_spellProto->SpellFamilyName==SPELLFAMILY_DRUID && (m_spellmod->mask2 & UI64LIT(0x20000)))
     {
         m_target->RemoveAurasDueToSpell(66530);
@@ -1348,6 +1349,7 @@ void Aura::HandleAddModifier(bool apply, bool Real)
         if(apply && (m_target->m_form == FORM_NONE || m_target->m_form == FORM_TRAVEL))
             m_target->CastSpell(m_target,66530,true);
     }
+    */
 }
 void Aura::HandleAddTargetTrigger(bool apply, bool /*Real*/)
 {
@@ -2617,9 +2619,9 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 uint32 spell_id;
                 switch(GetId())
                 {
-                    case 48384: spell_id = 50170;           //Rank 1
-                    case 48395: spell_id = 50171;           //Rank 2
-                    case 48396: spell_id = 50172;           //Rank 3
+                    case 48384: spell_id = 50170; break;    //Rank 1
+                    case 48395: spell_id = 50171; break;    //Rank 2
+                    case 48396: spell_id = 50172; break;    //Rank 3
                     default:
                         sLog.outError("HandleAuraDummy: Not handled rank of IMF (Spell: %u)",GetId());
                         return;
@@ -5919,6 +5921,7 @@ void Aura::HandleShapeshiftBoosts(bool apply)
     }
 
     // Improved Barkskin - apply/remove armor bonus due to shapeshift
+    /*
     if (m_target->HasAura(63410) || m_target->HasAura(63411))
     {
         SpellEntry const *spellInfo = sSpellStore.LookupEntry(66530);
@@ -5927,6 +5930,7 @@ void Aura::HandleShapeshiftBoosts(bool apply)
         else
             m_target->RemoveAurasDueToSpell(66530);
     }
+    */
 
     /*double healthPercentage = (double)m_target->GetHealth() / (double)m_target->GetMaxHealth();
     m_target->SetHealth(uint32(ceil((double)m_target->GetMaxHealth() * healthPercentage)));*/
