@@ -777,6 +777,20 @@ void AreaAura::Update(uint32 diff)
 
                 if(SpellEntry const *actualSpellInfo = spellmgr.SelectAuraRankForPlayerLevel(GetSpellProto(), (*tIter)->getLevel()))
                 {
+					bool canAdd = true;
+					//Unit::AuraList uAuraList = (*tIter)->GetAurasByType(AuraType(actualSpellInfo->EffectApplyAuraName[0]));
+					Unit::AuraList uAuraList = (*tIter)->GetAuras();
+					for (Unit::AuraList::const_iterator itr = uAuraList.begin(); itr != uAuraList.end(); ++itr)
+					{
+						if (spellmgr.IsRankSpellDueToSpell(actualSpellInfo, (*itr)->GetId()))
+						{
+							canAdd = false;
+							break;
+						}
+					}
+					if (!canAdd)
+						continue;
+
                     int32 actualBasePoints = m_currentBasePoints;
                     // recalculate basepoints for lower rank (all AreaAura spell not use custom basepoints?)
                     if(actualSpellInfo != GetSpellProto())
