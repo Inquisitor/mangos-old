@@ -779,10 +779,10 @@ void AreaAura::Update(uint32 diff)
                 {
 					bool canAdd = true;
 					//Unit::AuraList uAuraList = (*tIter)->GetAurasByType(AuraType(actualSpellInfo->EffectApplyAuraName[0]));
-					Unit::AuraList uAuraList = (*tIter)->GetAuras();
-					for (Unit::AuraList::const_iterator itr = uAuraList.begin(); itr != uAuraList.end(); ++itr)
+					Unit::AuraMap uAuraList = (*tIter)->GetAuras();
+					for (Unit::AuraMap::const_iterator itr = uAuraList.begin(); itr != uAuraList.end(); ++itr)
 					{
-						if (spellmgr.IsRankSpellDueToSpell(actualSpellInfo, (*itr)->GetId()))
+						if (spellmgr.IsRankSpellDueToSpell(actualSpellInfo, (*itr).second->GetId()))
 						{
 							canAdd = false;
 							break;
