@@ -348,7 +348,8 @@ void Unit::RemoveSpellsCausingAura(AuraType auraType)
 
         if (*iter)
         {
-            RemoveAurasDueToSpell((*iter)->GetId());
+			if( (*iter)->GetId() != 46021 ) // hacky fix for Spectral Realm being removed from Unit::DealDamage invis removal check
+				RemoveAurasDueToSpell((*iter)->GetId());
             if (!m_modAuras[auraType].empty())
                 next = m_modAuras[auraType].begin();
             else
