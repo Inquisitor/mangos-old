@@ -377,6 +377,9 @@ void ThreatManager::addThreat(Unit* pVictim, float pThreat, SpellSchoolMask scho
     if(!pVictim->isAlive() || !getOwner()->isAlive() )
         return;
 
+   if (!getOwner()->IsHostileTo(pVictim))
+      return;
+
     assert(getOwner()->GetTypeId()== TYPEID_UNIT);
 
     float threat = ThreatCalcHelper::calcThreat(pVictim, iOwner, pThreat, schoolMask, pThreatSpell);
