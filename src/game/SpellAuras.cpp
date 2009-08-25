@@ -3208,16 +3208,31 @@ void Aura::HandleAuraTransform(bool apply, bool Real)
             m_target->setTransForm(GetId());
 
         // polymorph case
-        if (Real && m_target->GetTypeId() == TYPEID_PLAYER && m_target->IsPolymorphed())
+        if (Real && m_target->IsPolymorphed())
         {
-            // for players, start regeneration after 1s (in polymorph fast regeneration case)
-            // only if caster is Player (after patch 2.4.2)
-            if (IS_PLAYER_GUID(GetCasterGUID()) )
-                ((Player*)m_target)->setRegenTimer(1*IN_MILISECONDS);
+			if( m_target->GetTypeId() == TYPEID_PLAYER )
+			{
+				// for players, start regeneration after 1s (in polymorph fast regeneration case)
+				// only if caster is Player (after patch 2.4.2)
+				if (IS_PLAYER_GUID(GetCasterGUID()) )
+					((Player*)m_target)->setRegenTimer(1*IN_MILISECONDS);
 
-            //dismount polymorphed target (after patch 2.4.2)
-            if (m_target->IsMounted())
-                m_target->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
+				//dismount polymorphed target (after patch 2.4.2)
+				if (m_target->IsMounted())
+					m_target->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
+			}
+			if( GetCaster()->GetDummyAura(56375) ) // Glyph of Polymorph
+			{
+				Unit::AuraMap const& auras = m_target->GetAuras();
+				for(Unit::AuraMap::const_iterator itr = auras.begin(); itr != auras.end(); ++itr)
+				{
+					 if(itr->second)
+					 {
+						 if( itr->second->GetModifier()->m_auraname == SPELL_AURA_PERIODIC_DAMAGE )
+							 m_target->RemoveAura(itr->second);
+					 }
+				}
+			}
         }
     }
     else
@@ -3806,6 +3821,22 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
         data << uint32(0);
         m_target->SendMessageToSet(&data, true);
 
+		if( GetId() == 6358 ) // Glyph of Succubus
+		{
+			if( GetCaster() && GetCaster()->GetOwner() && GetCaster()->GetOwner()->GetDummyAura(56250) ) // Glyph of Polymorph
+			{
+				Unit::AuraMap const& auras = m_target->GetAuras();
+				for(Unit::AuraMap::const_iterator itr = auras.begin(); itr != auras.end(); ++itr)
+				{
+					 if(itr->second)
+					 {
+						 if( itr->second->GetModifier()->m_auraname == SPELL_AURA_PERIODIC_DAMAGE )
+							 m_target->RemoveAura(itr->second);
+					 }
+				}
+			}
+		}
+		
         // Summon the Naj'entus Spine GameObject on target if spell is Impaling Spine
         if(GetId() == 39837)
         {
