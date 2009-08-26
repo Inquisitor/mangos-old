@@ -1657,38 +1657,40 @@ GameObject* WorldObject::SummonGameObject(uint32 id, float x, float y, float z, 
 	return pGameObj;
 }
 
-Vehicle* WorldObject::SummonVehicle(uint32 entry, uint32 vehicleId, float x, float y, float z, uint32 team)
-{
-	CreatureInfo const *ci = objmgr.GetCreatureTemplate(entry);
-
-	if(!ci)
-		return NULL;
-
-	VehicleEntry const *ve = sVehicleStore.LookupEntry(vehicleId);
-
-	if(!ve)
-		return NULL;
-
-	Vehicle *v = new Vehicle;
-	if(!v->Create(objmgr.GenerateLowGuid(HIGHGUID_VEHICLE), GetMap(), entry, vehicleId, team) )
-	{
-		delete v;
-		return NULL;
-	}
-
-	v->Relocate(x, y, z, GetOrientation());
-
-	if(!v->IsPositionValid())
-	{
-		sLog.outError("Vehicle (guidlow %d, entry %d) not created. Suggested coordinates isn't valid (X: %f Y: %f)",
-			v->GetGUIDLow(), v->GetEntry(), v->GetPositionX(), v->GetPositionY());
-		delete v;
-		return NULL;
-	}
-
-	GetMap()->Add((Creature*)v);
-
-	return v;
+Vehicle* WorldObject::SummonVehicle(uint32 id, float x, float y, float z, float ang, uint32 vehicleId)
+ {
+     Vehicle *v = new Vehicle;
+ 
+     Map *map = GetMap();
+     uint32 team = 0;
+     if (GetTypeId()==TYPEID_PLAYER)
+         team = ((Player*)this)->GetTeam();
+ 
+     if(!v->Create(objmgr.GenerateLowGuid(HIGHGUID_VEHICLE), map, GetPhaseMask(), id, vehicleId, team))
+     {
+         delete v;
+         return NULL;
+     }
+ 
+     if (x == 0.0f && y == 0.0f && z == 0.0f)
+         GetClosePoint(x, y, z, v->GetObjectSize());
+ 
+     v->Relocate(x, y, z, ang);
+ 
+     if(!v->IsPositionValid())
+     {
+         sLog.outError("ERROR: Vehicle (guidlow %d, entry %d) not created. Suggested coordinates isn't valid (X: %f Y: %f)",
+             v->GetGUIDLow(), v->GetEntry(), v->GetPositionX(), v->GetPositionY());
+         delete v;
+         return NULL;
+     }
+     map->Add((Creature*)v);
+     v->AIM_Initialize();
+ 
+     if(GetTypeId()==TYPEID_UNIT && ((Creature*)this)->AI())
+         ((Creature*)this)->AI()->JustSummoned((Creature*)v);
+ 
+     return v;
 }
 
 namespace MaNGOS

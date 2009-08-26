@@ -492,7 +492,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 
         Creature* SummonCreature(uint32 id, float x, float y, float z, float ang,TempSummonType spwtype,uint32 despwtime);
         GameObject* SummonGameObject(uint32 id, float x, float y, float z, float ang, uint32 despwtime);
-		Vehicle* SummonVehicle(uint32 entry, uint32 vehicleId, float x, float y, float z, uint32 team);
+		Vehicle* SummonVehicle(uint32 id, float x, float y, float z, float ang, uint32 vehicleId = NULL);
 
     protected:
         explicit WorldObject();
