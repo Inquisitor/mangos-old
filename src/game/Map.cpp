@@ -3334,6 +3334,41 @@ void Map::ScriptsProcess()
                     pSource->PlayDirectSound(step.script->datalong,pTarget);
                 break;
             }
+			case SCRIPT_COMMAND_ADD_QUEST_COUNT:
+			{
+				if(source == NULL) return;
+				if(source->GetTypeId() != TYPEID_PLAYER) return;
+				Player * user = static_cast<Player*>(source);
+
+				uint32 QuestID = step.script->datalong;
+				uint32 x = step.script->datalong2;
+				uint32 increment = step.script->dataint;
+
+				if( increment < 1 ) // We havent anything to increment (it cant be either 0 nor minus value )
+					break;
+
+				Quest const* pQuest = objmgr.GetQuestTemplate(QuestID);
+				if( !pQuest )
+					break;
+
+				uint16 log_slot = user->FindQuestSlot( pQuest->GetQuestId() );
+				if( log_slot > MAX_QUEST_LOG_SIZE)
+					break;
+
+				QuestStatusData& q_status = user->getQuestStatusMap()[QuestID];
+
+				if( q_status.m_creatureOrGOcount[x]+ increment >  pQuest->ReqCreatureOrGOCount[x] ) // We shouldnt go above required count
+					break;
+
+				q_status.m_creatureOrGOcount[x] = q_status.m_creatureOrGOcount[x] + increment;
+				if (q_status.uState != QUEST_NEW) q_status.uState = QUEST_CHANGED;
+
+				user->SendQuestUpdateAddCreatureOrGo( pQuest, 0, x, user->GetQuestSlotCounter(log_slot, x), increment );
+				if( user->CanCompleteQuest(QuestID) )
+					user->CompleteQuest( QuestID );
+
+				break;
+			}
             default:
                 sLog.outError("Unknown script command %u called.",step.script->command);
                 break;
