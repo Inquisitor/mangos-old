@@ -5155,6 +5155,8 @@ void Spell::EffectSummonObjectWild(uint32 i)
 
     // Wild object not have owner and check clickable by players
     map->Add(pGameObj);
+	
+	m_caster->AddGameObject(pGameObj);
 
     if(pGameObj->GetGoType() == GAMEOBJECT_TYPE_FLAGDROP && m_caster->GetTypeId() == TYPEID_PLAYER)
     {
