@@ -116,7 +116,6 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
     if (pHolder.Event.event_inverse_phase_mask & (1 << Phase))
         return false;
 
-	// Feanor TODO: EventRequirement
 	switch( pHolder.Event.event_requirement_type )
 	{
 		case REQUIREMENT_T_HP_PERCENT:
@@ -137,6 +136,10 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
 			break;
 		case REQUIREMENT_T_ZONE:
 			if( m_creature->GetZoneId() != pHolder.Event.event_requirement_value )
+				return false;
+			break;
+		case REQUIREMENT_T_QUEST:
+			if( pActionInvoker->GetTypeId() != TYPEID_PLAYER || ((Player*)pActionInvoker)->GetQuestStatus( pHolder.Event.event_requirement_value) != QUEST_STATUS_INCOMPLETE )
 				return false;
 			break;
 	}
