@@ -58,8 +58,21 @@ enum EventAI_Type
     EVENT_T_RECEIVE_EMOTE           = 22,                   // EmoteId, Condition, CondValue1, CondValue2
     EVENT_T_BUFFED                  = 23,                   // Param1 = SpellID, Param2 = Number of Time STacked, Param3/4 Repeat Min/Max
     EVENT_T_TARGET_BUFFED           = 24,                   // Param1 = SpellID, Param2 = Number of Time STacked, Param3/4 Repeat Min/Max
+	EVENT_T_PLAYER_TALK				= 25,                   // NONE
+	EVENT_T_GOSSIP_SELECT           = 26,                   // Param1 = GossipId
 
     EVENT_T_END,
+};
+
+enum EventAI_Requirement
+{
+	REQUIREMENT_T_NONE			= 0,
+	REQUIREMENT_T_HP_PERCENT	= 1,
+	REQUIREMENT_T_MANA_PERCENT	= 2,
+	REQUIREMENT_T_AURA			= 3,
+	REQUIREMENT_T_INVOKER_AURA	= 4,
+	REQUIREMENT_T_ZONE			= 5,
+	REQUIREMENT_T_END,
 };
 
 enum EventAI_ActionType
@@ -107,6 +120,8 @@ enum EventAI_ActionType
     ACTION_T_SET_SHEATH                 = 40,               // Sheath (0-passive,1-melee,2-ranged)
     ACTION_T_FORCE_DESPAWN              = 41,               // No Params
     ACTION_T_SET_INVINCIBILITY_HP_LEVEL = 42,               // MinHpValue, format(0-flat,1-percent from max health)
+	ACTION_T_ADD_GOSSIP					= 43,               // Gossip Id, 
+	ACTION_T_SUMMON_GOBJECT				= 44,				// Object ID, Target, Duration in ms
     ACTION_T_END,
 };
 
@@ -380,6 +395,17 @@ struct CreatureEventAI_Action
             uint32 hp_level;
             uint32 is_percent;
         } invincibility_hp_level;
+		struct
+        {
+            uint32 id;
+            uint32 text;
+        } add_gossip;
+		struct
+        {
+            uint32 id;
+            uint32 target;
+			uint32 duration;
+        } summon_gobject;
         // RAW
         struct
         {
@@ -401,6 +427,9 @@ struct CreatureEventAI_Event
     EventAI_Type event_type : 16;
     uint8 event_chance : 8;
     uint8 event_flags  : 8;
+
+	uint8 event_requirement_type;
+	uint32 event_requirement_value;
 
     union
     {
@@ -520,7 +549,11 @@ struct CreatureEventAI_Event
             uint32 repeatMin;
             uint32 repeatMax;
         } buffed;
-
+		// EVENT_T_GOSSIP_SELECT
+		struct
+        {
+            uint32 GossipId;
+        } gossip;
         // RAW
         struct
         {
@@ -529,6 +562,7 @@ struct CreatureEventAI_Event
             uint32 param3;
             uint32 param4;
         } raw;
+
     };
 
     CreatureEventAI_Action action[MAX_ACTIONS];
@@ -582,6 +616,8 @@ class MANGOS_DLL_SPEC CreatureEventAI : public CreatureAI
         void AttackStart(Unit *who);
         void MoveInLineOfSight(Unit *who);
         void SpellHit(Unit* pUnit, const SpellEntry* pSpell);
+		bool OnTalk(Player* pPlayer);
+		bool OnGossipSelect(Player* pPlayer, uint32 Id);
         void DamageTaken(Unit* done_by, uint32& damage);
         void UpdateAI(const uint32 diff);
         bool IsVisible(Unit *) const;

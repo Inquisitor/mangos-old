@@ -98,6 +98,11 @@ class MANGOS_DLL_SPEC CreatureAI
         // Called at text emote receive from player
         virtual void ReceiveEmote(Player* /*pPlayer*/, uint32 /*text_emote*/) {}
 
+		// Called when player opens gossip window
+		virtual bool OnTalk(Player * /*pPlayer*/) {return false;}
+		// Called when player selects one of gossip options
+		virtual bool OnGossipSelect(Player* pPlayer, uint32 Id) {return false;}
+
         ///== Triggered Actions Requested ==================
 
         // Called when creature attack expected (if creature can and no have current victim)

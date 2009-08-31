@@ -35,6 +35,7 @@
 #include "BattleGroundMgr.h"
 #include "BattleGround.h"
 #include "Guild.h"
+#include "CreatureAI.h"
 
 void WorldSession::HandleTabardVendorActivateOpcode( WorldPacket & recv_data )
 {
@@ -296,7 +297,7 @@ void WorldSession::HandleGossipHelloOpcode( WorldPacket & recv_data )
         }
     }
 
-    if(!Script->GossipHello( _player, unit ))
+	if(!Script->GossipHello( _player, unit ) && !unit->AI()->OnTalk(_player) )
     {
         _player->TalkedToCreature(unit->GetEntry(),unit->GetGUID());
         unit->prepareGossipMenu(_player);
@@ -344,7 +345,7 @@ void WorldSession::HandleGossipSelectOptionOpcode( WorldPacket & recv_data )
     }
     else
     {
-        if (!Script->GossipSelect (_player, unit, _player->PlayerTalkClass->GossipOptionSender (option), _player->PlayerTalkClass->GossipOptionAction (option)))
+		if (!Script->GossipSelect (_player, unit, _player->PlayerTalkClass->GossipOptionSender (option), _player->PlayerTalkClass->GossipOptionAction (option)) && !unit->AI()->OnGossipSelect(_player, _player->PlayerTalkClass->GossipOptionAction(option)) )
            unit->OnGossipSelect (_player, option);
     }
 }
