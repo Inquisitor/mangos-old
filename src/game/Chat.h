@@ -386,7 +386,6 @@ class ChatHandler
          bool HandleReloadVehicleSeatDataCommand(const char* args);
 
         bool HandleResetAchievementsCommand(const char * args);
-        bool HandleResetAllCommand(const char * args);
         bool HandleResetHonorCommand(const char * args);
         bool HandleResetLevelCommand(const char * args);
         bool HandleResetSpellsCommand(const char * args);

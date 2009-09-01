@@ -4455,45 +4455,6 @@ bool ChatHandler::HandleResetTalentsCommand(const char * args)
     return false;
 }
 
-bool ChatHandler::HandleResetAllCommand(const char * args)
-{
-    if(!*args)
-        return false;
-
-    std::string casename = args;
-
-    AtLoginFlags atLogin;
-
-    // Command specially created as single command to prevent using short case names
-    if(casename=="spells")
-    {
-        atLogin = AT_LOGIN_RESET_SPELLS;
-        sWorld.SendWorldText(LANG_RESETALL_SPELLS);
-        if(!m_session)
-            SendSysMessage(LANG_RESETALL_SPELLS);
-    }
-    else if(casename=="talents")
-    {
-        atLogin = AtLoginFlags(AT_LOGIN_RESET_TALENTS | AT_LOGIN_RESET_PET_TALENTS);
-        sWorld.SendWorldText(LANG_RESETALL_TALENTS);
-        if(!m_session)
-            SendSysMessage(LANG_RESETALL_TALENTS);
-    }
-    else
-    {
-        PSendSysMessage(LANG_RESETALL_UNKNOWN_CASE,args);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login | '%u' WHERE (at_login & '%u') = '0'",atLogin,atLogin);
-    HashMapHolder<Player>::MapType const& plist = ObjectAccessor::Instance().GetPlayers();
-    for(HashMapHolder<Player>::MapType::const_iterator itr = plist.begin(); itr != plist.end(); ++itr)
-        itr->second->SetAtLoginFlag(atLogin);
-
-    return true;
-}
-
 bool ChatHandler::HandleServerShutDownCancelCommand(const char* /*args*/)
 {
     sWorld.ShutdownCancel();
