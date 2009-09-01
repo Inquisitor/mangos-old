@@ -24,7 +24,7 @@ CREATE TABLE `db_version` (
   `version` varchar(120) default NULL,
   `creature_ai_version` varchar(120) default NULL,
   `cache_id` int(10) default '0',
-  `required_8364_01_mangos_db_version` bit(1) default NULL
+  `required_8444_01_mangos_mangos_string` bit(1) default NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Used DB version notes';
 
 --
@@ -34,7 +34,7 @@ CREATE TABLE `db_version` (
 LOCK TABLES `db_version` WRITE;
 /*!40000 ALTER TABLE `db_version` DISABLE KEYS */;
 INSERT INTO `db_version` VALUES
-('Mangos default database.','Creature EventAI not provided.',NULL);
+('Mangos default database.','Creature EventAI not provided.',0,NULL);
 /*!40000 ALTER TABLE `db_version` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2720,6 +2720,7 @@ INSERT INTO `mangos_string` VALUES
 (345,'Forced customize for player %s will be requested at next login.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (346,'Forced customize for player %s (GUID #%u) will be requested at next login.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (347,'TaxiNode ID %u not found!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(348,'Game Object (Entry: %u) have invalid data and can\'t be spawned',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (400,'|cffff0000[System Message]:|rScripts reloaded',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (401,'You change security level of account %s to %i.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (402,'%s changed your security level to %i.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -2831,8 +2832,8 @@ INSERT INTO `mangos_string` VALUES
 (509,'%d - sender: %s (guid: %u account: %u ) receiver: %s (guid: %u account: %u ) %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (510,'%d - owner: %s (guid: %u account: %u ) %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (511,'Wrong link type!',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(512,'%d - |cffffffff|Hitem:%d:0:0:0:0:0:0:0|h[%s]|h|r ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(513,'%d - |cffffffff|Hquest:%d|h[%s]|h|r %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(512,'%d - |cffffffff|Hitem:%d:0:0:0:0:0:0:0:0|h[%s]|h|r ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(513,'%d - |cffffffff|Hquest:%d:%d|h[%s]|h|r %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (514,'%d - |cffffffff|Hcreature_entry:%d|h[%s]|h|r ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (515,'%d - |cffffffff|Hcreature:%d|h[%s X:%f Y:%f Z:%f MapId:%d]|h|r ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (516,'%d - |cffffffff|Hgameobject_entry:%d|h[%s]|h|r ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -2841,7 +2842,7 @@ INSERT INTO `mangos_string` VALUES
 (519,'|cffffffff|Htele:%s|h[%s]|h|r ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (520,'%d - |cffffffff|Hspell:%d|h[%s]|h|r ',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (521,'%d - |cffffffff|Hskill:%d|h[%s %s]|h|r %s %s',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
-(522,'Game Object (GUID: %u) not found',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(522,'Game Object (Entry: %u) not found',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (523,'>> Game Object %s (GUID: %u) at %f %f %f. Orientation %f.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (524,'Selected object:\n|cffffffff|Hgameobject:%d|h[%s]|h|r GUID: %u ID: %u\nX: %f Y: %f Z: %f MapId: %u\nOrientation: %f',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (525,'>> Add Game Object \'%i\' (%s) (GUID: %i) added at \'%f %f %f\'.',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -14413,6 +14414,9 @@ INSERT INTO spell_chain VALUES
 (63625,0,63625,1,0),
 (63626,63625,63625,2,0),
 (63627,63626,63625,3,0),
+/*Improved Shadowform*/
+(47569,0,47569,1,0),
+(47570,47569,47569,2,0),
 /*Mind Blast*/
 (8092,0,8092,1,0),
 (8102,8092,8092,2,0),
@@ -15379,14 +15383,6 @@ INSERT INTO spell_chain VALUES
 (30356,25258,23922,6,0),
 (47487,30356,23922,7,0),
 (47488,47487,23922,8,0),
-/*SunderArmor*/
-(7386,0,7386,1,0),
-(7405,7386,7386,2,0),
-(8380,7405,7386,3,0),
-(11596,8380,7386,4,0),
-(11597,11596,7386,5,0),
-(25225,11597,7386,6,0),
-(47467,25225,7386,7,0),
 /*------------------
 -- (267) Protection (Paladin)
 ------------------*/
@@ -16971,12 +16967,19 @@ INSERT INTO `spell_elixir` VALUES
 (17627,0x3),
 (17629,0x3),
 (17628,0x3),
+(18191,0x10),
+(18192,0x10),
+(18193,0x10),
+(18194,0x10),
+(18222,0x10),
 (21920,0x1),
+(22730,0x10),
 (24361,0x2),
 (24363,0x2),
 (24382,0x2),
 (24383,0x2),
 (24417,0x2),
+(25661,0x10),
 (26276,0x1),
 (27652,0x2),
 (27653,0x2),
@@ -17019,6 +17022,8 @@ INSERT INTO `spell_elixir` VALUES
 (45373,0x1),
 (46837,0xB),
 (46839,0xB);
+
+
 /*!40000 ALTER TABLE `spell_elixir` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -17041,39 +17046,20 @@ CREATE TABLE `spell_learn_spell` (
 LOCK TABLES `spell_learn_spell` WRITE;
 /*!40000 ALTER TABLE `spell_learn_spell` DISABLE KEYS */;
 INSERT INTO `spell_learn_spell` VALUES
-(71,7376,0),
-(768,3025,0),
-(783,5419,0),
-(1066,5421,0),
-(2457,21156,0),
-(2458,7381,0),
-(5487,1178,0),
-(5487,21178,0),
 (5784,33388,1),
-(9634,9635,0),
-(9634,21178,0),
 (13819,33388,1),
 (17002,24867,0),
 (23161,33391,1),
 (23214,33391,1),
-(24858,24905,0),
 (24866,24864,0),
 (33872,47179,0),
 (33873,47180,0),
-(33891,5420,0),
-(33891,34123,0),
-(33943,33948,0),
 (33943,34090,1),
-(33943,34764,0),
 (34767,33391,1),
 (34769,33388,1),
-(40123,40121,0),
-(40123,40122,0),
 (53428,53341,1),
 (53428,53343,1),
 (58984,21009,1);
-
-
 /*!40000 ALTER TABLE `spell_learn_spell` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -17727,6 +17713,7 @@ INSERT INTO `spell_proc_event` VALUES
 (47515, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (47516, 0x00000000,  6, 0x00001800, 0x00010000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (47517, 0x00000000,  6, 0x00001800, 0x00010000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(47569, 0x00000000,  6, 0x00004000, 0x00000000, 0x00000000, 0x00004000, 0x00000000, 0.000000, 0.000000,  0),
 (47580, 0x00000000,  6, 0x00000000, 0x00000000, 0x00000040, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
 (47581, 0x00000000,  6, 0x00000000, 0x00000000, 0x00000040, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
 (47582, 0x00000000,  6, 0x00000000, 0x00000000, 0x00000040, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
@@ -17865,6 +17852,7 @@ INSERT INTO `spell_proc_event` VALUES
 (54488, 0x00000000,  0, 0x20000021, 0x00009000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (54489, 0x00000000,  0, 0x20000021, 0x00009000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
 (54490, 0x00000000,  0, 0x20000021, 0x00009000, 0x00000000, 0x00000000, 0x00000000, 0.000000, 0.000000,  0),
+(54646, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00015400, 0x00000002, 0.000000, 0.000000,  0),
 (54738, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000002, 0.000000, 0.000000,  0),
 (54747, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
 (54749, 0x00000000,  0, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00010000, 0.000000, 0.000000,  0),
@@ -18099,11 +18087,9 @@ INSERT INTO `spell_threat` VALUES
 (7373,141),
 (7379,235),
 (7386,100),
-(7405,140),
 (8198,40),
 (8204,64),
 (8205,96),
-(8380,180),
 (8972,118),
 (9745,148),
 (9880,178),
@@ -18115,8 +18101,6 @@ INSERT INTO `spell_threat` VALUES
 (11567,145),
 (11580,143),
 (11581,180),
-(11596,220),
-(11597,261),
 (11600,275),
 (11601,315),
 (11775,395),
@@ -18137,7 +18121,6 @@ INSERT INTO `spell_threat` VALUES
 (23925,250),
 (24394,580),
 (24583,5),
-(25225,300),
 (25231,130),
 (25258,286),
 (25264,215),

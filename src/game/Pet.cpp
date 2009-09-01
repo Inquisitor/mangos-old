@@ -227,6 +227,7 @@ bool Pet::LoadPetFromDB( Player* owner, uint32 petentry, uint32 petnumber, bool 
     if(owner->IsPvP())
         SetPvP(true);
 
+    SetCanModifyStats(true);
     InitStatsForLevel(petlevel);
     InitTalentForLevel();                                   // set original talents points before spell loading
 
@@ -266,7 +267,6 @@ bool Pet::LoadPetFromDB( Player* owner, uint32 petentry, uint32 petnumber, bool 
     delete result;
 
     //load spells/cooldowns/auras
-    SetCanModifyStats(true);
     _LoadAuras(timediff);
 
     //init AB

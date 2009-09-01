@@ -207,6 +207,18 @@ enum ItemQualities
 
 #define MAX_ITEM_QUALITY                 8
 
+const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
+    0xff9d9d9d,        //GREY
+    0xffffffff,        //WHITE
+    0xff1eff00,        //GREEN
+    0xff0070dd,        //BLUE
+    0xffa335ee,        //PURPLE
+    0xffff8000,        //ORANGE
+    0xffe6cc80,        //LIGHT YELLOW
+    0xffe6cc80         //LIGHT YELLOW
+};
+
+
 // ***********************************
 // Spell Attributes definitions
 // ***********************************
@@ -216,7 +228,7 @@ enum ItemQualities
 #define SPELL_ATTR_ON_NEXT_SWING_1                0x00000004            // 2 on next swing
 #define SPELL_ATTR_UNK3                           0x00000008            // 3 not set in 3.0.3
 #define SPELL_ATTR_UNK4                           0x00000010            // 4
-#define SPELL_ATTR_UNK5                           0x00000020            // 5 trade spells?
+#define SPELL_ATTR_TRADESPELL                     0x00000020            // 5 trade spells, will be added by client to a sublist of profession spell
 #define SPELL_ATTR_PASSIVE                        0x00000040            // 6 Passive spell
 #define SPELL_ATTR_UNK7                           0x00000080            // 7 visible?
 #define SPELL_ATTR_UNK8                           0x00000100            // 8
@@ -308,7 +320,7 @@ enum ItemQualities
 #define SPELL_ATTR_EX2_UNK28                      0x10000000            // 28 no breaks stealth if it fails??
 #define SPELL_ATTR_EX2_CANT_CRIT                  0x20000000            // 29 Spell can't crit
 #define SPELL_ATTR_EX2_UNK30                      0x40000000            // 30
-#define SPELL_ATTR_EX2_UNK31                      0x80000000            // 31
+#define SPELL_ATTR_EX2_FOOD_BUFF                  0x80000000            // 31 Food or Drink Buff (like Well Fed)
 
 #define SPELL_ATTR_EX3_UNK0                       0x00000001            // 0
 #define SPELL_ATTR_EX3_UNK1                       0x00000002            // 1
@@ -658,7 +670,7 @@ enum SpellEffects
     SPELL_EFFECT_CALL_PET                  = 135,
     SPELL_EFFECT_HEAL_PCT                  = 136,
     SPELL_EFFECT_ENERGIZE_PCT              = 137,
-    SPELL_EFFECT_138                       = 138,
+    SPELL_EFFECT_LEAP_BACK                 = 138,
     SPELL_EFFECT_CLEAR_QUEST               = 139,
     SPELL_EFFECT_FORCE_CAST                = 140,
     SPELL_EFFECT_141                       = 141,
@@ -2311,6 +2323,16 @@ enum ChatMsg
 
 #define MAX_CHAT_MSG_TYPE 0x32
 
+enum ChatLinkColors
+{
+    CHAT_LINK_COLOR_TRADE       = 0xffffd000,   // orange
+    CHAT_LINK_COLOR_TALENT      = 0xff4e96f7,   // blue
+    CHAT_LINK_COLOR_SPELL       = 0xff71d5ff,   // bright blue
+    CHAT_LINK_COLOR_ENCHANT     = 0xffffd000,   // orange
+    CHAT_LINK_COLOR_ACHIEVEMENT = 0xffffff00,
+    CHAT_LINK_COLOR_GLYPH       = 0xff66bbff
+};
+
 // Values from ItemPetFood (power of (value-1) used for compare with CreatureFamilyEntry.petDietMask
 enum PetDiet
 {
@@ -2331,9 +2353,11 @@ enum PetDiet
 // Max values for Guild & Guild Bank
 #define GUILD_BANK_MAX_TABS         6
 #define GUILD_BANK_MAX_SLOTS        98
-#define GUILD_BANK_MAX_LOGS         24
-#define GUILD_EVENTLOG_MAX_ENTRIES  100
-#define GUILD_MAX_RANKS             10
+#define GUILD_BANK_MAX_LOGS         25
+#define GUILD_BANK_MONEY_LOGS_TAB   100
+#define GUILD_EVENTLOG_MAX_RECORDS  100
+#define GUILD_RANKS_MIN_COUNT       5
+#define GUILD_RANKS_MAX_COUNT       10
 
 enum AiReaction
 {
@@ -2440,13 +2464,14 @@ enum SummonType
     SUMMON_TYPE_VEHICLE6    = 708,
     SUMMON_TYPE_VEHICLE7    = 710,
     SUMMON_TYPE_INFERNO     = 711,
+    SUMMON_TYPE_GUARDIAN2   = 713,
     SUMMON_TYPE_VEHICLE8    = 716,
     SUMMON_TYPE_GHOUL	    = 829,
 	SUMMON_TYPE_SNAKES      = 881,
     SUMMON_TYPE_VEHICLE9    = 901,
     SUMMON_TYPE_VEHICLE10   = 941,
     SUMMON_TYPE_VEHICLE11   = 1081,
-    SUMMON_TYPE_GUARDIAN2   = 1161,
+    SUMMON_TYPE_GUARDIAN3   = 1161,
 	SUMMON_TYPE_VEHICLE12   = 1162,
     SUMMON_TYPE_ELEMENTAL   = 1561,
     SUMMON_TYPE_FORCE_OF_NATURE = 1562,
