@@ -148,6 +148,7 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
 
     SetUInt32Value(GAMEOBJECT_FACTION, goinfo->faction);
     SetUInt32Value(GAMEOBJECT_FLAGS, goinfo->flags);
+    SetUInt32Value(GAMEOBJECT_BYTES_1, uint32(-1));
 
     SetEntry(goinfo->id);
 
