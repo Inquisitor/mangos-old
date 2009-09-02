@@ -2175,6 +2175,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 		// Combo adding hack for talents like Ruthlessness
 		uint32 m_comboCountAfterCalc;
 
+        uint32 m_grid_update_timer;
 
         /*********************************************************/
         /***                 INSTANCE SYSTEM                   ***/
