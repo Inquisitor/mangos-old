@@ -240,8 +240,8 @@ class Creature;
 class OutdoorPvPNA;
 class OutdoorPvPObjectiveNA : public OutdoorPvPObjective
 {
-friend class OutdoorPvPNA;
-public:
+    friend class OutdoorPvPNA;
+    public:
     OutdoorPvPObjectiveNA(OutdoorPvP * pvp);
     bool Update(uint32 diff);
     void FillInitialWorldStates(WorldPacket & data);
@@ -251,7 +251,7 @@ public:
     bool HandleCustomSpell(Player *plr, uint32 spellId, GameObject * go);
     int32 HandleOpenGo(Player *plr, uint64 guid);
     uint32 GetAliveGuardsCount();
-protected:
+    protected:
     // called when a faction takes control
     void FactionTakeOver(uint32 team);
 
@@ -264,7 +264,7 @@ protected:
     void UpdateHalaaWorldState();
 
     bool HandleCapturePointEvent(Player * plr, uint32 eventId);
-private:
+    private:
     bool m_capturable;
     uint32 m_GuardsAlive;
     uint32 m_ControllingFaction;
@@ -279,8 +279,8 @@ private:
 
 class OutdoorPvPNA : public OutdoorPvP
 {
-friend class OutdoorPvPObjectiveNA;
-public:
+    friend class OutdoorPvPObjectiveNA;
+    public:
     OutdoorPvPNA();
     bool SetupOutdoorPvP();
     void HandlePlayerEnterZone(Player *plr, uint32 zone);
@@ -290,7 +290,7 @@ public:
     void SendRemoveWorldStates(Player * plr);
     void HandleKillImpl(Player * plr, Unit * killed);
     void BuffTeam(uint32 team);
-private:
+    private:
     OutdoorPvPObjectiveNA * m_obj;
 };
 

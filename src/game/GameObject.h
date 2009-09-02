@@ -532,7 +532,7 @@ struct GameObjectData
     uint32 animprogress;
     GOState go_state;
     uint8 spawnMask;
-	uint8 ArtKit;
+    uint8 ArtKit;
 };
 
 // For containers:  [GO_NOT_READY]->GO_READY (close)->GO_ACTIVATED (open) ->GO_JUST_DEACTIVATED->GO_READY        -> ...

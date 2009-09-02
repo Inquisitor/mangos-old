@@ -163,6 +163,8 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
     if (goinfo->type == GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING)
         m_actualHealth = goinfo->destructibleBuilding.intactNumHits;
 
+    SetGoArtKit(ArtKit);
+
     //Notify the map's instance data.
     //Only works if you create the object in it, not if it is moves to that map.
     //Normally non-players do not teleport to other maps.
@@ -550,7 +552,7 @@ void GameObject::SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask)
     data.animprogress = GetGoAnimProgress();
     data.go_state = GetGoState();
     data.spawnMask = spawnMask;
-	data.ArtKit = GetGoArtKit();
+    data.ArtKit = GetGoArtKit();
 
     // updated in DB
     std::ostringstream ss;

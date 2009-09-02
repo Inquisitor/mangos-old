@@ -113,25 +113,25 @@ bool OutdoorPvPObjectiveZM_Beacon::Update(uint32 diff)
 
             switch(m_State)
             {
-            case OBJECTIVESTATE_ALLIANCE:
-                m_TowerState = ZM_TOWERSTATE_A;
-                if(((OutdoorPvPZM*)m_PvP)->m_AllianceTowersControlled<ZM_NUM_BEACONS)
-                    ((OutdoorPvPZM*)m_PvP)->m_AllianceTowersControlled++;
-                sWorld.SendZoneText(ZM_GRAVEYARD_ZONE,objmgr.GetMangosString(ZMBeaconCaptureA[m_TowerType],-1));
-                break;
-            case OBJECTIVESTATE_HORDE:
-                m_TowerState = ZM_TOWERSTATE_H;
-                if(((OutdoorPvPZM*)m_PvP)->m_HordeTowersControlled<ZM_NUM_BEACONS)
-                    ((OutdoorPvPZM*)m_PvP)->m_HordeTowersControlled++;
-                sWorld.SendZoneText(ZM_GRAVEYARD_ZONE,objmgr.GetMangosString(ZMBeaconCaptureH[m_TowerType],-1));
-                break;
-            case OBJECTIVESTATE_NEUTRAL:
-            case OBJECTIVESTATE_NEUTRAL_ALLIANCE_CHALLENGE:
-            case OBJECTIVESTATE_NEUTRAL_HORDE_CHALLENGE:
-            case OBJECTIVESTATE_ALLIANCE_HORDE_CHALLENGE:
-            case OBJECTIVESTATE_HORDE_ALLIANCE_CHALLENGE:
-                m_TowerState = ZM_TOWERSTATE_N;
-                break;
+                case OBJECTIVESTATE_ALLIANCE:
+                    m_TowerState = ZM_TOWERSTATE_A;
+                    if(((OutdoorPvPZM*)m_PvP)->m_AllianceTowersControlled<ZM_NUM_BEACONS)
+                        ((OutdoorPvPZM*)m_PvP)->m_AllianceTowersControlled++;
+                    sWorld.SendZoneText(ZM_GRAVEYARD_ZONE,objmgr.GetMangosString(ZMBeaconCaptureA[m_TowerType],-1));
+                    break;
+                case OBJECTIVESTATE_HORDE:
+                    m_TowerState = ZM_TOWERSTATE_H;
+                    if(((OutdoorPvPZM*)m_PvP)->m_HordeTowersControlled<ZM_NUM_BEACONS)
+                        ((OutdoorPvPZM*)m_PvP)->m_HordeTowersControlled++;
+                    sWorld.SendZoneText(ZM_GRAVEYARD_ZONE,objmgr.GetMangosString(ZMBeaconCaptureH[m_TowerType],-1));
+                    break;
+                case OBJECTIVESTATE_NEUTRAL:
+                case OBJECTIVESTATE_NEUTRAL_ALLIANCE_CHALLENGE:
+                case OBJECTIVESTATE_NEUTRAL_HORDE_CHALLENGE:
+                case OBJECTIVESTATE_ALLIANCE_HORDE_CHALLENGE:
+                case OBJECTIVESTATE_HORDE_ALLIANCE_CHALLENGE:
+                    m_TowerState = ZM_TOWERSTATE_N;
+                    break;
             }
 
             UpdateTowerState();
@@ -351,37 +351,37 @@ void OutdoorPvPObjectiveZM_GraveYard::SetBeaconState(uint32 controlling_faction)
 
     switch(controlling_faction)
     {
-    case ALLIANCE:
-        // if ally already controls the gy and taken back both beacons, return, nothing to do for us
-        if(m_GraveYardState & ZM_GRAVEYARD_A)
-            return;
-        // ally doesn't control the gy, but controls the side beacons -> add gossip option, add neutral banner
-        break;
-    case HORDE:
-        // if horde already controls the gy and taken back both beacons, return, nothing to do for us
-        if(m_GraveYardState & ZM_GRAVEYARD_H)
-            return;
-        // horde doesn't control the gy, but controls the side beacons -> add gossip option, add neutral banner
-        break;
-    default:
-        // if the graveyard is not neutral, then leave it that way
-        // if the graveyard is neutral, then we have to dispel the buff from the flag carrier
-        if(m_GraveYardState & ZM_GRAVEYARD_N)
-        {
-            // gy was neutral, thus neutral banner was spawned, it is possible that someone was taking the flag to the gy
-            if(m_FlagCarrierGUID)
+        case ALLIANCE:
+            // if ally already controls the gy and taken back both beacons, return, nothing to do for us
+            if(m_GraveYardState & ZM_GRAVEYARD_A)
+                return;
+            // ally doesn't control the gy, but controls the side beacons -> add gossip option, add neutral banner
+            break;
+        case HORDE:
+            // if horde already controls the gy and taken back both beacons, return, nothing to do for us
+            if(m_GraveYardState & ZM_GRAVEYARD_H)
+                return;
+            // horde doesn't control the gy, but controls the side beacons -> add gossip option, add neutral banner
+            break;
+        default:
+            // if the graveyard is not neutral, then leave it that way
+            // if the graveyard is neutral, then we have to dispel the buff from the flag carrier
+            if(m_GraveYardState & ZM_GRAVEYARD_N)
             {
-                // remove flag from carrier, reset flag carrier guid
-                Player * p = objmgr.GetPlayer(m_FlagCarrierGUID);
-                if(p)
+                // gy was neutral, thus neutral banner was spawned, it is possible that someone was taking the flag to the gy
+                if(m_FlagCarrierGUID)
                 {
-                   p->RemoveAurasDueToSpell(ZM_BATTLE_STANDARD_A);
-                   p->RemoveAurasDueToSpell(ZM_BATTLE_STANDARD_H);
+                    // remove flag from carrier, reset flag carrier guid
+                    Player * p = objmgr.GetPlayer(m_FlagCarrierGUID);
+                    if(p)
+                    {
+                        p->RemoveAurasDueToSpell(ZM_BATTLE_STANDARD_A);
+                        p->RemoveAurasDueToSpell(ZM_BATTLE_STANDARD_H);
+                    }
+                    m_FlagCarrierGUID = 0;
                 }
-                m_FlagCarrierGUID = 0;
             }
-        }
-        break;
+            break;
     }
     // send worldstateupdate
     UpdateTowerState();
@@ -439,12 +439,12 @@ bool OutdoorPvPObjectiveZM_GraveYard::HandleDropFlag(Player * plr, uint32 spellI
 {
     switch(spellId)
     {
-    case ZM_BATTLE_STANDARD_A:
-        m_FlagCarrierGUID = 0;
-        return true;
-    case ZM_BATTLE_STANDARD_H:
-        m_FlagCarrierGUID = 0;
-        return true;
+        case ZM_BATTLE_STANDARD_A:
+            m_FlagCarrierGUID = 0;
+            return true;
+        case ZM_BATTLE_STANDARD_H:
+            m_FlagCarrierGUID = 0;
+            return true;
     }
     return false;
 }

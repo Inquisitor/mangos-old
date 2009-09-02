@@ -31,12 +31,12 @@ INSTANTIATE_SINGLETON_1( OutdoorPvPMgr );
 
 OutdoorPvPMgr::OutdoorPvPMgr()
 {
-    sLog.outDebug("Instantiating OutdoorPvPMgr");
+    sLog.outDebug("OutdoorPvPMgr: Instantiating");
 }
 
 OutdoorPvPMgr::~OutdoorPvPMgr()
 {
-    sLog.outDebug("Deleting OutdoorPvPMgr");
+    sLog.outDebug("OutdoorPvPMgr: Deleting");
     for(OutdoorPvPSet::iterator itr = m_OutdoorPvPSet.begin(); itr != m_OutdoorPvPSet.end(); ++itr)
     {
         (*itr)->DeleteSpawns();
@@ -59,19 +59,18 @@ void OutdoorPvPMgr::CreateOutdoorPvP(uint32 typeId)
     }
     if(!pOP)
     {
-        sLog.outDebug("OutdoorPvP : init failed for %i.", typeId);
+        sLog.outDebug("OutdoorPvPMgr: init failed for %i.", typeId);
         return;
     }
     if(!pOP->SetupOutdoorPvP())
     {
-       sLog.outDebug("OutdoorPvP : SetupOutdoorPvP failed for %i.", typeId);
-       delete pOP;
-       return;
+        sLog.outDebug("OutdoorPvPMgr: SetupOutdoorPvP failed for %i.", typeId);
+        delete pOP;
+        return;
     }
     pOP->SetTypeId(typeId);
     m_OutdoorPvPSet.insert(pOP);
-    sLog.outDebug("OutdoorPvP : init successfull for %i.", typeId);
-
+    sLog.outDebug("OutdoorPvPMgr: init successfull for %i.", typeId);
 }
 
 void OutdoorPvPMgr::InitOutdoorPvP()
@@ -102,7 +101,7 @@ void OutdoorPvPMgr::HandlePlayerEnterZone(Player *plr, uint32 zoneid)
     // add possibly beneficial buffs to plr for zone
     itr->second->HandlePlayerEnterZone(plr, zoneid);
     //plr->SendInitWorldStates(); TODO: look if this is needed
-    sLog.outDebug("Player %u entered outdoorpvp id %u",plr->GetGUIDLow(), itr->second->GetTypeId());
+    sLog.outDebug("OutdoorPvPMgr: Player %u entered outdoorpvp id %u", plr->GetGUIDLow(), itr->second->GetTypeId());
 }
 
 void OutdoorPvPMgr::HandlePlayerLeaveZone(Player *plr, uint32 zoneid)
@@ -115,7 +114,7 @@ void OutdoorPvPMgr::HandlePlayerLeaveZone(Player *plr, uint32 zoneid)
     }
     // inform the OutdoorPvP class of the leaving, it should remove the player from all objectives
     itr->second->HandlePlayerLeaveZone(plr, zoneid);
-    sLog.outDebug("Player %u left outdoorpvp id %u",plr->GetGUIDLow(), itr->second->GetTypeId());
+    sLog.outDebug("OutdoorPvPMgr: Player %u left outdoorpvp id %u", plr->GetGUIDLow(), itr->second->GetTypeId());
 }
 
 OutdoorPvP * OutdoorPvPMgr::GetOutdoorPvPToZoneId(uint32 zoneid)

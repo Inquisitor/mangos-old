@@ -96,25 +96,25 @@ enum TFTowerStates {
 
 class OutdoorPvPObjectiveTF : public OutdoorPvPObjective
 {
-public:
-    OutdoorPvPObjectiveTF(OutdoorPvP * pvp, OutdoorPvPTF_TowerType type);
-    bool Update(uint32 diff);
-    void FillInitialWorldStates(WorldPacket & data);
-    // used when player is activated/inactivated in the area
-    void HandlePlayerEnter(Player * plr);
-    void HandlePlayerLeave(Player * plr);
-    void UpdateTowerState();
-protected:
-    virtual bool HandleCapturePointEvent(Player * plr, uint32 eventId);
-protected:
-    OutdoorPvPTF_TowerType m_TowerType;
-    uint32 m_TowerState;
+    public:
+        OutdoorPvPObjectiveTF(OutdoorPvP * pvp, OutdoorPvPTF_TowerType type);
+        bool Update(uint32 diff);
+        void FillInitialWorldStates(WorldPacket & data);
+        // used when player is activated/inactivated in the area
+        void HandlePlayerEnter(Player * plr);
+        void HandlePlayerLeave(Player * plr);
+        void UpdateTowerState();
+    protected:
+        virtual bool HandleCapturePointEvent(Player * plr, uint32 eventId);
+    protected:
+        OutdoorPvPTF_TowerType m_TowerType;
+        uint32 m_TowerState;
 };
 
 class OutdoorPvPTF : public OutdoorPvP
 {
-friend class OutdoorPvPObjectiveTF;
-public:
+    friend class OutdoorPvPObjectiveTF;
+    public:
     OutdoorPvPTF();
     bool SetupOutdoorPvP();
     void HandlePlayerEnterZone(Player *plr, uint32 zone);
@@ -123,7 +123,7 @@ public:
     void FillInitialWorldStates(WorldPacket &data);
     void SendRemoveWorldStates(Player * plr);
     void BuffTeam(uint32 team);
-private:
+    private:
     bool m_IsLocked;
     uint32 m_LockTimer;
     uint32 m_LockTimerUpdate;

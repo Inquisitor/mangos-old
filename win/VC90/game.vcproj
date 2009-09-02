@@ -931,6 +931,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\game\OutdoorPvPLA.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\OutdoorPvPLA.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\Path.h"
 				>
 			</File>
@@ -1356,6 +1364,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\game\ObjectPosSelector.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\OutdoorPvPObjectiveAI.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\OutdoorPvPObjectiveAI.h"
 				>
 			</File>
 			<File

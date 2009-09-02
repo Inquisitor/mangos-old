@@ -619,7 +619,7 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
         if(!spiritOfRedemtionTalentReady)
             pVictim->setDeathState(JUST_DIED);
 
-		// outdoor pvp things, do these after setting the death state, else the player activity notify won't work... doh...
+        // outdoor pvp things, do these after setting the death state, else the player activity notify won't work... doh...
         // handle player kill only if not suicide (spirit of redemption for example)
         if(GetTypeId() == TYPEID_PLAYER && this != pVictim)
         {

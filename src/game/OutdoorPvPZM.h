@@ -150,8 +150,8 @@ enum ZM_TowerStateMask{
 class OutdoorPvPZM;
 class OutdoorPvPObjectiveZM_Beacon : public OutdoorPvPObjective
 {
-friend class OutdoorPvPZM;
-public:
+    friend class OutdoorPvPZM;
+    public:
     OutdoorPvPObjectiveZM_Beacon(OutdoorPvP * pvp, ZM_BeaconType type);
     bool Update(uint32 diff);
     void FillInitialWorldStates(WorldPacket & data);
@@ -159,9 +159,9 @@ public:
     void HandlePlayerEnter(Player * plr);
     void HandlePlayerLeave(Player * plr);
     void UpdateTowerState();
-protected:
+    protected:
     bool HandleCapturePointEvent(Player * plr, uint32 eventId);
-protected:
+    protected:
     ZM_BeaconType m_TowerType;
     uint32 m_TowerState;
 };
@@ -174,8 +174,8 @@ enum ZM_GraveYardState{
 
 class OutdoorPvPObjectiveZM_GraveYard : public OutdoorPvPObjective
 {
-friend class OutdoorPvPZM;
-public:
+    friend class OutdoorPvPZM;
+    public:
     OutdoorPvPObjectiveZM_GraveYard(OutdoorPvP * pvp);
     bool Update(uint32 diff);
     void FillInitialWorldStates(WorldPacket & data);
@@ -185,17 +185,17 @@ public:
     bool HandleGossipOption(Player * plr, uint64 guid, uint32 gossipid);
     bool HandleDropFlag(Player * plr, uint32 spellId);
     bool CanTalkTo(Player * plr, Creature * c, GossipOption &gso);
-private:
+    private:
     uint32 m_GraveYardState;
-protected:
+    protected:
     uint32 m_BothControllingFaction;
     uint64 m_FlagCarrierGUID;
 };
 
 class OutdoorPvPZM : public OutdoorPvP
 {
-friend class OutdoorPvPObjectiveZM_Beacon;
-public:
+    friend class OutdoorPvPObjectiveZM_Beacon;
+    public:
     OutdoorPvPZM();
     bool SetupOutdoorPvP();
     void HandlePlayerEnterZone(Player *plr, uint32 zone);
@@ -205,7 +205,7 @@ public:
     void SendRemoveWorldStates(Player * plr);
     void HandleKillImpl(Player * plr, Unit * killed);
     void BuffTeam(uint32 team);
-private:
+    private:
     OutdoorPvPObjectiveZM_GraveYard * m_GraveYard;
     uint32 m_AllianceTowersControlled;
     uint32 m_HordeTowersControlled;

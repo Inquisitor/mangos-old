@@ -22,7 +22,7 @@
 #include "OutdoorPvP.h"
 
 #define OutdoorPvPHPBuffZonesNum 6
-                                                         //  HP, citadel, ramparts, blood furnace, shattered halls, mag's lair
+//  HP, citadel, ramparts, blood furnace, shattered halls, mag's lair
 const uint32 OutdoorPvPHPBuffZones[OutdoorPvPHPBuffZonesNum] = { 3483, 3563, 3562, 3713, 3714, 3836 };
 
 const uint32 AllianceBuff = 32071;
@@ -84,22 +84,22 @@ const go_type HPTowerFlags[HP_TOWER_NUM] = {
 
 class OutdoorPvPObjectiveHP : public OutdoorPvPObjective
 {
-public:
-    OutdoorPvPObjectiveHP(OutdoorPvP * pvp, OutdoorPvPHPTowerType type);
-    bool Update(uint32 diff);
-    void FillInitialWorldStates(WorldPacket & data);
-    // used when player is activated/inactivated in the area
-    void HandlePlayerEnter(Player * plr);
-    void HandlePlayerLeave(Player * plr);
-    bool HandleCapturePointEvent(Player * plr, uint32 eventId);
-private:
-    OutdoorPvPHPTowerType m_TowerType;
+    public:
+        OutdoorPvPObjectiveHP(OutdoorPvP * pvp, OutdoorPvPHPTowerType type);
+        bool Update(uint32 diff);
+        void FillInitialWorldStates(WorldPacket & data);
+        // used when player is activated/inactivated in the area
+        void HandlePlayerEnter(Player * plr);
+        void HandlePlayerLeave(Player * plr);
+        bool HandleCapturePointEvent(Player * plr, uint32 eventId);
+    private:
+        OutdoorPvPHPTowerType m_TowerType;
 };
 
 class OutdoorPvPHP : public OutdoorPvP
 {
-friend class OutdoorPvPObjectiveHP;
-public:
+    friend class OutdoorPvPObjectiveHP;
+    public:
     OutdoorPvPHP();
     bool SetupOutdoorPvP();
     void HandlePlayerEnterZone(Player *plr, uint32 zone);
@@ -109,7 +109,7 @@ public:
     void SendRemoveWorldStates(Player * plr);
     void HandleKillImpl(Player * plr, Unit * killed);
     void BuffTeam(uint32 team);
-private:
+    private:
     // how many towers are controlled
     uint32 m_AllianceTowersControlled;
     uint32 m_HordeTowersControlled;

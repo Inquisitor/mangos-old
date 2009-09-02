@@ -128,57 +128,57 @@ bool OutdoorPvPSI::HandleAreaTrigger(Player *plr, uint32 trigger)
 {
     switch(trigger)
     {
-    case SI_AREATRIGGER_A:
-        if(plr->GetTeam() == ALLIANCE && plr->HasAura(SI_SILITHYST_FLAG,0))
-        {
-            // remove aura
-            plr->RemoveAurasDueToSpell(SI_SILITHYST_FLAG);
-            ++ m_Gathered_A;
-            if(m_Gathered_A >= SI_MAX_RESOURCES)
+        case SI_AREATRIGGER_A:
+            if(plr->GetTeam() == ALLIANCE && plr->HasAura(SI_SILITHYST_FLAG,0))
             {
-                BuffTeam(ALLIANCE);
-                sWorld.SendZoneText(OutdoorPvPSIBuffZones[0],objmgr.GetMangosString(LANG_OPVP_SI_CAPTURE_A,-1));
-                m_LastController = ALLIANCE;
-                m_Gathered_A = 0;
-                m_Gathered_H = 0;
+                // remove aura
+                plr->RemoveAurasDueToSpell(SI_SILITHYST_FLAG);
+                ++ m_Gathered_A;
+                if(m_Gathered_A >= SI_MAX_RESOURCES)
+                {
+                    BuffTeam(ALLIANCE);
+                    sWorld.SendZoneText(OutdoorPvPSIBuffZones[0],objmgr.GetMangosString(LANG_OPVP_SI_CAPTURE_A,-1));
+                    m_LastController = ALLIANCE;
+                    m_Gathered_A = 0;
+                    m_Gathered_H = 0;
+                }
+                UpdateWorldState();
+                // reward player
+                plr->CastSpell(plr,SI_TRACES_OF_SILITHYST,true);
+                // add 19 honor
+                plr->RewardHonor(NULL,1,19);
+                // add 20 cenarion circle repus
+                plr->GetReputationMgr().ModifyReputation(sFactionStore.LookupEntry(609), 20);
+                // complete quest
+                plr->KilledMonsterCredit(SI_TURNIN_QUEST_CM_A,0);
             }
-            UpdateWorldState();
-            // reward player
-            plr->CastSpell(plr,SI_TRACES_OF_SILITHYST,true);
-            // add 19 honor
-            plr->RewardHonor(NULL,1,19);
-            // add 20 cenarion circle repus 
-            plr->GetReputationMgr().ModifyReputation(sFactionStore.LookupEntry(609), 20);
-            // complete quest
-            plr->KilledMonsterCredit(SI_TURNIN_QUEST_CM_A,0);
-        }
-        return true;
-    case SI_AREATRIGGER_H:
-        if(plr->GetTeam() == HORDE && plr->HasAura(SI_SILITHYST_FLAG,0))
-        {
-            // remove aura
-            plr->RemoveAurasDueToSpell(SI_SILITHYST_FLAG);
-            ++ m_Gathered_H;
-            if(m_Gathered_H >= SI_MAX_RESOURCES)
+            return true;
+        case SI_AREATRIGGER_H:
+            if(plr->GetTeam() == HORDE && plr->HasAura(SI_SILITHYST_FLAG,0))
             {
-                BuffTeam(HORDE);
-                sWorld.SendZoneText(OutdoorPvPSIBuffZones[0],objmgr.GetMangosString(LANG_OPVP_SI_CAPTURE_H,-1));
-                m_LastController = HORDE;
-                m_Gathered_A = 0;
-                m_Gathered_H = 0;
-            }
-            UpdateWorldState();
-            // reward player
-            plr->CastSpell(plr,SI_TRACES_OF_SILITHYST,true);
-            // add 19 honor
-            plr->RewardHonor(NULL,1,19);
-            // add 20 cenarion circle repu
-            plr->GetReputationMgr().ModifyReputation(sFactionStore.LookupEntry(609), 20);
+                // remove aura
+                plr->RemoveAurasDueToSpell(SI_SILITHYST_FLAG);
+                ++ m_Gathered_H;
+                if(m_Gathered_H >= SI_MAX_RESOURCES)
+                {
+                    BuffTeam(HORDE);
+                    sWorld.SendZoneText(OutdoorPvPSIBuffZones[0],objmgr.GetMangosString(LANG_OPVP_SI_CAPTURE_H,-1));
+                    m_LastController = HORDE;
+                    m_Gathered_A = 0;
+                    m_Gathered_H = 0;
+                }
+                UpdateWorldState();
+                // reward player
+                plr->CastSpell(plr,SI_TRACES_OF_SILITHYST,true);
+                // add 19 honor
+                plr->RewardHonor(NULL,1,19);
+                // add 20 cenarion circle repu
+                plr->GetReputationMgr().ModifyReputation(sFactionStore.LookupEntry(609), 20);
 
-            // complete quest
-            plr->KilledMonsterCredit(SI_TURNIN_QUEST_CM_H,0);
-        }
-        return true;
+                // complete quest
+                plr->KilledMonsterCredit(SI_TURNIN_QUEST_CM_H,0);
+            }
+            return true;
     }
     return false;
 }
@@ -190,58 +190,58 @@ bool OutdoorPvPSI::HandleDropFlag(Player *plr, uint32 spellId)
         // if it was dropped away from the player's turn-in point, then create a silithyst mound, if it was dropped near the areatrigger, then it was dispelled by the outdoorpvp, so do nothing
         switch(plr->GetTeam())
         {
-        case ALLIANCE:
-            {
-                AreaTriggerEntry const* atEntry = sAreaTriggerStore.LookupEntry(SI_AREATRIGGER_A);
-                if(atEntry)
+            case ALLIANCE:
                 {
-                    // 5.0f is safe-distance
-                    if(plr->GetDistance(atEntry->x,atEntry->y,atEntry->z) > 5.0f + atEntry->radius)
+                    AreaTriggerEntry const* atEntry = sAreaTriggerStore.LookupEntry(SI_AREATRIGGER_A);
+                    if(atEntry)
                     {
-                        // he dropped it further, summon mound
-                        GameObject * go = new GameObject;
-                        Map * map = MapManager::Instance().CreateMap(plr->GetMapId(), plr);
-                        if(!map)
-                            return true;
-                        if(!go->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT),SI_SILITHYST_MOUND, map,PHASEMASK_NORMAL, plr->GetPositionX(),plr->GetPositionY(),plr->GetPositionZ(),plr->GetOrientation(),0,0,0,0,100,GO_STATE_READY))
+                        // 5.0f is safe-distance
+                        if(plr->GetDistance(atEntry->x,atEntry->y,atEntry->z) > 5.0f + atEntry->radius)
                         {
-                            delete go;
-                        }
-                        else
-                        {
-                            go->SetRespawnTime(0);
-                            map->Add(go);
+                            // he dropped it further, summon mound
+                            GameObject * go = new GameObject;
+                            Map * map = plr->GetMap();
+                            if(!map)
+                                return true;
+                            if(!go->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT),SI_SILITHYST_MOUND, map,PHASEMASK_NORMAL, plr->GetPositionX(),plr->GetPositionY(),plr->GetPositionZ(),plr->GetOrientation(),0,0,0,0,100, GO_STATE_READY))
+                            {
+                                delete go;
+                            }
+                            else
+                            {
+                                go->SetRespawnTime(0);
+                                map->Add(go);
+                            }
                         }
                     }
                 }
-            }
-            break;
-        case HORDE:
-            {
-                AreaTriggerEntry const* atEntry = sAreaTriggerStore.LookupEntry(SI_AREATRIGGER_H);
-                if(atEntry)
+                break;
+            case HORDE:
                 {
-                    // 5.0f is safe-distance
-                    if(plr->GetDistance(atEntry->x,atEntry->y,atEntry->z) > 5.0f + atEntry->radius)
+                    AreaTriggerEntry const* atEntry = sAreaTriggerStore.LookupEntry(SI_AREATRIGGER_H);
+                    if(atEntry)
                     {
-                        // he dropped it further, summon mound
-                        GameObject * go = new GameObject;
-                        Map * map = MapManager::Instance().CreateMap(plr->GetMapId(), plr);
-                        if(!map)
-                            return true;
-                        if(!go->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT),SI_SILITHYST_MOUND, map, PHASEMASK_NORMAL ,plr->GetPositionX(),plr->GetPositionY(),plr->GetPositionZ(),plr->GetOrientation(),0,0,0,0,100,GO_STATE_READY))
+                        // 5.0f is safe-distance
+                        if(plr->GetDistance(atEntry->x,atEntry->y,atEntry->z) > 5.0f + atEntry->radius)
                         {
-                            delete go;
-                        }
-                        else
-                        {
-                            go->SetRespawnTime(0);
-                            map->Add(go);
+                            // he dropped it further, summon mound
+                            GameObject * go = new GameObject;
+                            Map * map = plr->GetMap();
+                            if(!map)
+                                return true;
+                            if(!go->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT),SI_SILITHYST_MOUND, map, PHASEMASK_NORMAL ,plr->GetPositionX(),plr->GetPositionY(),plr->GetPositionZ(),plr->GetOrientation(),0,0,0,0,100, GO_STATE_READY))
+                            {
+                                delete go;
+                            }
+                            else
+                            {
+                                go->SetRespawnTime(0);
+                                map->Add(go);
+                            }
                         }
                     }
                 }
-            }
-            break;
+                break;
         }
         return true;
     }

@@ -1340,13 +1340,14 @@ void ObjectMgr::LoadGameobjects()
 
         data.animprogress   = fields[12].GetUInt32();
         uint32 go_state     = fields[13].GetUInt32();
-        data.ArtKit         = 0;
         if (go_state >= MAX_GO_STATE)
         {
             sLog.outErrorDb("Table `gameobject` have gameobject (GUID: %u Entry: %u) with invalid `state` (%u) value, skip",guid,data.id,go_state);
             continue;
         }
+
         data.go_state       = GOState(go_state);
+        data.ArtKit         = 0;
 
         data.spawnMask      = fields[14].GetUInt8();
         data.phaseMask      = fields[15].GetUInt16();
@@ -5368,6 +5369,7 @@ void ObjectMgr::RemoveGraveYardLink(uint32 id, uint32 zoneId, uint32 team, bool 
 
     return;
 }
+
 
 void ObjectMgr::LoadAreaTriggerTeleports()
 {

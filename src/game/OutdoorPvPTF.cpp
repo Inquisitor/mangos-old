@@ -287,7 +287,7 @@ bool OutdoorPvPObjectiveTF::Update(uint32 diff)
 {
     // can update even in locked state if gathers the controlling faction
     bool canupdate = ((((OutdoorPvPTF*)m_PvP)->m_AllianceTowersControlled > 0) && this->m_AllianceActivePlayerCount > this->m_HordeActivePlayerCount) ||
-            ((((OutdoorPvPTF*)m_PvP)->m_HordeTowersControlled > 0) && this->m_AllianceActivePlayerCount < this->m_HordeActivePlayerCount);
+        ((((OutdoorPvPTF*)m_PvP)->m_HordeTowersControlled > 0) && this->m_AllianceActivePlayerCount < this->m_HordeActivePlayerCount);
     // if gathers the other faction, then only update if the pvp is unlocked
     canupdate = canupdate || !((OutdoorPvPTF*)m_PvP)->m_IsLocked;
     if(canupdate && OutdoorPvPObjective::Update(diff))
@@ -313,27 +313,27 @@ bool OutdoorPvPObjectiveTF::Update(uint32 diff)
 
             switch(m_State)
             {
-            case OBJECTIVESTATE_ALLIANCE:
-                m_TowerState = TF_TOWERSTATE_A;
-                artkit = 2;
-                if(((OutdoorPvPTF*)m_PvP)->m_AllianceTowersControlled<TF_TOWER_NUM)
-                    ((OutdoorPvPTF*)m_PvP)->m_AllianceTowersControlled++;
-                sWorld.SendZoneText(OutdoorPvPTFBuffZones[0],objmgr.GetMangosString(LANG_OPVP_TF_CAPTURE_A,-1));
-                break;
-            case OBJECTIVESTATE_HORDE:
-                m_TowerState = TF_TOWERSTATE_H;
-                artkit = 1;
-                if(((OutdoorPvPTF*)m_PvP)->m_HordeTowersControlled<TF_TOWER_NUM)
-                    ((OutdoorPvPTF*)m_PvP)->m_HordeTowersControlled++;
-                sWorld.SendZoneText(OutdoorPvPTFBuffZones[0],objmgr.GetMangosString(LANG_OPVP_TF_CAPTURE_H,-1));
-                break;
-            case OBJECTIVESTATE_NEUTRAL:
-            case OBJECTIVESTATE_NEUTRAL_ALLIANCE_CHALLENGE:
-            case OBJECTIVESTATE_NEUTRAL_HORDE_CHALLENGE:
-            case OBJECTIVESTATE_ALLIANCE_HORDE_CHALLENGE:
-            case OBJECTIVESTATE_HORDE_ALLIANCE_CHALLENGE:
-                m_TowerState = TF_TOWERSTATE_N;
-                break;
+                case OBJECTIVESTATE_ALLIANCE:
+                    m_TowerState = TF_TOWERSTATE_A;
+                    artkit = 2;
+                    if(((OutdoorPvPTF*)m_PvP)->m_AllianceTowersControlled<TF_TOWER_NUM)
+                        ((OutdoorPvPTF*)m_PvP)->m_AllianceTowersControlled++;
+                    sWorld.SendZoneText(OutdoorPvPTFBuffZones[0],objmgr.GetMangosString(LANG_OPVP_TF_CAPTURE_A,-1));
+                    break;
+                case OBJECTIVESTATE_HORDE:
+                    m_TowerState = TF_TOWERSTATE_H;
+                    artkit = 1;
+                    if(((OutdoorPvPTF*)m_PvP)->m_HordeTowersControlled<TF_TOWER_NUM)
+                        ((OutdoorPvPTF*)m_PvP)->m_HordeTowersControlled++;
+                    sWorld.SendZoneText(OutdoorPvPTFBuffZones[0],objmgr.GetMangosString(LANG_OPVP_TF_CAPTURE_H,-1));
+                    break;
+                case OBJECTIVESTATE_NEUTRAL:
+                case OBJECTIVESTATE_NEUTRAL_ALLIANCE_CHALLENGE:
+                case OBJECTIVESTATE_NEUTRAL_HORDE_CHALLENGE:
+                case OBJECTIVESTATE_ALLIANCE_HORDE_CHALLENGE:
+                case OBJECTIVESTATE_HORDE_ALLIANCE_CHALLENGE:
+                    m_TowerState = TF_TOWERSTATE_N;
+                    break;
             }
 
             GameObject* flag = HashMapHolder<GameObject>::Find(m_CapturePoint);

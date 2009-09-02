@@ -641,7 +641,7 @@ enum MangosStrings
     LANG_ARENA_FIFTEEN_SECONDS          = 703,
     LANG_ARENA_HAS_BEGUN                = 704,
 
-	// opvp hp
+    // opvp hp
     LANG_OPVP_HP_CAPTURE_OVERLOOK_H     = 9001,
     LANG_OPVP_HP_CAPTURE_OVERLOOK_A     = 9002,
     LANG_OPVP_HP_CAPTURE_STADIUM_H      = 9003,

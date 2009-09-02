@@ -24,10 +24,10 @@
 
 class OutdoorPvPLA : public OutdoorPvP
 {
-public:
-    OutdoorPvPLA();
-    ~OutdoorPvPLA();
-    bool SetupOutdoorPvP();
+    public:
+        OutdoorPvPLA();
+        ~OutdoorPvPLA();
+        bool SetupOutdoorPvP();
 
 };
 

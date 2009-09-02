@@ -357,7 +357,7 @@ void WorldSession::LogoutPlayer(bool Save)
         if(BattleGround *bg = _player->GetBattleGround())
             bg->EventPlayerLoggedOut(_player);
 
-		///- Remove from OutdoorPvP
+        ///- Remove from OutdoorPvP
         sOutdoorPvPMgr.HandlePlayerLeaveZone(_player,_player->GetZoneId());
 
         ///- Teleport to home if the player is in an invalid instance

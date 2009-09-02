@@ -6266,9 +6266,10 @@ void Player::UpdateArea(uint32 newArea)
 
 void Player::UpdateZone(uint32 newZone, uint32 newArea)
 {
+
     uint32 oldZoneId  = m_zoneUpdateId;
 
-	if(m_zoneUpdateId != newZone)
+    if(m_zoneUpdateId != newZone)
         SendInitWorldStates(newZone, newArea);              // only if really enters to new zone, not just area change, works strange...
 
     m_zoneUpdateId    = newZone;
@@ -6281,7 +6282,7 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea)
     if(!zone)
         return;
 
-	// inform outdoor pvp
+    // inform outdoor pvp
     if(oldZoneId != m_zoneUpdateId)
     {
         sOutdoorPvPMgr.HandlePlayerLeaveZone(this, oldZoneId);
@@ -6439,7 +6440,9 @@ void Player::CheckDuelDistance(time_t currTime)
 
 bool Player::IsOutdoorPvPActive()
 {
-    return (isAlive() && !HasInvisibilityAura() && !HasStealthAura() && (HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_IN_PVP) || sWorld.IsPvPRealm())  && !m_movementInfo.HasMovementFlag(MOVEMENTFLAG_FLYING2) && !isInFlight());
+    return (isAlive() && !HasInvisibilityAura() && !HasStealthAura() &&
+           (HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_IN_PVP) || sWorld.IsPvPRealm()) &&
+           !m_movementInfo.HasMovementFlag(MOVEMENTFLAG_FLYING2) && !isInFlight());
 }
 
 void Player::DuelComplete(DuelCompleteType type)
@@ -7803,7 +7806,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
         case 1537:
         case 2257:
             break;
-		case 139: // EPL
+        case 139: // EPL
             {
                 OutdoorPvP * pvp = this->GetOutdoorPvP();
                 if(pvp && pvp->GetTypeId() == OUTDOOR_PVP_EP)
@@ -8041,8 +8044,8 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
                 // and some more ... unknown
             }
             break;
-		// any of these needs change! the client remembers the prev setting!
-		// ON EVERY ZONE LEAVE, RESET THE OLD ZONE'S WORLD STATE, BUT AT LEAST THE UI STUFF!
+        // any of these needs change! the client remembers the prev setting!
+        // ON EVERY ZONE LEAVE, RESET THE OLD ZONE'S WORLD STATE, BUT AT LEAST THE UI STUFF!
         case 3483:                                          // Hellfire Peninsula
             {
                 OutdoorPvP * pvp = this->GetOutdoorPvP();
@@ -8107,7 +8110,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
 
                     data << uint32(2671) << uint32(0x0);    // 33
                     data << uint32(2676) << uint32(0x0);    // 34
-                   data << uint32(2677) << uint32(0x0);    // 35
+                    data << uint32(2677) << uint32(0x0);    // 35
                     data << uint32(2672) << uint32(0x0);    // 36
                     data << uint32(2673) << uint32(0x0);    // 37
                 }
@@ -8129,7 +8132,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
                     data << uint32(0xa88) << uint32(0x0);           // 16 // 2696 SE Neu
                     data << uint32(0xa87) << uint32(0x0);           // 17 // SE Horde
                     data << uint32(0xa86) << uint32(0x0);           // 18 // SE Ally
-                   data << uint32(0xa85) << uint32(0x0);           // 19 //S Neu
+                    data << uint32(0xa85) << uint32(0x0);           // 19 //S Neu
                     data << uint32(0xa84) << uint32(0x0);           // 20 S Horde
                     data << uint32(0xa83) << uint32(0x0);           // 21 S Ally
                     data << uint32(0xa82) << uint32(0x0);           // 22 NE Neu

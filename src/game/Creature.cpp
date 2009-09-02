@@ -809,7 +809,7 @@ void Creature::prepareGossipMenu( Player *pPlayer,uint32 gossipid )
                     case GOSSIP_OPTION_TABARDDESIGNER:
                     case GOSSIP_OPTION_AUCTIONEER:
                         break;                              // no checks
-					case GOSSIP_OPTION_OUTDOORPVP:
+                    case GOSSIP_OPTION_OUTDOORPVP:
                         if ( !sOutdoorPvPMgr.CanTalkTo(pPlayer,this,(*gso)) )
                              cantalking = false;
                          break;
@@ -904,8 +904,8 @@ void Creature::OnGossipSelect(Player* player, uint32 option)
             player->PlayerTalkClass->SendTalking(textid);
             break;
         }
-		case GOSSIP_OPTION_OUTDOORPVP:
-             sOutdoorPvPMgr.HandleGossipOption(player, GetGUID(), gossip->GossipId);
+        case GOSSIP_OPTION_OUTDOORPVP:
+            sOutdoorPvPMgr.HandleGossipOption(player, GetGUID(), gossip->GossipId);
             break;
         case GOSSIP_OPTION_SPIRITHEALER:
             if (player->isDead())

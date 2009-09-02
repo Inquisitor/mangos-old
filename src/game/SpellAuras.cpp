@@ -4007,10 +4007,10 @@ void Aura::HandleModStealth(bool apply, bool Real)
                 m_target->SetVisibility(VISIBILITY_GROUP_STEALTH);
             }
 
-			// remove player from the objective's active player count at stealth
-            if(m_target->GetTypeId() == TYPEID_PLAYER)
+            // remove player from the objective's active player count at stealth
+            if (m_target->GetTypeId() == TYPEID_PLAYER)
             {
-                if(OutdoorPvP * pvp = ((Player*)m_target)->GetOutdoorPvP())
+                if (OutdoorPvP* pvp = ((Player*)m_target)->GetOutdoorPvP())
                     pvp->HandlePlayerActivityChanged((Player*)m_target);
             }
 
@@ -4059,9 +4059,9 @@ void Aura::HandleModStealth(bool apply, bool Real)
                 else
                     m_target->SetVisibility(VISIBILITY_ON);
 
-				if(m_target->GetTypeId() == TYPEID_PLAYER)
+                if (m_target->GetTypeId() == TYPEID_PLAYER)
                 {
-                    if(OutdoorPvP * pvp = ((Player*)m_target)->GetOutdoorPvP())
+                    if (OutdoorPvP* pvp = ((Player*)m_target)->GetOutdoorPvP())
                        pvp->HandlePlayerActivityChanged((Player*)m_target);
                 }
             }
@@ -4095,6 +4095,9 @@ void Aura::HandleInvisibility(bool apply, bool Real)
         {
             // apply glow vision
             m_target->SetFlag(PLAYER_FIELD_BYTES2,PLAYER_FIELD_BYTE2_INVISIBILITY_GLOW);
+            // remove player from the objective's active player count at invisibility
+            if(OutdoorPvP *pvp = ((Player*)m_target)->GetOutdoorPvP())
+                pvp->HandlePlayerActivityChanged((Player*)m_target);
 
 			// remove player from the objective's active player count at invisibility
             if(OutdoorPvP * pvp = ((Player*)m_target)->GetOutdoorPvP())
@@ -4131,9 +4134,9 @@ void Aura::HandleInvisibility(bool apply, bool Real)
                 if(!m_target->HasAuraType(SPELL_AURA_MOD_STEALTH))
                     m_target->SetVisibility(VISIBILITY_ON);
 
-				if(m_target->GetTypeId() == TYPEID_PLAYER)
+                if(m_target->GetTypeId() == TYPEID_PLAYER)
                 {
-                    if(OutdoorPvP * pvp = ((Player*)m_target)->GetOutdoorPvP())
+                    if(OutdoorPvP *pvp = ((Player*)m_target)->GetOutdoorPvP())
                         pvp->HandlePlayerActivityChanged((Player*)m_target);
 
                     m_target->SendUpdateToPlayer((Player*)m_target);
@@ -4544,10 +4547,12 @@ void Aura::HandleAuraModEffectImmunity(bool apply, bool /*Real*/)
             bg->EventPlayerDroppedFlag(((Player*)m_target));
 		else if(OutdoorPvP * pvp = ((Player*)m_target)->GetOutdoorPvP())
             sOutdoorPvPMgr.HandleDropFlag((Player*)m_target,GetSpellProto()->Id);
-    }
+	}
 
     m_target->ApplySpellImmune(GetId(), IMMUNITY_EFFECT, m_modifier.m_miscvalue, apply);
 }
+
+
 
 void Aura::HandleAuraModStateImmunity(bool apply, bool Real)
 {
