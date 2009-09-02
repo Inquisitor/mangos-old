@@ -723,7 +723,7 @@ void Object::_BuildValuesUpdate(uint8 updatetype, ByteBuffer * data, UpdateMask 
                         }
                     }
                     else
-                        *data << uint32(0);                 // disable quest object
+                        *data << uint32(0xFFFF0000);                 // disable quest object
                 }
                 else
                     *data << m_uint32Values[ index ];       // other cases
