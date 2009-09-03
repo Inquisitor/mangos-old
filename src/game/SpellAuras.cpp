@@ -6404,29 +6404,36 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
         if (m_target->GetTypeId()!=TYPEID_PLAYER || !((Player*)m_target)->GetSession()->PlayerLoading())
         {
             float DoneActualBenefit = 0.0f;
+
+            //check for SpellMod Scaling
+            float SpellModSpellPowerScaling = 100.0f;
+            if( Player* modOwner = caster->GetSpellModOwner() )
+                modOwner->ApplySpellMod(m_spellProto->Id, SPELLMOD_SPELL_BONUS_DAMAGE, SpellModSpellPowerScaling);
+            SpellModSpellPowerScaling = (SpellModSpellPowerScaling - 100.0f)/100.0f;
+
             switch(m_spellProto->SpellFamilyName)
             {
                 case SPELLFAMILY_PRIEST:
                     // Power Word: Shield
                     if (m_spellProto->SpellFamilyFlags & UI64LIT(0x0000000000000001))
                         //+80.68% from +spell bonus
-                        DoneActualBenefit = caster->SpellBaseHealingBonus(GetSpellSchoolMask(m_spellProto)) * 0.8068f;
+                        DoneActualBenefit = caster->SpellBaseHealingBonus(GetSpellSchoolMask(m_spellProto)) * (0.8068f + SpellModSpellPowerScaling);
                     break;
                 case SPELLFAMILY_MAGE:
                     // Frost Ward, Fire Ward
                     if (m_spellProto->SpellFamilyFlags & UI64LIT(0x0000000000000108))
                         //+10% from +spell bonus
-                        DoneActualBenefit = caster->SpellBaseDamageBonus(GetSpellSchoolMask(m_spellProto)) * 0.1f;
+                        DoneActualBenefit = caster->SpellBaseDamageBonus(GetSpellSchoolMask(m_spellProto)) * (0.1f + SpellModSpellPowerScaling);
                     // Ice Barrier
                     else if (m_spellProto->SpellFamilyFlags & UI64LIT(0x0000000100000000))
                         //+80.67% from +spell bonus
-                        DoneActualBenefit = caster->SpellBaseDamageBonus(GetSpellSchoolMask(m_spellProto)) * 0.8067f;
+                        DoneActualBenefit = caster->SpellBaseDamageBonus(GetSpellSchoolMask(m_spellProto)) * (0.8067f + SpellModSpellPowerScaling);
                     break;
                 case SPELLFAMILY_WARLOCK:
                     // Shadow Ward
                     if (m_spellProto->SpellFamilyFlags2 & 0x00000040)
                         //+30% from +spell bonus
-                        DoneActualBenefit = caster->SpellBaseDamageBonus(GetSpellSchoolMask(m_spellProto)) * 0.30f;
+                        DoneActualBenefit = caster->SpellBaseDamageBonus(GetSpellSchoolMask(m_spellProto)) * (0.30f+ SpellModSpellPowerScaling);
                     break;
                 case SPELLFAMILY_DRUID:
                     // Savage Defense (amount store original percent of attack power applied)
