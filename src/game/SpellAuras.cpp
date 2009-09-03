@@ -1372,9 +1372,9 @@ void Aura::HandleAddModifier(bool apply, bool Real)
     // reapply talents to own passive persistent auras
     ReapplyAffectedPassiveAuras(m_target);
 
+
     // Improved Barkskin
-    /*
-    else if(m_spellProto->SpellFamilyName==SPELLFAMILY_DRUID && (m_spellmod->mask2 & UI64LIT(0x20000)))
+    if(m_spellProto->SpellFamilyName==SPELLFAMILY_DRUID && (m_spellmod->mask2 & UI64LIT(0x20000)))
     {
         m_target->RemoveAurasDueToSpell(66530);
 
@@ -1382,7 +1382,6 @@ void Aura::HandleAddModifier(bool apply, bool Real)
         if(apply && (m_target->m_form == FORM_NONE || m_target->m_form == FORM_TRAVEL))
             m_target->CastSpell(m_target,66530,true);
     }
-    */
 
     // re-aplly talents and passives applied to pet (it affected by player spellmods)
     if(Pet* pet = m_target->GetPet())
@@ -6026,16 +6025,17 @@ void Aura::HandleShapeshiftBoosts(bool apply)
     }
 
     // Improved Barkskin - apply/remove armor bonus due to shapeshift
-    /*
     if (m_target->HasAura(63410) || m_target->HasAura(63411))
     {
         SpellEntry const *spellInfo = sSpellStore.LookupEntry(66530);
         if (!apply || (spellInfo && (spellInfo->Stances & (1<<(form-1))) ))
+        {
+            m_target->RemoveAurasDueToSpell(66530);
             m_target->CastSpell(m_target, 66530, true);
+        }
         else
             m_target->RemoveAurasDueToSpell(66530);
     }
-    */
 
     /*double healthPercentage = (double)m_target->GetHealth() / (double)m_target->GetMaxHealth();
     m_target->SetHealth(uint32(ceil((double)m_target->GetMaxHealth() * healthPercentage)));*/
