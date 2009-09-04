@@ -660,14 +660,15 @@ void Player::UpdateExpertise(WeaponAttackType attack)
 
 void Player::UpdateArmorPenetration()
 {
-    float amount = uint32(m_baseRatingValue[CR_ARMOR_PENETRATION]);
+    m_armorPenetrationPct = GetRatingBonusValue(CR_ARMOR_PENETRATION);
+
     AuraList const& armorAuras = GetAurasByType(SPELL_AURA_MOD_TARGET_ARMOR_PCT);
     for(AuraList::const_iterator itr = armorAuras.begin(); itr != armorAuras.end(); ++itr)
     {
         // affects all weapons
         if((*itr)->GetSpellProto()->EquippedItemClass == -1)
         {
-            amount += (*itr)->GetModifier()->m_amount*GetRatingCoefficient(CR_ARMOR_PENETRATION);
+            m_armorPenetrationPct += (*itr)->GetModifier()->m_amount;
             continue;
         }
 
@@ -676,11 +677,12 @@ void Player::UpdateArmorPenetration()
         {
             Item *weapon = GetWeaponForAttack(WeaponAttackType(i));
             if(weapon && weapon->IsFitToSpellRequirements((*itr)->GetSpellProto()))
-                amount += (*itr)->GetModifier()->m_amount*GetRatingCoefficient(CR_ARMOR_PENETRATION);
+            {
+                m_armorPenetrationPct += (*itr)->GetModifier()->m_amount;
+                break;
+            }
         }
     }
-
-    SetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + CR_ARMOR_PENETRATION, uint32(amount));
 }
 
 void Player::ApplyManaRegenBonus(int32 amount, bool apply)
