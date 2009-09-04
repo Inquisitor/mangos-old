@@ -6564,7 +6564,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune (not use charges)
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+            if(m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             // some auras remove at specific health level or more
@@ -6682,7 +6682,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+            if(m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             uint32 absorb=0;
@@ -6852,7 +6852,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune (not use charges)
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+            if(m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             // ignore non positive values (can be result apply spellmods to aura damage
@@ -6966,7 +6966,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune (not use charges)
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+            if(m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             int32 pdamage = m_modifier.m_amount > 0 ? m_modifier.m_amount : 0;
