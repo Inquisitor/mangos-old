@@ -392,6 +392,7 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
         case 52986:                                         // Penance heal effect trigger - Rank 2
         case 52987:                                         // Penance heal effect trigger - Rank 3
         case 52988:                                         // Penance heal effect trigger - Rank 4
+        case 642:                                           // Divine Shield
             return true;
     }
 
