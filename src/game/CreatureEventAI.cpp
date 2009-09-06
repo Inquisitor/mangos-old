@@ -1113,8 +1113,9 @@ bool CreatureEventAI::OnTalk(Player* pUnit)
     for (std::list<CreatureEventAIHolder>::iterator i = CreatureEventAIList.begin(); i != CreatureEventAIList.end(); ++i)
         if ((*i).Event.event_type == EVENT_T_PLAYER_TALK)
 		{
-			ProcessEvent(*i, (Unit*)pUnit);
-			return true;
+			if( ProcessEvent(*i, (Unit*)pUnit) )
+				return true;
+			return false;
 		}
 		return false;
 }
@@ -1129,8 +1130,9 @@ bool CreatureEventAI::OnGossipSelect(Player* pPlayer, uint32 Id)
 		{
             if ((*i).Event.gossip.GossipId && (*i).Event.gossip.GossipId == Id)
 			{
-				ProcessEvent(*i, (Unit*)pPlayer);
-				return true;
+				if( ProcessEvent(*i, (Unit*)pPlayer) )
+					return true;
+				return false;
 			}
 		}
 	return false;
