@@ -121,7 +121,7 @@ enum EventAI_ActionType
     ACTION_T_SET_SHEATH                 = 40,               // Sheath (0-passive,1-melee,2-ranged)
     ACTION_T_FORCE_DESPAWN              = 41,               // No Params
     ACTION_T_SET_INVINCIBILITY_HP_LEVEL = 42,               // MinHpValue, format(0-flat,1-percent from max health)
-	ACTION_T_ADD_GOSSIP					= 43,               // Gossip Id, TextId (from creature_ai_texts), 
+	ACTION_T_ADD_GOSSIP					= 43,               // Gossip Id, TextId (from creature_ai_texts), TitleTextId (from npc_text)
 	ACTION_T_SUMMON_GOBJECT				= 44,				// Object ID, Target, Duration in ms
     ACTION_T_END,
 };
@@ -400,6 +400,7 @@ struct CreatureEventAI_Action
         {
             uint32 id;
             uint32 text;
+			uint32 titletext;
         } add_gossip;
 		struct
         {

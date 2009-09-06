@@ -831,7 +831,7 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
 			}
 			((Player*)pActionInvoker)->PlayerTalkClass->ClearMenus();
 			((Player*)pActionInvoker)->PlayerTalkClass->GetGossipMenu().AddMenuItem(0, text, 1, action.add_gossip.id, "", 0 );
-			((Player*)pActionInvoker)->PlayerTalkClass->SendGossipMenu( m_creature->GetNpcTextId(), m_creature->GetGUID() );
+			((Player*)pActionInvoker)->PlayerTalkClass->SendGossipMenu( action.add_gossip.titletext == 0 ? m_creature->GetNpcTextId() : action.add_gossip.titletext, m_creature->GetGUID() );
             break;
         }
 		case ACTION_T_SUMMON_GOBJECT:
