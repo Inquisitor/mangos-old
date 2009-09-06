@@ -2352,9 +2352,12 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
 			case 31606:
 			{
 				if( caster->GetTypeId() == TYPEID_PLAYER && ((Player*)caster)->GetQuestStatus(9718) == QUEST_STATUS_INCOMPLETE )
-				{
 					((Player*)caster)->CompleteQuest( 9718 );
-				}
+			}
+			case 50141:
+			{
+				if( caster->GetTypeId() == TYPEID_PLAYER && ((Player*)caster)->GetQuestStatus(11989) == QUEST_STATUS_INCOMPLETE )
+					((Player*)caster)->CastSpell( caster, 50001, true );
 			}
         }
 
