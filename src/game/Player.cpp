@@ -1251,14 +1251,7 @@ void Player::Update( uint32 p_time )
 
     if (isAlive())
     {
-        // if no longer casting, set regen power as soon as it is up.
-        if (!IsUnderLastManaUseEffect())
-        {
-            SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_REGENERATE_POWER);
-        }
-
-        if (m_regenTimer == 0)
-            RegenerateAll();
+        RegenerateAll();
     }
 
     if (m_deathState == JUST_DIED)
@@ -1924,41 +1917,34 @@ void Player::RegenerateAll()
     if (!isAlive())
         return;
 
-    uint32 now = getMSTime(); // in msec
-    uint32 diff = getMSTimeDiff(m_lastRegenerate, now);
-    uint32 regenDelay = 2000; // default time to next regenerate.
-
-    // avoid to fast re-computation.
-    if (diff < 400)
+    if (m_regenTimer != 0)
         return;
-
-    m_lastRegenerate = now;
+    uint32 regenDelay = 2000;
 
     // Not in combat or they have regeneration
-    if (!isInCombat() || HasAuraType(SPELL_AURA_MOD_REGEN_DURING_COMBAT) ||
+    if( !isInCombat() || HasAuraType(SPELL_AURA_MOD_REGEN_DURING_COMBAT) ||
         HasAuraType(SPELL_AURA_MOD_HEALTH_REGEN_IN_COMBAT) || IsPolymorphed() )
     {
-        RegenerateHealth(diff);
+        RegenerateHealth();
         if (!isInCombat() && !HasAuraType(SPELL_AURA_INTERRUPT_REGEN))
         {
-            Regenerate(POWER_RAGE, diff);
+            Regenerate(POWER_RAGE);
             if(getClass() == CLASS_DEATH_KNIGHT)
-                Regenerate(POWER_RUNIC_POWER, diff);
+                Regenerate(POWER_RUNIC_POWER);
         }
     }
 
-    Regenerate(POWER_ENERGY, diff);
+    Regenerate( POWER_ENERGY );
 
-    Regenerate(POWER_MANA, diff);
+    Regenerate( POWER_MANA );
 
-    if (getClass() == CLASS_DEATH_KNIGHT)
-        Regenerate(POWER_RUNE, diff);
+    if(getClass() == CLASS_DEATH_KNIGHT)
+        Regenerate( POWER_RUNE );
 
     m_regenTimer = regenDelay;
 }
 
-// diff contains the time in milliseconds since last regen.
-void Player::Regenerate(Powers power, uint32 diff)
+void Player::Regenerate(Powers power)
 {
     uint32 curValue = GetPower(power);
     uint32 maxValue = GetMaxPower(power);
@@ -1997,17 +1983,8 @@ void Player::Regenerate(Powers power, uint32 diff)
         case POWER_RUNE:
         {
             for(uint32 i = 0; i < MAX_RUNES; ++i)
-                if(uint16 cd = GetRuneCooldown(i))           // if we have cooldown, reduce it...
-                {
-                    if (cd < diff)
-                    {
-                        SetRuneCooldown(i, 0);
-                    }
-                    else
-                    {
-                        SetRuneCooldown(i, cd - diff);
-                    }
-                }
+                if(uint8 cd = GetRuneCooldown(i))           // if we have cooldown, reduce it...
+                    SetRuneCooldown(i, cd - 1);             // ... by 2 sec (because update is every 2 sec)
         }   break;
         case POWER_FOCUS:
         case POWER_HAPPINESS:
@@ -2025,9 +2002,6 @@ void Player::Regenerate(Powers power, uint32 diff)
                 addvalue *= ((*i)->GetModifier()->m_amount + 100) / 100.0f;
     }
 
-    // addvalue computed on a 2sec basis. => update to diff time
-    addvalue *= float(diff)/2000.0f;
-
     if (power != POWER_RAGE && power != POWER_RUNIC_POWER)
     {
         curValue += uint32(addvalue);
@@ -2044,7 +2018,7 @@ void Player::Regenerate(Powers power, uint32 diff)
     SetPower(power, curValue);
 }
 
-void Player::RegenerateHealth(uint32 diff)
+void Player::RegenerateHealth()
 {
     uint32 curValue = GetHealth();
     uint32 maxValue = GetMaxHealth();
@@ -2080,8 +2054,6 @@ void Player::RegenerateHealth(uint32 diff)
 
     if(addvalue < 0)
         addvalue = 0;
-
-    addvalue *= (diff/2000.0f);
 
     ModifyHealth(int32(addvalue));
 }
@@ -14562,8 +14534,6 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     // since last logout (in seconds)
     uint64 time_diff = uint64(now - logoutTime);
 
-    m_lastRegenerate = now;
-
     // set value, including drunk invisibility detection
     // calculate sobering. after 15 minutes logged out, the player will be sober again
     float soberFactor;
@@ -19820,7 +19790,7 @@ void Player::ResyncRunes(uint8 count)
     for(uint32 i = 0; i < count; ++i)
     {
         data << uint8(GetCurrentRune(i));                   // rune type
-        data << uint8(255 - ((GetRuneCooldown(i)/2000) * 51));     // passed cooldown time (0-255)
+        data << uint8(255 - (GetRuneCooldown(i) * 51));     // passed cooldown time (0-255)
     }
     GetSession()->SendPacket(&data);
 }
