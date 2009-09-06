@@ -4166,7 +4166,14 @@ SpellCastResult Spell::CheckCast(bool strict)
         // Dispel spells are considered negative, so let's do explicit check
         if(IsPositiveSpell(m_spellInfo->Id) || (IsDispelSpell(m_spellInfo) && m_caster->IsFriendlyTo(target)))
             if(target->IsImmunedToSpell(m_spellInfo))
-                return SPELL_FAILED_TARGET_AURASTATE;
+            {
+                // Divine Shield - very ugly hack to allow (some) positive effects being casted while under effect
+                if (!target->HasAura(642))
+                    return SPELL_FAILED_TARGET_AURASTATE;
+                else // Avenging Wrath, Divine Shield, Divine Protection or Hand of Protection
+                    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_PALADIN && m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000200000400080))
+                        return SPELL_FAILED_TARGET_AURASTATE;
+            }
 
         //Must be behind the target.
         if( m_spellInfo->AttributesEx2 == 0x100000 && (m_spellInfo->AttributesEx & 0x200) == 0x200 && target->HasInArc(M_PI, m_caster) )
@@ -5293,9 +5300,6 @@ SpellCastResult Spell::CheckPower()
     // item cast not used power
     if(m_CastItem)
         return SPELL_CAST_OK;
-
-    if (m_powerCost > 0 && m_caster->GetTypeId() == TYPEID_PLAYER)
-        ((Player*)m_caster)->RegenerateAll();
 
     // health as power used - need check health amount
     if(m_spellInfo->powerType == POWER_HEALTH)

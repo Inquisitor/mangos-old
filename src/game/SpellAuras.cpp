@@ -311,7 +311,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleNoReagentUseAura,                          //256 SPELL_AURA_NO_REAGENT_USE Use SpellClassMask for spell select
     &Aura::HandleNULL,                                      //257 SPELL_AURA_MOD_TARGET_RESIST_BY_SPELL_CLASS Use SpellClassMask for spell select
     &Aura::HandleNULL,                                      //258 SPELL_AURA_MOD_SPELL_VISUAL
-    &Aura::HandleNULL,                                      //259 corrupt healing over time spell
+    &Aura::HandleNoImmediateEffect,                         //259 SPELL_AURA_DECREASE_PERIODIC_HEAL               implemented in Unit::SpellHealingBonus
     &Aura::HandleNoImmediateEffect,                         //260 SPELL_AURA_SCREEN_EFFECT (miscvalue = id in ScreenEffect.dbc) not required any code
     &Aura::HandlePhase,                                     //261 SPELL_AURA_PHASE undetactable invisibility?     implemented in Unit::isVisibleForOrDetect
     &Aura::HandleNoImmediateEffect,                         //262 SPELL_AURA_IGNORE_TARGET_AURA_STATE implemented in Spell::CheckCast()
@@ -6564,7 +6564,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune (not use charges)
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+            if(m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             // some auras remove at specific health level or more
@@ -6682,7 +6682,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+            if(m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             uint32 absorb=0;
@@ -6852,7 +6852,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune (not use charges)
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+            if(m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             // ignore non positive values (can be result apply spellmods to aura damage
@@ -6966,7 +6966,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune (not use charges)
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+            if(m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             int32 pdamage = m_modifier.m_amount > 0 ? m_modifier.m_amount : 0;

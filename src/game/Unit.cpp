@@ -2763,13 +2763,8 @@ SpellMissInfo Unit::SpellHitResult(Unit *pVictim, SpellEntry const *spell, bool 
         return SPELL_MISS_IMMUNE;
 
     // All positive spells can`t miss
-    // TODO: client not show miss log for this spells - so need find info for this in dbc and use it!
     if (IsPositiveSpell(spell->Id))
         return SPELL_MISS_NONE;
-
-    // Check for immune
-    if (pVictim->IsImmunedToDamage(GetSpellSchoolMask(spell)))
-        return SPELL_MISS_IMMUNE;
 
     // Try victim reflect spell
     if (CanReflect)
@@ -9123,6 +9118,13 @@ uint32 Unit::SpellHealingBonus(Unit *pVictim, SpellEntry const *spellProto, uint
             TakenTotalMod *= ((*i)->GetModifier()->m_amount + 100.0f) / 100.0f;
 
     heal = (heal + TakenTotal) * TakenTotalMod;
+
+    if (damagetype == DOT)
+    {
+        AuraList const& mDecreaseHealingDoT = pVictim->GetAurasByType(SPELL_AURA_DECREASE_PERIODIC_HEAL);
+        for(AuraList::const_iterator i = mDecreaseHealingDoT.begin(); i != mDecreaseHealingDoT.end(); ++i)
+            TakenTotalMod *= ((*i)->GetModifier()->m_amount + 100.0f) / 100.0f;
+    }
 
     return heal < 0 ? 0 : uint32(heal);
 }
