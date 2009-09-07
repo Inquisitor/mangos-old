@@ -123,6 +123,7 @@ enum EventAI_ActionType
     ACTION_T_SET_INVINCIBILITY_HP_LEVEL = 42,               // MinHpValue, format(0-flat,1-percent from max health)
 	ACTION_T_ADD_GOSSIP					= 43,               // Gossip Id, TextId (from creature_ai_texts), TitleTextId (from npc_text)
 	ACTION_T_SUMMON_GOBJECT				= 44,				// Object ID, Target, Duration in ms
+	ACTION_T_CLOSE_GOSSIP				= 45,				// No Params
     ACTION_T_END,
 };
 

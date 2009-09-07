@@ -857,6 +857,11 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
 
             break;
         }
+		case ACTION_T_CLOSE_GOSSIP:
+		{
+			((Player*)pActionInvoker)->PlayerTalkClass->CloseGossip();
+			break;
+		}
     }
 }
 
