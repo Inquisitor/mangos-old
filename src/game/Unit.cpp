@@ -142,7 +142,7 @@ Unit::Unit()
     m_baseSpellCritChance = 5;
 
     m_CombatTimer = 0;
-    m_lastManaUse = 0;
+    m_lastManaUseTimer = 0;
 
     //m_victimThreat = 0.0f;
     for (int i = 0; i < MAX_SPELL_SCHOOL; ++i)
@@ -199,6 +199,14 @@ void Unit::Update( uint32 p_time )
 
 	if (CanHaveThreatList() && getThreatManager().isNeedUpdateToClient(p_time))
         SendThreatListUpdate();
+
+    if (m_lastManaUseTimer)
+    {
+        if (p_time >= m_lastManaUseTimer)
+            m_lastManaUseTimer = 0;
+        else
+            m_lastManaUseTimer -= p_time;
+    }
 
     // really delete auras "deleted" while processing its ApplyModify code
     for(AuraList::const_iterator itr = m_deletedAuras.begin(); itr != m_deletedAuras.begin(); ++itr)
@@ -6744,7 +6752,6 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                     {
                         if ((*i)->GetModifier()->m_miscvalue == SPELLMOD_CHANCE_OF_SUCCESS && (*i)->GetSpellProto()->SpellIconID == 113)
                         {
-                            int32 value2 = CalculateSpellDamage((*i)->GetSpellProto(),2,(*i)->GetSpellProto()->EffectBasePoints[2],this);
                             // Drain Soul
                             CastCustomSpell(this, 18371, &basepoints[0], NULL, NULL, true, castItem, triggeredByAura);
                             break;
@@ -12260,11 +12267,6 @@ Aura* Unit::GetDummyAura( uint32 spell_id ) const
             return *itr;
 
     return NULL;
-}
-
-bool Unit::IsUnderLastManaUseEffect() const
-{
-    return  getMSTimeDiff(m_lastManaUse,getMSTime()) < 5000;
 }
 
 void Unit::SetContestedPvP(Player *attackedPlayer)
