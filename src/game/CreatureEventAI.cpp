@@ -831,7 +831,7 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
 			}
 			((Player*)pActionInvoker)->PlayerTalkClass->ClearMenus();
 			((Player*)pActionInvoker)->PlayerTalkClass->GetGossipMenu().AddMenuItem(0, text, 1, action.add_gossip.id, "", 0 );
-			((Player*)pActionInvoker)->PlayerTalkClass->SendGossipMenu( m_creature->GetNpcTextId(), m_creature->GetGUID() );
+			((Player*)pActionInvoker)->PlayerTalkClass->SendGossipMenu( action.add_gossip.titletext == 0 ? m_creature->GetNpcTextId() : action.add_gossip.titletext, m_creature->GetGUID() );
             break;
         }
 		case ACTION_T_SUMMON_GOBJECT:
@@ -1113,8 +1113,9 @@ bool CreatureEventAI::OnTalk(Player* pUnit)
     for (std::list<CreatureEventAIHolder>::iterator i = CreatureEventAIList.begin(); i != CreatureEventAIList.end(); ++i)
         if ((*i).Event.event_type == EVENT_T_PLAYER_TALK)
 		{
-			ProcessEvent(*i, (Unit*)pUnit);
-			return true;
+			if( ProcessEvent(*i, (Unit*)pUnit) )
+				return true;
+			return false;
 		}
 		return false;
 }
@@ -1129,8 +1130,9 @@ bool CreatureEventAI::OnGossipSelect(Player* pPlayer, uint32 Id)
 		{
             if ((*i).Event.gossip.GossipId && (*i).Event.gossip.GossipId == Id)
 			{
-				ProcessEvent(*i, (Unit*)pPlayer);
-				return true;
+				if( ProcessEvent(*i, (Unit*)pPlayer) )
+					return true;
+				return false;
 			}
 		}
 	return false;
