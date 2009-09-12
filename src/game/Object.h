@@ -496,6 +496,8 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         GameObject* SummonGameObject(uint32 id, float x, float y, float z, float ang, uint32 despwtime);
 		Vehicle* SummonVehicle(uint32 id, float x, float y, float z, float ang, uint32 vehicleId = NULL);
 
+		Creature* GetClosestCreatureWithEntry(WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange);
+
     protected:
         explicit WorldObject();
         std::string m_name;
