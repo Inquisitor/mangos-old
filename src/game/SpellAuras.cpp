@@ -7529,22 +7529,32 @@ void Aura::HandleAuraControlVehicle(bool apply, bool Real)
          return;
 
     Unit *caster = GetCaster();
-    Vehicle *vehicle = dynamic_cast<Vehicle*>(m_target);
-    if(!caster || !vehicle)
-        return;
+    Vehicle *vehicle = static_cast<Vehicle*>(m_target);
+	caster->MonsterYell("caster", LANG_UNIVERSAL, 0);
+	m_target->MonsterYell("target", LANG_UNIVERSAL, 0);
+ //   if(!caster || !vehicle)
+//	{
+//		printf("\n\n no caster or vehicle !! \n\n ");
+  //      return;
+//	}
     
     // this can happen due to wrong caster/target spell handling
     // note : SPELL_AURA_CONTROL_VEHICLE can have EffectImplicitTargetA
     // TARGET_SCRIPT, TARGET_DUELVSPLAYER.. etc
     if(caster->GetGUID() == vehicle->GetGUID())
+	{
+		printf("\n\n !! we are the same guid as vehicle !! \n\n ");
         return;
+	}
 
     if (apply)
     {
         if(caster->GetTypeId() == TYPEID_PLAYER)
         {
+			printf("\n\n !! we are entering vehicle !! \n\n ");
             WorldPacket data(SMSG_ON_CANCEL_EXPECTED_RIDE_VEHICLE_AURA, 0);
             ((Player*)caster)->GetSession()->SendPacket(&data);
+			caster->EnterVehicle( vehicle, /*this->GetModifier()->m_amount*/ -1, true );
         }
         // if we leave and enter again, this will refresh
         int32 duration = GetSpellMaxDuration(GetSpellProto());
@@ -7554,6 +7564,7 @@ void Aura::HandleAuraControlVehicle(bool apply, bool Real)
     else
     {
         // some SPELL_AURA_CONTROL_VEHICLE auras have a dummy effect on the player - remove them
+		caster->ExitVehicle();
         caster->RemoveAurasDueToSpell(GetId());
     }
 }
