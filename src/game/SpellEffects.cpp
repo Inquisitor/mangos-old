@@ -1440,6 +1440,41 @@ void Spell::EffectDummy(uint32 i)
 
 					else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 25847, 10 ) )
 						pPlayer->KilledMonsterCredit( 25847, 0);
+
+					return;
+				}
+				case 46797:
+				{
+					if( m_caster->GetTypeId() != TYPEID_PLAYER )
+						return;
+
+					Player * pPlayer = static_cast<Player*>(m_caster);
+
+					if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 26249, 10 ) )
+						pPlayer->KilledMonsterCredit( 26249, 0);
+
+					else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 26248, 10 ) )
+						pPlayer->KilledMonsterCredit( 26248, 0);
+
+					return;
+				}
+				case 45653:
+				{
+					if( m_caster->GetTypeId() != TYPEID_PLAYER )
+						return;
+
+					Player * pPlayer = static_cast<Player*>(m_caster);
+
+					if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 25490, 10 ) )
+						pPlayer->KilledMonsterCredit( 25490, 0);
+
+					else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 25492, 10 ) )
+						pPlayer->KilledMonsterCredit( 25492, 0);
+
+					else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 25493, 10 ) )
+						pPlayer->KilledMonsterCredit( 25493, 0);
+
+					return;
 				}
             }
 
