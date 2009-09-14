@@ -1939,6 +1939,13 @@ void Player::RegenerateAll(uint32 diff)
 
     Regenerate(POWER_MANA, diff);
 
+	if( GetVehicleGUID() != 0 )
+		if( Vehicle * veh = static_cast<Vehicle*>(Unit::GetUnit(*this, GetVehicleGUID())) )
+		{
+			veh->Regenerate(POWER_ENERGY, diff);
+			veh->Regenerate(POWER_MANA, diff);
+		}
+
     if (getClass() == CLASS_DEATH_KNIGHT)
         Regenerate(POWER_RUNE, diff);
 

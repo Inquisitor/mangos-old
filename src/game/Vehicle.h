@@ -79,6 +79,8 @@ class Vehicle : public Creature
         void RemovePassenger(Unit *unit);
         void RemoveAllPassengers();
 
+        void Regenerate(Powers power, uint32 diff);
+
         bool HasSpell(uint32 spell) const;
         void SetSpawnDuration(int32 duration)
         {

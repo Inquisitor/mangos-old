@@ -397,7 +397,6 @@ void Vehicle::AddPassenger(Unit *unit, int8 seatId, bool force)
             }
             if(canFly() || HasAuraType(SPELL_AURA_FLY) || HasAuraType(SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED))
             {
-				printf("\n\n Vehicle is set to fly !! \n\n !! ");
                 WorldPacket data3(SMSG_MOVE_SET_CAN_FLY, 12);
                 data3.append(GetPackGUID());
                 data3 << (uint32)(0);
@@ -596,4 +595,59 @@ void Vehicle::BuildVehicleActionBar(Player *plr) const
     data << uint32(1);                                        // count
     data << uint64(GetGUID());
     plr->GetSession()->SendPacket(&data);
+}
+
+// diff contains the time in milliseconds since last regen.
+void Vehicle::Regenerate(Powers power, uint32 diff)
+{
+    uint32 curValue = GetPower(power);
+    uint32 maxValue = GetMaxPower(power);
+
+    float addvalue = 0.0f;
+
+    switch (power)
+    {
+        case POWER_MANA:
+        {
+            bool recentCast = IsUnderLastManaUseEffect();
+            if (recentCast)
+            {
+                // Mangos Updates Mana in intervals of 2s, which is correct
+                addvalue = GetFloatValue(UNIT_FIELD_POWER_REGEN_INTERRUPTED_FLAT_MODIFIER) * 2.00f;
+            }
+            else
+            {
+                addvalue = GetFloatValue(UNIT_FIELD_POWER_REGEN_FLAT_MODIFIER) * 2.00f;
+            }
+        }   break;
+        case POWER_RAGE:                                    // Regenerate rage
+        {
+            addvalue = 20;					               // 2 rage by tick (= 2 seconds => 1 rage/sec)
+        }   break;
+        case POWER_ENERGY:                                  // Regenerate energy (rogue)
+            addvalue = 20;
+            break;
+        case POWER_FOCUS:
+        case POWER_HAPPINESS:
+        case POWER_HEALTH:
+            break;
+    }
+
+    // addvalue computed on a 2sec basis. => update to diff time
+    addvalue *= float(diff) / REGEN_TIME_FULL;
+
+    if (power != POWER_RAGE && power != POWER_RUNIC_POWER)
+    {
+        curValue += uint32(addvalue);
+        if (curValue > maxValue)
+            curValue = maxValue;
+    }
+    else
+    {
+        if(curValue <= uint32(addvalue))
+            curValue = 0;
+        else
+            curValue -= uint32(addvalue);
+    }
+    SetPower(power, curValue);
 }
