@@ -979,6 +979,8 @@ void GameObject::Use(Unit* user)
                 // possible quest objective for active quests
                 player->CastedCreatureOrGO(info->id, GetGUID(), 0);
 
+				GetMap()->ScriptsStart(sGameObjectScripts, GetDBTableGUIDLow(), spellCaster, this);
+
                 if (info->goober.eventId)
                     GetMap()->ScriptsStart(sEventScripts, info->goober.eventId, player, this);
             }
