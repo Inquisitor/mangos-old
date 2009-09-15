@@ -5519,6 +5519,32 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 63675;
                     break;
                 }
+                // Empowered Renew
+                case 63534:
+                case 63542:
+                case 63543:
+                {
+                    uint32 perDamage = 0;
+                    if( GetTypeId()!= TYPEID_PLAYER )
+					    break;
+
+				    //find highest learned rank of Renew
+				    uint32 spell = 48068; // rank 14
+				    while( spell && !((Player*)this)->HasActiveSpell(spell) )
+					    spell = spellmgr.GetPrevSpellInChain(spell);
+
+				    SpellEntry const *sp = sSpellStore.LookupEntry(spell);
+				    if(sp)
+                    {
+                        int32 tick = SpellHealingBonus(pVictim, sp, sp->EffectBasePoints[0], HEAL);
+                        int32 tickcount = GetSpellDuration(sp) / sp->EffectAmplitude[0];
+                        perDamage = tick*tickcount;
+                    }
+
+                    basepoints0 = int32(perDamage*triggerAmount/100);
+                    triggered_spell_id = 63544;
+                    break;
+                }
                 // Oracle Healing Bonus ("Garments of the Oracle" set)
                 case 26169:
                 {
@@ -7417,6 +7443,31 @@ bool Unit::HandleOverrideClassScriptAuraProc(Unit *pVictim, uint32 damage, Aura 
         case 5497:                                          // Improved Mana Gems (Serpent-Coil Braid)
             triggered_spell_id = 37445;                     // Mana Surge
             break;
+        case 7010:                                          // Revitalize
+        case 7011:
+        case 7012:
+        {
+            switch(pVictim->getPowerType())
+            {
+                case POWER_RUNIC_POWER:
+                    pVictim->CastSpell(pVictim, 48543, true, NULL, triggeredByAura);
+                    break;
+                case POWER_RAGE:
+                    pVictim->CastSpell(pVictim, 48541, true, NULL, triggeredByAura);
+                    break;
+                case POWER_MANA:
+                {
+                    int32 basepoints0 = pVictim->GetMaxPower(POWER_MANA) / 100;
+                    pVictim->CastCustomSpell(pVictim, 48542, &basepoints0, NULL, NULL, true, NULL, triggeredByAura);
+                    break;
+                }
+                case POWER_ENERGY:
+                    pVictim->CastSpell(pVictim, 48540, true, NULL, triggeredByAura);
+                    break;
+                default:
+                    break;
+            }
+        }
         case 8152:                                          // Serendipity
         {
             // if heal your target over maximum health
