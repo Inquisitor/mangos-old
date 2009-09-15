@@ -5519,6 +5519,32 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 63675;
                     break;
                 }
+                // Empowered Renew
+                case 63534:
+                case 63542:
+                case 63543:
+                {
+                    uint32 perDamage = 0;
+                    if( GetTypeId()!= TYPEID_PLAYER )
+					    break;
+
+				    //find highest learned rank of Renew
+				    uint32 spell = 48068; // rank 14
+				    while( spell && !((Player*)this)->HasActiveSpell(spell) )
+					    spell = spellmgr.GetPrevSpellInChain(spell);
+
+				    SpellEntry const *sp = sSpellStore.LookupEntry(spell);
+				    if(sp)
+                    {
+                        int32 tick = SpellHealingBonus(pVictim, sp, sp->EffectBasePoints[0], HEAL);
+                        int32 tickcount = GetSpellDuration(sp) / sp->EffectAmplitude[0];
+                        perDamage = tick*tickcount;
+                    }
+
+                    basepoints0 = int32(perDamage*triggerAmount/100);
+                    triggered_spell_id = 63544;
+                    break;
+                }
                 // Oracle Healing Bonus ("Garments of the Oracle" set)
                 case 26169:
                 {
