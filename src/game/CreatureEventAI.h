@@ -124,6 +124,7 @@ enum EventAI_ActionType
 	ACTION_T_ADD_GOSSIP					= 43,               // Gossip Id, TextId (from creature_ai_texts), TitleTextId (from npc_text)
 	ACTION_T_SUMMON_GOBJECT				= 44,				// Object ID, Target, Duration in ms
 	ACTION_T_CLOSE_GOSSIP				= 45,				// No Params
+	ACTION_T_ADD_ITEM					= 46,				// Item Id
     ACTION_T_END,
 };
 
@@ -409,6 +410,10 @@ struct CreatureEventAI_Action
             uint32 target;
 			uint32 duration;
         } summon_gobject;
+		struct
+        {
+            uint32 id;
+        } add_item;
         // RAW
         struct
         {
