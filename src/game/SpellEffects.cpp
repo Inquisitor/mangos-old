@@ -1476,6 +1476,16 @@ void Spell::EffectDummy(uint32 i)
 
 					return;
 				}
+				case 53145:
+				{
+					if( m_caster->GetTypeId() != TYPEID_PLAYER )
+						return;
+
+					if( ((Player*)m_caster)->GetQuestStatus(12758) == QUEST_STATUS_INCOMPLETE )
+						m_caster->SummonGameObject( 191179, unitTarget->GetPositionX(), unitTarget->GetPositionY(), unitTarget->GetPositionZ(), unitTarget->GetOrientation(), 300000 );
+
+					return;
+				}
             }
 
             //All IconID Check in there
