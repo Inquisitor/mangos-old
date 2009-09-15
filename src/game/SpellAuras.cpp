@@ -1382,7 +1382,7 @@ void Aura::HandleAddModifier(bool apply, bool Real)
     }
 
     // reapply auras when Aura Mastery casted
-    if(m_spellProto->SpellFamilyName == SPELLFAMILY_PALADIN && (m_spellProto->SpellFamilyFlags == UI64LIT(0x4000000)))
+    if(m_spellProto->SpellFamilyName == SPELLFAMILY_PALADIN && (m_spellmod->mask == UI64LIT(0x4000000)))
     {
         uint32 activeAuraId = 0;
         Unit::AuraMap auras = m_target->GetAuras();
