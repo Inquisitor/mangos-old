@@ -1381,6 +1381,23 @@ void Aura::HandleAddModifier(bool apply, bool Real)
             m_target->CastSpell(m_target,66530,true);
     }
 
+    // reapply auras when Aura Mastery casted
+    if(m_spellProto->SpellFamilyName == SPELLFAMILY_PALADIN && (m_spellProto->SpellFamilyFlags == UI64LIT(0x4000000)))
+    {
+        uint32 activeAuraId = 0;
+        Unit::AuraMap auras = m_target->GetAuras();
+        for (Unit::AuraMap::const_iterator iter = auras.begin(); iter != auras.end(); ++iter)
+        if (iter->second->GetSpellProto()->SpellFamilyFlags2 == UI64LIT(0x20))
+        {
+           activeAuraId = iter->second->GetId();
+           break;
+        }
+        if (!activeAuraId)
+            return;
+
+        m_target->CastSpell(m_target, activeAuraId, true);
+    }
+
     // re-aplly talents and passives applied to pet (it affected by player spellmods)
     if(Pet* pet = m_target->GetPet())
         ReapplyAffectedPassiveAuras(pet);
