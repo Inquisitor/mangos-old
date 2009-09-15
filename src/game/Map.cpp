@@ -3377,6 +3377,35 @@ void Map::ScriptsProcess()
 
 				break;
 			}
+			case SCRIPT_COMMAND_TEMP_SUMMON_OBJECT:
+			{
+				GameObject* pGameObj = new GameObject;
+
+				if(source == NULL) return;
+
+				WorldObject* summoner = dynamic_cast<WorldObject*>(source);
+
+				float x = step.script->x;
+                float y = step.script->y;
+                float z = step.script->z;
+                float o = step.script->o;
+
+				if(!pGameObj->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), step.script->datalong, summoner->GetMap(),
+					summoner->GetPhaseMask(), x==0?summoner->GetPositionX():x, y==0?summoner->GetPositionY():y, z==0?summoner->GetPositionZ():z, o==0?summoner->GetOrientation():o, 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
+				{
+					delete pGameObj;
+					return;
+				}
+
+				pGameObj->SetRespawnTime(step.script->datalong2 > 0 ? step.script->datalong2/IN_MILISECONDS : 0);
+
+				summoner->GetMap()->Add(pGameObj);
+				
+				if( summoner->GetTypeId() == TYPEID_UNIT )
+					((Unit*)summoner)->AddGameObject(pGameObj);
+
+				break;
+			}
             default:
                 sLog.outError("Unknown script command %u called.",step.script->command);
                 break;

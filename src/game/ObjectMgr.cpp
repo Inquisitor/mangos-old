@@ -4235,6 +4235,21 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
 				}
 				break;
 			} 
+			case SCRIPT_COMMAND_TEMP_SUMMON_OBJECT:
+            {
+                if(!MaNGOS::IsValidMapCoord(tmp.x,tmp.y,tmp.z,tmp.o))
+                {
+                    sLog.outErrorDb("Table `%s` has invalid coordinates (X: %f Y: %f) in SCRIPT_COMMAND_TEMP_SUMMON_OBJECT for script id %u",tablename,tmp.x,tmp.y,tmp.id);
+                    continue;
+                }
+
+				if(!GetGameObjectInfo(tmp.datalong))
+                {
+                    sLog.outErrorDb("Table `%s` has invalid gameobject (Entry: %u) in SCRIPT_COMMAND_TEMP_SUMMON_OBJECT for script id %u",tablename,tmp.datalong,tmp.id);
+                    continue;
+                }
+                break;
+            }
         }
 
         if (scripts.find(tmp.id) == scripts.end())
