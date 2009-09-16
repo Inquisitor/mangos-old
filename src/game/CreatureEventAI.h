@@ -73,6 +73,7 @@ enum EventAI_Requirement
 	REQUIREMENT_T_INVOKER_AURA	= 4,
 	REQUIREMENT_T_ZONE			= 5,
 	REQUIREMENT_T_QUEST			= 6,
+	REQUIREMENT_T_ENTRY			= 7, // not for creature_ai_scripts usage (all other *_scripts)
 	REQUIREMENT_T_END,
 };
 

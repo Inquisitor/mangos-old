@@ -34,6 +34,7 @@
 #include "ScriptCalls.h"
 #include "Group.h"
 #include "MapRefManager.h"
+#include "CreatureEventAI.h"
 
 #include "MapInstanced.h"
 #include "InstanceSaveMgr.h"
@@ -2785,6 +2786,63 @@ void Map::ScriptsProcess()
 
         if(target && !target->IsInWorld()) target = NULL;
 
+		bool requirement_passed = true;
+
+		if( source && source->GetTypeId() == TYPEID_UNIT  )
+		{
+			Unit * uSource = static_cast<Unit*>(source);
+
+			switch( step.script->reqtype )
+			{
+				case REQUIREMENT_T_INVOKER_AURA:
+					if( !uSource->HasAura( step.script->reqvalue ) )
+						requirement_passed = false;
+					break;
+				case REQUIREMENT_T_QUEST:
+					if( uSource->GetTypeId() != TYPEID_PLAYER || ((Player*)uSource)->GetQuestStatus(step.script->reqvalue) != QUEST_STATUS_INCOMPLETE )
+						requirement_passed = false;
+					break;
+			}
+		}
+
+		if( target && target->GetTypeId() == TYPEID_UNIT )
+		{
+			Unit * uTarget = static_cast<Unit*>(target);
+
+			switch( step.script->reqtype )
+			{
+				case REQUIREMENT_T_HP_PERCENT:
+					if( uTarget->GetHealth() * 100 / uTarget->GetMaxHealth() > step.script->reqvalue )
+						requirement_passed = false;
+					break;
+				case REQUIREMENT_T_MANA_PERCENT:
+					if( uTarget->GetPower(POWER_MANA) * 100 / uTarget->GetMaxPower(POWER_MANA) > step.script->reqvalue )
+						requirement_passed = false;
+					break;
+				case REQUIREMENT_T_AURA:
+					if( !uTarget->HasAura( step.script->reqvalue ) )
+						requirement_passed = false;
+					break;
+				case REQUIREMENT_T_ZONE:
+					if( uTarget->GetZoneId() != step.script->reqvalue )
+						requirement_passed = false;
+					break;
+				case REQUIREMENT_T_ENTRY:
+					if( uTarget->GetEntry() != step.script->reqvalue )
+						requirement_passed = false;
+					break;
+			}
+		}
+
+		if( !requirement_passed )
+		{
+			m_scriptSchedule.erase(iter);
+			sWorld.DecreaseScheduledScriptCount();
+
+			iter = m_scriptSchedule.begin();
+			return;
+		}
+
         switch (step.script->command)
         {
             case SCRIPT_COMMAND_TALK:
@@ -3337,7 +3395,12 @@ void Map::ScriptsProcess()
             }
 			case SCRIPT_COMMAND_ADD_QUEST_COUNT:
 			{
-				if(source == NULL) return;
+				if(!source)
+                {
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT call for NULL object.");
+                    break;
+                }
+
 				if(source->GetTypeId() != TYPEID_PLAYER) return;
 				Player * user = static_cast<Player*>(source);
 
@@ -3372,9 +3435,13 @@ void Map::ScriptsProcess()
 			}
 			case SCRIPT_COMMAND_TEMP_SUMMON_OBJECT:
 			{
-				GameObject* pGameObj = new GameObject;
+                if(!source)
+                {
+                    sLog.outError("SCRIPT_COMMAND_TEMP_SUMMON_OBJECT call for NULL object.");
+                    break;
+                }
 
-				if(source == NULL) return;
+				GameObject* pGameObj = new GameObject;
 
 				WorldObject* summoner = dynamic_cast<WorldObject*>(source);
 
