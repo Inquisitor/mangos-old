@@ -1486,6 +1486,27 @@ void Spell::EffectDummy(uint32 i)
 
 					return;
 				}
+				case 53038:
+				{
+					if( m_caster->GetTypeId() != TYPEID_PLAYER )
+						return;
+
+					Player * pPlayer = static_cast<Player*>(m_caster);
+
+					if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 29056, 10 ) )
+						pPlayer->KilledMonsterCredit( 29056, 0);
+
+					else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 29057, 10 ) )
+						pPlayer->KilledMonsterCredit( 29057, 0);
+
+					else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 29058, 10 ) )
+						pPlayer->KilledMonsterCredit( 29058, 0);
+
+					else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 29069, 10 ) )
+						pPlayer->KilledMonsterCredit( 29069, 0);
+
+					return;
+				}
             }
 
             //All IconID Check in there
