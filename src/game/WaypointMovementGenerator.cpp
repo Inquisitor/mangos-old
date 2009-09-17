@@ -233,7 +233,7 @@ uint32 FlightPathMovementGenerator::GetPathAtMapEnd() const
 
 void FlightPathMovementGenerator::Initialize(Player &player)
 {
-	if( player.m_taxi.GetTaxiDestination() == 158 )
+	if( player.m_taxi.GetTaxiDestination() == 158 || player.m_taxi.GetTaxiDestination() == 243 )
 		player.SetDisplayId(16587);
 
     player.getHostilRefManager().setOnlineOfflineState(false);
@@ -249,13 +249,25 @@ void FlightPathMovementGenerator::Initialize(Player &player)
 
 void FlightPathMovementGenerator::Finalize(Player & player)
 {
-	if( i_pathId == 632  )
+	switch( i_pathId )
 	{
-		if( player.GetQuestStatus(10525) == QUEST_STATUS_INCOMPLETE )
-			player.CompleteQuest(10525);
+		case 632:
+		{
+			if( player.GetQuestStatus(10525) == QUEST_STATUS_INCOMPLETE )
+				player.CompleteQuest(10525);
 
-		player.SetDisplayId(player.GetNativeDisplayId());
-	}		
+			player.SetDisplayId(player.GetNativeDisplayId());
+			break;	
+		}
+		case 811:
+		{
+			if( player.GetQuestStatus(12028) == QUEST_STATUS_INCOMPLETE )
+				player.CompleteQuest(12028);
+
+			player.SetDisplayId(player.GetNativeDisplayId());
+			break;
+		}
+	}
 
     // remove flag to prevent send object build movement packets for flight state and crash (movement generator already not at top of stack)
     player.clearUnitState(UNIT_STAT_IN_FLIGHT);
