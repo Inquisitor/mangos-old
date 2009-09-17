@@ -655,6 +655,22 @@ namespace MaNGOS
             NearestGameObjectFishingHole(NearestGameObjectFishingHole const&);
     };
 
+	class AnyGameObjectInPointRangeCheck
+    {
+        public:
+            AnyGameObjectInPointRangeCheck(float posX, float posY, float posZ, float range) : x(posX), y(posY), z(posZ), i_range(range) {}
+            bool operator()(GameObject* g)
+            {
+				if(g && g->GetDistance(x, y, z) < i_range)
+                    return true;
+
+                return false;
+            }
+        private:
+			float x, y, z;
+            float i_range;
+    };
+
     // Success at unit in range, range update for next check (this can be use with GameobjectLastSearcher to find nearest GO)
     class NearestGameObjectEntryInObjectRangeCheck
     {

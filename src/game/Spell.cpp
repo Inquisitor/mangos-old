@@ -2853,7 +2853,7 @@ void Spell::_handle_immediate_phase()
     for(uint32 j = 0; j < 3; ++j)
     {
         // persistent area auras target only the ground
-        if(m_spellInfo->Effect[j] == SPELL_EFFECT_PERSISTENT_AREA_AURA)
+        if(m_spellInfo->Effect[j] == SPELL_EFFECT_PERSISTENT_AREA_AURA || m_spellInfo->Effect[j] == SPELL_EFFECT_DUMMY )
             HandleEffects(NULL, NULL, NULL, j);
     }
 }
