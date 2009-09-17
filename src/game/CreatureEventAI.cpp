@@ -862,6 +862,19 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
 			((Player*)pActionInvoker)->PlayerTalkClass->CloseGossip();
 			break;
 		}
+		case ACTION_T_ADD_ITEM:
+		{
+			if( pActionInvoker->GetTypeId() != TYPEID_PLAYER )
+				return;
+
+			ItemPosCountVec dest;
+			uint8 msg = ((Player*)pActionInvoker)->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, action.add_item.id, 1);
+			if (msg == EQUIP_ERR_OK)
+			{
+				((Player*)pActionInvoker)->StoreNewItem(dest, action.add_item.id, true);
+			}
+			break;
+		}
     }
 }
 
