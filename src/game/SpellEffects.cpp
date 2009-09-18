@@ -667,6 +667,14 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                 // Judgement of Vengeance/Corruption ${1+0.22*$SPH+0.14*$AP} + 10% for each application of Holy Vengeance/Blood Corruption on the target
                 if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x800000000)) && m_spellInfo->SpellIconID==2292)
                 {
+                    uint32 debuf_id;
+                    switch(m_spellInfo->Id)
+                    {
+                        case 53733: debuf_id = 53742; break;// Judgement of Corruption -> Blood Corruption
+                        case 31804: debuf_id = 31803; break;// Judgement of Vengeance -> Holy Vengeance
+                        default: return;
+                    }
+
                     float ap = m_caster->GetTotalAttackPowerValue(BASE_ATTACK);
                     int32 holy = m_caster->SpellBaseDamageBonus(GetSpellSchoolMask(m_spellInfo)) +
                                  m_caster->SpellBaseDamageBonusForVictim(GetSpellSchoolMask(m_spellInfo), unitTarget);
@@ -675,11 +683,13 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                     uint32 stacks = 0;
                     Unit::AuraList const& auras = unitTarget->GetAurasByType(SPELL_AURA_PERIODIC_DAMAGE);
                     for(Unit::AuraList::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
-                        if( ((*itr)->GetId() == 31803 || (*itr)->GetId() == 53742) && (*itr)->GetCasterGUID()==m_caster->GetGUID())
+                    {
+                        if( ((*itr)->GetId() == debuf_id) && (*itr)->GetCasterGUID()==m_caster->GetGUID())
                         {
                             stacks = (*itr)->GetStackAmount();
                             break;
                         }
+                    }
                     // + 10% for each application of Holy Vengeance on the target
                     if(stacks)
                         damage += damage * stacks * 10 /100;
@@ -2060,7 +2070,7 @@ void Spell::EffectDummy(uint32 i)
                     if (!spell_proto)
                         return;
 
-                    m_caster->CastSpell(unitTarget,spell_proto,true,NULL);
+                    m_caster->CastSpell(unitTarget, spell_proto, true, NULL);
                     return;
                 }
             }
@@ -4048,6 +4058,7 @@ void Spell::EffectDispel(uint32 i)
         std::list < uint32 > fail_list;                     // spell_id
         int32 list_size = dispel_list.size();
 
+        // some spells have effect value = 0 and all from its by meaning expect 1
         if(!damage)
             damage = 1;
 
@@ -5221,7 +5232,6 @@ void Spell::EffectWeaponDmg(uint32 i)
         if(m_caster->GetTypeId()==TYPEID_PLAYER)
             ((Player*)m_caster)->AddComboPoints(unitTarget, 1);
     }
-
     // Mangle (Cat): CP
     else if (m_spellInfo->SpellFamilyName==SPELLFAMILY_DRUID && (m_spellInfo->SpellFamilyFlags==UI64LIT(0x0000040000000000)))
     {
@@ -5231,7 +5241,7 @@ void Spell::EffectWeaponDmg(uint32 i)
     else if(m_spellInfo->SpellFamilyName==SPELLFAMILY_PALADIN)
     {
         // Judgement of Blood/of the Martyr backlash damage (33%)
-        if(m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000800000000) && m_spellInfo->SpellIconID==153)
+        if(m_spellInfo->SpellFamilyFlags & 0x0000000800000000LL && m_spellInfo->SpellIconID==153)
         {
             int32 damagePoint  = m_damage * 33 / 100;
             if(m_spellInfo->Id == 31898)
@@ -5243,7 +5253,7 @@ void Spell::EffectWeaponDmg(uint32 i)
         else if(m_spellInfo->SpellIconID==2293)
         {
             int32 damagePoint  = m_damage * 10 / 100;
-            if(m_spellInfo->Id == 31892)
+            if(m_spellInfo->Id == 31893)
                 m_caster->CastCustomSpell(m_caster, 32221, &damagePoint, NULL, NULL, true);
             else
                 m_caster->CastCustomSpell(m_caster, 53718, &damagePoint, NULL, NULL, true);
