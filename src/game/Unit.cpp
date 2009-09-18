@@ -5536,7 +5536,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
 				    SpellEntry const *sp = sSpellStore.LookupEntry(spell);
 				    if(sp)
                     {
-                        int32 tick = SpellHealingBonus(pVictim, sp, sp->EffectBasePoints[0], HEAL);
+                        int32 tick = SpellHealingBonus(pVictim, sp, sp->EffectBasePoints[0], DOT);
                         int32 tickcount = GetSpellDuration(sp) / sp->EffectAmplitude[0];
                         perDamage = tick*tickcount;
                     }
