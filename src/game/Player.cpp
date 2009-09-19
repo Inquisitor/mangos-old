@@ -11802,7 +11802,7 @@ void Player::RemoveEnchantmentDurations(Item *item)
     }
 }
 
-void Player::RemoveAllEnchantments(EnchantmentSlot slot, bool inArena)
+void Player::RemoveAllEnchantments(EnchantmentSlot slot)
 {
     // remove enchantments from equipped items first to clean up the m_enchantDuration list
     for(EnchantDurationList::iterator itr = m_enchantDuration.begin(), next; itr != m_enchantDuration.end(); itr = next)
@@ -11813,11 +11813,12 @@ void Player::RemoveAllEnchantments(EnchantmentSlot slot, bool inArena)
             if (itr->item && itr->item->GetEnchantmentId(slot))
             {
                 // remove from stats
-                ApplyEnchantment(itr->item,slot,false,false);
-
+                ApplyEnchantment(itr->item, slot, false, false);
                 // remove visual
                 itr->item->ClearEnchantment(slot);
             }
+            // remove from update list
+            next = m_enchantDuration.erase(itr);
         }
         else
             ++next;
