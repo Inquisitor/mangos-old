@@ -8397,6 +8397,7 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
     // Taken/Done total percent damage auras
     float DoneTotalMod = 1.0f;
     float TakenTotalMod = 1.0f;
+    float APCoeffMod = 1.0f;
     int32 DoneTotal = 0;
     int32 TakenTotal = 0;
 
@@ -8599,6 +8600,62 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
             }
             break;
         }
+        case SPELLFAMILY_DEATHKNIGHT:
+        {
+            // Improved Icy Touch
+            if (spellProto->SpellFamilyFlags & UI64LIT(0x0000000000000002))
+            {
+                Unit::AuraList const& iit = GetAurasByType(SPELL_AURA_DUMMY);
+                for(Unit::AuraList::const_iterator i = iit.begin(); i != iit.end(); ++i)
+                {
+                    if ((*i)->GetSpellProto()->SpellIconID == 2721)
+                    {
+                        DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f) / 100.0f;
+                        break;
+                    }
+                }
+            }
+
+            // Impurity - affects all spells
+            Unit::AuraList const& imp = GetAurasByType(SPELL_AURA_DUMMY);
+            for(Unit::AuraList::const_iterator i = imp.begin(); i != imp.end(); ++i)
+            {
+                if ((*i)->GetSpellProto()->SpellIconID == 1986)
+                {
+                    DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f) / 100.0f;
+                    break;
+                }
+            }
+
+            // Glacier Rot
+            if (spellProto->SpellFamilyFlags & UI64LIT(0x0000000600000002))
+            {
+                Unit::AuraList const& gr = GetAurasByType(SPELL_AURA_DUMMY);
+                for(Unit::AuraList::const_iterator i = gr.begin(); i != gr.end(); ++i)
+                {
+                    if ((*i)->GetSpellProto()->SpellIconID == 196)
+                    {
+                        bool found = false;
+
+                        Unit::AuraMap const& auras = pVictim->GetAuras();
+                        for(Unit::AuraMap::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
+                        {
+                            if(itr->second->GetSpellProto()->Dispel == DISPEL_DISEASE)
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (found)
+                            DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f) / 100.0f;
+                        break;
+                    }
+                }
+            }
+
+            break;
+        }
         default:
             break;
     }
@@ -8682,7 +8739,7 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
             coeff = bonus->direct_damage * LvlPenalty * stack;
 
         if (bonus->ap_bonus)
-            DoneTotal += int32(bonus->ap_bonus * GetTotalAttackPowerValue(BASE_ATTACK) * stack);
+            DoneTotal += int32(bonus->ap_bonus * APCoeffMod * GetTotalAttackPowerValue(BASE_ATTACK) * stack);
 
         DoneTotal  += int32(DoneAdvertisedBenefit * coeff * SpellModSpellDamage);
         TakenTotal += int32(TakenAdvertisedBenefit * coeff);
