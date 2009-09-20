@@ -6588,6 +6588,16 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 triggered_spell_id = dummySpell->EffectTriggerSpell[effIndex];
                 break;
             }
+            // Sudden Doom
+            if (dummySpell->SpellIconID == 1939 && GetTypeId() == TYPEID_PLAYER)
+            {
+                // get highest rank of the Death Coil
+                uint32 spell = 49895; // rank 5
+                while( spell && !((Player*)this)->HasActiveSpell(spell) )
+                    spell = spellmgr.GetPrevSpellInChain(spell);
+
+                triggered_spell_id = spell;
+            }
             break;
         }
         default:
