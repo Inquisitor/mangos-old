@@ -7523,11 +7523,12 @@ bool Unit::HandleOverrideClassScriptAuraProc(Unit *pVictim, uint32 damage, Aura 
                 default:
                     break;
             }
+            break;
         }
         case 8152:                                          // Serendipity
         {
             // if heal your target over maximum health
-            if (pVictim->GetHealth() + damage < pVictim->GetMaxHealth())
+            if (!procSpell || pVictim->GetHealth() + damage < pVictim->GetMaxHealth())
                 return false;
             int32 cost = procSpell->manaCost + procSpell->ManaCostPercentage * GetCreateMana() / 100;
             int32 basepoints0 = cost * triggeredByAura->GetModifier()->m_amount/100;
