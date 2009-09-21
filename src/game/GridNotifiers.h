@@ -765,6 +765,23 @@ namespace MaNGOS
             uint32 i_spell;
     };
 
+    class AnyWithAuraInRange
+    {
+        public:
+            AnyWithAuraInRange(Unit const* obj, float range, uint32 spellid) : i_obj(obj), i_range(range), i_spell(spellid) {}
+            bool operator()(Unit* u)
+            {
+                if(u->isAlive() && i_obj->IsWithinDistInMap(u, i_range) && u->HasAura(i_spell))
+                    return true;
+
+                return false;
+            }
+        private:
+            Unit const* i_obj;
+            float i_range;
+            uint32 i_spell;
+    };
+
     class AnyUnfriendlyUnitInObjectRangeCheck
     {
         public:
