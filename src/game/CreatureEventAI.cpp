@@ -131,7 +131,7 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
 				return false;
 			break;
 		case REQUIREMENT_T_INVOKER_AURA:
-			if( !pActionInvoker->HasAura( pHolder.Event.event_requirement_value ) )
+			if( !pActionInvoker || !pActionInvoker->HasAura( pHolder.Event.event_requirement_value ) )
 				return false;
 			break;
 		case REQUIREMENT_T_ZONE:
@@ -139,7 +139,7 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
 				return false;
 			break;
 		case REQUIREMENT_T_QUEST:
-			if( pActionInvoker->GetTypeId() != TYPEID_PLAYER || ((Player*)pActionInvoker)->GetQuestStatus( pHolder.Event.event_requirement_value) != QUEST_STATUS_INCOMPLETE )
+			if( !pActionInvoker || pActionInvoker->GetTypeId() != TYPEID_PLAYER || ((Player*)pActionInvoker)->GetQuestStatus( pHolder.Event.event_requirement_value) != QUEST_STATUS_INCOMPLETE )
 				return false;
 			break;
 	}
