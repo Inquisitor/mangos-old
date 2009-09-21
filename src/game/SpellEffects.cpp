@@ -3825,6 +3825,7 @@ void Spell::EffectSummonType(uint32 i)
         case SUMMON_TYPE_GHOUL:
         case SUMMON_TYPE_GHOUL_OF_THE_DEAD:
         case SUMMON_TYPE_GUARDIAN3:
+        case SUMMON_TYPE_GARGOLYTE:
             // Jewelery statue case (totem like)
             if(m_spellInfo->SpellIconID == 2056)
                 EffectSummonTotem(i);

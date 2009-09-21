@@ -2458,6 +2458,10 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
         if (caster && m_spellProto->SpellFamilyName == SPELLFAMILY_WARLOCK &&
             m_spellProto->SpellFamilyFlags & UI64LIT(0x4000000000000))
             caster->CastCustomSpell(caster, 48210, &GetModifier()->m_amount, NULL, NULL, true, NULL, this);
+
+        // Summon Gargoyle
+        if (m_spellProto->Id == 50514)
+            m_target->CastSpell(m_target, GetModifier()->m_amount, true, NULL, this);
     }
 
     // AT APPLY & REMOVE
