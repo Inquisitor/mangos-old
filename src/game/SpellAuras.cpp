@@ -4037,13 +4037,6 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
             m_target->SendMessageToSet(&data, true);
         }
 
-        // Divine Hymn Recovery
-        if(GetId() == 47953)
-        {
-        m_target->CastSpell(m_target,60406,false);
-        return;
-        }
-
         // Wyvern Sting
         if (m_spellProto->SpellFamilyName == SPELLFAMILY_HUNTER && m_spellProto->SpellFamilyFlags & UI64LIT(0x0000100000000000))
         {
