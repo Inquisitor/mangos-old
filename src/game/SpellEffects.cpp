@@ -4344,13 +4344,6 @@ void Spell::EffectSummonGuardian(uint32 i)
     // set timer for unsummon
     int32 duration = GetSpellDuration(m_spellInfo);
 
-    // Search old Guardian only for players (if casted spell not have duration or cooldown)
-    // FIXME: some guardians have control spell applied and controlled by player and anyway player can't summon in this time
-    //        so this code hack in fact
-    if (m_caster->GetTypeId() == TYPEID_PLAYER && (duration <= 0 || GetSpellRecoveryTime(m_spellInfo) == 0))
-        if(m_caster->FindGuardianWithEntry(pet_entry) && m_spellInfo->Id != 42651)
-            return;                                         // find old guardian, ignore summon
-
     // in another case summon new
     uint32 level = m_caster->getLevel();
 
