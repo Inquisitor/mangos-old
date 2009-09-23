@@ -448,6 +448,9 @@ void Vehicle::AddPassenger(Unit *unit, int8 seatId, bool force)
 
 void Vehicle::RemovePassenger(Unit *unit)
 {
+    if(!unit)
+        return;
+
     SeatMap::iterator seat;
     for(seat = m_Seats.begin(); seat != m_Seats.end(); ++seat)
     {
