@@ -3851,21 +3851,25 @@ void Spell::EffectSummonType(uint32 i)
         case SUMMON_TYPE_GHOUL_OF_THE_DEAD:
         case SUMMON_TYPE_GUARDIAN3:
         case SUMMON_TYPE_GARGOLYTE:
+        case SUMMON_TYPE_MIRROR_IMAGE:
+        case SUMMON_TYPE_SNAKES:
             // Jewelery statue case (totem like)
             if(m_spellInfo->SpellIconID == 2056)
                 EffectSummonTotem(i);
             else
                 EffectSummonGuardian(i);
             break;
-        case SUMMON_TYPE_SNAKES:
-            EffectSummonGuardian(i);
-        break;
         case SUMMON_TYPE_WILD:
         case SUMMON_TYPE_WILD2:
         case SUMMON_TYPE_WILD4:
         case SUMMON_TYPE_QUEST_WILD:
         case SUMMON_TYPE_CREATURE:
-            EffectSummonWild(i);
+        case SUMMON_TYPE_CREATURE1:
+        case SUMMON_TYPE_QUEST_CREATURE:
+        case SUMMON_TYPE_LIGHTWELL:
+        //case SUMMON_TYPE_QUEST_WILD2: // all (2) cases handled by script
+            if(m_spellInfo->Id != 53063) // Makeshift Cover - quest :: Ambush At The Overlook 
+                EffectSummonWild(i);
             break;
         case SUMMON_TYPE_DEMON:
         case SUMMON_TYPE_INFERNO:
