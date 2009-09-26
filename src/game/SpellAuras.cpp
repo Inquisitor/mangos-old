@@ -314,7 +314,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleNoImmediateEffect,                         //259 SPELL_AURA_DECREASE_PERIODIC_HEAL               implemented in Unit::SpellHealingBonus
     &Aura::HandleNoImmediateEffect,                         //260 SPELL_AURA_SCREEN_EFFECT (miscvalue = id in ScreenEffect.dbc) not required any code
     &Aura::HandlePhase,                                     //261 SPELL_AURA_PHASE undetactable invisibility?     implemented in Unit::isVisibleForOrDetect
-    &Aura::HandleNoImmediateEffect,                         //262 SPELL_AURA_IGNORE_TARGET_AURA_STATE implemented in Spell::CheckCast()
+    &Aura::HandleIgnoreAuraState,                         //262 SPELL_AURA_IGNORE_TARGET_AURA_STATE implemented in Spell::CheckCast()
     &Aura::HandleAllowOnlyAbility,                          //263 SPELL_AURA_ALLOW_ONLY_ABILITY player can use only abilities set in SpellClassMask
     &Aura::HandleUnused,                                    //264 unused (3.0.8a)
     &Aura::HandleUnused,                                    //265 unused (3.0.8a)
@@ -7863,4 +7863,20 @@ void Aura::HandleModTargetArmorPct(bool apply, bool Real)
         return;
 
     ((Player*)m_target)->UpdateArmorPenetration();
+}
+
+void Aura::HandleIgnoreAuraState(bool apply, bool Real)
+{
+	if (GetId() == 64976 || 57499 )
+	{
+		WorldPacket data(SMSG_AURA_UPDATE);
+		data.append(m_target->GetPackGUID());
+		data << uint8(255);
+		data << uint32(GetId());
+		data << uint8(19);
+		data << uint8(80);
+		data << uint8(1);
+		data << uint8(0);
+		m_target->SendMessageToSet(&data, true);
+	}
 }
