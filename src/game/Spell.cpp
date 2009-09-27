@@ -1133,6 +1133,12 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
 
     Unit* realCaster = m_originalCaster ? m_originalCaster : m_caster;
 
+	if (m_spellInfo->Id == 33786 && unit->IsImmunedToDamage(GetSpellSchoolMask(m_spellInfo)))
+    {
+        realCaster->SendSpellMiss(unit, m_spellInfo->Id, SPELL_MISS_IMMUNE);
+        return;
+    }
+
     // Recheck immune (only for delayed spells)
     if( m_spellInfo->speed && unit->IsImmunedToSpell(m_spellInfo))
     {
