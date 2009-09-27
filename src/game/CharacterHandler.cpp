@@ -779,6 +779,19 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
     if(!pCurrChar->IsStandState() && !pCurrChar->hasUnitState(UNIT_STAT_STUNNED))
         pCurrChar->SetStandState(UNIT_STAND_STATE_STAND);
 
+	if (pCurrChar->HasSpell(64976) || pCurrChar->HasSpell(57499) )
+	{
+		WorldPacket data(SMSG_AURA_UPDATE);
+		data.append(pCurrChar->GetPackGUID());
+		data << uint8(255);
+		data << uint32( pCurrChar->HasSpell(64976) ? 64976 : 57499 );
+		data << uint8(19);
+		data << uint8(80);
+		data << uint8(1);
+		data << uint8(0);
+		pCurrChar->SendMessageToSet(&data, true);
+	}
+
     m_playerLoading = false;
     delete holder;
 }

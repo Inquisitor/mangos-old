@@ -7859,12 +7859,19 @@ void Aura::HandleAuraModAllCritChance(bool apply, bool Real)
 
 void Aura::HandleIgnoreAuraState(bool apply, bool Real)
 {
-	if (GetId() == 64976 || 57499 )
+	if (GetId() == 64976 || GetId() == 57499 )
 	{
 		WorldPacket data(SMSG_AURA_UPDATE);
 		data.append(m_target->GetPackGUID());
 		data << uint8(255);
-		data << uint32(GetId());
+		data << uint32( apply ? GetId() : 0 );
+
+		if(!apply)
+		{
+			m_target->SendMessageToSet(&data, true);
+			return;
+		}
+
 		data << uint8(19);
 		data << uint8(80);
 		data << uint8(1);
