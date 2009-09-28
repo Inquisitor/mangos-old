@@ -1472,8 +1472,8 @@ void BattleGround::OnObjectDBLoad(Creature* creature)
 
 uint64 BattleGround::GetSingleCreatureGuid(uint8 event1, uint8 event2)
 {
-    BGCreatures::const_iterator itr = m_EventObjects[event1][event2].creatures.begin();
-    if (itr != m_EventObjects[event1][event2].creatures.end())
+    BGCreatures::const_iterator itr = m_EventObjects[MAKE_PAIR32(event1, event2)].creatures.begin();
+    if (itr != m_EventObjects[MAKE_PAIR32(event1, event2)].creatures.end())
         return *itr;
     return 0;
 }
@@ -1602,6 +1602,7 @@ bool BattleGround::DelObject(uint32 type)
 {
     if (!m_BgObjects[type])
         return true;
+
     GameObject *obj = HashMapHolder<GameObject>::Find(m_BgObjects[type]);
     if (!obj)
     {

@@ -87,8 +87,11 @@ enum BG_AV_OTHER_VALUES
     BG_AV_SOUTH_MINE            = 1,
     BG_AV_MINE_TICK_TIMER       = 45000,
     BG_AV_MINE_RECLAIM_TIMER    = 1200000,                  // TODO: get the right value.. this is currently 20 minutes
-    BG_AV_NEUTRAL_TEAM          = 2                         // this is the neutral owner of snowfall
+    BG_AV_NEUTRAL_TEAM          = 2,                        // this is the neutral owner of snowfall
+    BG_AV_FACTION_A             = 730,
+    BG_AV_FACTION_H             = 729,
 };
+#define BG_AV_MAX_MINES 2
 
 enum BG_AV_ObjectIds
 {
@@ -156,26 +159,6 @@ enum BG_AV_Nodes
 #define BG_AV_BOSS_H            62
 #define BG_AV_NodeEventCaptainDead_A 63
 #define BG_AV_NodeEventCaptainDead_H 64
-
-/// stores x,y-position from the center of the node (for graves and horde-towers, the
-/// node-banner-position), (for alliance-towers the bigbanner/bigaura position)
-const float BG_AV_NodePositions[BG_AV_NODES_MAX][2] = {
-    {638.592f,-32.422f },                                   // firstaid station
-    {669.007f,-294.078f },                                  // stormpike
-    {77.8013f,-404.7f },                                    // stone grave
-    {-202.581f,-112.73f },                                  // snowfall
-    {-611.962f,-396.17f },                                  // iceblood grave
-    {-1082.45f,-346.823f },                                 // frostwolf grave
-    {-1402.21f,-307.431f },                                 // frostwolf hut
-    {555.848f,-84.4151f },                                  // dunbaldar south
-    {679.339f,-136.468f },                                  // dunbaldar north
-    {208.973f,-365.971f },                                  // icewing bunker
-    {-155.832f,-449.401f },                                 // stoneheart bunker
-    {-571.88f,-262.777f },                                  // ice tower
-    {-768.907f,-363.71f },                                  // tower point
-    {-1302.9f,-316.981f },                                  // frostwolf etower
-    {-1297.5f,-266.767f }                                   // frostwolf wtower
-};
 
 enum BG_AV_Graveyards
 {
@@ -293,7 +276,7 @@ struct BG_AV_NodeInfo
     uint32       PrevOwner;
     BG_AV_States State;
     BG_AV_States PrevState;
-    int          Timer;
+    uint32       Timer;
     bool         Tower;
 };
 
@@ -335,11 +318,10 @@ class BattleGroundAV : public BattleGround
 
         void RemovePlayer(Player *plr,uint64 guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
-        bool SetupBattleGround();
         virtual void Reset();
 
         /*general stuff*/
-        void UpdateScore(uint32 team, int32 points);
+        void UpdateScore(BattleGroundTeamId team, int32 points);
         void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
 
         /*handle stuff*/ // these are functions which get called from extern scripts
@@ -355,8 +337,8 @@ class BattleGroundAV : public BattleGround
 
     private:
         /* Nodes occupying */
-        void EventPlayerAssaultsPoint(Player* player);
-        void EventPlayerDefendsPoint(Player* player);
+        void EventPlayerAssaultsPoint(Player* player, BG_AV_Nodes node);
+        void EventPlayerDefendsPoint(Player* player, BG_AV_Nodes node);
         void EventPlayerDestroyedPoint(BG_AV_Nodes node);
 
         void AssaultNode(BG_AV_Nodes node, uint32 team);
@@ -366,7 +348,6 @@ class BattleGroundAV : public BattleGround
 
         void PopulateNode(BG_AV_Nodes node);
 
-        const BG_AV_Nodes GetNodeThroughPlayerPosition(Player* plr);
         uint32 GetNodeName(BG_AV_Nodes node);
         const bool IsTower(BG_AV_Nodes node) { return (node == BG_AV_NODES_ERROR)? false : m_Nodes[node].Tower; }
         const bool IsGrave(BG_AV_Nodes node) { return (node == BG_AV_NODES_ERROR)? false : !m_Nodes[node].Tower; }
@@ -384,11 +365,10 @@ class BattleGroundAV : public BattleGround
 
         BG_AV_NodeInfo m_Nodes[BG_AV_NODES_MAX];
 
-        // TODO define BG_AV_MAX_MINES
-        uint32 m_Mine_Owner[BG_TEAMS_COUNT];
-        uint32 m_Mine_PrevOwner[BG_TEAMS_COUNT];            // only for worldstates needed
-        int32 m_Mine_Timer[BG_TEAMS_COUNT];
-        uint32 m_Mine_Reclaim_Timer[BG_TEAMS_COUNT];
+        int8 m_Mine_Owner[BG_AV_MAX_MINES];
+        int8 m_Mine_PrevOwner[BG_AV_MAX_MINES];             // only for worldstates needed
+        int32 m_Mine_Timer[BG_AV_MAX_MINES];
+        uint32 m_Mine_Reclaim_Timer[BG_AV_MAX_MINES];
 
         bool m_IsInformedNearLose[BG_TEAMS_COUNT];
         bool m_captainAlive[BG_TEAMS_COUNT];

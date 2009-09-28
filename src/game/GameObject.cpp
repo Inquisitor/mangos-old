@@ -444,8 +444,7 @@ void GameObject::Update(uint32 /*p_time*/)
                 return;
             }
 
-            if(m_respawnTime<=time(NULL))
-                m_respawnTime = time(NULL) + m_respawnDelayTime;
+            m_respawnTime = time(NULL) + m_respawnDelayTime;
 
             // if option not set then object will be saved at grid unload
             if(sWorld.getConfig(CONFIG_SAVE_RESPAWN_TIME_IMMEDIATLY))
@@ -748,9 +747,9 @@ bool GameObject::ActivateToQuest( Player *pTarget)const
             if(LootTemplates_Gameobject.HaveQuestLootForPlayer(GetGOInfo()->GetLootId(), pTarget))
             {
                 //look for battlegroundAV for some objects which are only activated after mine gots captured by own team
-                if(GetEntry() == BG_AV_OBJECTID_MINE_N || GetEntry() == BG_AV_OBJECTID_MINE_S)
-                    if(BattleGround *bg = pTarget->GetBattleGround())
-                        if(bg->GetTypeID() == BATTLEGROUND_AV && !(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(GetEntry(),pTarget->GetTeam())))
+                if (GetEntry() == BG_AV_OBJECTID_MINE_N || GetEntry() == BG_AV_OBJECTID_MINE_S)
+                    if (BattleGround *bg = pTarget->GetBattleGround())
+                        if (bg->GetTypeID() == BATTLEGROUND_AV && !(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(GetEntry(),pTarget->GetTeam())))
                             return false;
                 return true;
             }
