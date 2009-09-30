@@ -2318,14 +2318,7 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
                     }
                     break;
                 case SPELL_EFFECT_SUMMON:
-                    if (m_spellInfo->EffectMiscValueB[effIndex] == SUMMON_TYPE_POSESSED ||
-                        m_spellInfo->EffectMiscValueB[effIndex] == SUMMON_TYPE_POSESSED2)
-                    {
-                        if (m_targets.getUnitTarget())
-                            TagUnitMap.push_back(m_targets.getUnitTarget());
-                    }
-                    else
-                        TagUnitMap.push_back(m_caster);
+                     TagUnitMap.push_back(m_caster);
                     break;
                 case SPELL_EFFECT_SUMMON_CHANGE_ITEM:
                 case SPELL_EFFECT_TRANS_DOOR:
@@ -4698,42 +4691,30 @@ SpellCastResult Spell::CheckCast(bool strict)
             // This is generic summon effect
             case SPELL_EFFECT_SUMMON:
             {
-                switch(m_spellInfo->EffectMiscValueB[i])
+                if(m_spellInfo->EffectMiscValue[i] == 18225 && m_caster->GetTypeId() == TYPEID_PLAYER)
                 {
-                    case SUMMON_TYPE_POSESSED:
-                    case SUMMON_TYPE_POSESSED2:
-                    case SUMMON_TYPE_DEMON:
-                    case SUMMON_TYPE_SUMMON:
-                    case SUMMON_TYPE_ELEMENTAL:
-                    case SUMMON_TYPE_INFERNO:
-                    {
-                        // Outdoor PvP - Trigger FireBomb
+                    // if not in halaa or not in flight, cannot be used
+                    if(m_caster->GetAreaId() != 3628 || !m_caster->isInFlight())
+                        return SPELL_FAILED_NOT_HERE;
 
-                        // fire bomb trigger, can only be used in halaa opvp when flying on a path from a wyvern roost
-                        // yeah, hacky, I know, but neither item flags, nor spell attributes contained any useable data (or I was unable to find it)
-                        if(m_spellInfo->EffectMiscValue[i] == 18225 && m_caster->GetTypeId() == TYPEID_PLAYER)
-                        {
-                            // if not in halaa or not in flight, cannot be used
-                            if(m_caster->GetAreaId() != 3628 || !m_caster->isInFlight())
-                                return SPELL_FAILED_NOT_HERE;
-
-                            // if not on one of the specific taxi paths, then cannot be used
-                            uint32 src_node = ((Player*)m_caster)->m_taxi.GetTaxiSource();
-                            if( src_node != 103 && src_node != 105 && src_node != 107 && src_node != 109 )
-                                return SPELL_FAILED_NOT_HERE;
-                        }
-                        // Outdoor PvP - Trigger FireBomb end
-                        else
-                        {
-                            if(m_caster->GetPetGUID())
-                                 return SPELL_FAILED_ALREADY_HAVE_SUMMON;
-
-                            if(m_caster->GetCharmGUID())
-                                return SPELL_FAILED_ALREADY_HAVE_CHARM;
-                        }
-                        break;
-                    }
+                    // if not on one of the specific taxi paths, then cannot be used
+                    uint32 src_node = ((Player*)m_caster)->m_taxi.GetTaxiSource();
+                    if( src_node != 103 && src_node != 105 && src_node != 107 && src_node != 109 )
+                        return SPELL_FAILED_NOT_HERE;
                 }
+
+                if(SummonPropertiesEntry const *summon_prop = sSummonPropertiesStore.LookupEntry(m_spellInfo->EffectMiscValueB[i]))
+                {
+                    if(summon_prop->Group == SUMMON_PROP_GROUP_PETS)
+                     {
+                         if(m_caster->GetPetGUID())
+                             return SPELL_FAILED_ALREADY_HAVE_SUMMON;
+ 
+                         if(m_caster->GetCharmGUID())
+                             return SPELL_FAILED_ALREADY_HAVE_CHARM;
+                     }
+                }
+
                 break;
             }
             // Not used for summon?
