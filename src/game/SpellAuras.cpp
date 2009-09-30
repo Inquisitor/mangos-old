@@ -7478,6 +7478,18 @@ void Aura::PeriodicDummyTick()
                     return;
                 }
             }
+
+            // Prey on the Weak
+            if (spell->SpellIconID == 2983)
+            {
+                caster->RemoveAurasDueToSpell(58670);
+                if (Unit *target=caster->getVictim())
+                    if (caster->GetHealth() * 100 / caster->GetMaxHealth()>target->GetHealth() * 100 / target->GetMaxHealth())
+                    {
+                        int32 basepoints = GetBasePoints();
+                        caster->CastCustomSpell(caster, 58670, &basepoints, 0, 0, true);
+                    }
+            } 
             break;
         }
         case SPELLFAMILY_HUNTER:
