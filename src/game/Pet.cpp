@@ -869,7 +869,6 @@ bool Pet::InitStatsForLevel(uint32 petlevel, Unit* owner)
 
                 SetBonusDamage(int32 (val * 0.15f));
                 //bonusAP += val * 0.57;
-                break;
             }
 
             switch(GetEntry())
