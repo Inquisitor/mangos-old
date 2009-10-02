@@ -6472,6 +6472,7 @@ void Spell::EffectApplyGlyph(uint32 i)
 
 void Spell::EffectSummonTotem(uint32 i, uint8 slot)
 {
+    slot = slot ? (slot-1) : 255;
     if(slot < MAX_TOTEM)
     {
         uint64 guid = m_caster->m_TotemSlot[slot];

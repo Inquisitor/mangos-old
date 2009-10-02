@@ -274,7 +274,7 @@ class Spell
         void EffectSummonPlayer(uint32 i);
         void EffectActivateObject(uint32 i);
         void EffectApplyGlyph(uint32 i);
-        void EffectSummonTotem(uint32 i, uint8 slot = 255);
+        void EffectSummonTotem(uint32 i, uint8 slot = 0);
         void EffectEnchantHeldItem(uint32 i);
         void EffectSummonObject(uint32 i);
         void EffectResurrect(uint32 i);
