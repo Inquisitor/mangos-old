@@ -8645,7 +8645,7 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
             {
                 if ((*i)->GetSpellProto()->SpellIconID == 1986)
                 {
-                    DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f) / 100.0f;
+                    APCoeffMod += (*i)->GetModifier()->m_amount / 100.0f;
                     break;
                 }
             }
