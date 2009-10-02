@@ -7518,7 +7518,7 @@ void Player::SendLoot(uint64 guid, LootType loot_type)
             bones->lootForBody = true;
             uint32 pLevel = bones->loot.gold;
             bones->loot.clear();
-            if(GetBattleGround()->GetTypeID() == BATTLEGROUND_AV)
+            if (GetBattleGround()->GetTypeID() == BATTLEGROUND_AV)
                 loot->FillLoot(1, LootTemplates_Creature, this, false);
             // It may need a better formula
             // Now it works like this: lvl10: ~6copper, lvl70: ~9silver
@@ -12831,6 +12831,10 @@ void Player::RewardQuest( Quest const *pQuest, uint32 reward, Object* questGiver
     }
 
     RemoveTimedQuest(quest_id);
+
+    if (BattleGround* bg = GetBattleGround())
+        if (bg->GetTypeID() == BATTLEGROUND_AV)
+            ((BattleGroundAV*)bg)->HandleQuestComplete(pQuest->GetQuestId(), this);
 
     if (pQuest->GetRewChoiceItemsCount() > 0)
     {

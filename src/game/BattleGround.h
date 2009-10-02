@@ -510,10 +510,14 @@ class BattleGround
                 return false;
             return m_ActiveEvents[event1] == event2;
         }
+        uint64 GetSingleCreatureGuid(uint8 event1, uint8 event2);
+
         void OpenDoorEvent(uint8 event1, uint8 event2 = 0);
         bool IsDoor(uint8 event1, uint8 event2);
 
         /* other things */
+        virtual void OnCreatureRespawn(Creature* /*creature*/) {}
+
         void HandleTriggerBuff(uint64 const& go_guid);
 
         // TODO: make this protected:
