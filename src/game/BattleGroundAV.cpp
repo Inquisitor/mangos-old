@@ -257,7 +257,7 @@ void BattleGroundAV::UpdateScore(uint32 team, int32 points )
 
 void BattleGroundAV::OnObjectDBLoad(GameObject* obj)
 {
-    uint8 eventId = sBattleGroundMgr.GetGameObjectEventIndex(obj->GetDBTableGUIDLow());
+    uint8 eventId = BG_EVENT_NONE;
     if (eventId == BG_EVENT_NONE)
         return;
     if (eventId == BG_AV_NodeEventCaptainDead_A)
@@ -389,7 +389,6 @@ void BattleGroundAV::OnObjectDBLoad(Creature* creature)
             ++graveDefenderType;
         case BG_AV_CREATURE_ENTRY_A_GRAVE_DEFENSE_1:
         case BG_AV_CREATURE_ENTRY_H_GRAVE_DEFENSE_1:
-            eventId = sBattleGroundMgr.GetCreatureEventIndex(creature->GetDBTableGUIDLow());
             node = GetNodeThroughNodeEvent(eventId);
             if (eventId == BG_EVENT_NONE || !IsGrave(node))
             {
@@ -419,7 +418,6 @@ void BattleGroundAV::OnObjectDBLoad(Creature* creature)
     // creature entries
     if( eventId == BG_EVENT_NONE )                          // if eventId is set, creature is already processed right
     {
-        eventId = sBattleGroundMgr.GetCreatureEventIndex(creature->GetDBTableGUIDLow());
         node = GetNodeThroughNodeEvent(eventId);
         if (node != BG_AV_NODES_ERROR)
         {
