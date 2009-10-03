@@ -7232,7 +7232,8 @@ void Aura::PeriodicDummyTick()
                 }
 				case 52708:
 				{
-					caster->CastSpell(caster, 52712, true );
+					if (Unit *caster = GetCaster())
+						caster->CastSpell(caster, 52712, true );
 					m_target->CastSpell(m_target, 52711, true);
 					return;
 				}
