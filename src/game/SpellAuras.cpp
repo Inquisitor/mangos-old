@@ -4509,6 +4509,17 @@ void Aura::HandleAuraModDecreaseSpeed(bool apply, bool Real)
             if (GetStackAmount() >= 5 && !m_target->HasAura(33652))
                 m_target->CastSpell(m_target, 33652, true);
         }
+		// Chains of Ice, start from 95% not 100%
+		if (GetId() == 47805)
+		{
+			Aura *slow = m_target->GetAura(GetId(), 0);
+			if (slow && slow->GetModifier()->m_amount == -100)
+            {
+					slow->ApplyModifier(false, true);
+					Modifier *mod = slow->GetModifier()->m_amount = -95;
+                    slow->ApplyModifier(true, true);
+			}
+		}
     }
 
     m_target->UpdateSpeed(MOVE_RUN, true);
