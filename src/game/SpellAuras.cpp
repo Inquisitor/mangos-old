@@ -4516,7 +4516,7 @@ void Aura::HandleAuraModDecreaseSpeed(bool apply, bool Real)
 			if (slow && slow->GetModifier()->m_amount == -100)
             {
 					slow->ApplyModifier(false, true);
-					Modifier *mod = slow->GetModifier()->m_amount = -95;
+					slow->GetModifier()->m_amount = -95;
                     slow->ApplyModifier(true, true);
 			}
 		}

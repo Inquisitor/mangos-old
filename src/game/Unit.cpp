@@ -11691,7 +11691,12 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
             }
             // Update defence if player is victim and parry/dodge/block
             if (isVictim && procExtra&(PROC_EX_DODGE|PROC_EX_PARRY|PROC_EX_BLOCK))
+			{
                 ((Player*)this)->UpdateDefense();
+				// Rune Strike activation
+				if( this->getClass() == CLASS_DEATH_KNIGHT )
+					this->CastSpell(this, 56817, true );
+			}
         }
         // If exist crit/parry/dodge/block need update aura state (for victim and attacker)
         if (procExtra & (PROC_EX_CRITICAL_HIT|PROC_EX_PARRY|PROC_EX_DODGE|PROC_EX_BLOCK))
