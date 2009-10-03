@@ -7230,6 +7230,12 @@ void Aura::PeriodicDummyTick()
                     // 7053 Forsaken Skill: Shadow
                     return;
                 }
+				case 52708:
+				{
+					caster->CastSpell(caster, 52712, true );
+					m_target->CastSpell(m_target, 52711, true);
+					return;
+				}
 //              // Panda
 //              case 19230: break;
 //              // Gossip NPC Periodic - Talk
