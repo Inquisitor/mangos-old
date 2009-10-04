@@ -3895,6 +3895,7 @@ void Spell::TakeRunePower()
         if((plr->GetRuneCooldown(i) == 0) && (runeCost[rune] > 0))
         {
             plr->SetRuneCooldown(i, RUNE_COOLDOWN);         // 5*2=10 sec
+			plr->SetLastUsedRune(RuneType(rune));
             runeCost[rune]--;
         }
     }

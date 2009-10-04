@@ -11786,6 +11786,51 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
         if (GetTypeId() == TYPEID_PLAYER && spellProcEvent && spellProcEvent->cooldown)
             cooldown = spellProcEvent->cooldown;
 
+		if( spellInfo->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT )
+		{
+			if (spellInfo->SpellIconID == 3041 || spellInfo->SpellIconID == 22 || spellInfo->SpellIconID == 2622)
+			{
+				 if (GetTypeId() == TYPEID_PLAYER && ((Player*)this)->getClass() == CLASS_DEATH_KNIGHT )
+				 {
+					RuneType rune = ((Player*)this)->GetLastUsedRune();
+                    // can't proc from death rune use
+                    if (rune == RUNE_DEATH)
+                        return;
+
+					triggeredByAura->GetModifier()->periodictime = triggeredByAura->GetSpellProto()->EffectAmplitude[0]; // ok ?
+                    uint32 runesLeft;
+
+                    if (spellInfo->SpellIconID == 2622)
+                        runesLeft = 2;
+                    else
+                        runesLeft = 1;
+
+                    for (uint8 i=0;i<MAX_RUNES && runesLeft;++i)
+                    {
+                        if (spellInfo->SpellIconID == 2622)
+                        {
+                            if (((Player*)this)->GetCurrentRune(i) == RUNE_DEATH ||
+                                ((Player*)this)->GetBaseRune(i) == RUNE_BLOOD )
+                                continue;
+                        }
+                        else
+                        {
+                            if (((Player*)this)->GetCurrentRune(i) == RUNE_DEATH ||
+                                ((Player*)this)->GetBaseRune(i) != RUNE_BLOOD )
+                                continue;
+                        }
+                        if (((Player*)this)->GetRuneCooldown(i) != RUNE_COOLDOWN)
+                            continue;
+
+                        --runesLeft;
+                        // Mark aura as used
+						triggeredByAura->GetModifier()->m_amount = triggeredByAura->GetModifier()->m_amount  | (1<<i);
+                        ((Player*)this)->ConvertRune(i,RUNE_DEATH);
+                    }
+				 }
+			}
+		}
+
         switch(auraModifier->m_auraname)
         {
             case SPELL_AURA_PROC_TRIGGER_SPELL:
