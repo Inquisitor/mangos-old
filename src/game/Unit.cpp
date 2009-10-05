@@ -365,10 +365,15 @@ void Unit::RemoveSpellsCausingAura(AuraType auraType)
 
         if (*iter)
         {
-			if( (*iter)->GetId() != 46021 ) // hacky fix for Spectral Realm being removed from Unit::DealDamage invis removal check
+			if( (*iter)->GetId() != 46021 && (*iter)->GetId() != 44801 ) // hacky fix for Spectral Realm being removed from Unit::DealDamage invis removal check
 				RemoveAurasDueToSpell((*iter)->GetId());
             if (!m_modAuras[auraType].empty())
+			{
+				if( m_modAuras[auraType].size() == 1 && ( (*iter)->GetId() == 46021 || (*iter)->GetId() == 44801) ) // Hack for Spectral Realm (endless loop fix)
+					return;
+
                 next = m_modAuras[auraType].begin();
+			}
             else
                 return;
         }
