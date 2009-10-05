@@ -6234,119 +6234,161 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
         }
 		case SPELLFAMILY_DEATHKNIGHT:
         {
-            if (GetSpellSpecific(m_spellProto->Id) != SPELL_PRESENCE)
-                return;
+			// Frost Fever and Blood Plague
+			if(GetSpellProto()->SpellFamilyFlags2 & 0x2)
+            {
+                // Can't proc on self
+                if (GetCasterGUID() == m_target->GetGUID())
+                    return;
+                Unit * caster = GetCaster();
+                if (!caster)
+                    return;
 
-			Aura * bloodPresenceAura = NULL;
-			Aura * frostPresenceAura = NULL;
-			Aura * unholyPresenceAura = NULL;
+                Aura * aurEff = NULL;
+                // Ebon Plaguebringer / Crypt Fever
+                Unit::AuraList const& TalentAuras = caster->GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
+                for(Unit::AuraList::const_iterator itr = TalentAuras.begin(); itr != TalentAuras.end(); ++itr)
+                {
+                    if ((*itr)->GetMiscValue() == 7282)
+                    {
+                        aurEff = *itr;
+                        // Ebon Plaguebringer - end search if found
+                        if ((*itr)->GetSpellProto()->SpellIconID == 1766)
+                            break;
+                    }
+                }
+                if (aurEff)
+                {
+                    uint32 spellId = 0;
+                    switch (aurEff->GetId())
+                    {
+                        // Ebon Plague
+                        case 51161: spellId1 = 51735; break;
+                        case 51160: spellId1 = 51734; break;
+                        case 51099: spellId1 = 51726; break;
+                        // Crypt Fever
+                        case 49632: spellId1 = 50510; break;
+                        case 49631: spellId1 = 50509; break;
+                        case 49032: spellId1 = 50508; break;
+                        default:
+                            sLog.outError("Unknown rank of Crypt Fever/Ebon Plague %d", aurEff->GetId());
+                    }
+               //     caster->CastSpell(m_target, spellId, true, 0, GetPartAura(0));
+                }
+            }
 
-			if( apply )
+            if (GetSpellSpecific(m_spellProto->Id) == SPELL_PRESENCE)
 			{
-				Unit::AuraList const& vDummyAuras = m_target->GetAurasByType(SPELL_AURA_DUMMY);
-				for(Unit::AuraList::const_iterator itr = vDummyAuras.begin(); itr != vDummyAuras.end(); ++itr)
-				{
-					switch((*itr)->GetId())
-					{
-						// Improved Blood Presence
-						case 50365:
-						case 50371:
-						{
-							bloodPresenceAura = (*itr);
-							break;
-						}
-						// Improved Frost Presence
-						case 50384:
-						case 50385:
-						{
-							frostPresenceAura = (*itr);
-							break;
-						}
-						// Improved Unholy Presence
-						case 50391:
-						case 50392:
-						{
-							unholyPresenceAura = (*itr);
-							break;
-						}
-					}
-				}
 
-				if (GetId() == 48266) // Blood Presence effects from talents
-				{
-					m_target->CastSpell(m_target,63611,true);
-					if( unholyPresenceAura ) // Improved Unholy Presence speed
-					{
-						const int32 base = unholyPresenceAura->GetBasePoints();
-						m_target->CastCustomSpell(m_target, 49772, &base, NULL, NULL, true );
-					}
-					if( frostPresenceAura ) // Improved Frost Presence health
-					{
-						const int32 base = frostPresenceAura->GetBasePoints();
-						m_target->CastCustomSpell(m_target, 61261, &base, NULL, NULL, true );
-					}
-				}
-				// Frost Presence health
-				else if (GetId() == 48263)
-				{
-					if( bloodPresenceAura ) // Improved Blood Presence healing
-					{
-						const int32 base = bloodPresenceAura->GetBasePoints();
-						m_target->CastCustomSpell(m_target, 63611, &base, NULL, NULL, true );	
-					}
-					if( unholyPresenceAura ) // Improved Unholy Presence speed
-					{
-						const int32 base = unholyPresenceAura->GetBasePoints();
-						m_target->CastCustomSpell(m_target, 49772, &base, NULL, NULL, true );
-					}
-					m_target->CastSpell(m_target, 61261, true, NULL, this);
-				}
-				// Unholy Presence move speed
-				else if (GetId() == 48265)
-				{
-					if( bloodPresenceAura ) // Improved Blood Presence healing
-					{
-						const int32 base = bloodPresenceAura->GetBasePoints();
-						m_target->CastCustomSpell(m_target, 63611, &base, NULL, NULL, true );	
-					}
-					if( frostPresenceAura ) // Improved Frost Presence health
-					{
-						const int32 base = frostPresenceAura->GetBasePoints();
-						m_target->CastCustomSpell(m_target, 61261, &base, NULL, NULL, true );
-					}
-					if( unholyPresenceAura ) // Improved Unholy rune regeneration
-					{
-						const int32 base = unholyPresenceAura->GetSpellProto()->EffectBasePoints[1];
-						m_target->CastCustomSpell(m_target, 65095, &base, NULL, NULL, true );
-					}
-					m_target->CastSpell(m_target, 49772, true, NULL, this);
-				}
-				else
-					return;
+				Aura * bloodPresenceAura = NULL;
+				Aura * frostPresenceAura = NULL;
+				Aura * unholyPresenceAura = NULL;
 
-				return;
-			}
-			if( !apply )
-			{
-				// Remove passive auras
-				if (GetId() == SPELL_ID_BLOOD_PRESENCE || bloodPresenceAura)
-					m_target->RemoveAurasDueToSpell(63611);
-				if (GetId() == SPELL_ID_FROST_PRESENCE || frostPresenceAura)
-					m_target->RemoveAurasDueToSpell(61261);
-				if (GetId() == SPELL_ID_UNHOLY_PRESENCE || unholyPresenceAura)
+				if( apply )
 				{
-					if(GetId() == SPELL_ID_UNHOLY_PRESENCE && unholyPresenceAura)
+					Unit::AuraList const& vDummyAuras = m_target->GetAurasByType(SPELL_AURA_DUMMY);
+					for(Unit::AuraList::const_iterator itr = vDummyAuras.begin(); itr != vDummyAuras.end(); ++itr)
 					{
-						//m_target->RemoveAurasDueToSpell(63622);
-						m_target->RemoveAurasDueToSpell(65095);
+						switch((*itr)->GetId())
+						{
+							// Improved Blood Presence
+							case 50365:
+							case 50371:
+							{
+								bloodPresenceAura = (*itr);
+								break;
+							}
+							// Improved Frost Presence
+							case 50384:
+							case 50385:
+							{
+								frostPresenceAura = (*itr);
+								break;
+							}
+							// Improved Unholy Presence
+							case 50391:
+							case 50392:
+							{
+								unholyPresenceAura = (*itr);
+								break;
+							}
+						}
 					}
-					m_target->RemoveAurasDueToSpell(49772);
+
+					if (GetId() == 48266) // Blood Presence effects from talents
+					{
+						m_target->CastSpell(m_target,63611,true);
+						if( unholyPresenceAura ) // Improved Unholy Presence speed
+						{
+							const int32 base = unholyPresenceAura->GetBasePoints();
+							m_target->CastCustomSpell(m_target, 49772, &base, NULL, NULL, true );
+						}
+						if( frostPresenceAura ) // Improved Frost Presence health
+						{
+							const int32 base = frostPresenceAura->GetBasePoints();
+							m_target->CastCustomSpell(m_target, 61261, &base, NULL, NULL, true );
+						}
+					}
+					// Frost Presence health
+					else if (GetId() == 48263)
+					{
+						if( bloodPresenceAura ) // Improved Blood Presence healing
+						{
+							const int32 base = bloodPresenceAura->GetBasePoints();
+							m_target->CastCustomSpell(m_target, 63611, &base, NULL, NULL, true );	
+						}
+						if( unholyPresenceAura ) // Improved Unholy Presence speed
+						{
+							const int32 base = unholyPresenceAura->GetBasePoints();
+							m_target->CastCustomSpell(m_target, 49772, &base, NULL, NULL, true );
+						}
+						m_target->CastSpell(m_target, 61261, true, NULL, this);
+					}
+					// Unholy Presence move speed
+					else if (GetId() == 48265)
+					{
+						if( bloodPresenceAura ) // Improved Blood Presence healing
+						{
+							const int32 base = bloodPresenceAura->GetBasePoints();
+							m_target->CastCustomSpell(m_target, 63611, &base, NULL, NULL, true );	
+						}
+						if( frostPresenceAura ) // Improved Frost Presence health
+						{
+							const int32 base = frostPresenceAura->GetBasePoints();
+							m_target->CastCustomSpell(m_target, 61261, &base, NULL, NULL, true );
+						}
+						if( unholyPresenceAura ) // Improved Unholy rune regeneration
+						{
+							const int32 base = unholyPresenceAura->GetSpellProto()->EffectBasePoints[1];
+							m_target->CastCustomSpell(m_target, 65095, &base, NULL, NULL, true );
+						}
+						m_target->CastSpell(m_target, 49772, true, NULL, this);
+					}
+					else
+						return;
+
 				}
-				return;
+				if( !apply )
+				{
+					// Remove passive auras
+					if (GetId() == SPELL_ID_BLOOD_PRESENCE || bloodPresenceAura)
+						m_target->RemoveAurasDueToSpell(63611);
+					if (GetId() == SPELL_ID_FROST_PRESENCE || frostPresenceAura)
+						m_target->RemoveAurasDueToSpell(61261);
+					if (GetId() == SPELL_ID_UNHOLY_PRESENCE || unholyPresenceAura)
+					{
+						if(GetId() == SPELL_ID_UNHOLY_PRESENCE && unholyPresenceAura)
+						{
+							//m_target->RemoveAurasDueToSpell(63622);
+							m_target->RemoveAurasDueToSpell(65095);
+						}
+						m_target->RemoveAurasDueToSpell(49772);
+					}
+				}
 			}
 
             break;
-        }
+		}
         default:
             return;
     }

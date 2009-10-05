@@ -8604,6 +8604,26 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
                     DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f)/100.0f;
                 break;
             }
+			// Ebon Plague or Crypt Fever
+			case 7282:
+			{
+				if( spellProto->Dispel == DISPEL_DISEASE )
+				{
+					Aura * pAur = NULL;
+					switch ((*i)->GetId())
+					{
+						// Ebon Plague or Crypt Fever modifier aura
+						case 49632: pAur = pVictim->GetAura(50510, 0); break;
+						case 49631: pAur = pVictim->GetAura(50509, 0); break;
+						case 49032: pAur = pVictim->GetAura(50508, 0); break;
+						case 51161: pAur = pVictim->GetAura(51735, 0); break;
+						case 51160: pAur = pVictim->GetAura(51734, 0); break;
+						case 51099: pAur = pVictim->GetAura(51726, 0); break;
+					}
+					if( pAur )
+						DoneTotalMod *= (pAur->GetModifier()->m_amount+100.0f) / 100.0f;
+				}
+			}
         }
     }
 
