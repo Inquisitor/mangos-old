@@ -6232,19 +6232,118 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
             spellId3 = 63514;                               // placeholder for talent spell mods
             break;
         }
-        case SPELLFAMILY_DEATHKNIGHT:
+		case SPELLFAMILY_DEATHKNIGHT:
         {
             if (GetSpellSpecific(m_spellProto->Id) != SPELL_PRESENCE)
                 return;
 
-            // Frost Presence health
-            if (GetId() == 48263)
-                spellId1 = 61261;
-            // Unholy Presence move speed
-            else if (GetId() == 48265)
-                spellId1 = 49772;
-            else
-                return;
+			Aura * bloodPresenceAura = NULL;
+			Aura * frostPresenceAura = NULL;
+			Aura * unholyPresenceAura = NULL;
+
+			if( apply )
+			{
+				Unit::AuraList const& vDummyAuras = m_target->GetAurasByType(SPELL_AURA_DUMMY);
+				for(Unit::AuraList::const_iterator itr = vDummyAuras.begin(); itr != vDummyAuras.end(); ++itr)
+				{
+					switch((*itr)->GetId())
+					{
+						// Improved Blood Presence
+						case 50365:
+						case 50371:
+						{
+							bloodPresenceAura = (*itr);
+							break;
+						}
+						// Improved Frost Presence
+						case 50384:
+						case 50385:
+						{
+							frostPresenceAura = (*itr);
+							break;
+						}
+						// Improved Unholy Presence
+						case 50391:
+						case 50392:
+						{
+							unholyPresenceAura = (*itr);
+							break;
+						}
+					}
+				}
+
+				if (GetId() == 48266) // Blood Presence effects from talents
+				{
+					m_target->CastSpell(m_target,63611,true);
+					if( unholyPresenceAura ) // Improved Unholy Presence speed
+					{
+						const int32 base = unholyPresenceAura->GetBasePoints();
+						m_target->CastCustomSpell(m_target, 49772, &base, NULL, NULL, true );
+					}
+					if( frostPresenceAura ) // Improved Frost Presence health
+					{
+						const int32 base = frostPresenceAura->GetBasePoints();
+						m_target->CastCustomSpell(m_target, 61261, &base, NULL, NULL, true );
+					}
+				}
+				// Frost Presence health
+				else if (GetId() == 48263)
+				{
+					if( bloodPresenceAura ) // Improved Blood Presence healing
+					{
+						const int32 base = bloodPresenceAura->GetBasePoints();
+						m_target->CastCustomSpell(m_target, 63611, &base, NULL, NULL, true );	
+					}
+					if( unholyPresenceAura ) // Improved Unholy Presence speed
+					{
+						const int32 base = unholyPresenceAura->GetBasePoints();
+						m_target->CastCustomSpell(m_target, 49772, &base, NULL, NULL, true );
+					}
+					m_target->CastSpell(m_target, 61261, true, NULL, this);
+				}
+				// Unholy Presence move speed
+				else if (GetId() == 48265)
+				{
+					if( bloodPresenceAura ) // Improved Blood Presence healing
+					{
+						const int32 base = bloodPresenceAura->GetBasePoints();
+						m_target->CastCustomSpell(m_target, 63611, &base, NULL, NULL, true );	
+					}
+					if( frostPresenceAura ) // Improved Frost Presence health
+					{
+						const int32 base = frostPresenceAura->GetBasePoints();
+						m_target->CastCustomSpell(m_target, 61261, &base, NULL, NULL, true );
+					}
+					if( unholyPresenceAura ) // Improved Unholy rune regeneration
+					{
+						const int32 base = unholyPresenceAura->GetSpellProto()->EffectBasePoints[1];
+						m_target->CastCustomSpell(m_target, 65095, &base, NULL, NULL, true );
+					}
+					m_target->CastSpell(m_target, 49772, true, NULL, this);
+				}
+				else
+					return;
+
+				return;
+			}
+			if( !apply )
+			{
+				// Remove passive auras
+				if (GetId() == SPELL_ID_BLOOD_PRESENCE || bloodPresenceAura)
+					m_target->RemoveAurasDueToSpell(63611);
+				if (GetId() == SPELL_ID_FROST_PRESENCE || frostPresenceAura)
+					m_target->RemoveAurasDueToSpell(61261);
+				if (GetId() == SPELL_ID_UNHOLY_PRESENCE || unholyPresenceAura)
+				{
+					if(GetId() == SPELL_ID_UNHOLY_PRESENCE && unholyPresenceAura)
+					{
+						//m_target->RemoveAurasDueToSpell(63622);
+						m_target->RemoveAurasDueToSpell(65095);
+					}
+					m_target->RemoveAurasDueToSpell(49772);
+				}
+				return;
+			}
 
             break;
         }
