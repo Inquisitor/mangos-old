@@ -6234,6 +6234,7 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
         }
 		case SPELLFAMILY_DEATHKNIGHT:
         {
+            /*
 			// Frost Fever and Blood Plague
 			if(GetSpellProto()->SpellFamilyFlags2 & 0x2)
             {
@@ -6387,6 +6388,7 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
 				}
 			}
 
+            */
             break;
 		}
         default:

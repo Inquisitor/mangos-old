@@ -614,7 +614,7 @@ void InstanceSaveManager::_ResetOrWarnAll(uint32 mapid, bool warn, uint32 timeLe
         CharacterDatabase.PExecute("UPDATE instance_reset SET resettime = '"UI64FMTD"' WHERE mapid = '%d'", next_reset, mapid);
 
         m_resetTimeByMapId[mapid] = (time_t) next_reset;
-        ScheduleReset(true, (time_t) next_reset, InstResetEvent(1, mapid));
+        ScheduleReset(true, (time_t) (next_reset-3600), InstResetEvent(1, mapid));
     }
 
     MapInstanced::InstancedMaps &instMaps = ((MapInstanced*)map)->GetInstancedMaps();

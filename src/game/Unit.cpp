@@ -8604,6 +8604,7 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
                     DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f)/100.0f;
                 break;
             }
+            /*
 			// Ebon Plague or Crypt Fever
 			case 7282:
 			{
@@ -8623,7 +8624,9 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
 					if( pAur )
 						DoneTotalMod *= (pAur->GetModifier()->m_amount+100.0f) / 100.0f;
 				}
+                break;
 			}
+            */
         }
     }
 
