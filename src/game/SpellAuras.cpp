@@ -6393,6 +6393,31 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
             return;
     }
 
+	// Icy Talons (prolly as wrong place to do it as possible ;p
+	if( GetModifier()->m_auraname == SPELL_AURA_MOD_HASTE && GetModifier()->m_amount < 0 && apply )
+	{
+		if(Aura * pFever = m_target->GetAura(55095, 0) )
+		{
+			if( Unit * pCaster = pFever->GetCaster() )
+			{
+				uint32 hasteSpell = 0;
+				Unit::AuraList const& vDummyAuras = pCaster->GetAurasByType(SPELL_AURA_PROC_TRIGGER_SPELL_WITH_VALUE);
+				for(Unit::AuraList::const_iterator itr = vDummyAuras.begin(); itr != vDummyAuras.end(); ++itr)
+				{
+					switch((*itr)->GetId() )
+					{
+						case 50880: hasteSpell = 50882; break;
+						case 50884: hasteSpell = 58575; break;
+						case 50885: hasteSpell = 58576; break;
+						case 50886: hasteSpell = 58577; break;
+						case 50887: hasteSpell = 58578; break;
+					}
+				}
+				pCaster->CastSpell(pCaster, hasteSpell, true);
+			}
+		}
+	}
+
     // prevent aura deletion, specially in multi-boost case
     SetInUse(true);
 
