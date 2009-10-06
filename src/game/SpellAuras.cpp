@@ -6234,7 +6234,6 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
         }
 		case SPELLFAMILY_DEATHKNIGHT:
         {
-            /*
 			// Frost Fever and Blood Plague
 			if(GetSpellProto()->SpellFamilyFlags2 & 0x2)
             {
@@ -6260,7 +6259,6 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
                 }
                 if (aurEff)
                 {
-                    uint32 spellId = 0;
                     switch (aurEff->GetId())
                     {
                         // Ebon Plague
@@ -6274,7 +6272,6 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
                         default:
                             sLog.outError("Unknown rank of Crypt Fever/Ebon Plague %d", aurEff->GetId());
                     }
-               //     caster->CastSpell(m_target, spellId, true, 0, GetPartAura(0));
                 }
             }
 
@@ -6388,7 +6385,6 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
 				}
 			}
 
-            */
             break;
 		}
         default:

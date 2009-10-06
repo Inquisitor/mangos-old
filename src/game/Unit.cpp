@@ -365,15 +365,9 @@ void Unit::RemoveSpellsCausingAura(AuraType auraType)
 
         if (*iter)
         {
-			if( (*iter)->GetId() != 46021 && (*iter)->GetId() != 44801 ) // hacky fix for Spectral Realm being removed from Unit::DealDamage invis removal check
-				RemoveAurasDueToSpell((*iter)->GetId());
+            RemoveAurasDueToSpell((*iter)->GetId());
             if (!m_modAuras[auraType].empty())
-			{
-				if( m_modAuras[auraType].size() == 1 && ( (*iter)->GetId() == 46021 || (*iter)->GetId() == 44801) ) // Hack for Spectral Realm (endless loop fix)
-					return;
-
                 next = m_modAuras[auraType].begin();
-			}
             else
                 return;
         }
@@ -461,6 +455,7 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
         RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
         RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
+        if(!HasAura(46021) && !HasAura(44801)) // Spectral Realm
         if(pVictim != this)
             RemoveSpellsCausingAura(SPELL_AURA_MOD_INVISIBILITY);
 
@@ -8604,7 +8599,6 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
                     DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f)/100.0f;
                 break;
             }
-            /*
 			// Ebon Plague or Crypt Fever
 			case 7282:
 			{
@@ -8626,7 +8620,6 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
 				}
                 break;
 			}
-            */
         }
     }
 
