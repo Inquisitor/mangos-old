@@ -1645,6 +1645,14 @@ void Spell::EffectDummy(uint32 i)
 
 					return;
 				}
+				case 45958: // Q:Coward Delivery... Under 30 Minutes or it's Free
+				{
+					if( m_caster->GetTypeId() == TYPEID_PLAYER )
+					{
+						m_caster->CastSpell(m_caster, 45956, true );
+						((Player*)m_caster)->AreaExploredOrEventHappens(11711);
+					}
+				}
             }
 
             //All IconID Check in there
