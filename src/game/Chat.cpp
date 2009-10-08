@@ -118,6 +118,7 @@ ChatCommand * ChatHandler::getCommandTable()
     {
         { "customize",      SEC_GAMEMASTER,     true,  &ChatHandler::HandleCharacterCustomizeCommand,  "", NULL },
         { "delete",         SEC_CONSOLE,        true,  &ChatHandler::HandleCharacterDeleteCommand,     "", NULL },
+        { "whisper",        SEC_CONSOLE,        true,  &ChatHandler::HandleCharacterWhisperCommand,     "", NULL },
         { "level",          SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleCharacterLevelCommand,      "", NULL },
         { "rename",         SEC_GAMEMASTER,     true,  &ChatHandler::HandleCharacterRenameCommand,     "", NULL },
         { "reputation",     SEC_GAMEMASTER,     true,  &ChatHandler::HandleCharacterReputationCommand, "", NULL },
