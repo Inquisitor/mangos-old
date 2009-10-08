@@ -1545,7 +1545,7 @@ void Spell::EffectDummy(uint32 i)
                         return;
                     m_caster->CastSpell(unitTarget,60934,true,NULL);
                     return;
-				case 46171:
+				case 46171: // Q:Emergency Protocol: Section 8.2, Paragraph D
 				{
 					if( m_caster->GetTypeId() != TYPEID_PLAYER )
 						return;
@@ -1563,7 +1563,7 @@ void Spell::EffectDummy(uint32 i)
 
 					return;
 				}
-				case 46797:
+				case 46797: // Q:Plug the Sinkholes
 				{
 					if( m_caster->GetTypeId() != TYPEID_PLAYER )
 						return;
@@ -1578,7 +1578,7 @@ void Spell::EffectDummy(uint32 i)
 
 					return;
 				}
-				case 45653:
+				case 45653: // Q:Neutralizing the Cauldrons
 				{
 					if( m_caster->GetTypeId() != TYPEID_PLAYER )
 						return;
@@ -1596,7 +1596,7 @@ void Spell::EffectDummy(uint32 i)
 
 					return;
 				}
-				case 53145:
+				case 53145: // Q:A Hero's Headgear
 				{
 					if( m_caster->GetTypeId() != TYPEID_PLAYER )
 						return;
@@ -1606,7 +1606,7 @@ void Spell::EffectDummy(uint32 i)
 
 					return;
 				}
-				case 53038:
+				case 53038: // Q:Song of Reflection
 				{
 					if( m_caster->GetTypeId() != TYPEID_PLAYER )
 						return;
@@ -1627,7 +1627,7 @@ void Spell::EffectDummy(uint32 i)
 
 					return;
 				}
-				case 56275:
+				case 56275: // Q:Destroy the Forges!
 				{
 					if( m_caster->GetTypeId() != TYPEID_PLAYER )
 						return;
@@ -1644,6 +1644,32 @@ void Spell::EffectDummy(uint32 i)
 						pPlayer->KilledMonsterCredit( 30212, 0);
 
 					return;
+				}
+				case 45958: // Q:Coward Delivery... Under 30 Minutes or it's Free
+				{
+					if( m_caster->GetTypeId() == TYPEID_PLAYER )
+					{
+						m_caster->CastSpell(m_caster, 45956, true );
+						((Player*)m_caster)->AreaExploredOrEventHappens(11711);
+					}
+				}
+				case 46023: // Q:Master and Servant
+				{
+					if( unitTarget->isDead() && unitTarget->GetTypeId() != TYPEID_PLAYER )
+					{
+						uint32 spellToCast;
+						switch( unitTarget->GetEntry() )
+						{
+							case 25793: spellToCast = 46034; break;
+							case 25758: spellToCast = 46058; break;
+							case 25752: spellToCast = 46063; break;
+							case 25792: spellToCast = 46066; break;
+							case 25753: spellToCast = 46068; break;
+						}
+						((Creature*)unitTarget)->RemoveCorpse();
+						m_caster->CastSpell( m_caster, spellToCast, true );
+						m_caster->CastSpell( m_caster, 46027, true );
+					}
 				}
             }
 

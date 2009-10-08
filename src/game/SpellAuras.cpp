@@ -2322,6 +2322,15 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 if(m_target->GetTypeId() == TYPEID_PLAYER)
                     ((Player*)m_target)->RemoveAmmo();      // not use ammo and not allow use
                 return;
+			case 45611:
+				{
+					if( caster->GetTypeId() == TYPEID_PLAYER && m_target->GetEntry() == 25316 && (m_target->GetHealth() * 100 < m_target->GetMaxHealth() * 35) )
+					{
+						m_target->SetVisibility(VISIBILITY_OFF);
+						m_target->DealDamage(m_target, m_target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+						caster->CastSpell( caster, 45626, true );
+					}
+				}
         }
 
         // Earth Shield
