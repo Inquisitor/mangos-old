@@ -1676,6 +1676,39 @@ void Spell::EffectDummy(uint32 i)
 					if( m_caster->GetVehicleGUID() != 0 )
 						m_caster->ExitVehicle();
 				}
+				case 49319:
+				{
+					if( m_caster->GetTypeId() != TYPEID_PLAYER )
+						return;
+
+					// Iterate for all creatures around cast place
+					CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+					Cell cell(pair);
+					cell.data.Part.reserved = ALL_DISTRICT;
+					cell.SetNoCreate();
+
+					std::list<Creature*> creatureList;
+
+					MaNGOS::AnyUnitInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 5); // 5 yards check
+					MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
+					TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+					CellLock<GridReadGuard> cell_lock(cell, pair);
+					// Get Creatures
+					cell_lock->Visit(cell_lock, go_visit, *(unitTarget->GetMap()));
+
+					if (!creatureList.empty())
+					{
+						uint32 m_counted = 0;
+						for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+						{
+							if( (*itr)->GetEntry() == 26472 )
+								++m_counted; // Increment if found
+						}
+						for( uint32 x = 0; x < m_counted; ++x )
+							((Player*)m_caster)->KilledMonsterCredit(27221, 0);
+					}
+				}
             }
 
             //All IconID Check in there
