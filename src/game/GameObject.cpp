@@ -37,6 +37,7 @@
 #include "BattleGroundAV.h"
 #include "Util.h"
 #include "OutdoorPvPMgr.h"
+#include "ScriptCalls.h"
 
 GameObject::GameObject() : WorldObject()
 {
@@ -876,6 +877,9 @@ void GameObject::Use(Unit* user)
     Unit* spellCaster = user;
     uint32 spellId = 0;
     bool triggered = false;
+
+	if( user->GetTypeId() == TYPEID_PLAYER )
+		Script->GOHello((Player*)user, this);
 
     switch(GetGoType())
     {
