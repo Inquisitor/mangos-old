@@ -1671,6 +1671,11 @@ void Spell::EffectDummy(uint32 i)
 						m_caster->CastSpell( m_caster, 46027, true );
 					}
 				}
+				case 48610: // Q:Shredder Repair
+				{
+					if( m_caster->GetVehicleGUID() != 0 )
+						m_caster->ExitVehicle();
+				}
             }
 
             //All IconID Check in there
