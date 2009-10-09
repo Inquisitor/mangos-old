@@ -856,6 +856,13 @@ void Spell::EffectDummy(uint32 i)
 						}
 						return;
 					}
+					case 43385: // Q: Field Test
+					{
+						if( m_caster->GetTypeId() != TYPEID_PLAYER )
+							return;
+
+						((Player*)m_caster)->KilledMonsterCredit(24281, 0);
+					}
 				}
 				break;
 			}
@@ -1688,7 +1695,7 @@ void Spell::EffectDummy(uint32 i)
 						m_caster->ExitVehicle();
 					return;
 				}
-				case 49319:
+				case 49319: // Q:The Horse Hollerer
 				{
 					if( m_caster->GetTypeId() != TYPEID_PLAYER )
 						return;
