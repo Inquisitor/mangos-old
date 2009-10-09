@@ -542,7 +542,7 @@ class CliHandler : public ChatHandler
 {
     public:
         typedef void Print(char const*);
-        explicit CliHandler(Print* zprint) : m_print(zprint) {}
+        explicit CliHandler(Print* zprint, uint32 _guid) : m_print(zprint), guid(_guid) {}
 
         // overwrite functions
         const char *GetMangosString(int32 entry) const;
@@ -555,6 +555,7 @@ class CliHandler : public ChatHandler
 
     private:
         Print* m_print;
+        uint32 guid;
 };
 
 char const *fmtstring( char const *format, ... );
