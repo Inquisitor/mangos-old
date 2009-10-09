@@ -1695,6 +1695,12 @@ void Spell::EffectDummy(uint32 i)
 						m_caster->ExitVehicle();
 					return;
 				}
+				case 45877: // Q:Bring 'Em Back Alive
+				{
+					if( m_caster->GetVehicleGUID() != 0 )
+						m_caster->ExitVehicle();
+					return;
+				}
 				case 49319: // Q:The Horse Hollerer
 				{
 					if( m_caster->GetTypeId() != TYPEID_PLAYER )
