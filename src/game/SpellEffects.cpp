@@ -847,6 +847,22 @@ void Spell::EffectDummy(uint32 i)
 						}
 						return;
 					}
+					case 50547:
+					{
+						if( m_caster->GetTypeId() == TYPEID_PLAYER )
+						{
+							if( ((Player*)m_caster)->GetQuestStatus(12084) == QUEST_STATUS_INCOMPLETE || ((Player*)m_caster)->GetQuestStatus(12083) == QUEST_STATUS_INCOMPLETE )
+								((Player*)m_caster)->KilledMonsterCredit(26831, 0);
+						}
+						return;
+					}
+					case 43385: // Q: Field Test
+					{
+						if( m_caster->GetTypeId() != TYPEID_PLAYER )
+							return;
+
+						((Player*)m_caster)->KilledMonsterCredit(24281, 0);
+					}
 				}
 				break;
 			}
@@ -1652,6 +1668,7 @@ void Spell::EffectDummy(uint32 i)
 						m_caster->CastSpell(m_caster, 45956, true );
 						((Player*)m_caster)->AreaExploredOrEventHappens(11711);
 					}
+					return;
 				}
 				case 46023: // Q:Master and Servant
 				{
@@ -1670,13 +1687,15 @@ void Spell::EffectDummy(uint32 i)
 						m_caster->CastSpell( m_caster, spellToCast, true );
 						m_caster->CastSpell( m_caster, 46027, true );
 					}
+					return;
 				}
 				case 48610: // Q:Shredder Repair
 				{
 					if( m_caster->GetVehicleGUID() != 0 )
 						m_caster->ExitVehicle();
+					return;
 				}
-				case 49319:
+				case 49319: // Q:The Horse Hollerer
 				{
 					if( m_caster->GetTypeId() != TYPEID_PLAYER )
 						return;
@@ -1708,6 +1727,41 @@ void Spell::EffectDummy(uint32 i)
 						for( uint32 x = 0; x < m_counted; ++x )
 							((Player*)m_caster)->KilledMonsterCredit(27221, 0);
 					}
+					return;
+				}
+				case 48345: // Q:Bombard the Ballistae
+				{
+					if( m_caster->GetTypeId() != TYPEID_PLAYER )
+						return;
+
+					// Iterate for all creatures around cast place
+					CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+					Cell cell(pair);
+					cell.data.Part.reserved = ALL_DISTRICT;
+					cell.SetNoCreate();
+
+					std::list<GameObject*> gobList;
+
+					MaNGOS::AnyGameObjectInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10.0f); // 10 yards check
+					MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck> go_search(GetCaster(), gobList, go_check);
+					TypeContainerVisitor<MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+					CellLock<GridReadGuard> cell_lock(cell, pair);
+					// Get Creatures
+					cell_lock->Visit(cell_lock, go_visit, *(GetCaster()->GetMap()));
+
+					if (!gobList.empty())
+					{
+						for(std::list<GameObject*>::iterator itr = gobList.begin(); itr != gobList.end(); ++itr)
+						{
+							if( (*itr)->GetEntry() == 188673 )
+							{
+								(*itr)->SetLootState(GO_JUST_DEACTIVATED);
+								((Player*)m_caster)->KilledMonsterCredit(27331, 0);
+							}
+						}
+					}
+					return;
 				}
             }
 
