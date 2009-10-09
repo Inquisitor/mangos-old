@@ -213,7 +213,7 @@ BattleGroundMap* MapInstanced::CreateBattleGroundMap(uint32 InstanceId, BattleGr
     // load/create a map
     Guard guard(*this);
 
-    sLog.outDebug("MapInstanced::CreateBattleGroundMap: instance:%d for map:%d and bgType:%d created.", InstanceId, GetId(), bg->GetTypeID());
+    //sLog.outDebug("MapInstanced::CreateBattleGroundMap: instance:%d for map:%d and bgType:%d created.", InstanceId, GetId(), bg->GetTypeID());
 
     BattleGroundMap *map = new BattleGroundMap(GetId(), GetGridExpiry(), InstanceId, this);
     ASSERT(map->IsBattleGroundOrArena());

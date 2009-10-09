@@ -2192,8 +2192,17 @@ bool CliHandler::isAvailable(ChatCommand const& cmd) const
 
 void CliHandler::SendSysMessage(const char *str)
 {
-    m_print(str);
-    m_print("\r\n");
+    if (guid)
+    {
+        char resultMsg[512];
+        snprintf( (char*)resultMsg, 512, "%u|%s\r\n", guid, str);
+        m_print(resultMsg);
+    }
+    else
+    {
+        m_print(str);
+        m_print("\r\n");
+    }
 }
 
 std::string CliHandler::GetNameLink() const

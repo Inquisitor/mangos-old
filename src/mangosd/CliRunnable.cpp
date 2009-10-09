@@ -35,7 +35,6 @@
 #include "Player.h"
 #include "Chat.h"
 #include "WorldPacket.h"
-#include "../mangosd/RASocket.h"
 
 void utf8print(const char* str)
 {
@@ -136,10 +135,9 @@ bool ChatHandler::HandleCharacterWhisperCommand(const char* args)
     {
         char resultMsg[256];
         snprintf( (char*)resultMsg, 256, "Character %s not found or not online\n", character_name.c_str());
-        RASocket::zprint(resultMsg);
-        return false;
+        SendSysMessage(resultMsg);
+        return true;
     }
-
 
     from_name = std::string("[GM]") + from_name;
     // set GM name for replies - more than one GM cannot speak with same player at same time
@@ -164,16 +162,14 @@ bool ChatHandler::HandleCharacterWhisperCommand(const char* args)
     if(!msgStr)
         return false;
 
-    std::string msg = msgStr;
-
     WorldPacket data(SMSG_MESSAGECHAT, 200);
     data << (uint8)CHAT_MSG_WHISPER;
     data << (uint32)LANG_UNIVERSAL;
     data << (uint64)1;              // from guid - reserved dummy
     data << (uint32)LANG_UNIVERSAL;
     data << (uint64)player->GetGUID();
-    data << (uint32)(strlen(msg.c_str())+1);
-    data << msg.c_str();
+    data << (uint32)(strlen(msgStr)+1);
+    data << msgStr;
     data << (uint8)4;
 
     player->GetSession()->SendPacket(&data);
