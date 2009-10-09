@@ -847,6 +847,15 @@ void Spell::EffectDummy(uint32 i)
 						}
 						return;
 					}
+					case 50547:
+					{
+						if( m_caster->GetTypeId() == TYPEID_PLAYER )
+						{
+							if( ((Player*)m_caster)->GetQuestStatus(12084) == QUEST_STATUS_INCOMPLETE || ((Player*)m_caster)->GetQuestStatus(12083) == QUEST_STATUS_INCOMPLETE )
+								((Player*)m_caster)->KilledMonsterCredit(26831, 0);
+						}
+						return;
+					}
 				}
 				break;
 			}
@@ -1652,6 +1661,7 @@ void Spell::EffectDummy(uint32 i)
 						m_caster->CastSpell(m_caster, 45956, true );
 						((Player*)m_caster)->AreaExploredOrEventHappens(11711);
 					}
+					return;
 				}
 				case 46023: // Q:Master and Servant
 				{
@@ -1670,11 +1680,13 @@ void Spell::EffectDummy(uint32 i)
 						m_caster->CastSpell( m_caster, spellToCast, true );
 						m_caster->CastSpell( m_caster, 46027, true );
 					}
+					return;
 				}
 				case 48610: // Q:Shredder Repair
 				{
 					if( m_caster->GetVehicleGUID() != 0 )
 						m_caster->ExitVehicle();
+					return;
 				}
 				case 49319:
 				{
@@ -1708,6 +1720,7 @@ void Spell::EffectDummy(uint32 i)
 						for( uint32 x = 0; x < m_counted; ++x )
 							((Player*)m_caster)->KilledMonsterCredit(27221, 0);
 					}
+					return;
 				}
             }
 
