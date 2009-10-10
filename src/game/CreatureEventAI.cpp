@@ -142,6 +142,14 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
             if( !pActionInvoker || pActionInvoker->GetTypeId() != TYPEID_PLAYER || ((Player*)pActionInvoker)->GetQuestStatus( pHolder.Event.event_requirement_value) != QUEST_STATUS_INCOMPLETE )
                 return false;
             break;
+        case REQUIREMENT_T_HAS_NO_AURA:
+            if( m_creature->HasAura( pHolder.Event.event_requirement_value ) )
+                return false;
+            break;
+        case REQUIREMENT_T_INVOKER_HAS_NO_AURA:
+            if( !pActionInvoker || pActionInvoker->HasAura( pHolder.Event.event_requirement_value ) )
+                return false;
+            break;
     }
 
     CreatureEventAI_Event const& event = pHolder.Event;

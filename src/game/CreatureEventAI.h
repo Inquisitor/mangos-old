@@ -66,14 +66,16 @@ enum EventAI_Type
 
 enum EventAI_Requirement
 {
-    REQUIREMENT_T_NONE            = 0,
-    REQUIREMENT_T_HP_PERCENT    = 1,
-    REQUIREMENT_T_MANA_PERCENT    = 2,
-    REQUIREMENT_T_AURA            = 3,
-    REQUIREMENT_T_INVOKER_AURA    = 4,
-    REQUIREMENT_T_ZONE            = 5,
-    REQUIREMENT_T_QUEST            = 6,
-    REQUIREMENT_T_ENTRY            = 7, // not for creature_ai_scripts usage (all other *_scripts)
+    REQUIREMENT_T_NONE                  = 0,
+    REQUIREMENT_T_HP_PERCENT            = 1,
+    REQUIREMENT_T_MANA_PERCENT          = 2,
+    REQUIREMENT_T_AURA                  = 3,
+    REQUIREMENT_T_INVOKER_AURA          = 4,
+    REQUIREMENT_T_ZONE                  = 5,
+    REQUIREMENT_T_QUEST                 = 6,
+    REQUIREMENT_T_ENTRY                 = 7, // not for creature_ai_scripts usage (all other *_scripts)
+    REQUIREMENT_T_HAS_NO_AURA           = 8,
+    REQUIREMENT_T_INVOKER_HAS_NO_AURA   = 9,
     REQUIREMENT_T_END,
 };
 

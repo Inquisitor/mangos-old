@@ -2841,6 +2841,10 @@ void Map::ScriptsProcess()
                     if( uSource->GetTypeId() != TYPEID_PLAYER || ((Player*)uSource)->GetQuestStatus(step.script->reqvalue) != QUEST_STATUS_INCOMPLETE )
                         requirement_passed = false;
                     break;
+                case REQUIREMENT_T_INVOKER_HAS_NO_AURA:
+                    if( uSource->HasAura( step.script->reqvalue ) )
+                        requirement_passed = false;
+                    break;
             }
         }
 
