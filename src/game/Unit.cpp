@@ -9450,6 +9450,10 @@ bool Unit::IsImmunedToSpell(SpellEntry const* spellInfo)
     if (spellInfo->SpellFamilyName == SPELLFAMILY_PRIEST && spellInfo->SpellFamilyFlags == UI64LIT(0x8000000000))
         return false;
 
+    // Shattering Throw can pass any shield
+    if (spellInfo->SpellFamilyName == SPELLFAMILY_WARRIOR && spellInfo->SpellFamilyFlags == UI64LIT(0x100000000))
+        return false;
+
     SpellImmuneList const& dispelList = m_spellImmune[IMMUNITY_DISPEL];
     for(SpellImmuneList::const_iterator itr = dispelList.begin(); itr != dispelList.end(); ++itr)
         if(itr->type == spellInfo->Dispel)
