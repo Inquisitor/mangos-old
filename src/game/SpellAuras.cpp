@@ -2663,7 +2663,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     // original caster must be target (beacon)
                     m_target->CastSpell(m_target,53651,true,NULL,this,m_target->GetGUID());
                 else
-                    m_target->RemoveAurasDueToSpell(53651);
+                    m_target->RemoveAurasByCasterSpell(53651,m_target->GetGUID());
                 return;
             }
             break;
@@ -4650,8 +4650,6 @@ void Aura::HandleAuraModEffectImmunity(bool apply, bool /*Real*/)
 
     m_target->ApplySpellImmune(GetId(), IMMUNITY_EFFECT, m_modifier.m_miscvalue, apply);
 }
-
-
 
 void Aura::HandleAuraModStateImmunity(bool apply, bool Real)
 {
@@ -7201,7 +7199,7 @@ void Aura::PeriodicTick()
                     modOwner->ApplySpellMod(GetId(), SPELLMOD_MULTIPLE_VALUE, gain_multiplier);
             }
 
-            SpellPeriodicAuraLogInfo pInfo(this, drain_amount, 0, 0, 0, gain_multiplier, false);
+            SpellPeriodicAuraLogInfo pInfo(this, drain_amount, 0, 0, 0, gain_multiplier);
             m_target->SendPeriodicAuraLog(&pInfo);
 
             int32 gain_amount = int32(drain_amount * gain_multiplier);
@@ -7229,7 +7227,7 @@ void Aura::PeriodicTick()
             if(m_target->GetMaxPower(power) == 0)
                 break;
 
-            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0, 0.0f, false);
+            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0, 0.0f);
             m_target->SendPeriodicAuraLog(&pInfo);
 
             int32 gain = m_target->ModifyPower(power,pdamage);
@@ -7251,7 +7249,7 @@ void Aura::PeriodicTick()
             if(m_target->GetMaxPower(POWER_MANA) == 0)
                 break;
 
-            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0, 0.0f, false);
+            SpellPeriodicAuraLogInfo pInfo(this, pdamage, 0, 0, 0, 0.0f);
             m_target->SendPeriodicAuraLog(&pInfo);
 
             int32 gain = m_target->ModifyPower(POWER_MANA, pdamage);
@@ -7423,6 +7421,7 @@ void Aura::PeriodicDummyTick()
                     // 7053 Forsaken Skill: Shadow
                     return;
                 }
+                // Steal Flesh
                 case 52708:
                 {
                     if (Unit *caster = GetCaster())
@@ -7686,7 +7685,6 @@ void Aura::PeriodicDummyTick()
                 default:
                     break;
             }
-
             break;
         }
         case SPELLFAMILY_HUNTER:

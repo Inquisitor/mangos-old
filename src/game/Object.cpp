@@ -1856,8 +1856,6 @@ void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, 
     // set first used pos in lists
     selector.InitializeAngle();
 
-    // Debugging LoS problem when angle == 0.00, set some vars
-    bool localDebug = false;
     uint32 localCounter = 0;
     uint32 localCounter2 = 0;
 
@@ -1871,93 +1869,59 @@ void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, 
         if(IsWithinLOS(x,y,z))
             return;
 
-        // Start outputting debug when angle == 0.00
-        if(!angle && !localCounter) {
-                sLog.outError("WorldObject::GetNearPoint: DEBUG START (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
-                localDebug = true;
-        }
-
-        if(++localCounter > 100) {
-            sLog.outError("WorldObject::GetNearPoint: FIRST WHILE LOOP more then 100 iterations, BREAK (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
+        if(++localCounter > 100)
             break;
-        }
     }
 
     // BAD NEWS: not free pos (or used or have LOS problems)
     // Attempt find _used_ pos without LOS problem
 
-    if(localDebug) sLog.outError("WorldObject::GetNearPoint: CHECKPOINT 1 (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
-
     if(!first_los_conflict)
     {
-        if(localDebug) sLog.outError("WorldObject::GetNearPoint: CHECKPOINT 1A (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
-
         x = first_x;
         y = first_y;
 
         UpdateGroundPositionZ(x,y,z);                       // update to LOS height if available
 
-        if(localDebug) sLog.outError("WorldObject::GetNearPoint: RETURN POINT 1 (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
         return;
     }
-
-    if(localDebug) sLog.outError("WorldObject::GetNearPoint: CHECKPOINT 2 (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
 
     // special case when one from list empty and then empty side preferred
     if( selector.IsNonBalanced() )
     {
-        if(localDebug) sLog.outError("WorldObject::GetNearPoint: CHECKPOINT 2A (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
-
         if(!selector.FirstAngle(angle))                     // _used_ pos
         {
-            if(localDebug) sLog.outError("WorldObject::GetNearPoint: CHECKPOINT 2B (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
-
             GetNearPoint2D(x,y,distance2d,absAngle+angle);
             z = GetPositionZ();
             UpdateGroundPositionZ(x,y,z);                   // update to LOS height if available
 
-            if(IsWithinLOS(x,y,z)) {
-                if(localDebug) sLog.outError("WorldObject::GetNearPoint: RETURN POINT 2 (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
+            if(IsWithinLOS(x,y,z))
                 return;
-            }
         }
     }
-
-    if(localDebug) sLog.outError("WorldObject::GetNearPoint: CHECKPOINT 3 (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
 
     // set first used pos in lists
     selector.InitializeAngle();
 
-    if(localDebug) sLog.outError("WorldObject::GetNearPoint: CHECKPOINT 4 (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
-
     // select in positions after current nodes (selection one by one)
     while(selector.NextUsedAngle(angle))                    // angle for used pos but maybe without LOS problem
     {
-        if(localDebug) sLog.outError("WorldObject::GetNearPoint: CHECKPOINT 4A (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
-
         GetNearPoint2D(x,y,distance2d,absAngle+angle);
         z = GetPositionZ();
         UpdateGroundPositionZ(x,y,z);                       // update to LOS height if available
 
-        if(IsWithinLOS(x,y,z)) {
-            if(localDebug) sLog.outError("WorldObject::GetNearPoint: RETURN POINT 3 (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
+        if(IsWithinLOS(x,y,z))
             return;
-        }
 
-        if(++localCounter2 > 100) {
-            sLog.outError("WorldObject::GetNearPoint: SECOND WHILE LOOP more then 100 iterations, BREAK (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
+        if(++localCounter2 > 100)
             break;
-        }
     }
-
-    if(localDebug) sLog.outError("WorldObject::GetNearPoint: CHECKPOINT 5 (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
 
     // BAD BAD NEWS: all found pos (free and used) have LOS problem :(
     x = first_x;
     y = first_y;
 
     UpdateGroundPositionZ(x,y,z);                           // update to LOS height if available
-    if(localDebug) sLog.outError("WorldObject::GetNearPoint: RETURN POINT 4 (angle = %f, map_id = %u, x = %f, y = %f, z = %f)", angle, GetMapId(), x, y, z);
 }
 
 void WorldObject::SetPhaseMask(uint32 newPhaseMask, bool update)

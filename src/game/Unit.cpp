@@ -5511,14 +5511,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     target = this;
                     break;
                 }
-                // Improved Shadowform
-                case 47570:
-                case 47569:
-                {
-                    RemoveSpellsCausingAura(SPELL_AURA_MOD_ROOT);
-                    RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
-                    break;
-                }
                 // Improved Devouring Plague
                 case 63625:
                 case 63626:
@@ -7334,9 +7326,8 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
         {
             target = pVictim;
             if( this->GetTypeId() == TYPEID_PLAYER )
-            {
                 ((Player*)this)->m_comboCountAfterCalc = 1;
-            }
+
             // Need add combopoint AFTER finish movie (or they dropped in finish phase)
             break;
         }
@@ -7430,7 +7421,6 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
             }
             break;
         }
-
         // Astral Shift
         case 52179:
         {
@@ -7493,6 +7483,7 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
     if( cooldown && GetTypeId()==TYPEID_PLAYER )
         ((Player*)this)->AddSpellCooldown(trigger_spell_id,0,time(NULL) + cooldown);
 
+    // Fingers of Frost
     if( trigger_spell_id == 44544 )
     {
         if( target->HasAura(44544) )
@@ -12241,7 +12232,7 @@ void Unit::ClearComboPointHolders()
         if(plr && plr->GetComboTarget()==GetGUID())         // recheck for safe
             plr->ClearComboPoints();                        // remove also guid from m_ComboPointHolders;
         else
-            m_ComboPointHolders.erase(lowguid);                // or remove manually
+            m_ComboPointHolders.erase(lowguid);             // or remove manually
     }
 }
 

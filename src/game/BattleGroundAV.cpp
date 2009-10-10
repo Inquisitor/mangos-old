@@ -377,13 +377,13 @@ void BattleGroundAV::HandleAreaTrigger(Player *Source, uint32 Trigger)
         case 95:
         case 2608:
             if (Source->GetTeam() != ALLIANCE)
-                Source->GetSession()->SendNotification(LANG_BATTLEGROUND_ONLY_ALLIANCE_USE);
+                Source->GetSession()->SendAreaTriggerMessage("Only The Alliance can use that portal");
             else
                 Source->LeaveBattleground();
             break;
         case 2606:
             if (Source->GetTeam() != HORDE)
-                Source->GetSession()->SendNotification(LANG_BATTLEGROUND_ONLY_HORDE_USE);
+                Source->GetSession()->SendAreaTriggerMessage("Only The Horde can use that portal");
             else
                 Source->LeaveBattleground();
             break;

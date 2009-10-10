@@ -429,15 +429,15 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
             }
             case SPELLFAMILY_WARLOCK:
             {
-                 //shadowflame mask = 0x1000000000000LL
+                 //Shadowflame
                 if (m_spellInfo->Id == 47897)                    //shadowflame rank1
                 {
-                    m_caster->CastSpell(unitTarget,47960,true) ;        
+                    m_caster->CastSpell(unitTarget,47960,true);
                     break;
                 }
                 if (m_spellInfo->Id == 61290)                    //shadowflame rank2
                 {
-                    m_caster->CastSpell(unitTarget,61291,true) ;        
+                    m_caster->CastSpell(unitTarget,61291,true);
                     break;
                 }
                 // Incinerate Rank 1 & 2
@@ -7611,10 +7611,6 @@ void Spell::EffectSkill(uint32 /*i*/)
     sLog.outDebug("WORLD: SkillEFFECT");
 }
 
-/* There is currently no need for this effect. We handle it in BattleGround.cpp
-   If we would handle the resurrection here, the spiritguide would instantly disappear as the
-   player revives, and so we wouldn't see the spirit heal visual effect on the npc.
-   This is why we use a half sec delay between the visual effect and the resurrection itself */
 void Spell::EffectSpiritHeal(uint32 /*i*/)
 {
     // TODO player can't see the heal-animation - he should respawn some ticks later
