@@ -53,7 +53,7 @@ GameObject::GameObject() : WorldObject()
     m_spawnedByDefault = true;
     m_usetimes = 0;
     m_spellId = 0;
-	m_actualHealth = 0;
+    m_actualHealth = 0;
     m_cooldownTime = 0;
     m_goInfo = NULL;
 
@@ -160,9 +160,9 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
     SetGoType(GameobjectTypes(goinfo->type));
     SetGoArtKit(0);                                         // unknown what this is
     SetGoAnimProgress(animprogress);
-	SetGoArtKit(ArtKit);
+    SetGoArtKit(ArtKit);
 
-	// Spell charges for GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING (33)
+    // Spell charges for GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING (33)
     if (goinfo->type == GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING)
         m_actualHealth = goinfo->destructibleBuilding.intactNumHits;
 
@@ -878,8 +878,8 @@ void GameObject::Use(Unit* user)
     uint32 spellId = 0;
     bool triggered = false;
 
-	if( user->GetTypeId() == TYPEID_PLAYER )
-		Script->GOHello((Player*)user, this);
+    if( user->GetTypeId() == TYPEID_PLAYER )
+        Script->GOHello((Player*)user, this);
 
     switch(GetGoType())
     {
@@ -984,7 +984,7 @@ void GameObject::Use(Unit* user)
                 // possible quest objective for active quests
                 player->CastedCreatureOrGO(info->id, GetGUID(), 0);
 
-				GetMap()->ScriptsStart(sGameObjectScripts, GetDBTableGUIDLow(), spellCaster, this);
+                GetMap()->ScriptsStart(sGameObjectScripts, GetDBTableGUIDLow(), spellCaster, this);
 
                 if (info->goober.eventId)
                     GetMap()->ScriptsStart(sEventScripts, info->goober.eventId, player, this);

@@ -767,7 +767,7 @@ void WorldSession::BuildPartyMemberStatsChangedPacket(Player *player, WorldPacke
             *data << (uint64) 0;
     }
 
-	if (mask & GROUP_UPDATE_FLAG_VEHICLE_SEAT)
+    if (mask & GROUP_UPDATE_FLAG_VEHICLE_SEAT)
     {
         *data << (uint32) player->m_SeatData.dbc_seat;
     }
@@ -854,7 +854,7 @@ void WorldSession::HandleRequestPartyMemberStatsOpcode( WorldPacket &recv_data )
             }
         }
         data.put<uint64>(petMaskPos,petauramask);           // GROUP_UPDATE_FLAG_PET_AURAS
-		data << (uint32) player->m_SeatData.dbc_seat;
+        data << (uint32) player->m_SeatData.dbc_seat;
     }
     else
     {

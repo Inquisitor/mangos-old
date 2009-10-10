@@ -187,7 +187,7 @@ class MANGOS_DLL_SPEC ThreatManager
 
         void processThreatEvent(ThreatRefStatusChangeEvent* threatRefStatusChangeEvent);
 
-		bool isNeedUpdateToClient(uint32 time);
+        bool isNeedUpdateToClient(uint32 time);
 
         HostilReference* getCurrentVictim() { return iCurrentVictim; }
 
@@ -211,7 +211,7 @@ class MANGOS_DLL_SPEC ThreatManager
     private:
         HostilReference* iCurrentVictim;
         Unit* iOwner;
-		uint32 iUpdateTimer;
+        uint32 iUpdateTimer;
         ThreatContainer iThreatContainer;
         ThreatContainer iThreatOfflineContainer;
 };

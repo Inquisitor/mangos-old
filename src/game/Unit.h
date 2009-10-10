@@ -412,7 +412,7 @@ enum UnitState
     UNIT_STAT_DISTRACTED      = 0x1000,
     UNIT_STAT_ISOLATED        = 0x2000,                     // area auras do not affect other players
     UNIT_STAT_ATTACK_PLAYER   = 0x4000,
-	UNIT_STAT_ON_VEHICLE      = 0x8000,
+    UNIT_STAT_ON_VEHICLE      = 0x8000,
     UNIT_STAT_ALL_STATE       = 0xffff                      //(UNIT_STAT_STOPPED | UNIT_STAT_MOVING | UNIT_STAT_IN_COMBAT | UNIT_STAT_IN_FLIGHT)
 };
 
@@ -1142,7 +1142,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         }
         bool HasAura(uint32 spellId) const;
 
-/*		const uint64& GetAuraUpdateMask() const { return m_auraUpdateMask; }
+/*        const uint64& GetAuraUpdateMask() const { return m_auraUpdateMask; }
         void SetAuraUpdateMask(uint8 slot) { m_auraUpdateMask |= (uint64(1) << slot); }
         void ResetAuraUpdateMask() { m_auraUpdateMask = 0; }
 */
@@ -1192,7 +1192,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         void BuildHeartBeatMsg( WorldPacket *data ) const;
 
-		void SendChangeCurrentVictimOpcode(HostilReference* pHostilReference);
+        void SendChangeCurrentVictimOpcode(HostilReference* pHostilReference);
         void SendClearThreatListOpcode();
         void SendRemoveFromThreatListOpcode(HostilReference* pHostilReference);
         void SendThreatListUpdate();
@@ -1565,7 +1565,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void AddPetAura(PetAura const* petSpell);
         void RemovePetAura(PetAura const* petSpell);
 
-		// vehicle system
+        // vehicle system
         void EnterVehicle(Vehicle *vehicle, int8 seat_id, bool force = false);
         void ExitVehicle();
         uint64 GetVehicleGUID() { return m_vehicleGUID; }
@@ -1624,7 +1624,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         uint32 m_regenTimer;
         uint32 m_lastManaUseTimer;
 
-		uint64 m_vehicleGUID;
+        uint64 m_vehicleGUID;
 
     private:
         bool IsTriggeredAtSpellProcEvent(Unit *pVictim, Aura* aura, SpellEntry const* procSpell, uint32 procFlag, uint32 procExtra, WeaponAttackType attType, bool isVictim, bool active, SpellProcEventEntry const*& spellProcEvent );

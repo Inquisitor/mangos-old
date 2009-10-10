@@ -299,8 +299,8 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
     m_curSelection = 0;
     m_lootGuid = 0;
 
-	m_comboTarget = 0;
-	m_comboPoints = 0;
+    m_comboTarget = 0;
+    m_comboPoints = 0;
 
     m_usedTalentCount = 0;
     m_questRewardTalentCount = 0;
@@ -456,7 +456,7 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
     m_summon_z = 0.0f;
 
     m_mover = this;
-	m_mover_in_queve = NULL;
+    m_mover_in_queve = NULL;
 
     m_miniPet = 0;
     m_contestedPvPTimer = 0;
@@ -1350,7 +1350,7 @@ void Player::setDeathState(DeathState s)
         // drunken state is cleared on death
         SetDrunkValue(0);
         // lost combo points at any target (targeted combo points clear in Unit::setDeathState)
-		ClearComboPoints();
+        ClearComboPoints();
 
         clearResurrectRequestData();
 
@@ -1937,12 +1937,12 @@ void Player::RegenerateAll(uint32 diff)
 
     Regenerate(POWER_MANA, diff);
 
-	if( GetVehicleGUID() != 0 )
-		if( Vehicle * veh = static_cast<Vehicle*>(Unit::GetUnit(*this, GetVehicleGUID())) )
-		{
-			veh->Regenerate(POWER_ENERGY, diff);
-			veh->Regenerate(POWER_MANA, diff);
-		}
+    if( GetVehicleGUID() != 0 )
+        if( Vehicle * veh = static_cast<Vehicle*>(Unit::GetUnit(*this, GetVehicleGUID())) )
+        {
+            veh->Regenerate(POWER_ENERGY, diff);
+            veh->Regenerate(POWER_MANA, diff);
+        }
 
     if (getClass() == CLASS_DEATH_KNIGHT)
         Regenerate(POWER_RUNE, diff);
@@ -18304,10 +18304,10 @@ void Player::InitPrimaryProfessions()
 
 void Player::SendComboPoints()
 {
-	Unit *combotarget = ObjectAccessor::GetUnit(*this, m_comboTarget);
-	if (combotarget)
+    Unit *combotarget = ObjectAccessor::GetUnit(*this, m_comboTarget);
+    if (combotarget)
     {
-		WorldPacket data(SMSG_UPDATE_COMBO_POINTS, combotarget->GetPackGUID().size()+1);
+        WorldPacket data(SMSG_UPDATE_COMBO_POINTS, combotarget->GetPackGUID().size()+1);
         data.append(combotarget->GetPackGUID());
         data << uint8(m_comboPoints);
         GetSession()->SendPacket(&data);
@@ -18352,14 +18352,14 @@ void Player::ClearComboPoints()
     // without combopoints lost (duration checked in aura)
     RemoveSpellsCausingAura(SPELL_AURA_RETAIN_COMBO_POINTS);
 
-	m_comboPoints = 0;
+    m_comboPoints = 0;
 
     SendComboPoints();
 
     if(Unit* target = ObjectAccessor::GetUnit(*this,m_comboTarget))
         target->RemoveComboPointHolder(GetGUIDLow());
 
-	m_comboTarget = 0;
+    m_comboTarget = 0;
 }
 
 void Player::SetGroup(Group *group, int8 subgroup)
@@ -18417,7 +18417,7 @@ void Player::SendInitialPacketsBeforeAddToMap()
         m_movementInfo.AddMovementFlag(MOVEMENTFLAG_FLYING2);
 
     m_mover = this;
-	m_mover_in_queve = NULL;
+    m_mover_in_queve = NULL;
 }
 
 void Player::SendInitialPacketsAfterAddToMap()
@@ -18465,18 +18465,18 @@ void Player::SendInitialPacketsAfterAddToMap()
     SendEnchantmentDurations();                             // must be after add to map
     SendItemDurations();                                    // must be after add to map
 
-	if (HasSpell(64976) || HasSpell(57499) )
-	{
-		WorldPacket data(SMSG_AURA_UPDATE);
-		data.append(GetPackGUID());
-		data << uint8(255);
-		data << uint32( HasSpell(64976) ? 64976 : 57499 );
-		data << uint8(19);
-		data << uint8(80);
-		data << uint8(1);
-		data << uint8(0);
-		SendMessageToSet(&data, true);
-	}
+    if (HasSpell(64976) || HasSpell(57499) )
+    {
+        WorldPacket data(SMSG_AURA_UPDATE);
+        data.append(GetPackGUID());
+        data << uint8(255);
+        data << uint32( HasSpell(64976) ? 64976 : 57499 );
+        data << uint8(19);
+        data << uint8(80);
+        data << uint8(1);
+        data << uint8(0);
+        SendMessageToSet(&data, true);
+    }
 }
 
 void Player::SendUpdateToOutOfRangeGroupMembers()
@@ -18868,17 +18868,17 @@ bool Player::IsSpellFitByClassAndRace( uint32 spell_id ) const
 
 bool Player::HasQuest( uint32 questId ) const
 {
-	for( int i = 0; i < MAX_QUEST_LOG_SIZE; ++i )
-	{
-		uint32 questid = GetQuestSlotQuestId(i);
+    for( int i = 0; i < MAX_QUEST_LOG_SIZE; ++i )
+    {
+        uint32 questid = GetQuestSlotQuestId(i);
         if ( questid == 0 )
             continue;
-		if( questid == questId )
-			return true;
+        if( questid == questId )
+            return true;
 
-		return false;
-	}
-	return false;
+        return false;
+    }
+    return false;
 }
 
 bool Player::HasQuestForGO(int32 GOId) const
@@ -19853,7 +19853,7 @@ void Player::InitRunes()
     m_runes = new Runes;
 
     m_runes->runeState = 0;
-	m_runes->lastUsedRune = RUNE_BLOOD;
+    m_runes->lastUsedRune = RUNE_BLOOD;
 
     for(uint32 i = 0; i < MAX_RUNES; ++i)
     {

@@ -466,7 +466,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "spell_target_position",       SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadSpellTargetPositionCommand,     "", NULL },
         { "spell_threats",               SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadSpellThreatsCommand,            "", NULL },
         { "spell_disabled",              SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadSpellDisabledCommand,           "", NULL },
-		{ "vehicle_data",                SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadVehicleDataCommand,             "", NULL },
+        { "vehicle_data",                SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadVehicleDataCommand,             "", NULL },
         { "vehicle_seat_data",           SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadVehicleSeatDataCommand,         "", NULL },
 
 
@@ -490,7 +490,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "mail",           SEC_MODERATOR,      true,  &ChatHandler::HandleSendMailCommand,            "", NULL },
         { "message",        SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleSendMessageCommand,         "", NULL },
         { "money",          SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleSendMoneyCommand,           "", NULL },
-		{ "channel",		SEC_MODERATOR,      true,  &ChatHandler::HandleSendChannelMsgCommand,      "", NULL },
+        { "channel",        SEC_MODERATOR,      true,  &ChatHandler::HandleSendChannelMsgCommand,      "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
@@ -656,7 +656,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "flusharenapoints",SEC_ADMINISTRATOR, false, &ChatHandler::HandleFlushArenaPointsCommand,    "", NULL },
         { "repairitems",    SEC_GAMEMASTER,     true,  &ChatHandler::HandleRepairitemsCommand,         "", NULL },
         { "waterwalk",      SEC_GAMEMASTER,     false, &ChatHandler::HandleWaterwalkCommand,           "", NULL },
-		{ "password",      SEC_PLAYER,			false, &ChatHandler::HandleAccountPasswordCommand,     "", NULL },
+        { "password",      SEC_PLAYER,            false, &ChatHandler::HandleAccountPasswordCommand,     "", NULL },
 
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
@@ -1695,12 +1695,12 @@ void ChatHandler::FillMessageData( WorldPacket *data, WorldSession* session, uin
     if(session != 0 && type != CHAT_MSG_REPLY && type != CHAT_MSG_DND && type != CHAT_MSG_AFK)
         *data << uint8(session->GetPlayer()->chatTag());
     else
-	{
-		if( forceGMIcon )
-			*data << uint8(4);
-		else 
-			*data << uint8(0);
-	}
+    {
+        if( forceGMIcon )
+            *data << uint8(4);
+        else 
+            *data << uint8(0);
+    }
 }
 
 Player * ChatHandler::getSelectedPlayer()

@@ -934,7 +934,7 @@ void ObjectMgr::LoadCreatureAddons(SQLStorage& creatureaddons, char const* entry
         }
 
         ConvertCreatureAddonAuras(const_cast<CreatureDataAddon*>(addon), creatureaddons.GetTableName(), entryName);
-		ConvertCreatureAddonPassengers(const_cast<CreatureDataAddon*>(addon), creatureaddons.GetTableName(), entryName);
+        ConvertCreatureAddonPassengers(const_cast<CreatureDataAddon*>(addon), creatureaddons.GetTableName(), entryName);
     }
 }
 
@@ -4050,8 +4050,8 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
         ScriptInfo tmp;
         tmp.id        = fields[0].GetUInt32();
         tmp.delay     = fields[1].GetUInt32();
-		tmp.reqtype   = fields[2].GetUInt32();
-		tmp.reqvalue  = fields[3].GetUInt32();
+        tmp.reqtype   = fields[2].GetUInt32();
+        tmp.reqvalue  = fields[3].GetUInt32();
         tmp.command   = fields[4].GetUInt32();
         tmp.datalong  = fields[5].GetUInt32();
         tmp.datalong2 = fields[6].GetUInt32();
@@ -4255,27 +4255,27 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
                 }
                 break;
             }
-			case SCRIPT_COMMAND_ADD_QUEST_COUNT:
-			{
-				Quest const* quest = GetQuestTemplate(tmp.datalong);
-				if( tmp.datalong2 > 4 )
-				{
-					sLog.outErrorDb("Table `%s` has x for requirement [] (x: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `datalong2` for script id %u",tablename,tmp.datalong2,tmp.id);
-					continue;
-				}
-				if( tmp.dataint < 1 )
-				{
-					sLog.outErrorDb("Table `%s` has increment value (Value: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `dataint` for script id %u",tablename,tmp.dataint,tmp.id);
-					continue;
-				}
-				if(!quest)
-				{
-					sLog.outErrorDb("Table `%s` has invalid quest (ID: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `datalong` for script id %u",tablename,tmp.datalong,tmp.id);
-					continue;
-				}
-				break;
-			} 
-			case SCRIPT_COMMAND_TEMP_SUMMON_OBJECT:
+            case SCRIPT_COMMAND_ADD_QUEST_COUNT:
+            {
+                Quest const* quest = GetQuestTemplate(tmp.datalong);
+                if( tmp.datalong2 > 4 )
+                {
+                    sLog.outErrorDb("Table `%s` has x for requirement [] (x: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `datalong2` for script id %u",tablename,tmp.datalong2,tmp.id);
+                    continue;
+                }
+                if( tmp.dataint < 1 )
+                {
+                    sLog.outErrorDb("Table `%s` has increment value (Value: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `dataint` for script id %u",tablename,tmp.dataint,tmp.id);
+                    continue;
+                }
+                if(!quest)
+                {
+                    sLog.outErrorDb("Table `%s` has invalid quest (ID: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `datalong` for script id %u",tablename,tmp.datalong,tmp.id);
+                    continue;
+                }
+                break;
+            } 
+            case SCRIPT_COMMAND_TEMP_SUMMON_OBJECT:
             {
                 if(!MaNGOS::IsValidMapCoord(tmp.x,tmp.y,tmp.z,tmp.o))
                 {
@@ -4283,7 +4283,7 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
                     continue;
                 }
 
-				if(!GetGameObjectInfo(tmp.datalong))
+                if(!GetGameObjectInfo(tmp.datalong))
                 {
                     sLog.outErrorDb("Table `%s` has invalid gameobject (Entry: %u) in SCRIPT_COMMAND_TEMP_SUMMON_OBJECT for script id %u",tablename,tmp.datalong,tmp.id);
                     continue;
@@ -7186,7 +7186,7 @@ void ObjectMgr::LoadSpellDisabledEntrys()
     QueryResult *result = WorldDatabase.Query("SELECT entry, ischeat_spell FROM spell_disabled where active=1");
 
     uint32 total_count = 0;
-	uint32 cheat_spell_count=0;
+    uint32 cheat_spell_count=0;
 
     if( !result )
     {
@@ -7206,11 +7206,11 @@ void ObjectMgr::LoadSpellDisabledEntrys()
         bar.step();
         fields = result->Fetch();
         uint32 spellid = fields[0].GetUInt32();
-		bool ischeater = fields[1].GetBool();
+        bool ischeater = fields[1].GetBool();
         m_spell_disabled[spellid] = ischeater;
         ++total_count;
-		if(ischeater)
-		++cheat_spell_count;
+        if(ischeater)
+        ++cheat_spell_count;
 
    } while ( result->NextRow() );
 

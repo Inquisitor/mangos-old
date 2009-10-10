@@ -218,7 +218,7 @@ bool MapManager::CanPlayerEnter(uint32 mapid, Player* player)
                 sLog.outDebug("Map::CanEnter - player '%s' is dead but doesn't have a corpse!", player->GetName());
             }
         }
-		
+        
         return true;
     }
     else

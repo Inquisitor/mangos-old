@@ -276,7 +276,7 @@ void WorldSession::HandleGossipHelloOpcode( WorldPacket & recv_data )
     if (unit->isSpiritGuide())
         unit->SendAreaSpiritHealerQueryOpcode(_player);
 
-	if(!Script->GossipHello( _player, unit ) && !unit->AI()->OnTalk(_player) )
+    if(!Script->GossipHello( _player, unit ) && !unit->AI()->OnTalk(_player) )
     {
         _player->TalkedToCreature(unit->GetEntry(),unit->GetGUID());
         unit->prepareGossipMenu(_player);
@@ -320,7 +320,7 @@ void WorldSession::HandleGossipSelectOptionOpcode( WorldPacket & recv_data )
     }
     else
     {
-		if (!Script->GossipSelect (_player, unit, _player->PlayerTalkClass->GossipOptionSender (option), _player->PlayerTalkClass->GossipOptionAction (option)) && !unit->AI()->OnGossipSelect(_player, _player->PlayerTalkClass->GossipOptionAction(option)) )
+        if (!Script->GossipSelect (_player, unit, _player->PlayerTalkClass->GossipOptionSender (option), _player->PlayerTalkClass->GossipOptionAction (option)) && !unit->AI()->OnGossipSelect(_player, _player->PlayerTalkClass->GossipOptionAction(option)) )
            unit->OnGossipSelect (_player, option);
     }
 }

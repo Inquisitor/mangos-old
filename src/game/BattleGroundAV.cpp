@@ -104,7 +104,6 @@ void BattleGroundAV::HandleQuestComplete(uint32 questid, Player *player)
     uint8 team = GetTeamIndexByTeamId(player->GetTeam());
     uint32 reputation = 0;                                  // reputation for the whole team (other reputation must be done in db)
     // TODO add events (including quest not available anymore, next quest availabe, go/npc de/spawning)
-    // maybe we can do it with sd2?
     sLog.outError("BattleGroundAV: Quest %i completed", questid);
     switch(questid)
     {
@@ -373,21 +372,18 @@ void BattleGroundAV::RemovePlayer(Player* plr,uint64 /*guid*/)
 void BattleGroundAV::HandleAreaTrigger(Player *Source, uint32 Trigger)
 {
     // this is wrong way to implement these things. On official it done by gameobject spell cast.
-    if (GetStatus() != STATUS_IN_PROGRESS)
-        return;
-
     switch(Trigger)
     {
         case 95:
         case 2608:
             if (Source->GetTeam() != ALLIANCE)
-                Source->GetSession()->SendAreaTriggerMessage("Only The Alliance can use that portal");
+                Source->GetSession()->SendNotification(LANG_BATTLEGROUND_ONLY_ALLIANCE_USE);
             else
                 Source->LeaveBattleground();
             break;
         case 2606:
             if (Source->GetTeam() != HORDE)
-                Source->GetSession()->SendAreaTriggerMessage("Only The Horde can use that portal");
+                Source->GetSession()->SendNotification(LANG_BATTLEGROUND_ONLY_HORDE_USE);
             else
                 Source->LeaveBattleground();
             break;
@@ -408,6 +404,7 @@ void BattleGroundAV::HandleAreaTrigger(Player *Source, uint32 Trigger)
 
 void BattleGroundAV::UpdatePlayerScore(Player* Source, uint32 type, uint32 value)
 {
+
     BattleGroundScoreMap::iterator itr = m_PlayerScores.find(Source->GetGUID());
     if(itr == m_PlayerScores.end())                         // player not found...
         return;
@@ -457,7 +454,7 @@ void BattleGroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
         RewardHonorToTeam(GetBonusHonorFromKill(BG_AV_KILL_TOWER), owner);
         SendYell2ToAll(LANG_BG_AV_TOWER_TAKEN, LANG_UNIVERSAL, GetSingleCreatureGuid(BG_AV_HERALD, 0), GetNodeName(node), ( owner == BG_TEAM_ALLIANCE ) ? LANG_BG_AV_ALLY : LANG_BG_AV_HORDE);
     }
-    else if (IsGrave(node))
+    else
     {
         SendYell2ToAll(LANG_BG_AV_GRAVE_TAKEN, LANG_UNIVERSAL, GetSingleCreatureGuid(BG_AV_HERALD, 0), GetNodeName(node), ( owner == BG_TEAM_ALLIANCE ) ? LANG_BG_AV_ALLY : LANG_BG_AV_HORDE);
     }
@@ -484,8 +481,6 @@ void BattleGroundAV::ChangeMineOwner(uint8 mine, uint32 team)
     SpawnEvent(BG_AV_MINE_EVENT + mine, team, true);
     SpawnEvent(BG_AV_MINE_BOSSES + mine, team, true);
 
-    // because the gameobjects in this mine have changed, update all surrounding players:
-    // TODO: add gameobject - update code (currently this is done in a hacky way)
     if (team == BG_TEAM_ALLIANCE || team == BG_TEAM_HORDE)
     {
         PlaySoundToAll((team == BG_TEAM_ALLIANCE) ? BG_AV_SOUND_ALLIANCE_GOOD : BG_AV_SOUND_HORDE_GOOD);
@@ -588,7 +583,7 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, BG_AV_Nodes node)
         UpdatePlayerScore(player, SCORE_TOWERS_DEFENDED, 1);
         PlaySoundToAll(BG_AV_SOUND_BOTH_TOWER_DEFEND);
     }
-    else if (IsGrave(node))
+    else
     {
         SendYell2ToAll(LANG_BG_AV_GRAVE_DEFENDED, LANG_UNIVERSAL, GetSingleCreatureGuid(BG_AV_HERALD, 0),
             GetNodeName(node),
@@ -602,19 +597,12 @@ void BattleGroundAV::EventPlayerDefendsPoint(Player* player, BG_AV_Nodes node)
 void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, BG_AV_Nodes node)
 {
     // TODO implement quest 7101, 7081
-    // maybe using a mutex is better - if we have two parallel assaults it still
-    // makes conflicts
-    m_assault_in_progress = node;                           // to disable getclosestgrave for this node
-
     uint32 team  = GetTeamIndexByTeamId(player->GetTeam());
     sLog.outDebug("BattleGroundAV: player assaults node %i", node);
     if (m_Nodes[node].Owner == team || team == m_Nodes[node].TotalOwner)
         return;
 
-    // creatures from graveyard will be teleported away in
-    // spawnbgobject-function, when spiritguide is despawned
-    // - so n need to check here
-    AssaultNode(node, team);                          // update nodeinfo variables
+    AssaultNode(node, team);                                // update nodeinfo variables
     UpdateNodeWorldState(node);                             // send mapicon
     PopulateNode(node);
 
@@ -623,9 +611,9 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, BG_AV_Nodes node)
         SendYell2ToAll(LANG_BG_AV_TOWER_ASSAULTED, LANG_UNIVERSAL, GetSingleCreatureGuid(BG_AV_HERALD, 0),
             GetNodeName(node),
             ( team == BG_TEAM_ALLIANCE ) ? LANG_BG_AV_ALLY:LANG_BG_AV_HORDE);
-        UpdatePlayerScore(player, SCORE_GRAVEYARDS_ASSAULTED, 1);
+        UpdatePlayerScore(player, SCORE_TOWERS_ASSAULTED, 1);
     }
-    else if (IsGrave(node))
+    else
     {
         SendYell2ToAll(LANG_BG_AV_GRAVE_ASSAULTED, LANG_UNIVERSAL, GetSingleCreatureGuid(BG_AV_HERALD, 0),
             GetNodeName(node),
@@ -635,7 +623,6 @@ void BattleGroundAV::EventPlayerAssaultsPoint(Player* player, BG_AV_Nodes node)
     }
 
     PlaySoundToAll((team == BG_TEAM_ALLIANCE) ? BG_AV_SOUND_ALLIANCE_ASSAULTS : BG_AV_SOUND_HORDE_ASSAULTS);
-    m_assault_in_progress = BG_AV_NODES_ERROR;
 }
 
 void BattleGroundAV::FillInitialWorldStates(WorldPacket& data)
@@ -702,8 +689,6 @@ WorldSafeLocsEntry const* BattleGroundAV::GetClosestGraveYard(Player *plr)
         float mindist = 9999999.0f;
         for(uint8 i = BG_AV_NODES_FIRSTAID_STATION; i <= BG_AV_NODES_FROSTWOLF_HUT; ++i)
         {
-            if (i == m_assault_in_progress)
-                continue;
             if (m_Nodes[i].Owner != team || m_Nodes[i].State != POINT_CONTROLLED)
                 continue;
             WorldSafeLocsEntry const * entry = sWorldSafeLocsStore.LookupEntry( BG_AV_GraveyardIds[i] );
@@ -749,7 +734,7 @@ uint32 BattleGroundAV::GetNodeName(BG_AV_Nodes node)
 
 void BattleGroundAV::AssaultNode(BG_AV_Nodes node, uint32 team)
 {
-    assert(team<3);
+    assert(team < 3);                                       // alliance:0, horde:1, neutral:2
     assert(m_Nodes[node].TotalOwner != team);
     assert(m_Nodes[node].Owner != team);
     assert(m_Nodes[node].State != POINT_ASSAULTED || !m_Nodes[node].TotalOwner ); // only assault an assaulted node if no totalowner exists
@@ -774,7 +759,7 @@ void BattleGroundAV::DestroyNode(BG_AV_Nodes node)
 
 void BattleGroundAV::InitNode(BG_AV_Nodes node, uint32 team, bool tower)
 {
-    assert(team<3);
+    assert(team < 3);                                       // alliance:0, horde:1, neutral:2
     m_Nodes[node].TotalOwner = team;
     m_Nodes[node].Owner      = team;
     m_Nodes[node].PrevOwner  = team;
@@ -790,7 +775,7 @@ void BattleGroundAV::InitNode(BG_AV_Nodes node, uint32 team, bool tower)
 
 void BattleGroundAV::DefendNode(BG_AV_Nodes node, uint32 team)
 {
-    assert(team<3);
+    assert(team < 3);                                       // alliance:0, horde:1, neutral:2
     assert(m_Nodes[node].TotalOwner == team);
     assert(m_Nodes[node].Owner != team);
     assert(m_Nodes[node].State != POINT_CONTROLLED);
@@ -815,7 +800,6 @@ void BattleGroundAV::Reset()
     m_RepSurviveCaptain   = (isBGWeekend) ? BG_AV_REP_SURVIVING_CAPTAIN_HOLIDAY : BG_AV_REP_SURVIVING_CAPTAIN;
     m_RepSurviveTower     = (isBGWeekend) ? BG_AV_REP_SURVIVING_TOWER_HOLIDAY : BG_AV_REP_SURVIVING_TOWER;
 
-    m_assault_in_progress = BG_AV_NODES_ERROR;
     for(uint8 i = 0; i < BG_TEAMS_COUNT; i++)
     {
         for(uint8 j = 0; j < 9; j++)                        // 9 quests getting tracked

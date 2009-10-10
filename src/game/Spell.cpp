@@ -1136,7 +1136,7 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
 
     Unit* realCaster = m_originalCaster ? m_originalCaster : m_caster;
 
-	if (m_spellInfo->Id == 33786 && unit->IsImmunedToDamage(GetSpellSchoolMask(m_spellInfo)))
+    if (m_spellInfo->Id == 33786 && unit->IsImmunedToDamage(GetSpellSchoolMask(m_spellInfo)))
     {
         realCaster->SendSpellMiss(unit, m_spellInfo->Id, SPELL_MISS_IMMUNE);
         return;
@@ -1257,13 +1257,13 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
         }
     }
 
-	if( m_caster->HasAura(44544, 0) && !m_IsTriggeredSpell && !m_CastItem ) // Fingers of Frost removing (after 2 spells)
-	{
-		Aura * FoF = m_caster->GetAura(44544, 0);
-		FoF->DropAuraCharge();
-		if( FoF->GetAuraCharges() == 0 )
-			m_caster->RemoveAura(44544, 0);
-	}
+    if( m_caster->HasAura(44544, 0) && !m_IsTriggeredSpell && !m_CastItem ) // Fingers of Frost removing (after 2 spells)
+    {
+        Aura * FoF = m_caster->GetAura(44544, 0);
+        FoF->DropAuraCharge();
+        if( FoF->GetAuraCharges() == 0 )
+            m_caster->RemoveAura(44544, 0);
+    }
 }
 
 void Spell::DoAllEffectOnTarget(GOTargetInfo *target)
@@ -1503,7 +1503,7 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
                     switch (m_spellInfo->SpellIconID)
                     {
                         case 1737: // Corpse Explosion
-                        {	
+                        {    
                             // if not our ghoul AND
                             if (!(m_targets.getUnitTarget()->GetEntry() == 26125 && m_targets.getUnitTarget()->GetOwnerGUID() == m_caster->GetGUID()) &&
                                 // alive target or not suitable corpse
@@ -1511,7 +1511,7 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
                                 (m_targets.getUnitTarget()->getDeathState() != CORPSE && m_targets.getUnitTarget()->getDeathState() != GHOULED) ||
                                 (m_targets.getUnitTarget()->GetCreatureTypeMask() & CREATURE_TYPEMASK_MECHANICAL_OR_ELEMENTAL)!=0 || 
                                 (m_targets.getUnitTarget()->GetDisplayId() != m_targets.getUnitTarget()->GetNativeDisplayId()) ))
-                            {	
+                            {    
                                 TagUnitMap.clear();
                                 CleanupTargetList();
 
@@ -2527,17 +2527,17 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
     }
     
     if(uint8 result = objmgr.IsSpellDisabled(m_spellInfo->Id))
-	{
-		if(m_caster->GetTypeId() == TYPEID_PLAYER)
-		{
-			sLog.outDebug("Player %s cast a spell %u which was disabled by server administrator",   m_caster->GetName(), m_spellInfo->Id);
-			if(result == 2)
-			sLog.outChar("Player %s cast a spell %u which was disabled by server administrator and marked as CheatSpell",   m_caster->GetName(), m_spellInfo->Id);
-		}
-		SendCastResult(SPELL_FAILED_SPELL_UNAVAILABLE);
+    {
+        if(m_caster->GetTypeId() == TYPEID_PLAYER)
+        {
+            sLog.outDebug("Player %s cast a spell %u which was disabled by server administrator",   m_caster->GetName(), m_spellInfo->Id);
+            if(result == 2)
+            sLog.outChar("Player %s cast a spell %u which was disabled by server administrator and marked as CheatSpell",   m_caster->GetName(), m_spellInfo->Id);
+        }
+        SendCastResult(SPELL_FAILED_SPELL_UNAVAILABLE);
         finish(false);
         return;
-	}
+    }
 
     // Fill cost data
     m_powerCost = CalculatePowerCost();
@@ -2570,7 +2570,7 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
     {
         m_caster->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
         m_caster->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
-		m_caster->RemoveAurasDueToSpell(32612);
+        m_caster->RemoveAurasDueToSpell(32612);
     }
 
     if(m_IsTriggeredSpell)
@@ -2694,13 +2694,13 @@ void Spell::cast(bool skipCheck)
 
             break;
         }
-		case SPELLFAMILY_WARRIOR:
-		{
-			if(m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000004000000000))	//Devastate
-				AddPrecastSpell(58567);
+        case SPELLFAMILY_WARRIOR:
+        {
+            if(m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000004000000000))    //Devastate
+                AddPrecastSpell(58567);
 
-			break;
-		}
+            break;
+        }
         case SPELLFAMILY_PRIEST:
         {
             // Power Word: Shield
@@ -3169,19 +3169,19 @@ void Spell::finish(bool ok)
             }
         }
         if (needDrop)
-		{
-			Unit * ComboTarget = m_caster->GetGUID() == ((Player*)m_caster)->GetComboTarget() ? NULL : ObjectAccessor::GetUnit(*m_caster, ((Player*)m_caster)->GetComboTarget());
+        {
+            Unit * ComboTarget = m_caster->GetGUID() == ((Player*)m_caster)->GetComboTarget() ? NULL : ObjectAccessor::GetUnit(*m_caster, ((Player*)m_caster)->GetComboTarget());
             ((Player*)m_caster)->ClearComboPoints();
-			if( ((Player*)m_caster)->m_comboCountAfterCalc > 0 )
-			{
-				if (ComboTarget != NULL && ComboTarget->isAlive())
-				{
-				  ((Player*)m_caster)->AddComboPoints( ComboTarget, ((Player*)m_caster)->m_comboCountAfterCalc);
-				  ((Player*)m_caster)->m_comboCountAfterCalc = 0;
-				  ComboTarget = NULL;
-				}
-			}
-		}
+            if( ((Player*)m_caster)->m_comboCountAfterCalc > 0 )
+            {
+                if (ComboTarget != NULL && ComboTarget->isAlive())
+                {
+                  ((Player*)m_caster)->AddComboPoints( ComboTarget, ((Player*)m_caster)->m_comboCountAfterCalc);
+                  ((Player*)m_caster)->m_comboCountAfterCalc = 0;
+                  ComboTarget = NULL;
+                }
+            }
+        }
     }
 
     // potions disabled by client, send event "not in combat" if need
@@ -3896,7 +3896,7 @@ void Spell::TakeRunePower()
         if((plr->GetRuneCooldown(i) == 0) && (runeCost[rune] > 0))
         {
             plr->SetRuneCooldown(i, RUNE_COOLDOWN);         // 5*2=10 sec
-			plr->SetLastUsedRune(RuneType(rune));
+            plr->SetLastUsedRune(RuneType(rune));
             runeCost[rune]--;
         }
     }
@@ -4519,9 +4519,9 @@ SpellCastResult Spell::CheckCast(bool strict)
             {
                 if(m_spellInfo->SpellIconID == 1648)        // Execute
                 {
-					if( !m_caster->HasAura(52437) )
-						if( !m_targets.getUnitTarget() || m_targets.getUnitTarget()->GetHealth() > m_targets.getUnitTarget()->GetMaxHealth()*0.2)
-							return SPELL_FAILED_BAD_TARGETS;
+                    if( !m_caster->HasAura(52437) )
+                        if( !m_targets.getUnitTarget() || m_targets.getUnitTarget()->GetHealth() > m_targets.getUnitTarget()->GetMaxHealth()*0.2)
+                            return SPELL_FAILED_BAD_TARGETS;
                 }
                 else if (m_spellInfo->Id == 51582)          // Rocket Boots Engaged
                 {
@@ -5035,16 +5035,16 @@ SpellCastResult Spell::CheckCast(bool strict)
                 if(m_targets.getUnitTarget()->getPowerType() != POWER_MANA)
                     return SPELL_FAILED_BAD_TARGETS;
 
-				break;
-			}
-			case SPELL_AURA_PERIODIC_TRIGGER_SPELL_WITH_VALUE:
-				{
-					if(m_caster->IsFriendlyTo(m_targets.getUnitTarget()) && !IsPositiveSpell(m_spellInfo->Id))
-						return SPELL_FAILED_TARGET_FRIENDLY;
-					break;
-				}
-			default:
-				break;
+                break;
+            }
+            case SPELL_AURA_PERIODIC_TRIGGER_SPELL_WITH_VALUE:
+                {
+                    if(m_caster->IsFriendlyTo(m_targets.getUnitTarget()) && !IsPositiveSpell(m_spellInfo->Id))
+                        return SPELL_FAILED_TARGET_FRIENDLY;
+                    break;
+                }
+            default:
+                break;
         }
     }
 

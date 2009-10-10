@@ -325,7 +325,7 @@ class Spell
         void EffectActivateRune(uint32 i);
         void EffectTitanGrip(uint32 i);
         void EffectEnchantItemPrismatic(uint32 i);
-		void EffectSummonVehicle(uint32 i);
+        void EffectSummonVehicle(uint32 i);
         void EffectDamageBuilding(uint32 i);
         void EffectPlayMusic(uint32 i);
 

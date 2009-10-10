@@ -386,7 +386,7 @@ class ChatHandler
         bool HandleReloadSpellThreatsCommand(const char* args);
         bool HandleReloadSpellPetAurasCommand(const char* args);
         bool HandleReloadSpellDisabledCommand(const char* args);
-		bool HandleReloadVehicleDataCommand(const char* args);
+        bool HandleReloadVehicleDataCommand(const char* args);
          bool HandleReloadVehicleSeatDataCommand(const char* args);
 
         bool HandleResetAchievementsCommand(const char * args);
@@ -400,7 +400,7 @@ class ChatHandler
         bool HandleSendMailCommand(const char* args);
         bool HandleSendMessageCommand(const char * args);
         bool HandleSendMoneyCommand(const char* args);
-		bool HandleSendChannelMsgCommand(const char* args);
+        bool HandleSendChannelMsgCommand(const char* args);
 
         bool HandleServerCorpsesCommand(const char* args);
         bool HandleServerExitCommand(const char* args);

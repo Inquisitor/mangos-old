@@ -1022,8 +1022,8 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 if (!miscvalue1 || miscvalue1 != achievementCriteria->cast_spell.spellID)
                     continue;
 
-				if( miscvalue1 == 8690 && achievementCriteria->ID == 10391 && ( !GetPlayer()->GetMiniPet() || GetPlayer()->GetMiniPet()->GetEntry() != 14305 ) )
-					continue;
+                if( miscvalue1 == 8690 && achievementCriteria->ID == 10391 && ( !GetPlayer()->GetMiniPet() || GetPlayer()->GetMiniPet()->GetEntry() != 14305 ) )
+                    continue;
 
                 // those requirements couldn't be found in the dbc
                 AchievementCriteriaDataSet const* data = achievementmgr.GetCriteriaDataSet(achievementCriteria);

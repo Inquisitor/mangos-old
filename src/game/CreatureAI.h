@@ -77,8 +77,8 @@ class MANGOS_DLL_SPEC CreatureAI
 
         virtual void SummonedCreatureDespawn(Creature* /*unit*/) {}
 
-		// Called when Player uses spell with effect Spell::EffectSummonWild
-		virtual void SummonedBySpell( Player* ) {}
+        // Called when Player uses spell with effect Spell::EffectSummonWild
+        virtual void SummonedBySpell( Player* ) {}
 
         // Called when hit by a spell
         virtual void SpellHit(Unit*, const SpellEntry*) {}
@@ -98,10 +98,10 @@ class MANGOS_DLL_SPEC CreatureAI
         // Called at text emote receive from player
         virtual void ReceiveEmote(Player* /*pPlayer*/, uint32 /*text_emote*/) {}
 
-		// Called when player opens gossip window
-		virtual bool OnTalk(Player * /*pPlayer*/) {return false;}
-		// Called when player selects one of gossip options
-		virtual bool OnGossipSelect(Player* pPlayer, uint32 Id) {return false;}
+        // Called when player opens gossip window
+        virtual bool OnTalk(Player * /*pPlayer*/) {return false;}
+        // Called when player selects one of gossip options
+        virtual bool OnGossipSelect(Player* pPlayer, uint32 Id) {return false;}
 
         ///== Triggered Actions Requested ==================
 

@@ -625,7 +625,7 @@ void Vehicle::Regenerate(Powers power, uint32 diff)
         }   break;
         case POWER_RAGE:                                    // Regenerate rage
         {
-            addvalue = 20;					               // 2 rage by tick (= 2 seconds => 1 rage/sec)
+            addvalue = 20;                                   // 2 rage by tick (= 2 seconds => 1 rage/sec)
         }   break;
         case POWER_ENERGY:                                  // Regenerate energy (rogue)
             addvalue = 20;

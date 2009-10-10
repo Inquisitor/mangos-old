@@ -116,33 +116,33 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
     if (pHolder.Event.event_inverse_phase_mask & (1 << Phase))
         return false;
 
-	switch( pHolder.Event.event_requirement_type )
-	{
-		case REQUIREMENT_T_HP_PERCENT:
-			if( m_creature->GetHealth() * 100 / m_creature->GetMaxHealth() > pHolder.Event.event_requirement_value )
-				return false;
-			break;
-		case REQUIREMENT_T_MANA_PERCENT:
-			if( m_creature->GetPower(POWER_MANA) * 100 / m_creature->GetMaxPower(POWER_MANA) > pHolder.Event.event_requirement_value )
-				return false;
-			break;
-		case REQUIREMENT_T_AURA:
-			if( !m_creature->HasAura( pHolder.Event.event_requirement_value ) )
-				return false;
-			break;
-		case REQUIREMENT_T_INVOKER_AURA:
-			if( !pActionInvoker || !pActionInvoker->HasAura( pHolder.Event.event_requirement_value ) )
-				return false;
-			break;
-		case REQUIREMENT_T_ZONE:
-			if( m_creature->GetZoneId() != pHolder.Event.event_requirement_value )
-				return false;
-			break;
-		case REQUIREMENT_T_QUEST:
-			if( !pActionInvoker || pActionInvoker->GetTypeId() != TYPEID_PLAYER || ((Player*)pActionInvoker)->GetQuestStatus( pHolder.Event.event_requirement_value) != QUEST_STATUS_INCOMPLETE )
-				return false;
-			break;
-	}
+    switch( pHolder.Event.event_requirement_type )
+    {
+        case REQUIREMENT_T_HP_PERCENT:
+            if( m_creature->GetHealth() * 100 / m_creature->GetMaxHealth() > pHolder.Event.event_requirement_value )
+                return false;
+            break;
+        case REQUIREMENT_T_MANA_PERCENT:
+            if( m_creature->GetPower(POWER_MANA) * 100 / m_creature->GetMaxPower(POWER_MANA) > pHolder.Event.event_requirement_value )
+                return false;
+            break;
+        case REQUIREMENT_T_AURA:
+            if( !m_creature->HasAura( pHolder.Event.event_requirement_value ) )
+                return false;
+            break;
+        case REQUIREMENT_T_INVOKER_AURA:
+            if( !pActionInvoker || !pActionInvoker->HasAura( pHolder.Event.event_requirement_value ) )
+                return false;
+            break;
+        case REQUIREMENT_T_ZONE:
+            if( m_creature->GetZoneId() != pHolder.Event.event_requirement_value )
+                return false;
+            break;
+        case REQUIREMENT_T_QUEST:
+            if( !pActionInvoker || pActionInvoker->GetTypeId() != TYPEID_PLAYER || ((Player*)pActionInvoker)->GetQuestStatus( pHolder.Event.event_requirement_value) != QUEST_STATUS_INCOMPLETE )
+                return false;
+            break;
+    }
 
     CreatureEventAI_Event const& event = pHolder.Event;
 
@@ -820,61 +820,61 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
                 InvinceabilityHpLevel = action.invincibility_hp_level.hp_level;
             break;
         }
-		case ACTION_T_ADD_GOSSIP:
+        case ACTION_T_ADD_GOSSIP:
         {
-			char const* text = "Text missing, please report this on bugtracker.";
-			CreatureEventAI_TextMap::const_iterator i = CreatureEAI_Mgr.GetCreatureEventAITextMap().find(action.add_gossip.text);
-			if( i != CreatureEAI_Mgr.GetCreatureEventAITextMap().end() )
-			{
-				uint32 loc_idx = ((Player*)pActionInvoker)->GetSession()->GetSessionDbLocaleIndex();
-				text = objmgr.GetMangosString(action.add_gossip.text,loc_idx);
-			}
-			((Player*)pActionInvoker)->PlayerTalkClass->ClearMenus();
-			((Player*)pActionInvoker)->PlayerTalkClass->GetGossipMenu().AddMenuItem(0, text, 1, action.add_gossip.id, "", 0 );
-			((Player*)pActionInvoker)->PlayerTalkClass->SendGossipMenu( action.add_gossip.titletext == 0 ? m_creature->GetNpcTextId() : action.add_gossip.titletext, m_creature->GetGUID() );
+            char const* text = "Text missing, please report this on bugtracker.";
+            CreatureEventAI_TextMap::const_iterator i = CreatureEAI_Mgr.GetCreatureEventAITextMap().find(action.add_gossip.text);
+            if( i != CreatureEAI_Mgr.GetCreatureEventAITextMap().end() )
+            {
+                uint32 loc_idx = ((Player*)pActionInvoker)->GetSession()->GetSessionDbLocaleIndex();
+                text = objmgr.GetMangosString(action.add_gossip.text,loc_idx);
+            }
+            ((Player*)pActionInvoker)->PlayerTalkClass->ClearMenus();
+            ((Player*)pActionInvoker)->PlayerTalkClass->GetGossipMenu().AddMenuItem(0, text, 1, action.add_gossip.id, "", 0 );
+            ((Player*)pActionInvoker)->PlayerTalkClass->SendGossipMenu( action.add_gossip.titletext == 0 ? m_creature->GetNpcTextId() : action.add_gossip.titletext, m_creature->GetGUID() );
             break;
         }
-		case ACTION_T_SUMMON_GOBJECT:
+        case ACTION_T_SUMMON_GOBJECT:
         {
             if( !pActionInvoker )
                 return;
 
-			Unit* target = GetTargetByType(action.summon_gobject.target, pActionInvoker);
-			if( !target )
-				target = pActionInvoker;
+            Unit* target = GetTargetByType(action.summon_gobject.target, pActionInvoker);
+            if( !target )
+                target = pActionInvoker;
 
             GameObject* pGameObj = new GameObject;
-			if(!pGameObj->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), action.summon_gobject.id, target->GetMap(),
-			target->GetPhaseMask(), target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
-			{
-				delete pGameObj;
-				return;
-			}
+            if(!pGameObj->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), action.summon_gobject.id, target->GetMap(),
+            target->GetPhaseMask(), target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
+            {
+                delete pGameObj;
+                return;
+            }
 
-			pGameObj->SetRespawnTime(action.summon_gobject.duration > 0 ? action.summon_gobject.duration/IN_MILISECONDS : 0);
-			target->GetMap()->Add(pGameObj);
-			target->AddGameObject(pGameObj);
+            pGameObj->SetRespawnTime(action.summon_gobject.duration > 0 ? action.summon_gobject.duration/IN_MILISECONDS : 0);
+            target->GetMap()->Add(pGameObj);
+            target->AddGameObject(pGameObj);
 
             break;
         }
-		case ACTION_T_CLOSE_GOSSIP:
-		{
+        case ACTION_T_CLOSE_GOSSIP:
+        {
             if (pActionInvoker)
                 ((Player*)pActionInvoker)->PlayerTalkClass->CloseGossip();
             break;
-		}
-		case ACTION_T_ADD_ITEM:
-		{
+        }
+        case ACTION_T_ADD_ITEM:
+        {
             if( !pActionInvoker || pActionInvoker->GetTypeId() != TYPEID_PLAYER )
                 return;
 
             ItemPosCountVec dest;
             uint8 msg = ((Player*)pActionInvoker)->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, action.add_item.id, 1);
-			if (msg == EQUIP_ERR_OK)
-				((Player*)pActionInvoker)->StoreNewItem(dest, action.add_item.id, true);
+            if (msg == EQUIP_ERR_OK)
+                ((Player*)pActionInvoker)->StoreNewItem(dest, action.add_item.id, true);
 
             break;
-		}
+        }
     }
 }
 
@@ -939,7 +939,7 @@ void CreatureEventAI::JustReachedHome()
 
 void CreatureEventAI::EnterEvadeMode()
 {
-	m_creature->ExitVehicle();
+    m_creature->ExitVehicle();
     m_creature->RemoveAllAuras();
     m_creature->DeleteThreatList();
     m_creature->CombatStop(true);
@@ -1130,12 +1130,12 @@ bool CreatureEventAI::OnTalk(Player* pUnit)
 
     for (std::list<CreatureEventAIHolder>::iterator i = CreatureEventAIList.begin(); i != CreatureEventAIList.end(); ++i)
         if ((*i).Event.event_type == EVENT_T_PLAYER_TALK)
-		{
-			if( ProcessEvent(*i, (Unit*)pUnit) )
-				return true;
-			return false;
-		}
-		return false;
+        {
+            if( ProcessEvent(*i, (Unit*)pUnit) )
+                return true;
+            return false;
+        }
+        return false;
 }
 
 bool CreatureEventAI::OnGossipSelect(Player* pPlayer, uint32 Id)
@@ -1145,15 +1145,15 @@ bool CreatureEventAI::OnGossipSelect(Player* pPlayer, uint32 Id)
 
     for (std::list<CreatureEventAIHolder>::iterator i = CreatureEventAIList.begin(); i != CreatureEventAIList.end(); ++i)
         if ((*i).Event.event_type == EVENT_T_GOSSIP_SELECT)
-		{
+        {
             if ((*i).Event.gossip.GossipId && (*i).Event.gossip.GossipId == Id)
-			{
-				if( ProcessEvent(*i, (Unit*)pPlayer) )
-					return true;
-				return false;
-			}
-		}
-	return false;
+            {
+                if( ProcessEvent(*i, (Unit*)pPlayer) )
+                    return true;
+                return false;
+            }
+        }
+    return false;
 }
 
 void CreatureEventAI::UpdateAI(const uint32 diff)

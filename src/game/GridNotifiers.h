@@ -654,19 +654,19 @@ namespace MaNGOS
             NearestGameObjectFishingHole(NearestGameObjectFishingHole const&);
     };
 
-	class AnyGameObjectInPointRangeCheck
+    class AnyGameObjectInPointRangeCheck
     {
         public:
             AnyGameObjectInPointRangeCheck(float posX, float posY, float posZ, float range) : x(posX), y(posY), z(posZ), i_range(range) {}
             bool operator()(GameObject* g)
             {
-				if(g && g->GetDistance(x, y, z) < i_range)
+                if(g && g->GetDistance(x, y, z) < i_range)
                     return true;
 
                 return false;
             }
         private:
-			float x, y, z;
+            float x, y, z;
             float i_range;
     };
 
@@ -851,19 +851,19 @@ namespace MaNGOS
             float i_range;
     };
 
-	class AnyUnitInPointRangeCheck
+    class AnyUnitInPointRangeCheck
     {
         public:
             AnyUnitInPointRangeCheck(float posX, float posY, float posZ, float range) : x(posX), y(posY), z(posZ), i_range(range) {}
             bool operator()(Unit* u)
             {
-				if(u->isAlive() && u->GetDistance(x, y, z) < i_range)
+                if(u->isAlive() && u->GetDistance(x, y, z) < i_range)
                     return true;
 
                 return false;
             }
         private:
-			float x, y, z;
+            float x, y, z;
             float i_range;
     };
 

@@ -292,7 +292,7 @@ struct Runes
 {
     RuneInfo runes[MAX_RUNES];
     uint8 runeState;                                        // mask of available runes
-	RuneType lastUsedRune;
+    RuneType lastUsedRune;
 
     void SetRuneState(uint8 index, bool set = true)
     {
@@ -1352,7 +1352,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void TalkedToCreature( uint32 entry, uint64 guid );
         void MoneyChanged( uint32 value );
         void ReputationChanged(FactionEntry const* factionEntry );
-		bool HasQuest( uint32 questId ) const;
+        bool HasQuest( uint32 questId ) const;
         bool HasQuestForItem( uint32 itemid ) const;
         bool HasQuestForGO(int32 GOId) const;
         void UpdateForQuestWorldObjects();
@@ -1446,8 +1446,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         const uint64& GetSelection( ) const { return m_curSelection; }
         void SetSelection(const uint64 &guid) { m_curSelection = guid; SetUInt64Value(UNIT_FIELD_TARGET, guid); }
 
-		uint8 GetComboPoints() { return m_comboPoints; }
-		const uint64& GetComboTarget() const { return m_comboTarget; }
+        uint8 GetComboPoints() { return m_comboPoints; }
+        const uint64& GetComboTarget() const { return m_comboTarget; }
 
         void AddComboPoints(Unit* target, int8 count);
         void ClearComboPoints();
@@ -2045,7 +2045,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         bool isTotalImmune();
         bool CanCaptureTowerPoint();
 
-		/*********************************************************/
+        /*********************************************************/
         /***               OUTDOOR PVP SYSTEM                  ***/
         /*********************************************************/
 
@@ -2235,7 +2235,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         DeclinedName const* GetDeclinedNames() const { return m_declinedname; }
         uint8 GetRunesState() const { return m_runes->runeState; }
-		RuneType GetLastUsedRune() { return m_runes->lastUsedRune; }
+        RuneType GetLastUsedRune() { return m_runes->lastUsedRune; }
         void SetLastUsedRune(RuneType type) { m_runes->lastUsedRune = type; }
         RuneType GetBaseRune(uint8 index) const { return RuneType(m_runes->runes[index].BaseRune); }
         RuneType GetCurrentRune(uint8 index) const { return RuneType(m_runes->runes[index].CurrentRune); }
@@ -2361,8 +2361,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint32 m_ExtraFlags;
         uint64 m_curSelection;
 
-		uint64 m_comboTarget;
-		int8 m_comboPoints;
+        uint64 m_comboTarget;
+        int8 m_comboPoints;
 
         QuestStatusMap mQuestStatus;
 

@@ -225,7 +225,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     ReadMovementInfo(recv_data, &movementInfo);
     /*----------------*/
 
-	if(!(movementInfo.flags & MOVEMENTFLAG_ONTRANSPORT) && _player->GetVehicleGUID())
+    if(!(movementInfo.flags & MOVEMENTFLAG_ONTRANSPORT) && _player->GetVehicleGUID())
     {
         if(mover->GetGUID() == _player->GetGUID())
         {
@@ -325,8 +325,8 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     {
         // now client not include swimming flag in case jumping under water
         plMover->SetInWater( !plMover->IsInWater() || plMover->GetBaseMap()->IsUnderWater(movementInfo.x, movementInfo.y, movementInfo.z) );
-	}
-	if (movementInfo.HasMovementFlag(MOVEMENTFLAG_SWIMMING))
+    }
+    if (movementInfo.HasMovementFlag(MOVEMENTFLAG_SWIMMING))
     {
         if(mover->GetTypeId() == TYPEID_UNIT)
         {
@@ -390,11 +390,11 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     else                                                    // creature charmed
     {
         if(mover->IsInWorld())
-		{
+        {
             mover->GetMap()->CreatureRelocation((Creature*)mover, movementInfo.x, movementInfo.y, movementInfo.z, movementInfo.o);
-			if(((Creature*)mover)->isVehicle())
+            if(((Creature*)mover)->isVehicle())
                 ((Vehicle*)mover)->RellocatePassengers(mover->GetMap());
-		}
+        }
     }
 }
 
@@ -484,7 +484,7 @@ void WorldSession::HandleSetActiveMoverOpcode(WorldPacket &recv_data)
     uint64 guid;
     recv_data >> guid;
 
-	if(_player->m_mover_in_queve && _player->m_mover_in_queve->GetGUID() == guid)
+    if(_player->m_mover_in_queve && _player->m_mover_in_queve->GetGUID() == guid)
     {
         _player->m_mover = _player->m_mover_in_queve;
         _player->m_mover_in_queve = NULL;
