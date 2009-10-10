@@ -2789,7 +2789,8 @@ void Spell::cast(bool skipCheck)
     // CAST SPELL
     SendSpellCooldown();
 
-    TakePower();
+    if(m_spellInfo->powerType != POWER_RUNIC_POWER) 
+        TakePower();
     TakeReagents();                                         // we must remove reagents before HandleEffects to allow place crafted item in same slot
 
     SendCastResult(castResult);
@@ -2813,6 +2814,9 @@ void Spell::cast(bool skipCheck)
         // Immediate spell, no big deal
         handle_immediate();
     }
+
+    if(m_spellInfo->powerType == POWER_RUNIC_POWER)
+        TakePower();
 
     SetExecutedCurrently(false);
 }
@@ -3811,6 +3815,13 @@ void Spell::TakePower()
     }
 
     Powers powerType = Powers(m_spellInfo->powerType);
+
+    //ugly hack for 0RP cost spells causing client!=server RP bug
+    if(m_spellInfo->powerType == POWER_RUNIC_POWER && m_powerCost == 0)
+    {
+        m_caster->ModifyPower(powerType,1);
+        m_powerCost = 1;
+    }
 
     if(powerType == POWER_RUNE)
     {
