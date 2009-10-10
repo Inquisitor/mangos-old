@@ -1658,7 +1658,6 @@ void Spell::EffectDummy(uint32 i)
 
                     else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 30212, 10 ) )
                         pPlayer->KilledMonsterCredit( 30212, 0);
-
                     return;
                 }
                 case 45958: // Q:Coward Delivery... Under 30 Minutes or it's Free
@@ -1690,6 +1689,12 @@ void Spell::EffectDummy(uint32 i)
                     return;
                 }
                 case 48610: // Q:Shredder Repair
+                {
+                    if( m_caster->GetVehicleGUID() != 0 )
+                        m_caster->ExitVehicle();
+                    return;
+                }
+                case 45877: // Q:Bring 'Em Back Alive
                 {
                     if( m_caster->GetVehicleGUID() != 0 )
                         m_caster->ExitVehicle();
