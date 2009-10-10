@@ -215,6 +215,8 @@ class MANGOS_DLL_SPEC Aura
         void HandleModTargetArmorPct(bool Apply, bool Real); 
         void HandleAuraModAllCritChance(bool Apply, bool Real);
         void HandleIgnoreAuraState(bool Apply, bool Real);
+        void HandleAuraInitializeImages(bool Apply, bool Real);
+        void HandleAuraCloneCaster(bool Apply, bool Real);
 
         virtual ~Aura();
 
