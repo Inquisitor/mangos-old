@@ -425,6 +425,11 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                 {
                     damage+=int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK) * 12 / 100);
                 }
+                // Shattering Throw / Heroic Throw
+                else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x100000000))
+                {
+                    damage+=int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK) * 0.5f);
+                }
                 break;
             }
             case SPELLFAMILY_WARLOCK:
@@ -6257,6 +6262,27 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     m_caster->CastSpell(unitTarget, spellId1, true);
                 if (spellId2)
                     m_caster->CastSpell(unitTarget, spellId2, true);
+                return;
+            }
+            break;
+        }
+        case SPELLFAMILY_WARRIOR:
+        {
+            // Shattering Throw
+            if (m_spellInfo->Id == 64380) 
+            {
+                if (!unitTarget)
+                    return;
+
+                Unit::AuraMap& Auras = unitTarget->GetAuras();
+                for(Unit::AuraMap::iterator iter = Auras.begin(), next; iter != Auras.end(); iter = next)
+                {
+                    next = iter;
+                    ++next;
+                    if(GetAllSpellMechanicMask(iter->second->GetSpellProto()) & (1<<MECHANIC_IMMUNE_SHIELD))
+                        unitTarget->RemoveAura(iter, AURA_REMOVE_BY_DEFAULT);
+                }
+
                 return;
             }
             break;
