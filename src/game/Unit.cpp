@@ -4884,6 +4884,17 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 34650;
                     break;
                 }
+                // Bloodworms Health Leech (DK Pet Aura)
+                case 50453:
+                {
+                    target = GetOwner();
+                    if(!target)
+                        return false;
+
+                    basepoints0 = int32(damage*1.5f);
+                    triggered_spell_id = 50454;
+                    break;
+                }
                 // Mark of Malice
                 case 33493:
                 {
