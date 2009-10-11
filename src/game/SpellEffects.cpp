@@ -5983,6 +5983,11 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                         ((Player*)m_caster)->learnSpell(discoveredSpell, false);
                     return;
                 }
+                case 59576:
+                {
+                    m_caster->CastSpell(m_caster, 59579, true );
+                    return;
+                }
             }
             break;
         }
