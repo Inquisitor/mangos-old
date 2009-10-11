@@ -201,6 +201,34 @@ bool GOHello( Player *player, GameObject *_GO )
 }
 
 MANGOS_DLL_EXPORT
+bool GOSelect(Player* pPlayer, GameObject* pGO, uint32 uiSender, uint32 uiAction)
+{
+    if(!pGO)
+    return false;
+    debug_log("GameObject Gossip selection, sender: %d, action: %d", uiSender, uiAction);
+
+    Script *tmpscript = m_scripts[pGO->GetGOInfo()->ScriptId];
+    if(!tmpscript || !tmpscript->pGOSelect) return false;
+
+    pPlayer->PlayerTalkClass->ClearMenus();
+    return tmpscript->pGOSelect(pPlayer, pGO, uiSender, uiAction);
+}
+
+MANGOS_DLL_EXPORT
+bool GOSelectWithCode(Player* pPlayer, GameObject* pGO, uint32 uiSender, uint32 uiAction, const char* sCode)
+{
+    if(!pGO)
+    return false;
+    debug_log("GameObject Gossip selection, sender: %d, action: %d",uiSender, uiAction);
+
+    Script *tmpscript = m_scripts[pGO->GetGOInfo()->ScriptId];
+    if(!tmpscript || !tmpscript->pGOSelectWithCode) return false;
+
+    pPlayer->PlayerTalkClass->ClearMenus();
+    return tmpscript->pGOSelectWithCode(pPlayer, pGO, uiSender ,uiAction, sCode);
+}
+
+MANGOS_DLL_EXPORT
 bool GOQuestAccept( Player *player, GameObject *_GO, Quest *_Quest )
 {
     Script *tmpscript = NULL;

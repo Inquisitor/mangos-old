@@ -24,6 +24,7 @@
 #include "Opcodes.h"
 #include "Log.h"
 #include "Player.h"
+#include "GossipDef.h"
 #include "World.h"
 #include "ObjectMgr.h"
 #include "WorldSession.h"
@@ -41,6 +42,7 @@
 #include "Pet.h"
 #include "SocialMgr.h"
 #include "OutdoorPvP.h"
+#include "CreatureAI.h"
 
 void WorldSession::HandleRepopRequestOpcode( WorldPacket & recv_data )
 {
@@ -66,6 +68,77 @@ void WorldSession::HandleRepopRequestOpcode( WorldPacket & recv_data )
     GetPlayer()->RemovePet(NULL,PET_SAVE_NOT_IN_SLOT, true);
     GetPlayer()->BuildPlayerRepop();
     GetPlayer()->RepopAtGraveyard();
+}
+
+void WorldSession::HandleGossipSelectOptionOpcode( WorldPacket & recv_data )
+{
+    sLog.outDebug("WORLD: CMSG_GOSSIP_SELECT_OPTION");
+
+    uint32 option;
+    uint32 unk;
+    uint64 guid;
+    std::string code = "";
+
+    recv_data >> guid >> unk >> option;
+
+    if(_player->PlayerTalkClass->GossipOptionCoded( option ))
+    {
+        sLog.outBasic("reading string");
+        recv_data >> code;
+        sLog.outBasic("string read: %s", code.c_str());
+    }
+
+    Creature *unit = NULL;
+    GameObject *go = NULL;
+    
+    if(IS_CRE_OR_VEH_GUID(guid))
+    {
+        unit = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
+        if (!unit)
+        {
+            sLog.outDebug( "WORLD: HandleGossipSelectOptionOpcode - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(guid)) );
+            return;
+        }
+    }
+    else if(IS_GAMEOBJECT_GUID(guid))
+    {
+        go = _player->GetMap()->GetGameObject(guid);
+        if (!go)
+        {
+            sLog.outDebug( "WORLD: HandleGossipSelectOptionOpcode - GameObject (GUID: %u) not found.", uint32(GUID_LOPART(guid)) );
+            return;
+        }
+    }
+    else
+    {
+        sLog.outDebug( "WORLD: HandleGossipSelectOptionOpcode - unsupported GUID type for highguid %u. lowpart %u.", uint32(GUID_HIPART(guid)), uint32(GUID_LOPART(guid)) );
+        return;
+    }
+
+    // remove fake death
+    if(GetPlayer()->hasUnitState(UNIT_STAT_DIED))
+        GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
+
+    if(!code.empty())
+    {
+        if(unit)
+        {
+            if (!Script->GossipSelectWithCode(_player, unit, _player->PlayerTalkClass->GossipOptionSender (option), _player->PlayerTalkClass->GossipOptionAction( option ), code.c_str()))
+                unit->OnGossipSelect (_player, option);
+        }
+        else 
+            Script->GOSelectWithCode( _player, go, _player->PlayerTalkClass->GossipOptionSender( option ), _player->PlayerTalkClass->GossipOptionAction( option ), code.c_str());
+    }
+    else
+    {
+        if(unit)
+        {
+            if (!Script->GossipSelect (_player, unit, _player->PlayerTalkClass->GossipOptionSender (option), _player->PlayerTalkClass->GossipOptionAction (option)) && !unit->AI()->OnGossipSelect(_player, _player->PlayerTalkClass->GossipOptionAction(option)) )
+                unit->OnGossipSelect (_player, option);
+        }
+        else
+            Script->GOSelect( _player, go, _player->PlayerTalkClass->GossipOptionSender( option ), _player->PlayerTalkClass->GossipOptionAction( option ));
+    }
 }
 
 void WorldSession::HandleWhoOpcode( WorldPacket & recv_data )
