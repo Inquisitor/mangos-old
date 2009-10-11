@@ -1773,6 +1773,11 @@ void Spell::EffectDummy(uint32 i)
                     }
                     return;
                 }
+                case 50133: // Q: Bring Down Those Shields
+                {
+                    if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24464, 10 ) )
+                        pCrystal->setFaction(974);
+                }
             }
 
             //All IconID Check in there
@@ -5981,6 +5986,11 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     // learn random explicit discovery recipe (if any)
                     if(uint32 discoveredSpell = GetExplicitDiscoverySpell(m_spellInfo->Id, (Player*)m_caster))
                         ((Player*)m_caster)->learnSpell(discoveredSpell, false);
+                    return;
+                }
+                case 59576:
+                {
+                    m_caster->CastSpell(m_caster, 59579, true );
                     return;
                 }
             }

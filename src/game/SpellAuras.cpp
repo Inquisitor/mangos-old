@@ -2331,6 +2331,45 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         caster->CastSpell( caster, 45626, true );
                     }
                 }
+                case 59579:
+                {                    
+                    CellPair pair(MaNGOS::ComputeCellPair( m_target->GetPositionX(), m_target->GetPositionY() ) );
+                    Cell cell(pair);
+                    cell.data.Part.reserved = ALL_DISTRICT;
+                    cell.SetNoCreate();
+
+                    std::list<Creature*> creatureList;
+                    std::vector<Creature*> creatureVector;
+
+                    MaNGOS::AnyUnitInObjectRangeCheck go_check(m_target, 15); // 25 yards check
+                    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(m_target, creatureList, go_check);
+                    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+                    CellLock<GridReadGuard> cell_lock(cell, pair);
+                    // Get Creatures
+                    cell_lock->Visit(cell_lock, go_visit, *(m_target->GetMap()));
+
+                    if (!creatureList.empty())
+                    {
+                        for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+                        {
+                            if( (*itr)->isAlive() && (*itr)->GetTypeId() != TYPEID_PLAYER && ( (*itr)->GetEntry() == 31142 || (*itr)->GetEntry() == 31147 || (*itr)->GetEntry() == 31205 ) )
+                            {
+                                m_target->CastSpell( (*itr), 59580, true );
+                                if( m_target->GetOwner() )
+                                {
+                                    switch( (*itr)->GetEntry() )
+                                    {
+                                        case 31142: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 59591, true); break;
+                                        case 31147: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 60042, true); break;
+                                        case 31205: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 60040, true); break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
         }
 
         // Earth Shield
