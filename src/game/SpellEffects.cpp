@@ -6284,8 +6284,15 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                 {
                     next = iter;
                     ++next;
-                    if(GetAllSpellMechanicMask(iter->second->GetSpellProto()) & (1<<MECHANIC_IMMUNE_SHIELD))
-                        unitTarget->RemoveAura(iter, AURA_REMOVE_BY_DEFAULT);
+                    Aura *aur = iter->second;
+                    if(GetAllSpellMechanicMask(aur->GetSpellProto()) & (1<<MECHANIC_IMMUNE_SHIELD))
+                    {
+                        unitTarget->RemoveAurasDueToSpell(aur->GetId());
+                        if(Auras.empty())
+                            break;
+                        else
+                            next = Auras.begin();
+                    }
                 }
 
                 return;
