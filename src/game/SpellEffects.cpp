@@ -1773,6 +1773,11 @@ void Spell::EffectDummy(uint32 i)
                     }
                     return;
                 }
+                case 50133: // Q: Bring Down Those Shields
+                {
+                    if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24464, 10 ) )
+                        pCrystal->setFaction(974);
+                }
             }
 
             //All IconID Check in there
