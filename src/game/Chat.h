@@ -67,9 +67,10 @@ class ChatHandler
         void SendSysMessage(          int32     entry);
         void PSendSysMessage(         const char *format, ...) ATTR_PRINTF(2,3);
         void PSendSysMessage(         int32     entry, ...  );
+        void StrReplaceStr(std::string &str, const std::string &find_what, const std::string &replace_with);
 
         int ParseCommands(const char* text);
-
+        
         bool isValidChatMessage(const char* msg);
     protected:
         explicit ChatHandler() : m_session(NULL) {}      // for CLI subclass

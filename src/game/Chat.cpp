@@ -829,6 +829,17 @@ void ChatHandler::PSendSysMessage(const char *format, ...)
     SendSysMessage(str);
 }
 
+void ChatHandler::StrReplaceStr(std::string &str, const std::string &find_what, const std::string &replace_with)
+{
+    std::string::size_type pos = 0;
+    while((pos = str.find(find_what, pos)) != std::string::npos)
+    {
+        str.erase(pos, find_what.length());
+        str.insert(pos, replace_with);
+        pos += replace_with.length();
+    }
+}
+
 bool ChatHandler::ExecuteCommandInTable(ChatCommand *table, const char* text, const std::string& fullcmd)
 {
     char const* oldtext = text;
@@ -2194,8 +2205,17 @@ void CliHandler::SendSysMessage(const char *str)
 {
     if (guid)
     {
-        char resultMsg[512];
-        snprintf( (char*)resultMsg, 512, "%u|%s\r\n", guid, str);
+        std::string out = str;
+        char guidStr[64];
+
+        snprintf( (char*)guidStr, 64, "\r\n%u|", guid);
+        StrReplaceStr(out, "\r\n", guidStr);
+
+        snprintf( (char*)guidStr, 64, "\n\r%u|", guid);
+        StrReplaceStr(out, "\n\r", guidStr);
+
+        char resultMsg[2048];
+        snprintf( (char*)resultMsg, 2048, "%u|%s\r\n", guid, out.c_str());
         m_print(resultMsg);
     }
     else

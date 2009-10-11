@@ -2066,7 +2066,23 @@ void World::ProcessCliCommands()
     {
         sLog.outDebug("CLI command under processing...");
         zprint = command->m_print;
+
+        if (command->guid)
+        {
+            char outStr[64];
+            snprintf( (char*)outStr, 64, "%u|BEGIN\r\n", command->guid);
+            zprint(outStr);
+        }
+
         CliHandler(zprint, command->guid).ParseCommands(command->m_command);
+
+        if (command->guid)
+        {
+            char outStr[64];
+            snprintf( (char*)outStr, 64, "%u|END\r\n", command->guid);
+            zprint(outStr);
+        }
+
         delete command;
     }
 

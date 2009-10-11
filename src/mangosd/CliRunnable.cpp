@@ -133,9 +133,7 @@ bool ChatHandler::HandleCharacterWhisperCommand(const char* args)
     Player *player = objmgr.GetPlayer(character_name.c_str());
     if(!player || !player->GetSession())
     {
-        char resultMsg[256];
-        snprintf( (char*)resultMsg, 256, "Character %s not found or not online\n", character_name.c_str());
-        SendSysMessage(resultMsg);
+        PSendSysMessage("Character %s not found or not online", character_name.c_str());
         return true;
     }
 
