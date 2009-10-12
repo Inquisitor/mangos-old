@@ -7657,7 +7657,6 @@ void Aura::PeriodicDummyTick()
             {
                 // Set name of summons to name of caster
                 m_target->CastSpell((Unit *)NULL, m_spellProto->EffectTriggerSpell[m_effIndex], true);
-                m_isPeriodic = false;
             }
             break;
         }
@@ -8187,13 +8186,12 @@ void Aura::HandleIgnoreAuraState(bool apply, bool Real)
     }
 }
 
-void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
+void Aura::HandleAuraInitializeImages(bool apply, bool Real)
 {
-    if (!Real || !Apply)
+    if (!Real || !apply)
         return;
 
     Unit* caster = GetCaster();
-
     if (!caster)
         return;
 
@@ -8208,26 +8206,21 @@ void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
     }
     else
     {
-        m_target->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID));
-        m_target->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 1, caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 1));
-        m_target->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 2, caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 2));
+        for(uint32 idx = 0; idx < 3; ++idx)
+            m_target->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + idx, caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + idx));
     }
 }
 
-void Aura::HandleAuraCloneCaster(bool Apply, bool Real)
+void Aura::HandleAuraCloneCaster(bool apply, bool Real)
 {
-    if (!Real || !Apply)
+    if (!Real || !apply)
         return;
 
     Unit * caster = GetCaster();
-
     if (!caster)
         return;
 
     // Set item visual
     m_target->SetDisplayId(caster->GetDisplayId());
-    m_target->SetUInt32Value(UNIT_FIELD_FLAGS_2, 2064);
- //   m_target->SetName(caster->GetName());
-    //if( caster->GetTypeId() == TYPEID_PLAYER )
- //   m_target->MonsterSay("im being cloned!", LANG_UNIVERSAL, 0);
+    m_target->SetUInt32Value(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE | UNIT_FLAG2_REGENERATE_POWER);
 }

@@ -610,17 +610,16 @@ void WorldSession::HandleSpellClick( WorldPacket & recv_data )
 
 void WorldSession::HandleMirrrorImageDataRequest( WorldPacket & recv_data )
 {
-    sLog.outDebug("WORLD: CMSG_GET_MIRRORIMAGE_DATA");	
+    sLog.outDebug("WORLD: CMSG_GET_MIRRORIMAGE_DATA");    
 
     uint64 guid;
-    recv_data >> guid;	
+    recv_data >> guid;    
 
     // Get unit for which data is needed by client
-
     Unit *unit = ObjectAccessor::GetObjectInWorld(guid, (Unit*)NULL);
     if (!unit)
         return;
-	
+    
     // Get creator of the unit
     Unit *creator = ObjectAccessor::GetObjectInWorld(unit->GetCreatorGUID(), (Unit*)NULL);
     if (!creator)
@@ -661,10 +660,16 @@ void WorldSession::HandleMirrrorImageDataRequest( WorldPacket & recv_data )
 
         // Display items in visible slots
         for (EquipmentSlots const* itr = &ItemSlots[0]; *itr != EQUIPMENT_SLOT_END; ++itr)
-            if (Item const* item =  pCreator->GetItemByPos(INVENTORY_SLOT_BAG_0, *itr))
-                data << (uint32)item->GetProto()->DisplayInfoID;    // display id
+        {
+            if (*itr == EQUIPMENT_SLOT_HEAD && pCreator->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM))
+                data << (uint32)0;
+            else if (*itr == EQUIPMENT_SLOT_BACK && pCreator->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_CLOAK))
+                data << (uint32)0;
+            else if (Item const *item = pCreator->GetItemByPos(INVENTORY_SLOT_BAG_0, *itr))
+                data << (uint32)item->GetProto()->DisplayInfoID;
             else
-                data << (uint32)0;                                  // no item found, so no id
+                data << (uint32)0;
+        }
     }
     else
     {
