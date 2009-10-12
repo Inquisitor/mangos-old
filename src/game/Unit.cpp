@@ -6583,6 +6583,19 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 return false;
                 break;
             }
+            // Frozen Power
+            if (dummySpell->SpellIconID == 3780)
+            {
+                Unit *caster = triggeredByAura->GetCaster();
+                if (!procSpell || !caster)
+                    return false;
+
+                if (caster->GetDistance(pVictim) < 15.0f || !roll_chance_i(triggerAmount))
+                    return false;
+
+                triggered_spell_id = 63685;
+                break;
+            }
             break;
         }
         case SPELLFAMILY_DEATHKNIGHT:
