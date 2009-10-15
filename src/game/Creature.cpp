@@ -308,6 +308,9 @@ bool Creature::UpdateEntry(uint32 Entry, uint32 team, const CreatureData *data )
                 SetPvP(true);
     }
 
+    if (GetCreatureInfo()->unit_flags & UNIT_FLAG_PVP || GetCreatureInfo()->unit_flags & UNIT_FLAG_PVP_ATTACKABLE)
+        SetPvP(true);
+
     for(int i=0; i < CREATURE_MAX_SPELLS; ++i)
         m_spells[i] = GetCreatureInfo()->spells[i];
 
@@ -2065,6 +2068,10 @@ void Creature::AddCreatureSpellCooldown(uint32 spellid)
         return;
 
     uint32 cooldown = GetSpellRecoveryTime(spellInfo);
+    // apply spellmod (in case creature is pet)
+    if(Player* modOwner = GetSpellModOwner())
+        modOwner->ApplySpellMod(spellid, SPELLMOD_COOLDOWN, cooldown);
+
     if(cooldown)
         _AddCreatureSpellCooldown(spellid, time(NULL) + cooldown/IN_MILISECONDS);
 

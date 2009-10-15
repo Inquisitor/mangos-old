@@ -1857,6 +1857,13 @@ void Spell::EffectDummy(uint32 i)
                 m_caster->CastCustomSpell(m_caster, 34846, &chargeBasePoints0, NULL, NULL, true);
                 return;
             }
+            // Slam
+            if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000200000)) && m_spellInfo->SpellIconID == 559)
+            {
+                int32 bp0 = damage;
+                m_caster->CastCustomSpell(unitTarget, 50783, &bp0, NULL, NULL, true, 0);
+                return;
+            }
             // Execute
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x20000000))
             {
@@ -1882,15 +1889,6 @@ void Spell::EffectDummy(uint32 i)
                                                  m_caster->GetTotalAttackPowerValue(BASE_ATTACK)*0.2f);
                 m_caster->CastCustomSpell(unitTarget, 20647, &basePoints0, NULL, NULL, true, 0);
                 m_caster->SetPower(POWER_RAGE, rage_left);
-                return;
-            }
-            // Slam
-            if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000200000))
-            {
-                if(!unitTarget)
-                    return;
-                m_damage+=m_caster->CalculateDamage(m_attackType, false);
-                m_damage+=damage;
                 return;
             }
             // Concussion Blow
@@ -1977,6 +1975,14 @@ void Spell::EffectDummy(uint32 i)
                 }
                 else
                     SendCastResult(SPELL_FAILED_FIZZLE);
+                return;
+            }
+            // Improved Drain Soul trigger dummy damage
+            if (m_spellInfo->SpellIconID == 113)
+            {
+                Aura *ids = m_caster->GetDummyAura(m_spellInfo->Id);
+                if (ids)
+                    ids->GetModifier()->m_amount = damage;
                 return;
             }
             break;
@@ -3366,11 +3372,13 @@ void Spell::EffectHealthLeech(uint32 i)
     if (Player *modOwner = m_caster->GetSpellModOwner())
         modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_MULTIPLE_VALUE, multiplier);
 
-    int32 new_damage = int32(damage*multiplier);
+    
     uint32 curHealth = unitTarget->GetHealth();
-    new_damage = m_caster->SpellNonMeleeDamageLog(unitTarget, m_spellInfo->Id, new_damage );
+    int32 new_damage = m_caster->SpellNonMeleeDamageLog(unitTarget, m_spellInfo->Id, damage );
     if (curHealth < new_damage)
         new_damage = curHealth;
+
+    new_damage = int32(new_damage*multiplier);
 
     if (m_caster->isAlive())
     {
@@ -5638,6 +5646,15 @@ void Spell::EffectScriptEffect(uint32 effIndex)
         {
             switch(m_spellInfo->Id)
             {
+                case 45204: // Clone Me!
+                case 41055: // Copy Weapon
+                case 45206: // Copy Off-hand Weapon
+                    unitTarget->CastSpell(m_caster, damage, false);
+                    break;
+                case 45205: // Copy Offhand Weapon
+                case 41054: // Copy Weapon
+                    m_caster->CastSpell(unitTarget, damage, false);
+                    break;
                 case 60123: // Lightwell
                 {
                    if (m_caster->GetTypeId() != TYPEID_UNIT)
@@ -6279,7 +6296,7 @@ void Spell::EffectScriptEffect(uint32 effIndex)
         case SPELLFAMILY_WARRIOR:
         {
             // Shattering Throw
-            if (m_spellInfo->Id == 64380) 
+            if (m_spellInfo->Id == 64380)
             {
                 if (!unitTarget)
                     return;

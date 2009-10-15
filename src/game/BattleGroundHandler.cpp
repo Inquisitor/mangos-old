@@ -730,6 +730,8 @@ void WorldSession::HandleBattlemasterJoinArena( WorldPacket & recv_data )
             arenaRating = avg_pers_rating;
     }
 
+    bg->SetRated(isRated);
+
     GroupQueueInfo * ginfo = sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].AddGroup(_player, bgTypeId, arenatype, isRated, false, arenaRating, ateamId);
     uint32 avgTime = sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].GetAverageQueueWaitTime(ginfo, _player->GetBattleGroundQueueIdFromLevel(bgTypeId));
     if (asGroup)

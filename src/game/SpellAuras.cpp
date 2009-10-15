@@ -4655,14 +4655,7 @@ void Aura::HandleModMechanicImmunity(bool apply, bool /*Real*/)
 
     // Heroic Fury (remove Intercept cooldown)
     if( apply && GetId() == 60970 && m_target->GetTypeId() == TYPEID_PLAYER )
-    {
-        ((Player*)m_target)->RemoveSpellCooldown(20252);
-
-        WorldPacket data(SMSG_CLEAR_COOLDOWN, (4+8));
-        data << uint32(20252);
-        data << uint64(m_target->GetGUID());
-        ((Player*)m_target)->GetSession()->SendPacket(&data);
-    }
+        ((Player*)m_target)->RemoveSpellCooldown(20252,true);
 
     // Lichborne - apply shapeshift (only at first aura apply/remove)
     if (GetSpellProto()->Id == 49039 && GetEffIndex() == 0)
@@ -4950,6 +4943,14 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
                     float mwb_min = caster->GetWeaponDamageRange(BASE_ATTACK,MINDAMAGE);
                     float mwb_max = caster->GetWeaponDamageRange(BASE_ATTACK,MAXDAMAGE);
                     m_modifier.m_amount+=int32(((mwb_min+mwb_max)/2+ap*mws/14000)*0.2f);
+
+                    SpellChainNode const* RendSpell = spellmgr.GetSpellChainNode(m_spellProto->Id);
+                    if (RendSpell->rank >= 9)
+                    {
+                        if (m_target->GetHealth() > m_target->GetMaxHealth()*0.75f)
+                            m_modifier.m_amount += int32(GetModifier()->m_amount*0.35);
+                    }
+
                     return;
                 }
                 break;
@@ -7649,7 +7650,6 @@ void Aura::PeriodicDummyTick()
             {
                 // Set name of summons to name of caster
                 m_target->CastSpell((Unit *)NULL, m_spellProto->EffectTriggerSpell[m_effIndex], true);
-                m_isPeriodic = false;
             }
             break;
         }
@@ -7745,14 +7745,20 @@ void Aura::PeriodicDummyTick()
                 //    return;
                 // Feeding Frenzy Rank 1
                 case 53511:
-                    if ( m_target->GetHealth() * 100 < m_target->GetMaxHealth() * 35 )
-                        m_target->CastSpell(m_target, 60096, true, 0, this);
-                    return;
+                {
+                    Unit* victim = m_target->getVictim();
+                    if( victim && victim->GetHealth() * 100 < victim->GetMaxHealth() * 35 )
+                         m_target->CastSpell(m_target, 60096, true, 0, this);
+                     return;
+                }
                 // Feeding Frenzy Rank 2
                 case 53512:
-                    if ( m_target->GetHealth() * 100 < m_target->GetMaxHealth() * 35 )
-                        m_target->CastSpell(m_target, 60097, true, 0, this);
-                    return;
+                {
+                    Unit* victim = m_target->getVictim();
+                    if( victim && victim->GetHealth() * 100 < victim->GetMaxHealth() * 35 )
+                         m_target->CastSpell(m_target, 60097, true, 0, this);
+                     return;
+                }
                 default:
                     break;
             }
@@ -8173,13 +8179,12 @@ void Aura::HandleIgnoreAuraState(bool apply, bool Real)
     }
 }
 
-void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
+void Aura::HandleAuraInitializeImages(bool apply, bool Real)
 {
-    if (!Real || !Apply)
+    if (!Real || !apply)
         return;
 
     Unit* caster = GetCaster();
-
     if (!caster)
         return;
 
@@ -8194,26 +8199,21 @@ void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
     }
     else
     {
-        m_target->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID));
-        m_target->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 1, caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 1));
-        m_target->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 2, caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 2));
+        for(uint32 idx = 0; idx < 3; ++idx)
+            m_target->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + idx, caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + idx));
     }
 }
 
-void Aura::HandleAuraCloneCaster(bool Apply, bool Real)
+void Aura::HandleAuraCloneCaster(bool apply, bool Real)
 {
-    if (!Real || !Apply)
+    if (!Real || !apply)
         return;
 
     Unit * caster = GetCaster();
-
     if (!caster)
         return;
 
     // Set item visual
     m_target->SetDisplayId(caster->GetDisplayId());
-    m_target->SetUInt32Value(UNIT_FIELD_FLAGS_2, 2064);
- //   m_target->SetName(caster->GetName());
-    //if( caster->GetTypeId() == TYPEID_PLAYER )
- //   m_target->MonsterSay("im being cloned!", LANG_UNIVERSAL, 0);
+    m_target->SetUInt32Value(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE | UNIT_FLAG2_REGENERATE_POWER);
 }

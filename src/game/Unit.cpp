@@ -5340,6 +5340,12 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 triggered_spell_id = 26654;
                 break;
             }
+            // Glyph of Blocking
+            if (dummySpell->Id == 58375)
+            {
+                triggered_spell_id = 58374;
+                break;
+            }
             break;
         }
         case SPELLFAMILY_WARLOCK:
@@ -5386,6 +5392,18 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 // Damage counting
                 mod->m_amount-=damage;
                 return true;
+            }
+            // Improved Drain Soul
+            if (dummySpell->SpellIconID == 113)
+            {
+                Unit *caster = triggeredByAura->GetCaster();
+
+                if (!caster)
+                    return false;
+
+                basepoints0 = caster->GetMaxPower(POWER_MANA)* triggerAmount / 100;
+                triggered_spell_id = 18371;
+                break;
             }
             // Fel Synergy
             if (dummySpell->SpellIconID == 3222)
@@ -5446,9 +5464,19 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 // Siphon Life
                 case 63108:
                 {
+                    // Glyph of Siphon Life
+                    if (this->HasAura(56216))
+                        triggerAmount += triggerAmount * 25 / 100;
+
                     basepoints0 = int32(damage * triggerAmount / 100);
                     triggered_spell_id = 63106;
                     target = this;
+                    break;
+                }
+                // Glyph of Life Tap
+                case 63320:
+                {
+                    triggered_spell_id = 63321;
                     break;
                 }
             }
@@ -6397,6 +6425,51 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 triggered_spell_id = 379;
                 break;
             }
+            // Flametongue Weapon (Passive)
+            if (dummySpell->SpellFamilyFlags & UI64LIT(0x200000))
+            {
+                if(GetTypeId()!=TYPEID_PLAYER)
+                    return false;
+
+                if(!castItem || !castItem->IsEquipped())
+                    return false;
+
+                //  firehit =  dummySpell->EffectBasePoints[0] / ((4*19.25) * 1.3);
+                float fire_onhit = dummySpell->EffectBasePoints[0] / 100.0;
+
+                float add_spellpower = SpellBaseDamageBonus(SPELL_SCHOOL_MASK_FIRE)
+                                     + SpellBaseDamageBonusForVictim(SPELL_SCHOOL_MASK_FIRE, pVictim);
+
+                // 1.3speed = 5%, 2.6speed = 10%, 4.0 speed = 15%, so, 1.0speed = 3.84%
+                add_spellpower= add_spellpower / 100.0 * 3.84;
+
+                // Enchant on Off-Hand and ready?
+                if ( castItem->GetSlot() == EQUIPMENT_SLOT_OFFHAND && isAttackReady(OFF_ATTACK))
+                {
+                    float BaseWeaponSpeed = GetAttackTime(OFF_ATTACK)/1000.0;
+
+                    // Value1: add the tooltip damage by swingspeed + Value2: add spelldmg by swingspeed
+                    basepoints0 = int32( (fire_onhit * BaseWeaponSpeed) + (add_spellpower * BaseWeaponSpeed) );
+                    triggered_spell_id = 10444;
+                }
+
+                // Enchant on Main-Hand and ready?
+                else if ( castItem->GetSlot() == EQUIPMENT_SLOT_MAINHAND && isAttackReady(BASE_ATTACK))
+                {
+                    float BaseWeaponSpeed = GetAttackTime(BASE_ATTACK)/1000.0;
+
+                    // Value1: add the tooltip damage by swingspeed +  Value2: add spelldmg by swingspeed
+                    basepoints0 = int32( (fire_onhit * BaseWeaponSpeed) + (add_spellpower * BaseWeaponSpeed) );
+                    triggered_spell_id = 10444;
+                }
+
+                // If not ready, we should  return, shouldn't we?!
+                else
+                    return false;
+
+                CastCustomSpell(pVictim,triggered_spell_id,&basepoints0,NULL,NULL,true,castItem,triggeredByAura);
+                return true;
+            }
             // Improved Water Shield
             if (dummySpell->SpellIconID == 2287)
             {
@@ -6520,6 +6593,19 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     }
                 }
                 return false;
+                break;
+            }
+            // Frozen Power
+            if (dummySpell->SpellIconID == 3780)
+            {
+                Unit *caster = triggeredByAura->GetCaster();
+                if (!procSpell || !caster)
+                    return false;
+
+                if (caster->GetDistance(pVictim) < 15.0f || !roll_chance_i(triggerAmount))
+                    return false;
+
+                triggered_spell_id = 63685;
                 break;
             }
             break;
@@ -7165,6 +7251,14 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
             }
             case SPELLFAMILY_DEATHKNIGHT:
             {
+                 // Glyph of Death Grip
+                if (trigger_spell_id == 58628)
+                {
+                    // remove cooldown of Death Grip
+                    if (GetTypeId()==TYPEID_PLAYER)
+                        ((Player*)this)->RemoveSpellCooldown(82);
+                    return true;
+                }
                 // Acclimation
                 if (auraSpellInfo->SpellIconID == 1930)
                 {
@@ -8873,8 +8967,7 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
         // 50% for damage and healing spells for leech spells from damage bonus and 0% from healing
         for(int j = 0; j < 3; ++j)
         {
-            if( spellProto->Effect[j] == SPELL_EFFECT_HEALTH_LEECH ||
-                spellProto->Effect[j] == SPELL_EFFECT_APPLY_AURA && spellProto->EffectApplyAuraName[j] == SPELL_AURA_PERIODIC_LEECH )
+            if( spellProto->Effect[j] == SPELL_EFFECT_APPLY_AURA && spellProto->EffectApplyAuraName[j] == SPELL_AURA_PERIODIC_LEECH )
             {
                 CastingTime /= 2;
                 break;
