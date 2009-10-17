@@ -459,7 +459,7 @@ void ThreatManager::tauntFadeOut(Unit *pTaunter)
 
 void ThreatManager::setCurrentVictim(HostilReference* pHostilReference)
 {
-    if (pHostilReference && pHostilReference != iCurrentVictim)
+    if (pHostilReference && pHostilReference != iCurrentVictim && iOwner)
         iOwner->SendChangeCurrentVictimOpcode(pHostilReference);
 
     iCurrentVictim = pHostilReference;
@@ -507,7 +507,9 @@ void ThreatManager::processThreatEvent(ThreatRefStatusChangeEvent* threatRefStat
                 setCurrentVictim(NULL);
                 setDirty(true);
             }
-            iOwner->SendRemoveFromThreatListOpcode(hostilReference);
+            if(Unit* owner = getOwner())
+                owner->SendRemoveFromThreatListOpcode(hostilReference);
+
             if(hostilReference->isOnline())
                 iThreatContainer.remove(hostilReference);
             else

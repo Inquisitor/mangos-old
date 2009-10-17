@@ -7939,8 +7939,7 @@ void Aura::HandleAuraControlVehicle(bool apply, bool Real)
          return;
 
     Unit *caster = GetCaster();
-
-    if( caster->GetVehicleGUID() != 0 )
+    if(!caster || !caster->GetVehicleGUID())
         return;
 
     // this can happen due to wrong caster/target spell handling
@@ -7952,17 +7951,19 @@ void Aura::HandleAuraControlVehicle(bool apply, bool Real)
 
     if (apply)
     {
-        Vehicle * vehicle = caster->SummonVehicle(m_target->GetEntry(), m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation() );
-        if(caster->GetTypeId() == TYPEID_PLAYER)
+        if(Vehicle * vehicle = caster->SummonVehicle(m_target->GetEntry(), m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation() ))
         {
-            WorldPacket data(SMSG_ON_CANCEL_EXPECTED_RIDE_VEHICLE_AURA, 0);
-            ((Player*)caster)->GetSession()->SendPacket(&data);
-            caster->EnterVehicle( vehicle, /*this->GetModifier()->m_amount*/ -1, true );
+            if(caster->GetTypeId() == TYPEID_PLAYER)
+            {
+                WorldPacket data(SMSG_ON_CANCEL_EXPECTED_RIDE_VEHICLE_AURA, 0);
+                ((Player*)caster)->GetSession()->SendPacket(&data);
+                caster->EnterVehicle( vehicle, /*this->GetModifier()->m_amount*/ -1, true );
+            }
+            // if we leave and enter again, this will refresh
+            int32 duration = GetSpellMaxDuration(GetSpellProto());
+            if(duration > 0)
+                vehicle->SetSpawnDuration(duration);
         }
-        // if we leave and enter again, this will refresh
-        int32 duration = GetSpellMaxDuration(GetSpellProto());
-        if(duration > 0)
-            vehicle->SetSpawnDuration(duration);
     }
     else
     {
