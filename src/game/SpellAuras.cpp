@@ -7939,7 +7939,7 @@ void Aura::HandleAuraControlVehicle(bool apply, bool Real)
          return;
 
     Unit *caster = GetCaster();
-    if(!caster || !caster->GetVehicleGUID())
+    if(!caster || caster->GetVehicleGUID())
         return;
 
     // this can happen due to wrong caster/target spell handling
