@@ -2627,6 +2627,17 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             m_target->PlayDirectSound(14972, (Player *)m_target);
                     }
                     return;
+                case 43354:
+                    if( apply )
+                    {
+                        if( caster && caster->GetTypeId() == TYPEID_PLAYER )
+                            ((Player*)caster)->KilledMonsterCredit( 24235, 0);
+                    }
+                    else 
+                    {
+                        if( m_target->GetTypeId() != TYPEID_PLAYER && m_target->GetEntry() == 23876 )
+                            ((Creature*)m_target)->ForcedDespawn();
+                    }
             }
             break;
         }
