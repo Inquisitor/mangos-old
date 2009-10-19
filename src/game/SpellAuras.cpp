@@ -2638,6 +2638,20 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         if( m_target->GetTypeId() != TYPEID_PLAYER && m_target->GetEntry() == 23876 )
                             ((Creature*)m_target)->ForcedDespawn();
                     }
+                    return;
+                case 43115:
+                    if( apply && m_target->GetEntry() == 24120 )
+                    {
+                        switch( irand(0, 3))
+                        {
+                            case 0: m_target->MonsterYell("I don't feel so good...", LANG_UNIVERSAL, 0); break;
+                            case 1: m_target->MonsterYell("That liquid... it reeks!", LANG_UNIVERSAL, 0); break;
+                            case 2: m_target->MonsterYell("Someone shoot that bat down!", LANG_UNIVERSAL, 0); break;
+                        }
+                        if( caster && caster->GetTypeId() == TYPEID_PLAYER )
+                            caster->CastSpell(caster, 43138, true);
+                    }
+                    return;
             }
             break;
         }
