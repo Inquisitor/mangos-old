@@ -1777,6 +1777,23 @@ void Spell::EffectDummy(uint32 i)
                 {
                     if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24464, 10 ) )
                         pCrystal->setFaction(974);
+                    return;
+                }
+                case 49634: // Q: Towers of Certain Doom
+                case 49625:
+                {
+                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                        return;
+
+                    if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24087, 90 ) )
+                        ((Player*)m_caster)->KilledMonsterCredit( 24087, 0 );
+                    else if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24092, 90 ) )
+                        ((Player*)m_caster)->KilledMonsterCredit( 24092, 0 );
+                    else if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24093, 90 ) )
+                        ((Player*)m_caster)->KilledMonsterCredit( 24093, 0 );
+                    else if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24094, 90 ) )
+                        ((Player*)m_caster)->KilledMonsterCredit( 24094, 0 );
+                    return;
                 }
             }
 
