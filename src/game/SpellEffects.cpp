@@ -861,6 +861,15 @@ void Spell::EffectDummy(uint32 i)
                         }
                         return;
                     }
+                    case 50546:
+                    {
+                        if( m_caster->GetTypeId() == TYPEID_PLAYER )
+                        {
+                            if( ((Player*)m_caster)->GetQuestStatus(12065) == QUEST_STATUS_INCOMPLETE || ((Player*)m_caster)->GetQuestStatus(12066) == QUEST_STATUS_INCOMPLETE )
+                                ((Player*)m_caster)->KilledMonsterCredit(26773, 0);
+                        }
+                        return;
+                    }
                     case 43385: // Q: Field Test
                     {
                         if( m_caster->GetTypeId() != TYPEID_PLAYER )
