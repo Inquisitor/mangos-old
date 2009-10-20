@@ -1795,6 +1795,36 @@ void Spell::EffectDummy(uint32 i)
                         ((Player*)m_caster)->KilledMonsterCredit( 24094, 0 );
                     return;
                 }
+                case 43404:
+                {
+                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                        return;
+
+                    // Iterate for all creatures around cast place
+                    CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+                    Cell cell(pair);
+                    cell.data.Part.reserved = ALL_DISTRICT;
+                    cell.SetNoCreate();
+
+                    std::list<Creature*> creatureList;
+
+                    MaNGOS::AnyUnitInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10); // 10 yards check
+                    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
+                    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+                    CellLock<GridReadGuard> cell_lock(cell, pair);
+                    // Get Creatures
+                    cell_lock->Visit(cell_lock, go_visit, *(unitTarget->GetMap()));
+
+                    if (!creatureList.empty())
+                    {
+                        for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+                            if( (*itr)->GetEntry() == 24290 )
+                                m_caster->CastSpell(m_caster, 43419, true );
+                    }
+
+                    return;
+                }
             }
 
             //All IconID Check in there
