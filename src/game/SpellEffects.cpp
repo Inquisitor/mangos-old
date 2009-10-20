@@ -1834,6 +1834,15 @@ void Spell::EffectDummy(uint32 i)
 
                     return;
                 }
+                case 47530:
+                {
+                    if( m_caster->GetTypeId() == TYPEID_PLAYER && unitTarget->GetTypeId() != TYPEID_PLAYER && unitTarget->GetEntry() == 26321 )
+                    {
+                        unitTarget->MonsterTextEmote("The Lothalor Acient gives you its thanks.", 0);
+                        ((Player*)m_caster)->KilledMonsterCredit(26321, 0);
+                    }
+                    return;
+                }
             }
 
             //All IconID Check in there
