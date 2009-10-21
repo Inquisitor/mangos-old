@@ -2627,7 +2627,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             m_target->PlayDirectSound(14972, (Player *)m_target);
                     }
                     return;
-                case 43354:
+                case 43354: // Q: Seeds of the Blacksouled Keepers
                     if( apply )
                     {
                         if( caster && caster->GetTypeId() == TYPEID_PLAYER )
@@ -2636,6 +2636,18 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     else 
                     {
                         if( m_target->GetTypeId() != TYPEID_PLAYER && m_target->GetEntry() == 23876 )
+                            ((Creature*)m_target)->ForcedDespawn();
+                    }
+                    return;
+                case 57806: // Q: The Restless Dead
+                    if( apply )
+                    {
+                        if( caster && caster->GetTypeId() == TYPEID_PLAYER )
+                            ((Player*)caster)->KilledMonsterCredit( 30546, 0);
+                    }
+                    else 
+                    {
+                        if( m_target->GetTypeId() != TYPEID_PLAYER && m_target->GetEntry() == 31043 )
                             ((Creature*)m_target)->ForcedDespawn();
                     }
                     return;
