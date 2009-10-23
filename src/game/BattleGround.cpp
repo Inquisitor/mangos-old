@@ -456,9 +456,20 @@ void BattleGround::Update(uint32 diff)
 
                 for(BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
                     if (Player *plr = objmgr.GetPlayer(itr->first))
-                        plr->RemoveAurasDueToSpell(SPELL_ARENA_PREPARATION);
+                    {
+                        Unit::AuraMap m_Auras = plr->GetAuras();
+                        for (Unit::AuraMap::const_iterator itr = m_Auras.begin(); itr != m_Auras.end(); ++itr)
+                        {
+                            if (!itr->second->IsPassive() && itr->second->IsPositive() && itr->second->GetId() != 32612 && itr->second->GetAuraDuration() < 30000)
+                            {
+                                plr->RemoveAurasDueToSpell(itr->second->GetId());
+                            }
+                        }
 
-                CheckArenaWinConditions();
+                        plr->RemoveAurasDueToSpell(SPELL_ARENA_PREPARATION);
+                    }
+
+                    CheckArenaWinConditions();
             }
             else
             {
