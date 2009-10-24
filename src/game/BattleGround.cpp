@@ -455,21 +455,31 @@ void BattleGround::Update(uint32 diff)
                 //TODO : add arena sound PlaySoundToAll(SOUND_ARENA_START);
 
                 for(BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
+                {
                     if (Player *plr = objmgr.GetPlayer(itr->first))
                     {
-                        Unit::AuraMap m_Auras = plr->GetAuras();
-                        for (Unit::AuraMap::const_iterator itr = m_Auras.begin(); itr != m_Auras.end(); ++itr)
+                        plr->RemoveAurasDueToSpell(SPELL_ARENA_PREPARATION);
+
+                        // remove all positive auras with duration under 30 sec
+                        Unit::AuraMap& Auras = plr->GetAuras();
+                        for(Unit::AuraMap::iterator aura_iter = Auras.begin(), next; aura_iter != Auras.end(); aura_iter = next)
                         {
-                            if (!itr->second->IsPassive() && itr->second->IsPositive() && itr->second->GetId() != 32612 && itr->second->GetAuraDuration() < 30000)
+                            next = aura_iter;
+                            ++next;
+                            Aura *aur = aura_iter->second;
+                            if (!aur->IsPassive() && aur->IsPositive() && aur->GetAuraDuration() < 30000 && aur->GetId() != 32612)
                             {
-                                plr->RemoveAurasDueToSpell(itr->second->GetId());
+                                plr->RemoveAurasDueToSpell(aur->GetId());
+                                if(Auras.empty())
+                                    break;
+                                else
+                                    next = Auras.begin();
                             }
                         }
-
-                        plr->RemoveAurasDueToSpell(SPELL_ARENA_PREPARATION);
                     }
+                }
 
-                    CheckArenaWinConditions();
+                CheckArenaWinConditions();
             }
             else
             {
