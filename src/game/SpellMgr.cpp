@@ -1446,6 +1446,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                         (spellInfo_2->Id == 20594 && spellInfo_1->Id == 65116))
                         return false;
 
+                    // Unstable Sphere Passive and Detonation Timer
+                    if ((spellInfo_1->Id == 50756 && spellInfo_2->Id == 50758) ||
+                        (spellInfo_2->Id == 50756 && spellInfo_1->Id == 50758))
+                        return false;
+
                     break;
                 }
                 case SPELLFAMILY_MAGE:

@@ -861,6 +861,15 @@ void Spell::EffectDummy(uint32 i)
                         }
                         return;
                     }
+                    case 50546:
+                    {
+                        if( m_caster->GetTypeId() == TYPEID_PLAYER )
+                        {
+                            if( ((Player*)m_caster)->GetQuestStatus(12065) == QUEST_STATUS_INCOMPLETE || ((Player*)m_caster)->GetQuestStatus(12066) == QUEST_STATUS_INCOMPLETE )
+                                ((Player*)m_caster)->KilledMonsterCredit(26773, 0);
+                        }
+                        return;
+                    }
                     case 43385: // Q: Field Test
                     {
                         if( m_caster->GetTypeId() != TYPEID_PLAYER )
@@ -1777,6 +1786,62 @@ void Spell::EffectDummy(uint32 i)
                 {
                     if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24464, 10 ) )
                         pCrystal->setFaction(974);
+                    return;
+                }
+                case 49634: // Q: Towers of Certain Doom
+                case 49625:
+                {
+                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                        return;
+
+                    if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24087, 90 ) )
+                        ((Player*)m_caster)->KilledMonsterCredit( 24087, 0 );
+                    else if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24092, 90 ) )
+                        ((Player*)m_caster)->KilledMonsterCredit( 24092, 0 );
+                    else if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24093, 90 ) )
+                        ((Player*)m_caster)->KilledMonsterCredit( 24093, 0 );
+                    else if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24094, 90 ) )
+                        ((Player*)m_caster)->KilledMonsterCredit( 24094, 0 );
+                    return;
+                }
+                case 43404:
+                {
+                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                        return;
+
+                    // Iterate for all creatures around cast place
+                    CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+                    Cell cell(pair);
+                    cell.data.Part.reserved = ALL_DISTRICT;
+                    cell.SetNoCreate();
+
+                    std::list<Creature*> creatureList;
+
+                    MaNGOS::AnyUnitInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10); // 10 yards check
+                    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
+                    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+                    CellLock<GridReadGuard> cell_lock(cell, pair);
+                    // Get Creatures
+                    cell_lock->Visit(cell_lock, go_visit, *(unitTarget->GetMap()));
+
+                    if (!creatureList.empty())
+                    {
+                        for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+                            if( (*itr)->GetEntry() == 24290 )
+                                m_caster->CastSpell(m_caster, 43419, true );
+                    }
+
+                    return;
+                }
+                case 47530:
+                {
+                    if( m_caster->GetTypeId() == TYPEID_PLAYER && unitTarget->GetTypeId() != TYPEID_PLAYER && unitTarget->GetEntry() == 26321 )
+                    {
+                        unitTarget->MonsterTextEmote("The Lothalor Acient gives you its thanks.", 0);
+                        ((Player*)m_caster)->KilledMonsterCredit(26321, 0);
+                    }
+                    return;
                 }
             }
 

@@ -2427,6 +2427,12 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
 
         switch(GetId())
         {
+            case 28169:                                     // Mutating Injection
+            {
+                m_target->CastSpell(m_target, 28206, true);
+                m_target->CastSpell(m_target, 28240, true);
+            }
+            return;
             case 36730:                                     // Flame Strike
             {
                 m_target->CastSpell(m_target, 36731, true, NULL, this);
@@ -2625,6 +2631,43 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         // Play part 3
                         else
                             m_target->PlayDirectSound(14972, (Player *)m_target);
+                    }
+                    return;
+                case 43354: // Q: Seeds of the Blacksouled Keepers
+                    if( apply )
+                    {
+                        if( caster && caster->GetTypeId() == TYPEID_PLAYER )
+                            ((Player*)caster)->KilledMonsterCredit( 24235, 0);
+                    }
+                    else 
+                    {
+                        if( m_target->GetTypeId() != TYPEID_PLAYER && m_target->GetEntry() == 23876 )
+                            ((Creature*)m_target)->ForcedDespawn();
+                    }
+                    return;
+                case 57806: // Q: The Restless Dead
+                    if( apply )
+                    {
+                        if( caster && caster->GetTypeId() == TYPEID_PLAYER )
+                            ((Player*)caster)->KilledMonsterCredit( 30546, 0);
+                    }
+                    else 
+                    {
+                        if( m_target->GetTypeId() != TYPEID_PLAYER && m_target->GetEntry() == 31043 )
+                            ((Creature*)m_target)->ForcedDespawn();
+                    }
+                    return;
+                case 43115:
+                    if( apply && m_target->GetEntry() == 24120 )
+                    {
+                        switch( irand(0, 3))
+                        {
+                            case 0: m_target->MonsterYell("I don't feel so good...", LANG_UNIVERSAL, 0); break;
+                            case 1: m_target->MonsterYell("That liquid... it reeks!", LANG_UNIVERSAL, 0); break;
+                            case 2: m_target->MonsterYell("Someone shoot that bat down!", LANG_UNIVERSAL, 0); break;
+                        }
+                        if( caster && caster->GetTypeId() == TYPEID_PLAYER )
+                            caster->CastSpell(caster, 43138, true);
                     }
                     return;
             }
