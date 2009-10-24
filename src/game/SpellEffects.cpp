@@ -6005,6 +6005,18 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     unitTarget->CastSpell(unitTarget, damage, false);
                     break;
                 }
+                // Q: The Denouncement
+                case 48724:
+                case 48726:
+                case 48728:
+                case 48730:
+                {
+                    if(!unitTarget)
+                        return;
+                    // triggered spell is stored in m_spellInfo->EffectBasePoints[0]
+                    unitTarget->CastSpell(unitTarget, damage, true);
+                    break;
+                }
                 // Winged Steed of the Ebon Blade
                 case 54729:
                 {
