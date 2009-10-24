@@ -7509,6 +7509,16 @@ void Aura::PeriodicDummyTick()
                     m_target->CastSpell(m_target, 52711, true);
                     return;
                 }
+                // Carrion Beetles of Anub'arak
+                case 53520:
+                {
+                    if (Unit *caster = GetCaster())
+                    {
+                        caster->CastSpell(caster, 53521, true );
+                        caster->CastSpell(caster, 53521, true );
+                    }
+                    return;
+                }
 //              // Panda
 //              case 19230: break;
 //              // Gossip NPC Periodic - Talk
