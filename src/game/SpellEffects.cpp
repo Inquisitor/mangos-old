@@ -2432,19 +2432,21 @@ void Spell::EffectDummy(uint32 i)
             // Cleansing Totem
             if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000004000000)) && m_spellInfo->SpellIconID==1673)
             {
-                m_caster->CastSpell(unitTarget, 52025, true);
+                if (unitTarget)
+                    m_caster->CastSpell(unitTarget, 52025, true);
                 return;
             }
             // Healing Stream Totem
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000002000))
             {
-                m_caster->CastCustomSpell(unitTarget, 52042, &damage, 0, 0, true, 0, 0, m_originalCasterGUID);
+                if (unitTarget)
+                    m_caster->CastCustomSpell(unitTarget, 52042, &damage, 0, 0, true, 0, 0, m_originalCasterGUID);
                 return;
             }
             // Mana Spring Totem
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000004000))
             {
-                if (unitTarget->getPowerType()!=POWER_MANA)
+                if (!unitTarget || unitTarget->getPowerType()!=POWER_MANA)
                     return;
                 m_caster->CastCustomSpell(unitTarget, 52032, &damage, 0, 0, true, 0, 0, m_originalCasterGUID);
                 return;
@@ -2465,7 +2467,7 @@ void Spell::EffectDummy(uint32 i)
             // Lava Lash
             if (m_spellInfo->SpellFamilyFlags2 & 0x00000004)
             {
-                if (m_caster->GetTypeId()!=TYPEID_PLAYER)
+                if (!m_caster || m_caster->GetTypeId()!=TYPEID_PLAYER)
                     return;
                 Item *item = ((Player*)m_caster)->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND);
                 if (item)
@@ -2494,7 +2496,7 @@ void Spell::EffectDummy(uint32 i)
                 if (i!=1)
                     return;
                 // Living ghoul as a target
-                if (unitTarget->GetEntry() == 26125 && unitTarget->isAlive())
+                if (!unitTarget || unitTarget->GetEntry() == 26125 && unitTarget->isAlive())
                 {
                     int32 bp = unitTarget->GetMaxHealth()*0.25f;
                     unitTarget->CastCustomSpell(unitTarget,47496,&bp,NULL,NULL,true);
