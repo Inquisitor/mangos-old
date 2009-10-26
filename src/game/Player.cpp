@@ -20846,3 +20846,7 @@ void Player::UpdateVisibilityForPlayer()
         m->UpdateObjectsVisibilityFor(this, cell, p);
 }
 
+void Player::CompletedAchievement(AchievementEntry const* entry)
+{
+    GetAchievementMgr().CompletedAchievement(entry);
+}
