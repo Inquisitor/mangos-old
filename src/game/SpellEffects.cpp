@@ -671,7 +671,7 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                  // Volley
                 else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x2000))
                 {
-                    damage += int32(m_caster->GetTotalAttackPowerValue(RANGED_ATTACK)*0.07f);
+                    damage += int32(m_caster->GetTotalAttackPowerValue(RANGED_ATTACK)*0.00976f);
                 }
                 break;
             }
