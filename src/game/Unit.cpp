@@ -5729,6 +5729,28 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 32747;
                     break;
                 }
+                // Glyph of Rake
+                case 54821:
+                {
+                    if (procSpell->SpellVisual[0] == 750 && procSpell->EffectApplyAuraName[1] == 3)
+                    {
+                        if (target->GetTypeId() == TYPEID_UNIT)
+                        {
+                            triggered_spell_id = 54820;
+                            break;
+                        }
+                    }
+                    return false;
+                }
+                // Glyph of Rejuvenation
+                case 54754:
+                {
+                    if (!pVictim || pVictim->GetHealth() >= triggerAmount * pVictim->GetMaxHealth()/100)
+                        return false;
+                    basepoints0 = int32(triggerAmount * damage / 100);
+                    triggered_spell_id = 54755;
+                    break;
+                }
             }
             // Eclipse
             if (dummySpell->SpellIconID == 2856)
