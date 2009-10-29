@@ -11764,6 +11764,12 @@ void CharmInfo::SetSpellAutocast( uint32 spell_id, bool state )
     }
 }
 
+void Unit::InitPossessCreateSpells()
+{
+    if( GetCharmInfo() )
+        GetCharmInfo()->InitPossessCreateSpells();
+}
+
 bool Unit::isFrozen() const
 {
     return HasAuraState(AURA_STATE_FROZEN);
