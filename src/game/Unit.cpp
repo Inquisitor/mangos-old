@@ -5729,6 +5729,28 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 32747;
                     break;
                 }
+                // Glyph of Rake
+                case 54821:
+                {
+                    if (procSpell->SpellVisual[0] == 750 && procSpell->EffectApplyAuraName[1] == 3)
+                    {
+                        if (target->GetTypeId() == TYPEID_UNIT)
+                        {
+                            triggered_spell_id = 54820;
+                            break;
+                        }
+                    }
+                    return false;
+                }
+                // Glyph of Rejuvenation
+                case 54754:
+                {
+                    if (!pVictim || pVictim->GetHealth() >= triggerAmount * pVictim->GetMaxHealth()/100)
+                        return false;
+                    basepoints0 = int32(triggerAmount * damage / 100);
+                    triggered_spell_id = 54755;
+                    break;
+                }
             }
             // Eclipse
             if (dummySpell->SpellIconID == 2856)
@@ -6042,7 +6064,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 // Seal of Vengeance (damage calc on apply aura)
                 case 31801:
                 {
-                    if(effIndex != 0)                       // effect 1,2 used by seal unleashing code
+                    if(effIndex != 0 || !(procFlag & PROC_FLAG_SUCCESSFUL_MELEE_HIT)) // effect 1,2 used by seal unleashing code
                         return false;
 
                     triggered_spell_id = 31803;
@@ -6065,7 +6087,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 // Seal of Corruption (damage calc on apply aura)
                 case 53736:
                 {
-                    if(effIndex != 0)                       // effect 1,2 used by seal unleashing code
+                    if(effIndex != 0 || !(procFlag & PROC_FLAG_SUCCESSFUL_MELEE_HIT)) // effect 1,2 used by seal unleashing code
                         return false;
 
                     triggered_spell_id = 53742;
@@ -8719,14 +8741,21 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
         }
     }
 
-     //Glyph of Shadow Word: Pain
-    Aura *dummy = GetDummyAura(55687);
-    if ( dummy && pVictim->GetAura(SPELL_AURA_PERIODIC_DAMAGE, SPELLFAMILY_PRIEST, 0x0000000000008000LL, 0, GetGUID()))
-         DoneTotalMod *= (dummy->GetModifier()->m_amount+100.0f)/100.0f;
-
     // Custom scripted damage
     switch(spellProto->SpellFamilyName)
     {
+        case SPELLFAMILY_PRIEST:
+        {
+            // Glyph of Shadow Word: Pain
+            if (spellProto->SpellFamilyFlags & UI64LIT(0x00000800000))
+            {
+                Aura *dummy = GetDummyAura(55687);
+                if ( dummy && pVictim->GetAura(SPELL_AURA_PERIODIC_DAMAGE, SPELLFAMILY_PRIEST, 0x0000000000008000LL, 0, GetGUID()))
+                    DoneTotalMod *= (dummy->GetModifier()->m_amount+100.0f)/100.0f;
+            }
+
+            break;
+        }
         case SPELLFAMILY_WARLOCK:
         {
             // Fire and Brimstone
