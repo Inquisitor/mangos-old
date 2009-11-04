@@ -6017,7 +6017,19 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                         return;
                     // triggered spell is stored in m_spellInfo->EffectBasePoints[0]
                     unitTarget->CastSpell(unitTarget, damage, true);
-                    break;
+                    return;
+                }
+                // Q: In Service of Blood/Unholy/Frost
+                case 50252:
+                case 47724:
+                case 47703:
+                {
+                    if( !GetCaster() || GetCaster()->GetTypeId() != TYPEID_PLAYER )
+                        return;
+
+                    // triggered spell is stored in m_spellInfo->EffectBasePoints[0]
+                    GetCaster()->CastSpell(GetCaster(), damage, true);
+                    return;
                 }
                 // Winged Steed of the Ebon Blade
                 case 54729:
