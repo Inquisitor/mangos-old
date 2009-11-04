@@ -467,8 +467,8 @@ void BattleGround::Update(uint32 diff)
                             next = aura_iter;
                             ++next;
                             Aura *aur = aura_iter->second;
-                            if (!aur->IsPassive() && aur->IsPositive()
-                                && aur->GetAuraDuration() && aur->GetAuraDuration() < 30000 && aur->GetId() != 32612)
+                            if (!aur->IsPassive() && aur->IsPositive() && !aur->IsPermanent()
+                                && aur->GetAuraDuration() > 0 && aur->GetAuraDuration() < 30000 && aur->GetId() != 32612)
                             {
                                 plr->RemoveAurasDueToSpell(aur->GetId());
                                 if(Auras.empty())
