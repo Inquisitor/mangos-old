@@ -3467,10 +3467,11 @@ void Map::ScriptsProcess()
                 if( q_status.m_creatureOrGOcount[x]+ increment >  pQuest->ReqCreatureOrGOCount[x] ) // We shouldnt go above required count
                     break;
 
-                q_status.m_creatureOrGOcount[x] = q_status.m_creatureOrGOcount[x] + increment;
+                uint32 oldCount = q_status.m_creatureOrGOcount[x];
+                q_status.m_creatureOrGOcount[x] = oldCount + increment;
                 if (q_status.uState != QUEST_NEW) q_status.uState = QUEST_CHANGED;
 
-                user->SendQuestUpdateAddCreatureOrGo( pQuest, 0, x, user->GetQuestSlotCounter(log_slot, x), increment );
+                user->SendQuestUpdateAddCreatureOrGo( pQuest, 0, x, oldCount, increment );
                 if( user->CanCompleteQuest(QuestID) )
                     user->CompleteQuest( QuestID );
 

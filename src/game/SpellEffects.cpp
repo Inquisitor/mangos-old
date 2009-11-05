@@ -834,18 +834,18 @@ void Spell::EffectDummy(uint32 i)
                                     break;
 
                                 QuestStatusData& q_status = user->getQuestStatusMap()[QuestID];
-
-                                if( q_status.m_creatureOrGOcount[0]+ m_counted > pQuest->ReqCreatureOrGOCount[0] && q_status.m_creatureOrGOcount[0] == pQuest->ReqCreatureOrGOCount[0] ) // We shouldnt go above required count
+                                uint32 oldCount = q_status.m_creatureOrGOcount[0];
+                                if( oldCount+ m_counted > pQuest->ReqCreatureOrGOCount[0] && oldCount == pQuest->ReqCreatureOrGOCount[0] ) // We shouldnt go above required count
                                     break;
 
-                                if( q_status.m_creatureOrGOcount[0] + m_counted >= pQuest->ReqCreatureOrGOCount[0] && q_status.m_creatureOrGOcount[0] != pQuest->ReqCreatureOrGOCount[0] ) // We shouldnt go above required count
+                                if( oldCount+ m_counted >= pQuest->ReqCreatureOrGOCount[0] && oldCount != pQuest->ReqCreatureOrGOCount[0] ) // We shouldnt go above required count
                                     q_status.m_creatureOrGOcount[0] = pQuest->ReqCreatureOrGOCount[0];
                                 else 
-                                    q_status.m_creatureOrGOcount[0] = q_status.m_creatureOrGOcount[0] + m_counted;
+                                    q_status.m_creatureOrGOcount[0] = oldCount + m_counted;
 
                                 if (q_status.uState != QUEST_NEW) q_status.uState = QUEST_CHANGED;
 
-                                user->SendQuestUpdateAddCreatureOrGo( pQuest, 0, 0, user->GetQuestSlotCounter(log_slot, 0), m_counted );
+                                user->SendQuestUpdateAddCreatureOrGo( pQuest, 0, 0, oldCount, m_counted );
                                 if( user->CanCompleteQuest(QuestID) )
                                     user->CompleteQuest( QuestID );
                             }
