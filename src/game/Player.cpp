@@ -13687,7 +13687,9 @@ void Player::KilledMonster( CreatureInfo const* cInfo, uint64 guid )
 void Player::KilledMonsterCredit( uint32 entry, uint64 guid )
 {
     uint32 addkillcount = 1;
-    GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_KILL_CREATURE, entry, addkillcount);
+
+    Creature * pCreat = GetMap()->GetCreature(guid);
+    GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_KILL_CREATURE, pCreat ? pCreat->GetEntry() : entry, addkillcount);
     for( int i = 0; i < MAX_QUEST_LOG_SIZE; ++i )
     {
         uint32 questid = GetQuestSlotQuestId(i);
