@@ -384,6 +384,7 @@ void InstanceSaveManager::LoadResetTimes()
         delete result;
 
         // update reset time for normal instances with the max creature respawn time + X hours
+        /*
         result = WorldDatabase.Query("SELECT MAX(respawntime), instance FROM creature_respawn WHERE instance > 0 GROUP BY instance");
         if( result )
         {
@@ -402,6 +403,7 @@ void InstanceSaveManager::LoadResetTimes()
             while (result->NextRow());
             delete result;
         }
+        */
 
         // schedule the reset times
         for(ResetTimeMapType::iterator itr = InstResetTime.begin(); itr != InstResetTime.end(); ++itr)
@@ -426,13 +428,7 @@ void InstanceSaveManager::LoadResetTimes()
                 continue;
             }
 
-            // update the reset time if the hour in the configs changes
-            uint64 oldresettime = fields[1].GetUInt64();
-            uint64 newresettime = (oldresettime / DAY) * DAY + diff;
-            if(oldresettime != newresettime)
-                CharacterDatabase.DirectPExecute("UPDATE instance_reset SET resettime = '"UI64FMTD"' WHERE mapid = '%u'", newresettime, mapid);
-
-            m_resetTimeByMapId[mapid] = newresettime;
+            m_resetTimeByMapId[mapid] = fields[1].GetUInt64();
         } while(result->NextRow());
         delete result;
     }
@@ -452,8 +448,8 @@ void InstanceSaveManager::LoadResetTimes()
         if(!entry || !entry->HasResetTime())
             continue;
 
-        uint32 period = temp->reset_delay * DAY;
-        assert(period != 0);
+        uint32 period = temp->reset_delay;
+        assert(period);
         time_t t = m_resetTimeByMapId[temp->map];
         if(!t)
         {
@@ -466,8 +462,7 @@ void InstanceSaveManager::LoadResetTimes()
         {
             // assume that expired instances have already been cleaned
             // calculate the next reset time
-            t = (t / DAY) * DAY;
-            t += ((today - t) / period + 1) * period + diff;
+            t = ((t / DAY) * DAY) + period + diff;
             CharacterDatabase.DirectPExecute("UPDATE instance_reset SET resettime = '"UI64FMTD"' WHERE mapid = '%u'", (uint64)t, i);
         }
 
@@ -520,7 +515,7 @@ void InstanceSaveManager::Update()
         {
             // global reset/warning for a certain map
             time_t resetTime = GetResetTimeFor(event.mapid);
-            _ResetOrWarnAll(event.mapid, event.type != 4, resetTime - now);
+            _ResetOrWarnAll(event.mapid, event.type != 4, (resetTime > now)? resetTime - now : 0);
             if(event.type != 4)
             {
                 // schedule the next warning/reset
@@ -587,6 +582,7 @@ void InstanceSaveManager::_ResetOrWarnAll(uint32 mapid, bool warn, uint32 timeLe
         if(!temp || !temp->reset_delay)
         {
             sLog.outError("InstanceSaveManager::ResetOrWarnAll: no instance template or reset delay for map %d", mapid);
+            assert(false);
             return;
         }
 
@@ -608,13 +604,13 @@ void InstanceSaveManager::_ResetOrWarnAll(uint32 mapid, bool warn, uint32 timeLe
 
         // calculate the next reset time
         uint32 diff = sWorld.getConfig(CONFIG_INSTANCE_RESET_TIME_HOUR) * HOUR;
-        uint32 period = temp->reset_delay * DAY;
-        uint64 next_reset = ((now + timeLeft + MINUTE) / DAY * DAY) + period + diff;
+        uint32 period = temp->reset_delay;
+        uint64 next_reset = (((now + MINUTE) / DAY) * DAY) + period + diff;
         // update it in the DB
         CharacterDatabase.PExecute("UPDATE instance_reset SET resettime = '"UI64FMTD"' WHERE mapid = '%d'", next_reset, mapid);
 
-        m_resetTimeByMapId[mapid] = (time_t) next_reset;
-        ScheduleReset(true, (time_t) (next_reset-3600), InstResetEvent(1, mapid));
+        m_resetTimeByMapId[mapid] = time_t(next_reset);
+        ScheduleReset(true, time_t(next_reset - HOUR), InstResetEvent(1, mapid));
     }
 
     MapInstanced::InstancedMaps &instMaps = ((MapInstanced*)map)->GetInstancedMaps();

@@ -4604,12 +4604,12 @@ void ObjectMgr::LoadInstanceTemplate()
             // use defaults from the DBC
             if(entry->resetTimeHeroic)                      // for both raid and non raids, read above
             {
-                temp->reset_delay = entry->resetTimeHeroic / DAY;
+                temp->reset_delay = entry->resetTimeHeroic;
             }
             else if (entry->resetTimeRaid && entry->map_type == MAP_RAID)
                                                             // for normal raid only
             {
-                temp->reset_delay = entry->resetTimeRaid / DAY;
+                temp->reset_delay = entry->resetTimeRaid;
             }
         }
 
