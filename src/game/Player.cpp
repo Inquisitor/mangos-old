@@ -5916,15 +5916,7 @@ void Player::RewardReputation(Unit *pVictim, float rate)
         FactionEntry const *factionEntry1 = sFactionStore.LookupEntry(realFaction1);
         uint32 current_reputation_rank1 = GetReputationMgr().GetRank(factionEntry1);
         if (factionEntry1 && current_reputation_rank1 <= Rep->reputation_max_cap1)
-            GetReputationMgr().ModifyReputation(factionEntry1, donerep1);
-
-        // Wiki: Team factions value divided by 2
-        if (factionEntry1 && Rep->is_teamaward1)
-        {
-            FactionEntry const *team1_factionEntry = sFactionStore.LookupEntry(factionEntry1->team);
-            if(team1_factionEntry)
-                GetReputationMgr().ModifyReputation(team1_factionEntry, donerep1 / 2);
-        }
+            GetReputationMgr().ModifyReputation(factionEntry1, donerep1, Rep->is_teamaward1);
     }
 
     if(Rep->repfaction2 && (!Rep->team_dependent || GetTeam()==HORDE))
@@ -5935,15 +5927,7 @@ void Player::RewardReputation(Unit *pVictim, float rate)
         FactionEntry const *factionEntry2 = sFactionStore.LookupEntry(realFaction2);
         uint32 current_reputation_rank2 = GetReputationMgr().GetRank(factionEntry2);
         if (factionEntry2 && current_reputation_rank2 <= Rep->reputation_max_cap2)
-            GetReputationMgr().ModifyReputation(factionEntry2, donerep2);
-
-        // Wiki: Team factions value divided by 2
-        if (factionEntry2 && Rep->is_teamaward2)
-        {
-            FactionEntry const *team2_factionEntry = sFactionStore.LookupEntry(factionEntry2->team);
-            if(team2_factionEntry)
-                GetReputationMgr().ModifyReputation(team2_factionEntry, donerep2 / 2);
-        }
+            GetReputationMgr().ModifyReputation(factionEntry2, donerep2, Rep->is_teamaward2);
     }
 }
 
