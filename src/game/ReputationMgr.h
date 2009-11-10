@@ -101,13 +101,13 @@ class ReputationMgr
         }
 
     public:                                                 // modifiers
-        bool SetReputation(FactionEntry const* factionEntry, int32 standing, bool isTeamReward = true)
+        bool SetReputation(FactionEntry const* factionEntry, int32 standing)
         {
-            return SetReputation(factionEntry, standing, false,isTeamReward);
+            return SetReputation(factionEntry, standing, false);
         }
-        bool ModifyReputation(FactionEntry const* factionEntry, int32 standing, bool isTeamReward = true)
+        bool ModifyReputation(FactionEntry const* factionEntry, int32 standing)
         {
-            return SetReputation(factionEntry, standing, true, isTeamReward);
+            return SetReputation(factionEntry, standing, true);
         }
 
         void SetVisible(FactionTemplateEntry const* factionTemplateEntry);
@@ -126,7 +126,7 @@ class ReputationMgr
     private:                                                // internal helper functions
         void Initilize();
         uint32 GetDefaultStateFlags(const FactionEntry *factionEntry) const;
-        bool SetReputation(FactionEntry const* factionEntry, int32 standing, bool incremental, bool isTeamReward);
+        bool SetReputation(FactionEntry const* factionEntry, int32 standing, bool incremental);
         bool SetOneFactionReputation(FactionEntry const* factionEntry, int32 standing, bool incremental);
         void SetVisible(FactionState* faction);
         void SetAtWar(FactionState* faction, bool atWar);

@@ -226,31 +226,23 @@ void ReputationMgr::Initilize()
     }
 }
 
-bool ReputationMgr::SetReputation(FactionEntry const* factionEntry, int32 standing, bool incremental, bool isTeamReward)
+bool ReputationMgr::SetReputation(FactionEntry const* factionEntry, int32 standing, bool incremental)
 {
     uint32 faction_id = factionEntry->ID;
-
-    // give to all sub-functions
     SimpleFactionsList const* flist = GetFactionTeamList(faction_id);
-    if (flist && faction_id != 1037 && faction_id != 1052)
+    if (flist && (faction_id != 1037) && (faction_id != 1052))
     {
+        bool res = false;
         for (SimpleFactionsList::const_iterator itr = flist->begin();itr != flist->end();++itr)
         {
             FactionEntry const *factionEntryCalc = sFactionStore.LookupEntry(*itr);
             if(factionEntryCalc)
-                SetOneFactionReputation(factionEntryCalc, standing, incremental);
+                res = SetOneFactionReputation(factionEntryCalc, standing, incremental);
         }
+        return res;
     }
-
-    // give same reputation to parent faction
-    if (isTeamReward)
-    {
-        FactionEntry const *team_factionEntry = sFactionStore.LookupEntry(factionEntry->team);
-        if(team_factionEntry)
-            SetOneFactionReputation(team_factionEntry, standing/2, incremental);
-    }
-
-    return SetOneFactionReputation(factionEntry, standing, incremental);
+    else
+        return SetOneFactionReputation(factionEntry, standing, incremental);
 }
 
 bool ReputationMgr::SetOneFactionReputation(FactionEntry const* factionEntry, int32 standing, bool incremental)
