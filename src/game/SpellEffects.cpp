@@ -3348,9 +3348,11 @@ void Spell::EffectHeal( uint32 /*i*/ )
             addhealth += tickheal * tickcount;
         }
         //Nourish 20% of heal increase if target is afected by Druids HOTs
-        else if(m_spellInfo->SpellFamilyFlags&0x0200000000000000LL){
-            Unit::AuraList const& RejorRegr = unitTarget->GetAurasByType(SPELL_AURA_PERIODIC_HEAL);
+        else if(m_spellInfo->SpellFamilyFlags&0x0200000000000000LL)
+        {
+            addhealth = caster->SpellHealingBonus(unitTarget, m_spellInfo, addhealth, HEAL);
 
+            Unit::AuraList const& RejorRegr = unitTarget->GetAurasByType(SPELL_AURA_PERIODIC_HEAL);
             for(Unit::AuraList::const_iterator i = RejorRegr.begin(); i != RejorRegr.end(); ++i)
             {
                 if((*i)->GetSpellProto()->SpellFamilyName == SPELLFAMILY_DRUID)
