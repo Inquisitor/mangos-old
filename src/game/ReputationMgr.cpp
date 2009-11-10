@@ -230,7 +230,7 @@ bool ReputationMgr::SetReputation(FactionEntry const* factionEntry, int32 standi
 {
     uint32 faction_id = factionEntry->ID;
     SimpleFactionsList const* flist = GetFactionTeamList(faction_id);
-    if (flist && (faction_id != 1037) && (faction_id != 1052))
+    if (flist && faction_id != 1037 && faction_id != 1052)
     {
         bool res = false;
         for (SimpleFactionsList::const_iterator itr = flist->begin();itr != flist->end();++itr)
@@ -242,7 +242,13 @@ bool ReputationMgr::SetReputation(FactionEntry const* factionEntry, int32 standi
         return res;
     }
     else
+    {
+        FactionEntry const *team_factionEntry = sFactionStore.LookupEntry(factionEntry->team);
+        if(team_factionEntry && (team_factionEntry->ID == 1037 || team_factionEntry->ID == 1052))
+            SetOneFactionReputation(team_factionEntry, standing, incremental);
+
         return SetOneFactionReputation(factionEntry, standing, incremental);
+    }
 }
 
 bool ReputationMgr::SetOneFactionReputation(FactionEntry const* factionEntry, int32 standing, bool incremental)
