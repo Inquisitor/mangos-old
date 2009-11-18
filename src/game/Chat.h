@@ -70,7 +70,7 @@ class ChatHandler
         void StrReplaceStr(std::string &str, const std::string &find_what, const std::string &replace_with);
 
         int ParseCommands(const char* text);
-        
+
         bool isValidChatMessage(const char* msg);
     protected:
         explicit ChatHandler() : m_session(NULL) {}      // for CLI subclass

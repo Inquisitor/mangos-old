@@ -2734,7 +2734,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             }
             break;
         }
-         case SPELLFAMILY_PALADIN:
+        case SPELLFAMILY_PALADIN:
         {
             // Beacon of Light
             if (GetId() == 53563)

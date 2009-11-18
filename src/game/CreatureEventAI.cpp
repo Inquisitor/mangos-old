@@ -1120,6 +1120,7 @@ void CreatureEventAI::MoveInLineOfSight(Unit *who)
 
 void CreatureEventAI::SpellHit(Unit* pUnit, const SpellEntry* pSpell)
 {
+
     if (bEmptyList)
         return;
 

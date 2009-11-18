@@ -384,7 +384,6 @@ void InstanceSaveManager::LoadResetTimes()
         delete result;
 
         // update reset time for normal instances with the max creature respawn time + X hours
-        /*
         result = WorldDatabase.Query("SELECT MAX(respawntime), instance FROM creature_respawn WHERE instance > 0 GROUP BY instance");
         if( result )
         {
@@ -403,7 +402,6 @@ void InstanceSaveManager::LoadResetTimes()
             while (result->NextRow());
             delete result;
         }
-        */
 
         // schedule the reset times
         for(ResetTimeMapType::iterator itr = InstResetTime.begin(); itr != InstResetTime.end(); ++itr)
