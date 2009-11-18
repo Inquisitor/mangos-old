@@ -117,6 +117,49 @@ pkgdata_DATA = \
 	8548_02_mangos_gameobject_battleground.sql \
 	8549_03_mangos_battleground_events.sql \
 	8573_01_mangos_mangos_string.sql \
+	8589_01_mangos_creature_template.sql \
+	8589_02_mangos_gameobject_template.sql \
+	8589_03_mangos_item_template.sql \
+	8589_04_characters_groups.sql \
+	8589_05_mangos_battleground_template.sql \
+	8589_06_characters_bugreport.sql \
+	8589_07_mangos_spell_elixir.sql \
+	8589_08_mangos_item_template.sql \
+	8589_09_mangos_spell_chain.sql \
+	8589_10_mangos_spell_proc_event.sql \
+	8589_11_characters_characters.sql \
+	8596_01_characters_bugreport.sql \
+	8600_01_mangos_command.sql \
+	8607_01_mangos_string.sql \
+	8607_02_mangos_command.sql \
+	8608_01_mangos_mangos_string.sql \
+	8608_02_mangos_battleground_events.sql \
+	8618_01_mangos_spell_proc_event.sql \
+	8676_01_mangos_creature_template.sql \
+	8688_01_mangos_creature_template.sql \
+	8693_01_mangos_spell_proc_event.sql \
+	8702_01_characters_character_reputation.sql \
+	8720_01_mangos_quest_template.sql \
+	8721_01_characters_guild.sql \
+	8723_01_mangos_achievement_criteria_requirement.sql \
+	8726_01_mangos_spell_proc_event.sql \
+	8728_01_realmd_account.sql \
+	8731_01_mangos_creature_template.sql \
+	8749_01_mangos_mail_loot_template.sql \
+	8769_01_mangos_mail_level_reward.sql \
+	8770_01_mangos_quest_template.sql \
+	8775_01_mangos_creature_template.sql \
+	8775_02_mangos_creature.sql \
+	8775_03_mangos_gameobject.sql \
+	8777_01_mangos_creature.sql \
+	8777_02_mangos_gameobject.sql \
+	8800_01_mangos_spell_elixir.sql \
+	8803_01_mangos_playercreateinfo_spell.sql \
+	8803_02_mangos_playercreateinfo_action.sql \
+	8815_01_mangos_mangos_string.sql \
+	8818_01_mangos_mangos_string.sql \
+	8828_01_characters_instance_reset.sql \
+	8828_02_mangos_instance_template.sql \
 	README
 
 ## Additional files to include when running 'make dist'
@@ -214,4 +257,47 @@ EXTRA_DIST = \
 	8548_02_mangos_gameobject_battleground.sql \
 	8549_03_mangos_battleground_events.sql \
 	8573_01_mangos_mangos_string.sql \
+	8589_01_mangos_creature_template.sql \
+	8589_02_mangos_gameobject_template.sql \
+	8589_03_mangos_item_template.sql \
+	8589_04_characters_groups.sql \
+	8589_05_mangos_battleground_template.sql \
+	8589_06_characters_bugreport.sql \
+	8589_07_mangos_spell_elixir.sql \
+	8589_08_mangos_item_template.sql \
+	8589_09_mangos_spell_chain.sql \
+	8589_10_mangos_spell_proc_event.sql \
+	8589_11_characters_characters.sql \
+	8596_01_characters_bugreport.sql \
+	8600_01_mangos_command.sql \
+	8607_01_mangos_string.sql \
+	8607_02_mangos_command.sql \
+	8608_01_mangos_mangos_string.sql \
+	8608_02_mangos_battleground_events.sql \
+	8618_01_mangos_spell_proc_event.sql \
+	8676_01_mangos_creature_template.sql \
+	8688_01_mangos_creature_template.sql \
+	8693_01_mangos_spell_proc_event.sql \
+	8702_01_characters_character_reputation.sql \
+	8720_01_mangos_quest_template.sql \
+	8721_01_characters_guild.sql \
+	8723_01_mangos_achievement_criteria_requirement.sql \
+	8726_01_mangos_spell_proc_event.sql \
+	8728_01_realmd_account.sql \
+	8731_01_mangos_creature_template.sql \
+	8749_01_mangos_mail_loot_template.sql \
+	8769_01_mangos_mail_level_reward.sql \
+	8770_01_mangos_quest_template.sql \
+	8775_01_mangos_creature_template.sql \
+	8775_02_mangos_creature.sql \
+	8775_03_mangos_gameobject.sql \
+	8777_01_mangos_creature.sql \
+	8777_02_mangos_gameobject.sql \
+	8800_01_mangos_spell_elixir.sql \
+	8803_01_mangos_playercreateinfo_spell.sql \
+	8803_02_mangos_playercreateinfo_action.sql \
+	8815_01_mangos_mangos_string.sql \
+	8818_01_mangos_mangos_string.sql \
+	8828_01_characters_instance_reset.sql \
+	8828_02_mangos_instance_template.sql \
 	README

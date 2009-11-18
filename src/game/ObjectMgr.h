@@ -24,7 +24,6 @@
 #include "Bag.h"
 #include "Creature.h"
 #include "Player.h"
-#include "DynamicObject.h"
 #include "GameObject.h"
 #include "Corpse.h"
 #include "QuestDef.h"
@@ -182,6 +181,19 @@ struct PetLevelInfo
     uint16 armor;
 };
 
+struct MailLevelReward
+{
+    MailLevelReward() : raceMask(0), mailTemplateId(0), senderEntry(0) {}
+    MailLevelReward(uint32 _raceMask, uint32 _mailTemplateId, uint32 _senderEntry) : raceMask(_raceMask), mailTemplateId(_mailTemplateId), senderEntry(_senderEntry) {}
+
+    uint32 raceMask;
+    uint32 mailTemplateId;
+    uint32 senderEntry;
+};
+
+typedef std::list<MailLevelReward> MailLevelRewardList;
+typedef UNORDERED_MAP<uint8,MailLevelRewardList> MailLevelRewardMap;
+
 struct ReputationOnKillEntry
 {
     uint32 repfaction1;
@@ -300,19 +312,6 @@ MANGOS_DLL_SPEC LanguageDesc const* GetLanguageDescByID(uint32 lang);
 
 class PlayerDumpReader;
 
-// vehicle system
-#define MAX_VEHICLE_SPELLS 10
-
-struct VehicleDataStructure
-{
-    uint32 v_flags;                                         // vehicle flags, see enum CustomVehicleFLags
-    uint32 v_spells[MAX_VEHICLE_SPELLS];                    // spells
-    uint32 req_aura;                                        // requieres aura on player to enter (eg. in wintergrasp)
-};
-
-typedef UNORDERED_MAP<uint32, VehicleDataStructure> VehicleDataMap;
-typedef std::map<uint32,uint32> VehicleSeatDataMap;
- 
 class ObjectMgr
 {
     friend class PlayerDumpReader;
@@ -342,7 +341,7 @@ class ObjectMgr
 
         typedef std::vector<std::string> ScriptNameMap;
 
-        Player* GetPlayer(const char* name) const { return ObjectAccessor::Instance().FindPlayerByName(name);}
+        Player* GetPlayer(const char* name) const { return ObjectAccessor::FindPlayerByName(name);}
         Player* GetPlayer(uint64 guid) const { return ObjectAccessor::FindPlayer(guid); }
 
         static GameObjectInfo const *GetGameObjectInfo(uint32 id) { return sGOStorage.LookupEntry<GameObjectInfo>(id); }
@@ -531,6 +530,7 @@ class ObjectMgr
         void LoadNpcOptionLocales();
         void LoadPointOfInterestLocales();
         void LoadInstanceTemplate();
+        void LoadMailLevelRewards();
 
         void LoadGossipText();
 
@@ -563,9 +563,6 @@ class ObjectMgr
         void LoadNpcTextId();
         void LoadVendors();
         void LoadTrainerSpell();
-
-        void LoadVehicleData();
-        void LoadVehicleSeatData();
 
         std::string GeneratePetName(uint32 entry);
         uint32 GetBaseXP(uint32 level);
@@ -602,6 +599,19 @@ class ObjectMgr
 
         typedef std::multimap<int32, uint32> ExclusiveQuestGroups;
         ExclusiveQuestGroups mExclusiveQuestGroups;
+
+        MailLevelReward const* GetMailLevelReward(uint32 level,uint32 raceMask)
+        {
+            MailLevelRewardMap::const_iterator map_itr = m_mailLevelRewardMap.find(level);
+            if (map_itr == m_mailLevelRewardMap.end())
+                return NULL;
+
+            for(MailLevelRewardList::const_iterator set_itr = map_itr->second.begin(); set_itr != map_itr->second.end(); ++set_itr)
+                if (set_itr->raceMask & raceMask)
+                    return &*set_itr;
+
+            return NULL;
+        }
 
         WeatherZoneChances const* GetWeatherChances(uint32 zone_id) const
         {
@@ -796,25 +806,6 @@ class ObjectMgr
 
         int GetOrNewIndexForLocale(LocaleConstant loc);
 
-        VehicleDataMap mVehicleData;
-        VehicleSeatDataMap mVehicleSeatData;
-
-        uint32 GetSeatFlags(uint32 seatid)
-        {
-            VehicleSeatDataMap::iterator i = mVehicleSeatData.find(seatid);
-            if(i == mVehicleSeatData.end())
-                return NULL;
-            else
-                return i->second;
-        }
-        VehicleDataStructure const* GetVehicleData(uint32 entry) const
-        {
-            VehicleDataMap::const_iterator itr = mVehicleData.find(entry);
-            if(itr==mVehicleData.end()) return NULL;
-            return &itr->second;
-        }
-
-
         SpellClickInfoMapBounds GetSpellClickInfoMapBounds(uint32 creature_id) const
         {
             return SpellClickInfoMapBounds(mSpellClickInfoMap.lower_bound(creature_id),mSpellClickInfoMap.upper_bound(creature_id));
@@ -839,11 +830,8 @@ class ObjectMgr
         // first free low guid for seelcted guid type
         uint32 m_hiCharGuid;
         uint32 m_hiCreatureGuid;
-        uint32 m_hiPetGuid;
-        uint32 m_hiVehicleGuid;
         uint32 m_hiItemGuid;
         uint32 m_hiGoGuid;
-        uint32 m_hiDoGuid;
         uint32 m_hiCorpseGuid;
 
         QuestMap            mQuestTemplates;
@@ -900,8 +888,9 @@ class ObjectMgr
         void CheckScripts(ScriptMapMap const& scripts,std::set<int32>& ids);
         void LoadCreatureAddons(SQLStorage& creatureaddons, char const* entryName, char const* comment);
         void ConvertCreatureAddonAuras(CreatureDataAddon* addon, char const* table, char const* guidEntryStr);
-        void ConvertCreatureAddonPassengers(CreatureDataAddon* addon, char const* table, char const* guidEntryStr);
         void LoadQuestRelationsHelper(QuestRelations& map,char const* table);
+
+        MailLevelRewardMap m_mailLevelRewardMap;
 
         typedef std::map<uint32,PetLevelInfo*> PetLevelInfoMap;
         // PetLevelInfoMap[creature_id][level]
@@ -950,7 +939,7 @@ class ObjectMgr
         CacheTrainerSpellMap m_mCacheTrainerSpellMap;
 };
 
-#define objmgr MaNGOS::Singleton<ObjectMgr>::Instance()
+#define sObjectMgr MaNGOS::Singleton<ObjectMgr>::Instance()
 
 // scripting access functions
 MANGOS_DLL_SPEC bool LoadMangosStrings(DatabaseType& db, char const* table,int32 start_value = MAX_CREATURE_AI_TEXT_STRING_ID, int32 end_value = std::numeric_limits<int32>::min());

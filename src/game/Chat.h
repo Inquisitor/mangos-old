@@ -134,9 +134,10 @@ class ChatHandler
         bool HandleDebugGetItemStateCommand(const char * args);
         bool HandleDebugGetLootRecipientCommand(const char * args);
         bool HandleDebugGetValueCommand(const char* args);
+        bool HandleDebugGetItemValueCommand(const char* args);
         bool HandleDebugMod32ValueCommand(const char* args);
         bool HandleDebugSetAuraStateCommand(const char * args);
-        bool HandleDebugSetItemFlagCommand(const char * args);
+        bool HandleDebugSetItemValueCommand(const char * args);
         bool HandleDebugSetValueCommand(const char* args);
         bool HandleDebugSpawnVehicle(const char * args);
         bool HandleDebugSpellCheckCommand(const char* args);
@@ -160,7 +161,7 @@ class ChatHandler
         bool HandleDebugSendSetPhaseShiftCommand(const char * args);
         bool HandleDebugSendSpellFailCommand(const char* args);
 
-        bool HandleEventActiveListCommand(const char* args);
+        bool HandleEventListCommand(const char* args);
         bool HandleEventStartCommand(const char* args);
         bool HandleEventStopCommand(const char* args);
         bool HandleEventInfoCommand(const char* args);
@@ -318,7 +319,7 @@ class ChatHandler
 
         bool HandleReloadConfigCommand(const char* args);
 
-        bool HandleReloadAchievementCriteriaDataCommand(const char* args);
+        bool HandleReloadAchievementCriteriaRequirementCommand(const char* args);
         bool HandleReloadAchievementRewardCommand(const char* args);
         bool HandleReloadAreaTriggerTavernCommand(const char* args);
         bool HandleReloadAreaTriggerTeleportCommand(const char* args);
@@ -351,13 +352,14 @@ class ChatHandler
         bool HandleReloadLootTemplatesFishingCommand(const char* args);
         bool HandleReloadLootTemplatesGameobjectCommand(const char* args);
         bool HandleReloadLootTemplatesItemCommand(const char* args);
+        bool HandleReloadLootTemplatesMailCommand(const char* args);
         bool HandleReloadLootTemplatesMillingCommand(const char* args);
         bool HandleReloadLootTemplatesPickpocketingCommand(const char* args);
         bool HandleReloadLootTemplatesProspectingCommand(const char* args);
         bool HandleReloadLootTemplatesReferenceCommand(const char* args);
-        bool HandleReloadLootTemplatesQuestMailCommand(const char* args);
         bool HandleReloadLootTemplatesSkinningCommand(const char* args);
         bool HandleReloadLootTemplatesSpellCommand(const char* args);
+        bool HandleReloadMailLevelRewardCommand(const char* args);
         bool HandleReloadMangosStringCommand(const char* args);
         bool HandleReloadNpcGossipCommand(const char* args);
         bool HandleReloadNpcOptionCommand(const char* args);
@@ -387,8 +389,6 @@ class ChatHandler
         bool HandleReloadSpellThreatsCommand(const char* args);
         bool HandleReloadSpellPetAurasCommand(const char* args);
         bool HandleReloadSpellDisabledCommand(const char* args);
-        bool HandleReloadVehicleDataCommand(const char* args);
-         bool HandleReloadVehicleSeatDataCommand(const char* args);
 
         bool HandleResetAchievementsCommand(const char * args);
         bool HandleResetHonorCommand(const char * args);

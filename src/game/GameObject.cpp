@@ -20,7 +20,7 @@
 #include "QuestDef.h"
 #include "GameObject.h"
 #include "ObjectMgr.h"
-#include "PoolHandler.h"
+#include "PoolManager.h"
 #include "SpellMgr.h"
 #include "Spell.h"
 #include "UpdateMask.h"
@@ -52,7 +52,6 @@ GameObject::GameObject() : WorldObject()
     m_spawnedByDefault = true;
     m_usetimes = 0;
     m_spellId = 0;
-    m_actualHealth = 0;
     m_cooldownTime = 0;
     m_goInfo = NULL;
 
@@ -62,23 +61,26 @@ GameObject::GameObject() : WorldObject()
 
 GameObject::~GameObject()
 {
-    CleanupsBeforeDelete();
 }
 
-void GameObject::CleanupsBeforeDelete()
+void GameObject::AddToWorld()
 {
-    if(m_uint32Values)                                      // field array can be not exist if GameOBject not loaded
+    ///- Register the gameobject for guid lookup
+    if(!IsInWorld())
+        GetMap()->GetObjectsStore().insert<GameObject>(GetGUID(), (GameObject*)this);
+
+    Object::AddToWorld();
+}
+
+void GameObject::RemoveFromWorld()
+{
+    ///- Remove the gameobject from the accessor
+    if(IsInWorld())
     {
-        // Possible crash at access to deleted GO in Unit::m_gameobj
+        // Remove GO from owner
         if(uint64 owner_guid = GetOwnerGUID())
         {
-            Unit* owner = NULL;
-            if(IS_PLAYER_GUID(owner_guid))
-                owner = ObjectAccessor::GetObjectInWorld(owner_guid, (Player*)NULL);
-            else
-                owner = ObjectAccessor::GetUnit(*this,owner_guid);
-
-            if(owner)
+            if (Unit* owner = ObjectAccessor::GetUnit(*this,owner_guid))
                 owner->RemoveGameObject(this,false);
             else
             {
@@ -92,24 +94,14 @@ void GameObject::CleanupsBeforeDelete()
                     GetGUIDLow(), GetGOInfo()->id, m_spellId, GetGOInfo()->GetLinkedGameObjectEntry(), GUID_LOPART(owner_guid), ownerType);
             }
         }
+
+        GetMap()->GetObjectsStore().erase<GameObject>(GetGUID(), (GameObject*)NULL);
     }
-}
 
-void GameObject::AddToWorld()
-{
-    ///- Register the gameobject for guid lookup
-    if(!IsInWorld()) ObjectAccessor::Instance().AddObject(this);
-    Object::AddToWorld();
-}
-
-void GameObject::RemoveFromWorld()
-{
-    ///- Remove the gameobject from the accessor
-    if(IsInWorld()) ObjectAccessor::Instance().RemoveObject(this);
     Object::RemoveFromWorld();
 }
 
-bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint32 animprogress, GOState go_state, uint8 ArtKit)
+bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint32 animprogress, GOState go_state)
 {
     ASSERT(map);
     Relocate(x,y,z,ang);
@@ -122,7 +114,7 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
         return false;
     }
 
-    GameObjectInfo const* goinfo = objmgr.GetGameObjectInfo(name_id);
+    GameObjectInfo const* goinfo = ObjectMgr::GetGameObjectInfo(name_id);
     if (!goinfo)
     {
         sLog.outErrorDb("Gameobject (GUID: %u Entry: %u) not created: it have not exist entry in `gameobject_template`. Map: %u  (X: %f Y: %f Z: %f) ang: %f rotation0: %f rotation1: %f rotation2: %f rotation3: %f",guidlow, name_id, map->GetId(), x, y, z, ang, rotation0, rotation1, rotation2, rotation3);
@@ -157,12 +149,8 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
     // GAMEOBJECT_BYTES_1, index at 0, 1, 2 and 3
     SetGoState(go_state);
     SetGoType(GameobjectTypes(goinfo->type));
-    SetGoArtKit(ArtKit);                                         // unknown what this is
+    SetGoArtKit(0);                                         // unknown what this is
     SetGoAnimProgress(animprogress);
-
-    // Spell charges for GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING (33)
-    if (goinfo->type == GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING)
-        m_actualHealth = goinfo->destructibleBuilding.intactNumHits;
 
     //Notify the map's instance data.
     //Only works if you create the object in it, not if it is moves to that map.
@@ -272,9 +260,9 @@ void GameObject::Update(uint32 /*p_time*/)
                                 return;
                             }
                                                             // respawn timer
-                            uint16 poolid = poolhandler.IsPartOfAPool(GetGUIDLow(), TYPEID_GAMEOBJECT);
+                            uint16 poolid = sPoolMgr.IsPartOfAPool(GetGUIDLow(), TYPEID_GAMEOBJECT);
                             if (poolid)
-                                poolhandler.UpdatePool(poolid, GetGUIDLow(), TYPEID_GAMEOBJECT);
+                                sPoolMgr.UpdatePool(poolid, GetGUIDLow(), TYPEID_GAMEOBJECT);
                             else
                                 GetMap()->Add(this);
                             break;
@@ -451,8 +439,7 @@ void GameObject::Update(uint32 /*p_time*/)
                 return;
             }
 
-            if(m_respawnTime<=time(NULL))
-                m_respawnTime = time(NULL) + m_respawnDelayTime;
+            m_respawnTime = time(NULL) + m_respawnDelayTime;
 
             // if option not set then object will be saved at grid unload
             if(sWorld.getConfig(CONFIG_SAVE_RESPAWN_TIME_IMMEDIATLY))
@@ -488,9 +475,9 @@ void GameObject::Delete()
     SetGoState(GO_STATE_READY);
     SetUInt32Value(GAMEOBJECT_FLAGS, GetGOInfo()->flags);
 
-    uint16 poolid = poolhandler.IsPartOfAPool(GetGUIDLow(), TYPEID_GAMEOBJECT);
+    uint16 poolid = sPoolMgr.IsPartOfAPool(GetGUIDLow(), TYPEID_GAMEOBJECT);
     if (poolid)
-        poolhandler.UpdatePool(poolid, GetGUIDLow(), TYPEID_GAMEOBJECT);
+        sPoolMgr.UpdatePool(poolid, GetGUIDLow(), TYPEID_GAMEOBJECT);
     else
         AddObjectToRemoveList();
 }
@@ -503,10 +490,8 @@ void GameObject::getFishLoot(Loot *fishloot, Player* loot_owner)
     GetZoneAndAreaId(zone,subzone);
 
     // if subzone loot exist use it
-    if(LootTemplates_Fishing.HaveLootFor(subzone))
-        fishloot->FillLoot(subzone, LootTemplates_Fishing, loot_owner,true);
-    // else use zone loot
-    else
+    if (!fishloot->FillLoot(subzone, LootTemplates_Fishing, loot_owner, true, true))
+        // else use zone loot (must exist in like case)
         fishloot->FillLoot(zone, LootTemplates_Fishing, loot_owner,true);
 }
 
@@ -514,7 +499,7 @@ void GameObject::SaveToDB()
 {
     // this should only be used when the gameobject has already been loaded
     // preferably after adding to map, because mapid may not be valid otherwise
-    GameObjectData const *data = objmgr.GetGOData(m_DBTableGuid);
+    GameObjectData const *data = sObjectMgr.GetGOData(m_DBTableGuid);
     if(!data)
     {
         sLog.outError("GameObject::SaveToDB failed, cannot get gameobject data!");
@@ -534,7 +519,7 @@ void GameObject::SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask)
     if (!m_DBTableGuid)
         m_DBTableGuid = GetGUIDLow();
     // update in loaded data (changing data only in this place)
-    GameObjectData& data = objmgr.NewGOData(m_DBTableGuid);
+    GameObjectData& data = sObjectMgr.NewGOData(m_DBTableGuid);
 
     // data->guid = guid don't must be update at save
     data.id = GetEntry();
@@ -552,7 +537,6 @@ void GameObject::SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask)
     data.animprogress = GetGoAnimProgress();
     data.go_state = GetGoState();
     data.spawnMask = spawnMask;
-    data.ArtKit = GetGoArtKit();
 
     // updated in DB
     std::ostringstream ss;
@@ -582,7 +566,7 @@ void GameObject::SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask)
 
 bool GameObject::LoadFromDB(uint32 guid, Map *map)
 {
-    GameObjectData const* data = objmgr.GetGOData(guid);
+    GameObjectData const* data = sObjectMgr.GetGOData(guid);
 
     if( !data )
     {
@@ -605,12 +589,11 @@ bool GameObject::LoadFromDB(uint32 guid, Map *map)
 
     uint32 animprogress = data->animprogress;
     GOState go_state = data->go_state;
-    uint8 ArtKit = data->ArtKit;
 
     m_DBTableGuid = guid;
-    if (map->GetInstanceId() != 0) guid = objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT);
+    if (map->GetInstanceId() != 0) guid = sObjectMgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT);
 
-    if (!Create(guid,entry, map, phaseMask, x, y, z, ang, rotation0, rotation1, rotation2, rotation3, animprogress, go_state, ArtKit) )
+    if (!Create(guid,entry, map, phaseMask, x, y, z, ang, rotation0, rotation1, rotation2, rotation3, animprogress, go_state) )
         return false;
 
     if (!GetGOInfo()->GetDespawnPossibility() && !GetGOInfo()->IsDespawnAtAction() && data->spawntimesecs >= 0)
@@ -626,13 +609,13 @@ bool GameObject::LoadFromDB(uint32 guid, Map *map)
         {
             m_spawnedByDefault = true;
             m_respawnDelayTime = data->spawntimesecs;
-            m_respawnTime = objmgr.GetGORespawnTime(m_DBTableGuid, map->GetInstanceId());
+            m_respawnTime = sObjectMgr.GetGORespawnTime(m_DBTableGuid, map->GetInstanceId());
 
             // ready to respawn
             if(m_respawnTime && m_respawnTime <= time(NULL))
             {
                 m_respawnTime = 0;
-                objmgr.SaveGORespawnTime(m_DBTableGuid,GetInstanceId(),0);
+                sObjectMgr.SaveGORespawnTime(m_DBTableGuid,GetInstanceId(),0);
             }
         }
         else
@@ -648,8 +631,8 @@ bool GameObject::LoadFromDB(uint32 guid, Map *map)
 
 void GameObject::DeleteFromDB()
 {
-    objmgr.SaveGORespawnTime(m_DBTableGuid,GetInstanceId(),0);
-    objmgr.DeleteGOData(m_DBTableGuid);
+    sObjectMgr.SaveGORespawnTime(m_DBTableGuid,GetInstanceId(),0);
+    sObjectMgr.DeleteGOData(m_DBTableGuid);
     WorldDatabase.PExecuteLog("DELETE FROM gameobject WHERE guid = '%u'", m_DBTableGuid);
     WorldDatabase.PExecuteLog("DELETE FROM game_event_gameobject WHERE guid = '%u'", m_DBTableGuid);
     WorldDatabase.PExecuteLog("DELETE FROM gameobject_battleground WHERE guid = '%u'", m_DBTableGuid);
@@ -665,7 +648,7 @@ GameObjectInfo const *GameObject::GetGOInfo() const
 /*********************************************************/
 bool GameObject::hasQuest(uint32 quest_id) const
 {
-    QuestRelations const& qr = objmgr.mGOQuestRelations;
+    QuestRelations const& qr = sObjectMgr.mGOQuestRelations;
     for(QuestRelations::const_iterator itr = qr.lower_bound(GetEntry()); itr != qr.upper_bound(GetEntry()); ++itr)
     {
         if(itr->second==quest_id)
@@ -676,7 +659,7 @@ bool GameObject::hasQuest(uint32 quest_id) const
 
 bool GameObject::hasInvolvedQuest(uint32 quest_id) const
 {
-    QuestRelations const& qr = objmgr.mGOQuestInvolvedRelations;
+    QuestRelations const& qr = sObjectMgr.mGOQuestInvolvedRelations;
     for(QuestRelations::const_iterator itr = qr.lower_bound(GetEntry()); itr != qr.upper_bound(GetEntry()); ++itr)
     {
         if(itr->second==quest_id)
@@ -701,13 +684,17 @@ Unit* GameObject::GetOwner() const
 void GameObject::SaveRespawnTime()
 {
     if(m_respawnTime > time(NULL) && m_spawnedByDefault)
-        objmgr.SaveGORespawnTime(m_DBTableGuid,GetInstanceId(),m_respawnTime);
+        sObjectMgr.SaveGORespawnTime(m_DBTableGuid,GetInstanceId(),m_respawnTime);
 }
 
 bool GameObject::isVisibleForInState(Player const* u, WorldObject const* viewPoint, bool inVisibleList) const
 {
     // Not in world
     if(!IsInWorld() || !u->IsInWorld())
+        return false;
+
+    // invisible at client always
+    if(!GetGOInfo()->displayId)
         return false;
 
     // Transport always visible at this step implementation
@@ -740,13 +727,13 @@ void GameObject::Respawn()
     if(m_spawnedByDefault && m_respawnTime > 0)
     {
         m_respawnTime = time(NULL);
-        objmgr.SaveGORespawnTime(m_DBTableGuid,GetInstanceId(),0);
+        sObjectMgr.SaveGORespawnTime(m_DBTableGuid,GetInstanceId(),0);
     }
 }
 
 bool GameObject::ActivateToQuest( Player *pTarget)const
 {
-    if(!objmgr.IsGameObjectForQuests(GetEntry()))
+    if(!sObjectMgr.IsGameObjectForQuests(GetEntry()))
         return false;
 
     switch(GetGoType())
@@ -1032,9 +1019,9 @@ void GameObject::Use(Unit* user)
                     uint32 zone, subzone;
                     GetZoneAndAreaId(zone,subzone);
 
-                    int32 zone_skill = objmgr.GetFishingBaseSkillLevel( subzone );
+                    int32 zone_skill = sObjectMgr.GetFishingBaseSkillLevel( subzone );
                     if(!zone_skill)
-                        zone_skill = objmgr.GetFishingBaseSkillLevel( zone );
+                        zone_skill = sObjectMgr.GetFishingBaseSkillLevel( zone );
 
                     //provide error, no fishable zone or area should be 0
                     if(!zone_skill)
@@ -1331,7 +1318,7 @@ const char* GameObject::GetNameForLocaleIdx(int32 loc_idx) const
 {
     if (loc_idx >= 0)
     {
-        GameObjectLocale const *cl = objmgr.GetGameObjectLocale(GetEntry());
+        GameObjectLocale const *cl = sObjectMgr.GetGameObjectLocale(GetEntry());
         if (cl)
         {
             if (cl->Name.size() > loc_idx && !cl->Name[loc_idx].empty())
@@ -1370,16 +1357,4 @@ void GameObject::UpdateRotationFields(float rotation2 /*=0.0f*/, float rotation3
 
     SetFloatValue(GAMEOBJECT_PARENTROTATION+2, rotation2);
     SetFloatValue(GAMEOBJECT_PARENTROTATION+3, rotation3);
-}
-
-void GameObject::DealSiegeDamage(uint32 damage)
-{
-    m_actualHealth -= damage;
-
-    // TODO : there are a lot of thinghts to do here
-    if(m_actualHealth < 0)
-    {
-        m_actualHealth = GetGOInfo()->destructibleBuilding.intactNumHits;
-        SetLootState(GO_JUST_DEACTIVATED);
-    }
 }

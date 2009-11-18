@@ -377,7 +377,7 @@ int Master::Run()
 
         cliThread->wait();
 
-        #else 
+        #else
 
         cliThread->destroy();
 
@@ -398,8 +398,8 @@ int Master::Run()
 bool Master::_StartDB()
 {
     ///- Get world database info from configuration file
-    std::string dbstring;
-    if(!sConfig.GetString("WorldDatabaseInfo", &dbstring))
+    std::string dbstring = sConfig.GetStringDefault("WorldDatabaseInfo", "");
+    if(dbstring.empty())
     {
         sLog.outError("Database not specified in configuration file");
         return false;
@@ -414,11 +414,19 @@ bool Master::_StartDB()
     }
 
     if(!WorldDatabase.CheckRequiredField("db_version",REVISION_DB_MANGOS))
+    {
+        ///- Wait for already started DB delay threads to end
+        WorldDatabase.HaltDelayThread();
         return false;
+    }
 
-    if(!sConfig.GetString("CharacterDatabaseInfo", &dbstring))
+    dbstring = sConfig.GetStringDefault("CharacterDatabaseInfo", "");
+    if(dbstring.empty())
     {
         sLog.outError("Character Database not specified in configuration file");
+
+        ///- Wait for already started DB delay threads to end
+        WorldDatabase.HaltDelayThread();
         return false;
     }
     sLog.outString("Character Database: %s", dbstring.c_str());
@@ -427,16 +435,29 @@ bool Master::_StartDB()
     if(!CharacterDatabase.Initialize(dbstring.c_str()))
     {
         sLog.outError("Cannot connect to Character database %s",dbstring.c_str());
+
+        ///- Wait for already started DB delay threads to end
+        WorldDatabase.HaltDelayThread();
         return false;
     }
 
     if(!CharacterDatabase.CheckRequiredField("character_db_version",REVISION_DB_CHARACTERS))
+    {
+        ///- Wait for already started DB delay threads to end
+        WorldDatabase.HaltDelayThread();
+        CharacterDatabase.HaltDelayThread();
         return false;
+    }
 
     ///- Get login database info from configuration file
-    if(!sConfig.GetString("LoginDatabaseInfo", &dbstring))
+    dbstring = sConfig.GetStringDefault("LoginDatabaseInfo", "");
+    if(dbstring.empty())
     {
         sLog.outError("Login database not specified in configuration file");
+
+        ///- Wait for already started DB delay threads to end
+        WorldDatabase.HaltDelayThread();
+        CharacterDatabase.HaltDelayThread();
         return false;
     }
 
@@ -445,19 +466,35 @@ bool Master::_StartDB()
     if(!loginDatabase.Initialize(dbstring.c_str()))
     {
         sLog.outError("Cannot connect to login database %s",dbstring.c_str());
+
+        ///- Wait for already started DB delay threads to end
+        WorldDatabase.HaltDelayThread();
+        CharacterDatabase.HaltDelayThread();
         return false;
     }
 
     if(!loginDatabase.CheckRequiredField("realmd_db_version",REVISION_DB_REALMD))
+    {
+        ///- Wait for already started DB delay threads to end
+        WorldDatabase.HaltDelayThread();
+        CharacterDatabase.HaltDelayThread();
+        loginDatabase.HaltDelayThread();
         return false;
+    }
 
     ///- Get the realm Id from the configuration file
     realmID = sConfig.GetIntDefault("RealmID", 0);
     if(!realmID)
     {
         sLog.outError("Realm ID not defined in configuration file");
+
+        ///- Wait for already started DB delay threads to end
+        WorldDatabase.HaltDelayThread();
+        CharacterDatabase.HaltDelayThread();
+        loginDatabase.HaltDelayThread();
         return false;
     }
+
     sLog.outString("Realm running as realm ID %d", realmID);
 
     ///- Clean the database before starting
@@ -475,9 +512,7 @@ void Master::clearOnlineAccounts()
 {
     // Cleanup online status for characters hosted at current realm
     /// \todo Only accounts with characters logged on *this* realm should have online status reset. Move the online column from 'account' to 'realmcharacters'?
-    loginDatabase.PExecute(
-        "UPDATE account SET online = 0 WHERE online > 0 "
-        "AND id IN (SELECT acctid FROM realmcharacters WHERE realmid = '%d')",realmID);
+    loginDatabase.PExecute("UPDATE account SET active_realm_id = 0 WHERE active_realm_id = '%d'", realmID);
 
     CharacterDatabase.Execute("UPDATE characters SET online = 0 WHERE online<>0");
 

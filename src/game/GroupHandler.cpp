@@ -28,7 +28,6 @@
 #include "Group.h"
 #include "SocialMgr.h"
 #include "Util.h"
-#include "Vehicle.h"
 
 /* differeces from off:
     -you can uninvite yourself - is is useful
@@ -65,7 +64,7 @@ void WorldSession::HandleGroupInviteOpcode( WorldPacket & recv_data )
         return;
     }
 
-    Player *player = objmgr.GetPlayer(membername.c_str());
+    Player *player = sObjectMgr.GetPlayer(membername.c_str());
 
     // no player
     if(!player)
@@ -182,7 +181,7 @@ void WorldSession::HandleGroupAcceptOpcode( WorldPacket & /*recv_data*/ )
         return;
     }
 
-    Player* leader = objmgr.GetPlayer(group->GetLeaderGUID());
+    Player* leader = sObjectMgr.GetPlayer(group->GetLeaderGUID());
 
     // forming a new group, create it
     if(!group->IsCreated())
@@ -190,7 +189,7 @@ void WorldSession::HandleGroupAcceptOpcode( WorldPacket & /*recv_data*/ )
         if( leader )
             group->RemoveInvite(leader);
         group->Create(group->GetLeaderGUID(), group->GetLeaderName());
-        objmgr.AddGroup(group);
+        sObjectMgr.AddGroup(group);
     }
 
     // everything's fine, do it, PLAYER'S GROUP IS SET IN ADDMEMBER!!!
@@ -205,7 +204,7 @@ void WorldSession::HandleGroupDeclineOpcode( WorldPacket & /*recv_data*/ )
     if (!group) return;
 
     // remember leader if online
-    Player *leader = objmgr.GetPlayer(group->GetLeaderGUID());
+    Player *leader = sObjectMgr.GetPlayer(group->GetLeaderGUID());
 
     // uninvite, group can be deleted
     GetPlayer()->UninviteFromGroup();
@@ -308,7 +307,7 @@ void WorldSession::HandleGroupSetLeaderOpcode( WorldPacket & recv_data )
     uint64 guid;
     recv_data >> guid;
 
-    Player *player = objmgr.GetPlayer(guid);
+    Player *player = sObjectMgr.GetPlayer(guid);
 
     /** error handling **/
     if (!player || !group->IsLeader(GetPlayer()->GetGUID()) || player->GetGroup() != group)
@@ -369,26 +368,26 @@ void WorldSession::HandleLootRoll( WorldPacket &recv_data )
 
     uint64 Guid;
     uint32 NumberOfPlayers;
-    uint8  Choise;
+    uint8  rollType;
     recv_data >> Guid;                                      //guid of the item rolled
     recv_data >> NumberOfPlayers;
-    recv_data >> Choise;                                    //0: pass, 1: need, 2: greed
+    recv_data >> rollType;
 
-    //sLog.outDebug("WORLD RECIEVE CMSG_LOOT_ROLL, From:%u, Numberofplayers:%u, Choise:%u", (uint32)Guid, NumberOfPlayers, Choise);
+    //sLog.outDebug("WORLD RECIEVE CMSG_LOOT_ROLL, From:%u, Numberofplayers:%u, rollType:%u", (uint32)Guid, NumberOfPlayers, rollType);
 
     Group* group = GetPlayer()->GetGroup();
     if(!group)
         return;
 
     // everything's fine, do it
-    group->CountRollVote(GetPlayer()->GetGUID(), Guid, NumberOfPlayers, Choise);
+    group->CountRollVote(GetPlayer()->GetGUID(), Guid, NumberOfPlayers, rollType);
 
-    switch (Choise)
+    switch (rollType)
     {
-        case 1:
+        case ROLL_NEED:
             GetPlayer()->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_ROLL_NEED, 1);
             break;
-        case 2:
+        case ROLL_GREED:
             GetPlayer()->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_ROLL_GREED, 1);
             break;
     }
@@ -512,7 +511,7 @@ void WorldSession::HandleGroupChangeSubGroupOpcode( WorldPacket & recv_data )
     /********************/
 
     // everything's fine, do it
-    group->ChangeMembersGroup(objmgr.GetPlayer(name.c_str()), groupNr);
+    group->ChangeMembersGroup(sObjectMgr.GetPlayer(name.c_str()), groupNr);
 }
 
 void WorldSession::HandleGroupAssistantLeaderOpcode( WorldPacket & recv_data )
@@ -766,11 +765,6 @@ void WorldSession::BuildPartyMemberStatsChangedPacket(Player *player, WorldPacke
         else
             *data << (uint64) 0;
     }
-
-    if (mask & GROUP_UPDATE_FLAG_VEHICLE_SEAT)
-    {
-        *data << (uint32) player->m_SeatData.dbc_seat;
-    }
 }
 
 /*this procedure handles clients CMSG_REQUEST_PARTY_MEMBER_STATS request*/
@@ -780,7 +774,7 @@ void WorldSession::HandleRequestPartyMemberStatsOpcode( WorldPacket &recv_data )
     uint64 Guid;
     recv_data >> Guid;
 
-    Player *player = objmgr.GetPlayer(Guid);
+    Player *player = sObjectMgr.GetPlayer(Guid);
     if(!player)
     {
         WorldPacket data(SMSG_PARTY_MEMBER_STATS_FULL, 3+4+2);
@@ -854,7 +848,6 @@ void WorldSession::HandleRequestPartyMemberStatsOpcode( WorldPacket &recv_data )
             }
         }
         data.put<uint64>(petMaskPos,petauramask);           // GROUP_UPDATE_FLAG_PET_AURAS
-        data << (uint32) player->m_SeatData.dbc_seat;
     }
     else
     {

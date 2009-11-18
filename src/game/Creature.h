@@ -158,7 +158,7 @@ enum CreatureFlagsExtra
 struct CreatureInfo
 {
     uint32  Entry;
-    uint32  HeroicEntry;
+    uint32  DifficultyEntry[MAX_DIFFICULTY - 1];
     uint32  KillCredit[MAX_KILL_CREDIT];
     uint32  DisplayID_A[2];
     uint32  DisplayID_H[2];
@@ -217,7 +217,7 @@ struct CreatureInfo
     float   unk16;
     float   unk17;
     bool    RacialLeader;
-    uint32  questItems[4];
+    uint32  questItems[6];
     uint32  movementId;
     bool    RegenHealth;
     uint32  equipmentId;
@@ -238,13 +238,18 @@ struct CreatureInfo
             return SKILL_SKINNING;                          // normal case
     }
 
+    bool IsExotic() const
+    {
+        return (type_flags & CREATURE_TYPEFLAGS_EXOTIC);
+    }
+
     bool isTameable(bool exotic) const
     {
-        if(type != CREATURE_TYPE_BEAST || family == 0 || (type_flags & CREATURE_TYPEFLAGS_TAMEABLE)==0)
+        if(type != CREATURE_TYPE_BEAST || family == 0 || (type_flags & CREATURE_TYPEFLAGS_TAMEABLE) == 0)
             return false;
 
         // if can tame exotic then can tame any temable
-        return exotic || (type_flags & CREATURE_TYPEFLAGS_EXOTIC)==0;
+        return exotic || !IsExotic();
     }
 };
 
@@ -299,12 +304,6 @@ struct CreatureDataAddonAura
     uint8 effect_idx;
 };
 
-struct CreatureDataAddonPassengers
-{
-    int32 guidOrEntry;                                      // entry - negative, guid positive
-    int8 seat_idx;
-};
-
 // from `creature_addon` table
 struct CreatureDataAddon
 {
@@ -314,8 +313,6 @@ struct CreatureDataAddon
     uint32 bytes2;
     uint32 emote;
     uint32 move_flags;
-    uint32 vehicle_id;
-    CreatureDataAddonPassengers const* passengers;          // loaded as char* "entry1 seatid1 entry2 seatid2 ... "
     CreatureDataAddonAura const* auras;                     // loaded as char* "spell1 eff1 spell2 eff2 ... "
 };
 
@@ -473,7 +470,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         void AddToWorld();
         void RemoveFromWorld();
 
-        bool Create (uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, uint32 team, const CreatureData *data = NULL);
+        bool Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, uint32 team, const CreatureData *data = NULL);
         bool LoadCreaturesAddon(bool reload = false);
         void SelectLevel(const CreatureInfo *cinfo);
         void LoadEquipment(uint32 equip_entry, bool force=false);
@@ -627,6 +624,8 @@ class MANGOS_DLL_SPEC Creature : public Unit
 
         float GetAttackDistance(Unit const* pl) const;
 
+        void SendAIReaction(AiReaction reactionType);
+
         void DoFleeToGetAssistance();
         void CallForHelp(float fRadius);
         void CallAssistance();
@@ -743,7 +742,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         float CombatStartZ;
     private:
         GridReference<Creature> m_gridRef;
-        CreatureInfo const* m_creatureInfo;                 // in heroic mode can different from ObjMgr::GetCreatureTemplate(GetEntry())
+        CreatureInfo const* m_creatureInfo;                 // in difficulty mode > 0 can different from ObjMgr::GetCreatureTemplate(GetEntry())
         bool m_isActiveObject;
         MonsterMovementFlags m_monsterMoveFlags;
 };

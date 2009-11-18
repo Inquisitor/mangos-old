@@ -68,7 +68,7 @@ void WorldSession::HandleAutostoreLootItemOpcode( WorldPacket & recv_data )
     }
     else if (IS_CORPSE_GUID(lguid))
     {
-        Corpse *bones = ObjectAccessor::GetCorpse(*player, lguid);
+        Corpse *bones = player->GetMap()->GetCorpse(lguid);
         if (!bones)
         {
             player->SendLootRelease(lguid);
@@ -181,7 +181,7 @@ void WorldSession::HandleLootMoneyOpcode( WorldPacket & /*recv_data*/ )
         }
         case HIGHGUID_CORPSE:                               // remove insignia ONLY in BG
         {
-            Corpse *bones = ObjectAccessor::GetCorpse(*GetPlayer(), guid);
+            Corpse *bones = _player->GetMap()->GetCorpse(guid);
 
             if (bones && bones->IsWithinDistInMap(_player,INTERACTION_DISTANCE) )
                 pLoot = &bones->loot;
@@ -309,26 +309,6 @@ void WorldSession::DoLootRelease( uint64 lguid )
                 uint32 go_min = go->GetGOInfo()->chest.minSuccessOpens;
                 uint32 go_max = go->GetGOInfo()->chest.maxSuccessOpens;
 
-                if (player->GetInstanceId())
-                {
-                    Map *map = go->GetMap();
-                    if (map->IsDungeon())
-                    {
-                        if (map->IsRaid() || map->IsHeroic())
-                        {
-                            ((InstanceMap *)map)->PermBindAllPlayers(player);
-                        }
-                        else
-                        {
-                            // the reset time is set but not added to the scheduler
-                            // until the players leave the instance
-                            time_t resettime = go->GetRespawnTimeEx() + 2 * HOUR;
-                            if(InstanceSave *save = sInstanceSaveManager.GetInstanceSave(player->GetInstanceId()))
-                            if(save->GetResetTime() < resettime) save->SetResetTime(resettime);
-                        }
-                    }
-                }
-
                 // only vein pass this check
                 if(go_min != 0 && go_max > go_min)
                 {
@@ -388,7 +368,7 @@ void WorldSession::DoLootRelease( uint64 lguid )
     }
     else if (IS_CORPSE_GUID(lguid))        // ONLY remove insignia at BG
     {
-        Corpse *corpse = ObjectAccessor::GetCorpse(*player, lguid);
+        Corpse *corpse = _player->GetMap()->GetCorpse(lguid);
         if (!corpse || !corpse->IsWithinDistInMap(_player,INTERACTION_DISTANCE) )
             return;
 
@@ -520,7 +500,7 @@ void WorldSession::HandleLootMasterGiveOpcode( WorldPacket & recv_data )
         return;
     }
 
-    // not move item from loot to target inventory
+    // now move item from loot to target inventory
     Item * newitem = target->StoreNewItem( dest, item.itemid, true, item.randomPropertyId );
     target->SendNewItem(newitem, uint32(item.count), false, false, true );
     target->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_ITEM, item.itemid, item.count);
@@ -529,7 +509,6 @@ void WorldSession::HandleLootMasterGiveOpcode( WorldPacket & recv_data )
     // mark as looted
     item.count=0;
     item.is_looted=true;
-
 
     pLoot->NotifyItemRemoved(slotid);
     --pLoot->unlootedCount;

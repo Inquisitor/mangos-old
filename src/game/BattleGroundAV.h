@@ -121,6 +121,7 @@ enum BG_AV_Nodes
 };
 #define BG_AV_NODES_MAX                 15
 
+
 // for nodeevents we will use event1=node
 // event2 is related to BG_AV_States
 // 0 = alliance assaulted
@@ -307,8 +308,6 @@ class BattleGroundAV : public BattleGround
 
         /* inherited from BattlegroundClass */
         virtual void AddPlayer(Player *plr);
-        virtual void OnObjectDBLoad(Creature* creature);
-        virtual void OnCreatureRespawn(Creature* creature);
 
         virtual void StartingEventCloseDoors();
         virtual void StartingEventOpenDoors();
@@ -371,8 +370,6 @@ class BattleGroundAV : public BattleGround
 
         bool m_IsInformedNearLose[BG_TEAMS_COUNT];
         bool m_captainAlive[BG_TEAMS_COUNT];
-
-        BG_AV_Nodes m_assault_in_progress;                  // this node gets currently assaulted and must be ignored for getclosestgrave
 
         uint32 m_HonorMapComplete;
         uint32 m_RepTowerDestruction;

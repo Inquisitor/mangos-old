@@ -158,11 +158,12 @@ ChatCommand * ChatHandler::getCommandTable()
         { "getitemstate",   SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugGetItemStateCommand,        "", NULL },
         { "lootrecipient",  SEC_GAMEMASTER,     false, &ChatHandler::HandleDebugGetLootRecipientCommand,    "", NULL },
         { "getvalue",       SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugGetValueCommand,            "", NULL },
+        { "getitemvalue",   SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugGetItemValueCommand,        "", NULL },
         { "Mod32Value",     SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugMod32ValueCommand,          "", NULL },
         { "play",           SEC_MODERATOR,      false, NULL,                                                "", debugPlayCommandTable },
         { "send",           SEC_ADMINISTRATOR,  false, NULL,                                                "", debugSendCommandTable },
         { "setaurastate",   SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugSetAuraStateCommand,        "", NULL },
-        { "setitemflag",    SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugSetItemFlagCommand,         "", NULL },
+        { "setitemvalue",   SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugSetItemValueCommand,        "", NULL },
         { "setvalue",       SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugSetValueCommand,            "", NULL },
         { "spellcheck",     SEC_CONSOLE,        true,  &ChatHandler::HandleDebugSpellCheckCommand,          "", NULL },
         { "spawnvehicle",   SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugSpawnVehicle,               "", NULL },
@@ -173,7 +174,7 @@ ChatCommand * ChatHandler::getCommandTable()
 
     static ChatCommand eventCommandTable[] =
     {
-        { "activelist",     SEC_GAMEMASTER,     true,  &ChatHandler::HandleEventActiveListCommand,     "", NULL },
+        { "list",           SEC_GAMEMASTER,     true,  &ChatHandler::HandleEventListCommand,           "", NULL },
         { "start",          SEC_GAMEMASTER,     true,  &ChatHandler::HandleEventStartCommand,          "", NULL },
         { "stop",           SEC_GAMEMASTER,     true,  &ChatHandler::HandleEventStopCommand,           "", NULL },
         { "",               SEC_GAMEMASTER,     true,  &ChatHandler::HandleEventInfoCommand,           "", NULL },
@@ -396,7 +397,7 @@ ChatCommand * ChatHandler::getCommandTable()
 
         { "config",         SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleReloadConfigCommand,        "", NULL },
 
-        { "achievement_criteria_data",   SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadAchievementCriteriaDataCommand, "", NULL },
+        { "achievement_criteria_requirement",SEC_ADMINISTRATOR,true,&ChatHandler::HandleReloadAchievementCriteriaRequirementCommand,"",NULL },
         { "achievement_reward",          SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadAchievementRewardCommand,       "", NULL },
         { "areatrigger_involvedrelation",SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadQuestAreaTriggersCommand,       "", NULL },
         { "areatrigger_tavern",          SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadAreaTriggerTavernCommand,       "", NULL },
@@ -431,6 +432,8 @@ ChatCommand * ChatHandler::getCommandTable()
         { "locales_page_text",           SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadLocalesPageTextCommand,         "", NULL },
         { "locales_points_of_interest",  SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadLocalesPointsOfInterestCommand, "", NULL },
         { "locales_quest",               SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadLocalesQuestCommand,            "", NULL },
+        { "mail_level_reward",           SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadMailLevelRewardCommand,       "", NULL },
+        { "mail_loot_template",          SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadLootTemplatesMailCommand,       "", NULL },
         { "mangos_string",               SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadMangosStringCommand,            "", NULL },
         { "milling_loot_template",       SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadLootTemplatesMillingCommand,    "", NULL },
         { "npc_gossip",                  SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadNpcGossipCommand,               "", NULL },
@@ -443,7 +446,6 @@ ChatCommand * ChatHandler::getCommandTable()
         { "points_of_interest",          SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadPointsOfInterestCommand,        "",NULL},
         { "prospecting_loot_template",   SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadLootTemplatesProspectingCommand,"", NULL },
         { "quest_end_scripts",           SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadQuestEndScriptsCommand,         "", NULL },
-        { "quest_mail_loot_template",    SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadLootTemplatesQuestMailCommand,  "", NULL },
         { "quest_start_scripts",         SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadQuestStartScriptsCommand,       "", NULL },
         { "quest_template",              SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadQuestTemplateCommand,           "", NULL },
         { "reference_loot_template",     SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadLootTemplatesReferenceCommand,  "", NULL },
@@ -466,10 +468,6 @@ ChatCommand * ChatHandler::getCommandTable()
         { "spell_target_position",       SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadSpellTargetPositionCommand,     "", NULL },
         { "spell_threats",               SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadSpellThreatsCommand,            "", NULL },
         { "spell_disabled",              SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadSpellDisabledCommand,           "", NULL },
-        { "vehicle_data",                SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadVehicleDataCommand,             "", NULL },
-        { "vehicle_seat_data",           SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadVehicleSeatDataCommand,         "", NULL },
-
-
         { NULL,                          0,                 false, NULL,                                                     "", NULL }
     };
 
@@ -702,7 +700,7 @@ bool ChatHandler::HasLowerSecurity(Player* target, uint64 guid, bool strong)
     if (target)
         target_session = target->GetSession();
     else if (guid)
-        target_account = objmgr.GetPlayerAccountIdByGUID(guid);
+        target_account = sObjectMgr.GetPlayerAccountIdByGUID(guid);
 
     if(!target_session && !target_account)
     {
@@ -729,7 +727,7 @@ bool ChatHandler::HasLowerSecurityAccount(WorldSession* target, uint32 target_ac
     if (target)
         target_sec = target->GetSecurity();
     else if (target_account)
-        target_sec = accmgr.GetSecurity(target_account);
+        target_sec = sAccountMgr.GetSecurity(target_account);
     else
         return true;                                        // caller must report error for (target==NULL && target_account==0)
 
@@ -773,7 +771,7 @@ void ChatHandler::SendSysMessage(const char *str)
     WorldPacket data;
 
     // need copy to prevent corruption by strtok call in LineFromMessage original string
-    char* buf = strdup(str);
+    char* buf = mangos_strdup(str);
     char* pos = buf;
 
     while(char* line = LineFromMessage(pos))
@@ -782,7 +780,7 @@ void ChatHandler::SendSysMessage(const char *str)
         m_session->SendPacket(&data);
     }
 
-    free(buf);
+    delete [] buf;
 }
 
 void ChatHandler::SendGlobalSysMessage(const char *str)
@@ -791,7 +789,7 @@ void ChatHandler::SendGlobalSysMessage(const char *str)
     WorldPacket data;
 
     // need copy to prevent corruption by strtok call in LineFromMessage original string
-    char* buf = strdup(str);
+    char* buf = mangos_strdup(str);
     char* pos = buf;
 
     while(char* line = LineFromMessage(pos))
@@ -800,7 +798,7 @@ void ChatHandler::SendGlobalSysMessage(const char *str)
         sWorld.SendGlobalMessage(&data);
     }
 
-    free(buf);
+    delete [] buf;
 }
 
 void ChatHandler::SendSysMessage(int32 entry)
@@ -1052,7 +1050,7 @@ valid examples:
                     else
                         ++validSequenceIterator;
                 }
-                else
+                else if(commandChar != '|')
                     return false;
             }
         }
@@ -1068,6 +1066,8 @@ valid examples:
     Quest const* linkedQuest;
     SpellEntry const *linkedSpell;
     AchievementEntry const* linkedAchievement;
+    ItemRandomPropertiesEntry const* itemProperty;
+    ItemRandomSuffixEntry const* itemSuffix;
 
     while(!reader.eof())
     {
@@ -1077,6 +1077,8 @@ valid examples:
             linkedQuest = NULL;
             linkedSpell = NULL;
             linkedAchievement = NULL;
+            itemProperty = NULL;
+            itemSuffix = NULL;
 
             reader.ignore(255, '|');
         }
@@ -1175,7 +1177,7 @@ valid examples:
                     // read item entry
                     reader.getline(buffer, 256, ':');
 
-                    linkedItem= objmgr.GetItemPrototype(atoi(buffer));
+                    linkedItem = ObjectMgr::GetItemPrototype(atoi(buffer));
                     if(!linkedItem)
                     {
 #ifdef MANGOS_DEBUG
@@ -1193,9 +1195,47 @@ valid examples:
                         return false;
                     }
 
-                    char c = reader.peek();
+                    // the itementry is followed by several integers which describe an instance of this item
 
-                    // ignore enchants etc.
+                    // position relative after itemEntry
+                    const uint8 randomPropertyPosition = 6;
+
+                    int32 propertyId = 0;
+                    bool negativeNumber = false;
+                    char c;
+                    for(uint8 i=0; i<randomPropertyPosition; ++i)
+                    {
+                        propertyId = 0;
+                        negativeNumber = false;
+                        while((c = reader.get())!=':')
+                        {
+                            if(c >='0' && c<='9')
+                            {
+                                propertyId*=10;
+                                propertyId += c-'0';
+                            } else if(c == '-')
+                                negativeNumber = true;
+                            else
+                                return false;
+                        }
+                    }
+                    if (negativeNumber)
+                        propertyId *= -1;
+
+                    if (propertyId > 0)
+                    {
+                        itemProperty = sItemRandomPropertiesStore.LookupEntry(propertyId);
+                        if (!itemProperty)
+                            return false;
+                    }
+                    else if(propertyId < 0)
+                    {
+                        itemSuffix = sItemRandomSuffixStore.LookupEntry(-propertyId);
+                        if (!itemSuffix)
+                            return false;
+                    }
+
+                    // ignore other integers
                     while ((c >= '0' && c <= '9') || c== ':')
                     {
                         reader.ignore(1);
@@ -1216,7 +1256,7 @@ valid examples:
                         c = reader.peek();
                     }
 
-                    linkedQuest = objmgr.GetQuestTemplate(questid);
+                    linkedQuest = sObjectMgr.GetQuestTemplate(questid);
 
                     if(!linkedQuest)
                     {
@@ -1387,7 +1427,7 @@ valid examples:
                         if (linkedSpell->Attributes & SPELL_ATTR_TRADESPELL)
                         {
                             // lookup skillid
-                            SkillLineAbilityMapBounds bounds = spellmgr.GetSkillLineAbilityMapBounds(linkedSpell->Id);
+                            SkillLineAbilityMapBounds bounds = sSpellMgr.GetSkillLineAbilityMapBounds(linkedSpell->Id);
                             if (bounds.first == bounds.second)
                             {
                                 return false;
@@ -1434,7 +1474,7 @@ valid examples:
                     {
                         if (linkedQuest->GetTitle() != buffer)
                         {
-                            QuestLocale const *ql = objmgr.GetQuestLocale(linkedQuest->GetQuestId());
+                            QuestLocale const *ql = sObjectMgr.GetQuestLocale(linkedQuest->GetQuestId());
 
                             if (!ql)
                             {
@@ -1464,22 +1504,34 @@ valid examples:
                     }
                     else if(linkedItem)
                     {
-                        if (strcmp(linkedItem->Name1, buffer) != 0)
-                        {
-                            ItemLocale const *il = objmgr.GetItemLocale(linkedItem->ItemId);
+                        char* const* suffix = itemSuffix?itemSuffix->nameSuffix:(itemProperty?itemProperty->nameSuffix:NULL);
 
-                            if (!il)
-                            {
-#ifdef MANGOS_DEBUG
-                                sLog.outBasic("ChatHandler::isValidChatMessage linked item name doesn't is wrong and there is no localization");
-#endif
-                                return false;
-                            }
+                        std::string expectedName = std::string(linkedItem->Name1);
+                        if (suffix)
+                        {
+                            expectedName += " ";
+                            expectedName += suffix[LOCALE_enUS];
+                        }
+
+                        if (expectedName != buffer)
+                        {
+                            ItemLocale const *il = sObjectMgr.GetItemLocale(linkedItem->ItemId);
 
                             bool foundName = false;
-                            for(uint8 i=0; i<il->Name.size(); ++i)
+                            for(uint8 i=LOCALE_koKR; i<MAX_LOCALE; ++i)
                             {
-                                if (il->Name[i] == buffer)
+                                int8 dbIndex = sObjectMgr.GetIndexForLocale(LocaleConstant(i));
+                                if (dbIndex == -1 || il == NULL || dbIndex >= il->Name.size())
+                                    // using strange database/client combinations can lead to this case
+                                    expectedName = linkedItem->Name1;
+                                else
+                                    expectedName = il->Name[dbIndex];
+                                if (suffix)
+                                {
+                                    expectedName += " ";
+                                    expectedName += suffix[i];
+                                }
+                                if ( expectedName == buffer)
                                 {
                                     foundName = true;
                                     break;
@@ -1724,7 +1776,7 @@ Player * ChatHandler::getSelectedPlayer()
     if (guid == 0)
         return m_session->GetPlayer();
 
-    return objmgr.GetPlayer(guid);
+    return sObjectMgr.GetPlayer(guid);
 }
 
 Unit* ChatHandler::getSelectedUnit()
@@ -1745,7 +1797,7 @@ Creature* ChatHandler::getSelectedCreature()
     if(!m_session)
         return NULL;
 
-    return ObjectAccessor::GetCreatureOrPetOrVehicle(*m_session->GetPlayer(),m_session->GetPlayer()->GetSelection());
+    return m_session->GetPlayer()->GetMap()->GetCreatureOrPetOrVehicle(m_session->GetPlayer()->GetSelection());
 }
 
 char* ChatHandler::extractKeyFromLink(char* text, char const* linkType, char** something1)
@@ -1901,7 +1953,7 @@ GameObject* ChatHandler::GetObjectGlobalyWithGuidOrNearWithDbGuid(uint32 lowguid
 
     GameObject* obj = pl->GetMap()->GetGameObject(MAKE_NEW_GUID(lowguid, entry, HIGHGUID_GAMEOBJECT));
 
-    if(!obj && objmgr.GetGOData(lowguid))                   // guid is DB guid of object
+    if(!obj && sObjectMgr.GetGOData(lowguid))                   // guid is DB guid of object
     {
         // search near player then
         CellPair p(MaNGOS::ComputeCellPair(pl->GetPositionX(), pl->GetPositionY()));
@@ -2002,9 +2054,9 @@ GameTele const* ChatHandler::extractGameTeleFromLink(char* text)
     // id case (explicit or from shift link)
     if(cId[0] >= '0' || cId[0] >= '9')
         if(uint32 id = atoi(cId))
-            return objmgr.GetGameTele(id);
+            return sObjectMgr.GetGameTele(id);
 
-    return objmgr.GetGameTele(cId);
+    return sObjectMgr.GetGameTele(cId);
 }
 
 enum GuidLinkType
@@ -2041,10 +2093,10 @@ uint64 ChatHandler::extractGuidFromLink(char* text)
             if(!normalizePlayerName(name))
                 return 0;
 
-            if(Player* player = objmgr.GetPlayer(name.c_str()))
+            if(Player* player = sObjectMgr.GetPlayer(name.c_str()))
                 return player->GetGUID();
 
-            if(uint64 guid = objmgr.GetPlayerGUIDByName(name))
+            if(uint64 guid = sObjectMgr.GetPlayerGUIDByName(name))
                 return guid;
 
             return 0;
@@ -2053,7 +2105,7 @@ uint64 ChatHandler::extractGuidFromLink(char* text)
         {
             uint32 lowguid = (uint32)atol(idS);
 
-            if(CreatureData const* data = objmgr.GetCreatureData(lowguid) )
+            if(CreatureData const* data = sObjectMgr.GetCreatureData(lowguid) )
                 return MAKE_NEW_GUID(lowguid,data->id,HIGHGUID_UNIT);
             else
                 return 0;
@@ -2062,7 +2114,7 @@ uint64 ChatHandler::extractGuidFromLink(char* text)
         {
             uint32 lowguid = (uint32)atol(idS);
 
-            if(GameObjectData const* data = objmgr.GetGOData(lowguid) )
+            if(GameObjectData const* data = sObjectMgr.GetGOData(lowguid) )
                 return MAKE_NEW_GUID(lowguid,data->id,HIGHGUID_GAMEOBJECT);
             else
                 return 0;
@@ -2099,14 +2151,14 @@ bool ChatHandler::extractPlayerTarget(char* args, Player** player, uint64* playe
             return false;
         }
 
-        Player* pl = objmgr.GetPlayer(name.c_str());
+        Player* pl = sObjectMgr.GetPlayer(name.c_str());
 
         // if allowed player pointer
         if(player)
             *player = pl;
 
         // if need guid value from DB (in name case for check player existence)
-        uint64 guid = !pl && (player_guid || player_name) ? objmgr.GetPlayerGUIDByName(name) : 0;
+        uint64 guid = !pl && (player_guid || player_name) ? sObjectMgr.GetPlayerGUIDByName(name) : 0;
 
         // if allowed player guid (if no then only online players allowed)
         if(player_guid)
@@ -2192,7 +2244,7 @@ int ChatHandler::GetSessionDbLocaleIndex() const
 
 const char *CliHandler::GetMangosString(int32 entry) const
 {
-    return objmgr.GetMangosStringForDBCLocale(entry);
+    return sObjectMgr.GetMangosStringForDBCLocale(entry);
 }
 
 bool CliHandler::isAvailable(ChatCommand const& cmd) const
@@ -2242,5 +2294,5 @@ LocaleConstant CliHandler::GetSessionDbcLocale() const
 
 int CliHandler::GetSessionDbLocaleIndex() const
 {
-    return objmgr.GetDBCLocaleIndex();
+    return sObjectMgr.GetDBCLocaleIndex();
 }

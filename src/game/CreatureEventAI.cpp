@@ -57,8 +57,8 @@ int CreatureEventAI::Permissible(const Creature *creature)
 CreatureEventAI::CreatureEventAI(Creature *c ) : CreatureAI(c)
 {
     // Need make copy for filter unneeded steps and safe in case table reload
-    CreatureEventAI_Event_Map::const_iterator CreatureEvents = CreatureEAI_Mgr.GetCreatureEventAIMap().find(m_creature->GetEntry());
-    if (CreatureEvents != CreatureEAI_Mgr.GetCreatureEventAIMap().end())
+    CreatureEventAI_Event_Map::const_iterator CreatureEvents = sEventAIMgr.GetCreatureEventAIMap().find(m_creature->GetEntry());
+    if (CreatureEvents != sEventAIMgr.GetCreatureEventAIMap().end())
     {
         std::vector<CreatureEventAI_Event>::const_iterator i;
         for (i = (*CreatureEvents).second.begin(); i != (*CreatureEvents).second.end(); ++i)
@@ -71,8 +71,7 @@ CreatureEventAI::CreatureEventAI(Creature *c ) : CreatureAI(c)
             #endif
             if (m_creature->GetMap()->IsDungeon())
             {
-                if( (m_creature->GetMap()->IsHeroic() && (*i).event_flags & EFLAG_HEROIC) ||
-                    (!m_creature->GetMap()->IsHeroic() && (*i).event_flags & EFLAG_NORMAL))
+                if ((1 << (m_creature->GetMap()->GetSpawnMode()+1)) & (*i).event_flags)
                 {
                     //event flagged for instance mode
                     CreatureEventAIList.push_back(CreatureEventAIHolder(*i));
@@ -383,24 +382,17 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
     {
         case ACTION_T_TEXT:
         {
-            if (!action.text.TextId1)
+            if (!action.text.TextId[0])
                 return;
 
             int32 temp = 0;
 
-            if (action.text.TextId2 && action.text.TextId3)
-            {
-                switch( rand()%3 )
-                {
-                    case 0: temp = action.text.TextId1; break;
-                    case 1: temp = action.text.TextId2; break;
-                    case 2: temp = action.text.TextId3; break;
-                }
-            }
-            else if (action.text.TextId2 && urand(0,1))
-                temp = action.text.TextId2;
+            if (action.text.TextId[1] && action.text.TextId[2])
+                temp = action.text.TextId[rand()%3];
+            else if (action.text.TextId[1] && urand(0,1))
+                temp = action.text.TextId[1];
             else
-                temp = action.text.TextId1;
+                temp = action.text.TextId[0];
 
             if (temp)
             {
@@ -452,7 +444,7 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
                 {
                     if (CreatureInfo const* ci = GetCreatureTemplateStore(action.morph.creatureId))
                     {
-                        uint32 display_id = objmgr.ChooseDisplayId(0,ci);
+                        uint32 display_id = sObjectMgr.ChooseDisplayId(0,ci);
                         m_creature->SetDisplayId(display_id);
                     }
                 }
@@ -569,8 +561,8 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
             break;
         case ACTION_T_THREAT_ALL_PCT:
         {
-            std::list<HostilReference*>& threatList = m_creature->getThreatManager().getThreatList();
-            for (std::list<HostilReference*>::iterator i = threatList.begin(); i != threatList.end(); ++i)
+            std::list<HostileReference*>& threatList = m_creature->getThreatManager().getThreatList();
+            for (std::list<HostileReference*>::iterator i = threatList.begin(); i != threatList.end(); ++i)
                 if(Unit* Temp = Unit::GetUnit(*m_creature,(*i)->getUnitGuid()))
                     m_creature->getThreatManager().modifyThreatPercent(Temp, action.threat_all_pct.percent);
             break;
@@ -680,8 +672,8 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
             break;
         case ACTION_T_CAST_EVENT_ALL:
         {
-            std::list<HostilReference*>& threatList = m_creature->getThreatManager().getThreatList();
-            for (std::list<HostilReference*>::iterator i = threatList.begin(); i != threatList.end(); ++i)
+            std::list<HostileReference*>& threatList = m_creature->getThreatManager().getThreatList();
+            for (std::list<HostileReference*>::iterator i = threatList.begin(); i != threatList.end(); ++i)
                 if (Unit* Temp = Unit::GetUnit(*m_creature,(*i)->getUnitGuid()))
                     if (Temp->GetTypeId() == TYPEID_PLAYER)
                         ((Player*)Temp)->CastedCreatureOrGO(action.cast_event_all.creatureId, m_creature->GetGUID(), action.cast_event_all.spellId);
@@ -718,8 +710,8 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
         {
             Unit* target = GetTargetByType(action.summon_id.target, pActionInvoker);
 
-            CreatureEventAI_Summon_Map::const_iterator i = CreatureEAI_Mgr.GetCreatureEventAISummonMap().find(action.summon_id.spawnId);
-            if (i == CreatureEAI_Mgr.GetCreatureEventAISummonMap().end())
+            CreatureEventAI_Summon_Map::const_iterator i = sEventAIMgr.GetCreatureEventAISummonMap().find(action.summon_id.spawnId);
+            if (i == sEventAIMgr.GetCreatureEventAISummonMap().end())
             {
                 sLog.outErrorDb( "CreatureEventAI: failed to spawn creature %u. Summon map index %u does not exist. EventID %d. CreatureID %d", action.summon_id.creatureId, action.summon_id.spawnId, EventId, m_creature->GetEntry());
                 return;
@@ -831,11 +823,11 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
         case ACTION_T_ADD_GOSSIP:
         {
             char const* text = "Text missing, please report this on bugtracker.";
-            CreatureEventAI_TextMap::const_iterator i = CreatureEAI_Mgr.GetCreatureEventAITextMap().find(action.add_gossip.text);
-            if( i != CreatureEAI_Mgr.GetCreatureEventAITextMap().end() )
+            CreatureEventAI_TextMap::const_iterator i = sEventAIMgr.GetCreatureEventAITextMap().find(action.add_gossip.text);
+            if( i != sEventAIMgr.GetCreatureEventAITextMap().end() )
             {
                 uint32 loc_idx = ((Player*)pActionInvoker)->GetSession()->GetSessionDbLocaleIndex();
-                text = objmgr.GetMangosString(action.add_gossip.text,loc_idx);
+                text = sObjectMgr.GetMangosString(action.add_gossip.text,loc_idx);
             }
             ((Player*)pActionInvoker)->PlayerTalkClass->ClearMenus();
             ((Player*)pActionInvoker)->PlayerTalkClass->GetGossipMenu().AddMenuItem(0, text, 1, action.add_gossip.id, "", 0 );
@@ -852,7 +844,7 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
                 target = pActionInvoker;
 
             GameObject* pGameObj = new GameObject;
-            if(!pGameObj->Create(objmgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), action.summon_gobject.id, target->GetMap(),
+            if(!pGameObj->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), action.summon_gobject.id, target->GetMap(),
             target->GetPhaseMask(), target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
             {
                 delete pGameObj;
@@ -947,7 +939,6 @@ void CreatureEventAI::JustReachedHome()
 
 void CreatureEventAI::EnterEvadeMode()
 {
-    m_creature->ExitVehicle();
     m_creature->RemoveAllAuras();
     m_creature->DeleteThreatList();
     m_creature->CombatStop(true);
@@ -1049,7 +1040,7 @@ void CreatureEventAI::AttackStart(Unit *who)
 
     if (m_creature->Attack(who, MeleeEnabled))
     {
-        m_creature->AddThreat(who, 0.0f);
+        m_creature->AddThreat(who);
         m_creature->SetInCombatWith(who);
         who->SetInCombatWith(m_creature);
 
@@ -1095,7 +1086,7 @@ void CreatureEventAI::MoveInLineOfSight(Unit *who)
     if (m_creature->isCivilian() || m_creature->IsNeutralToAll())
         return;
 
-    if (!m_creature->hasUnitState(UNIT_STAT_STUNNED) && who->isTargetableForAttack() &&
+    if (!m_creature->hasUnitState(UNIT_STAT_STUNNED | UNIT_STAT_DIED) && who->isTargetableForAttack() &&
         m_creature->IsHostileTo(who) && who->isInAccessablePlaceFor(m_creature))
     {
         if (!m_creature->canFly() && m_creature->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
@@ -1111,7 +1102,7 @@ void CreatureEventAI::MoveInLineOfSight(Unit *who)
             }
             else if (m_creature->GetMap()->IsDungeon())
             {
-                m_creature->AddThreat(who, 0.0f);
+                m_creature->AddThreat(who);
                 who->SetInCombatWith(m_creature);
             }
         }
@@ -1168,7 +1159,7 @@ bool CreatureEventAI::OnGossipSelect(Player* pPlayer, uint32 Id)
 void CreatureEventAI::UpdateAI(const uint32 diff)
 {
     //Check if we are in combat (also updates calls threat update code)
-    bool Combat = m_creature->SelectHostilTarget() && m_creature->getVictim();
+    bool Combat = m_creature->SelectHostileTarget() && m_creature->getVictim();
 
     //Must return if creature isn't alive. Normally select hostil target and get victim prevent this
     if (!m_creature->isAlive())
@@ -1249,9 +1240,9 @@ bool CreatureEventAI::IsVisible(Unit *pl) const
 inline Unit* CreatureEventAI::SelectUnit(AttackingTarget target, uint32 position)
 {
     //ThreatList m_threatlist;
-    std::list<HostilReference*>& m_threatlist = m_creature->getThreatManager().getThreatList();
-    std::list<HostilReference*>::iterator i = m_threatlist.begin();
-    std::list<HostilReference*>::reverse_iterator r = m_threatlist.rbegin();
+    std::list<HostileReference*>& m_threatlist = m_creature->getThreatManager().getThreatList();
+    std::list<HostileReference*>::iterator i = m_threatlist.begin();
+    std::list<HostileReference*>::reverse_iterator r = m_threatlist.rbegin();
 
     if (position >= m_threatlist.size() || !m_threatlist.size())
         return NULL;
@@ -1394,9 +1385,9 @@ void CreatureEventAI::DoScriptText(int32 textEntry, WorldObject* pSource, Unit* 
         return;
     }
 
-    CreatureEventAI_TextMap::const_iterator i = CreatureEAI_Mgr.GetCreatureEventAITextMap().find(textEntry);
+    CreatureEventAI_TextMap::const_iterator i = sEventAIMgr.GetCreatureEventAITextMap().find(textEntry);
 
-    if (i == CreatureEAI_Mgr.GetCreatureEventAITextMap().end())
+    if (i == sEventAIMgr.GetCreatureEventAITextMap().end())
     {
         sLog.outErrorDb("CreatureEventAI: DoScriptText with source entry %u (TypeId=%u, guid=%u) could not find text entry %i.",pSource->GetEntry(),pSource->GetTypeId(),pSource->GetGUIDLow(),textEntry);
         return;
@@ -1475,7 +1466,8 @@ bool CreatureEventAI::CanCast(Unit* Target, SpellEntry const *Spell, bool Trigge
         return false;
 
     //Silenced so we can't cast
-    if (!Triggered && m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SILENCED))
+    if (!Triggered && (m_creature->hasUnitState(UNIT_STAT_CONFUSED | UNIT_STAT_STUNNED | UNIT_STAT_FLEEING | UNIT_STAT_DIED)
+        || m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED)))
         return false;
 
     //Check for power

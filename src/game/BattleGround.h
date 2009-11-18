@@ -81,12 +81,6 @@ enum BattleGroundMarksCount
     ITEM_LOSER_COUNT                = 1
 };
 
-enum BattleGroundCreatures
-{
-    BG_CREATURE_ENTRY_A_SPIRITGUIDE      = 13116,           // alliance
-    BG_CREATURE_ENTRY_H_SPIRITGUIDE      = 13117,           // horde
-};
-
 enum BattleGroundSpells
 {
     SPELL_ARENA_PREPARATION         = 32727,                // use this one, 32728 not correct
@@ -102,9 +96,9 @@ enum BattleGroundSpells
 enum BattleGroundTimeIntervals
 {
     RESURRECTION_INTERVAL           = 30000,                // ms
-    REMIND_INTERVAL                 = 30000,                // ms
-    INVITATION_REMIND_TIME          = 60000,                // ms
-    INVITE_ACCEPT_WAIT_TIME         = 80000,                // ms
+    //REMIND_INTERVAL                 = 10000,                // ms
+    INVITATION_REMIND_TIME          = 20000,                // ms
+    INVITE_ACCEPT_WAIT_TIME         = 40000,                // ms
     TIME_TO_AUTOREMOVE              = 120000,               // ms
     MAX_OFFLINE_TIME                = 300,                  // secs
     RESPAWN_ONE_DAY                 = 86400,                // secs
@@ -164,11 +158,12 @@ enum BattleGroundQueueTypeId
     BATTLEGROUND_QUEUE_AB       = 3,
     BATTLEGROUND_QUEUE_EY       = 4,
     BATTLEGROUND_QUEUE_SA       = 5,
-    BATTLEGROUND_QUEUE_2v2      = 6,
-    BATTLEGROUND_QUEUE_3v3      = 7,
-    BATTLEGROUND_QUEUE_5v5      = 8
+    BATTLEGROUND_QUEUE_IC       = 6,
+    BATTLEGROUND_QUEUE_2v2      = 7,
+    BATTLEGROUND_QUEUE_3v3      = 8,
+    BATTLEGROUND_QUEUE_5v5      = 9
 };
-#define MAX_BATTLEGROUND_QUEUE_TYPES 9
+#define MAX_BATTLEGROUND_QUEUE_TYPES 10
 
 enum BGQueueIdBasedOnLevel                        // queue_id for level ranges
 {
@@ -497,11 +492,10 @@ class BattleGround
                                                             // can be extended in in BG subclass
 
         /* event related */
-        // generic implementation in BattleGround-class
         // called when a creature gets added to map (NOTE: only triggered if
         // a player activates the cell of the creature)
-        virtual void OnObjectDBLoad(Creature* /*creature*/);
-        virtual void OnObjectDBLoad(GameObject* /*obj*/);
+        void OnObjectDBLoad(Creature* /*creature*/);
+        void OnObjectDBLoad(GameObject* /*obj*/);
         // (de-)spawns creatures and gameobjects from an event
         void SpawnEvent(uint8 event1, uint8 event2, bool spawn);
         bool IsActiveEvent(uint8 event1, uint8 event2)
@@ -514,9 +508,6 @@ class BattleGround
 
         void OpenDoorEvent(uint8 event1, uint8 event2 = 0);
         bool IsDoor(uint8 event1, uint8 event2);
-
-        /* other things */
-        virtual void OnCreatureRespawn(Creature* /*creature*/) {}
 
         void HandleTriggerBuff(uint64 const& go_guid);
 

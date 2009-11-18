@@ -43,7 +43,7 @@
 WorldSession::WorldSession(uint32 id, WorldSocket *sock, AccountTypes sec, uint8 expansion, time_t mute_time, LocaleConstant locale) :
 LookingForGroup_auto_join(false), LookingForGroup_auto_add(false), m_muteTime(mute_time),
 _player(NULL), m_Socket(sock),_security(sec), _accountId(id), m_expansion(expansion),
-m_sessionDbcLocale(sWorld.GetAvailableDbcLocale(locale)), m_sessionDbLocaleIndex(objmgr.GetIndexForLocale(locale)),
+m_sessionDbcLocale(sWorld.GetAvailableDbcLocale(locale)), m_sessionDbLocaleIndex(sObjectMgr.GetIndexForLocale(locale)),
 _logoutTime(0), m_inQueue(false), m_playerLoading(false), m_playerLogout(false), m_playerRecentlyLogout(false),
 m_latency(0), m_TutorialsChanged(false)
 {
@@ -246,6 +246,11 @@ bool WorldSession::Update(uint32 /*diff*/)
                             LookupOpcodeName(packet->GetOpcode()),
                             packet->GetOpcode());
                         break;
+                    case STATUS_UNHANDLED:
+                        sLog.outDebug("SESSION: received not handled opcode %s (0x%.4X)",
+                            LookupOpcodeName(packet->GetOpcode()),
+                            packet->GetOpcode());
+                        break;
                 }
             }
             catch(ByteBufferException &)
@@ -299,14 +304,14 @@ void WorldSession::LogoutPlayer(bool Save)
         //FIXME: logout must be delayed in case lost connection with client in time of combat
         if (_player->GetDeathTimer())
         {
-            _player->getHostilRefManager().deleteReferences();
+            _player->getHostileRefManager().deleteReferences();
             _player->BuildPlayerRepop();
             _player->RepopAtGraveyard();
         }
         else if (!_player->getAttackers().empty())
         {
             _player->CombatStop();
-            _player->getHostilRefManager().setOnlineOfflineState(false);
+            _player->getHostileRefManager().setOnlineOfflineState(false);
             _player->RemoveAllAurasOnDeath();
 
             // build set of player who attack _player or who have pet attacking of _player
@@ -377,10 +382,10 @@ void WorldSession::LogoutPlayer(bool Save)
         ///- Reset the online field in the account table
         // no point resetting online in character table here as Player::SaveToDB() will set it to 1 since player has not been removed from world at this stage
         //No SQL injection as AccountID is uint32
-        loginDatabase.PExecute("UPDATE account SET online = 0 WHERE id = '%u'", GetAccountId());
+        loginDatabase.PExecute("UPDATE account SET active_realm_id = 0 WHERE id = '%u'", GetAccountId());
 
         ///- If the player is in a guild, update the guild roster and broadcast a logout message to other guild members
-        Guild *guild = objmgr.GetGuildById(_player->GetGuildId());
+        Guild *guild = sObjectMgr.GetGuildById(_player->GetGuildId());
         if(guild)
         {
             guild->SetMemberStats(_player->GetGUID());
@@ -525,7 +530,7 @@ void WorldSession::SendSetPhaseShift(uint32 PhaseShift)
 
 const char * WorldSession::GetMangosString( int32 entry ) const
 {
-    return objmgr.GetMangosString(entry,GetSessionDbLocaleIndex());
+    return sObjectMgr.GetMangosString(entry,GetSessionDbLocaleIndex());
 }
 
 void WorldSession::Handle_NULL( WorldPacket& recvPacket )
@@ -646,13 +651,15 @@ void WorldSession::SetAccountData(AccountDataType type, time_t time_, std::strin
     m_accountData[type].Data = data;
 }
 
-void WorldSession::SendAccountDataTimes()
+void WorldSession::SendAccountDataTimes(uint32 mask)
 {
-    WorldPacket data( SMSG_ACCOUNT_DATA_TIMES, 4+1+8*4 );   // changed in WotLK
+    WorldPacket data( SMSG_ACCOUNT_DATA_TIMES, 4+1+4+8*4 ); // changed in WotLK
     data << uint32(time(NULL));                             // unix time of something
     data << uint8(1);
-    for(int i = 0; i < NUM_ACCOUNT_DATA_TYPES; ++i)
-        data << uint32(m_accountData[i].Time);              // also unix time
+    data << uint32(mask);                                   // type mask
+    for(uint32 i = 0; i < NUM_ACCOUNT_DATA_TYPES; ++i)
+        if(mask & (1 << i))
+            data << uint32(GetAccountData(AccountDataType(i))->Time);// also unix time
     SendPacket(&data);
 }
 
@@ -759,6 +766,51 @@ void WorldSession::ReadMovementInfo(WorldPacket &data, MovementInfo *mi)
     }
 }
 
+void WorldSession::WriteMovementInfo(WorldPacket *data, MovementInfo *mi)
+{
+    data->appendPackGUID(mi->guid);
+
+    *data << mi->flags;
+    *data << mi->unk1;
+    *data << mi->time;
+    *data << mi->x;
+    *data << mi->y;
+    *data << mi->z;
+    *data << mi->o;
+
+    if(mi->HasMovementFlag(MOVEMENTFLAG_ONTRANSPORT))
+    {
+        data->appendPackGUID(mi->t_guid);
+
+        *data << mi->t_x;
+        *data << mi->t_y;
+        *data << mi->t_z;
+        *data << mi->t_o;
+        *data << mi->t_time;
+        *data << mi->t_seat;
+    }
+
+    if((mi->HasMovementFlag(MovementFlags(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))) || (mi->unk1 & 0x20))
+    {
+        *data << mi->s_pitch;
+    }
+
+    *data << mi->fallTime;
+
+    if(mi->HasMovementFlag(MOVEMENTFLAG_JUMPING))
+    {
+        *data << mi->j_unk;
+        *data << mi->j_sinAngle;
+        *data << mi->j_cosAngle;
+        *data << mi->j_xyspeed;
+    }
+
+    if(mi->HasMovementFlag(MOVEMENTFLAG_SPLINE))
+    {
+        *data << mi->u_unk1;
+    }
+}
+
 void WorldSession::ReadAddonsInfo(WorldPacket &data)
 {
     if (data.rpos() + 4 > data.size())
@@ -850,7 +902,7 @@ void WorldSession::SendAddonsInfo()
         if (unk1)
         {
             uint8 unk2 = (itr->CRC != 0x4c1c776d);          // If addon is Standard addon CRC
-            data << uint8(unk2);
+            data << uint8(unk2);                            // if 1, than add addon public signature
             if (unk2)                                       // if CRC is wrong, add public key (client need it)
                 data.append(tdata, sizeof(tdata));
 
@@ -858,7 +910,7 @@ void WorldSession::SendAddonsInfo()
         }
 
         uint8 unk3 = 0;                                     // 0 is sent here
-        data << uint8(unk3);
+        data << uint8(unk3);                                // use <Addon>\<Addon>.url file or not
         if (unk3)
         {
             // String, 256 (null terminated?)
@@ -869,7 +921,7 @@ void WorldSession::SendAddonsInfo()
     m_addonsList.clear();
 
     uint32 count = 0;
-    data << uint32(count);
+    data << uint32(count);                                  // BannedAddons count
     /*for(uint32 i = 0; i < count; ++i)
     {
         uint32
