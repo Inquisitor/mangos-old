@@ -36,7 +36,6 @@
 #include "BattleGround.h"
 #include "BattleGroundAV.h"
 #include "Util.h"
-#include "OutdoorPvPMgr.h"
 #include "ScriptCalls.h"
 
 GameObject::GameObject() : WorldObject()
@@ -158,15 +157,12 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
     // GAMEOBJECT_BYTES_1, index at 0, 1, 2 and 3
     SetGoState(go_state);
     SetGoType(GameobjectTypes(goinfo->type));
-    SetGoArtKit(0);                                         // unknown what this is
+    SetGoArtKit(ArtKit);                                         // unknown what this is
     SetGoAnimProgress(animprogress);
-    SetGoArtKit(ArtKit);
 
     // Spell charges for GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING (33)
     if (goinfo->type == GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING)
         m_actualHealth = goinfo->destructibleBuilding.intactNumHits;
-
-    SetGoArtKit(ArtKit);
 
     //Notify the map's instance data.
     //Only works if you create the object in it, not if it is moves to that map.
@@ -1317,10 +1313,7 @@ void GameObject::Use(Unit* user)
     SpellEntry const *spellInfo = sSpellStore.LookupEntry( spellId );
     if(!spellInfo)
     {
-        if(user->GetTypeId()!=TYPEID_PLAYER || !sOutdoorPvPMgr.HandleCustomSpell((Player*)user,spellId,this))
-            sLog.outError("WORLD: unknown spell id %u at use action for gameobject (Entry: %u GoType: %u )", spellId,GetEntry(),GetGoType());
-        else
-            sLog.outDebug("WORLD: %u non-dbc spell was handled by OutdoorPvP", spellId);
+        sLog.outError("WORLD: unknown spell id %u at use action for gameobject (Entry: %u GoType: %u )", spellId,GetEntry(),GetGoType());
         return;
     }
 

@@ -33,7 +33,6 @@
 #include "Guild.h"
 #include "World.h"
 #include "BattleGroundMgr.h"
-#include "OutdoorPvPMgr.h"
 #include "Language.h"                                       // for CMSG_DISMOUNT handler
 #include "Chat.h"
 #include "MapManager.h"
@@ -352,9 +351,6 @@ void WorldSession::LogoutPlayer(bool Save)
         //drop a flag if player is carrying it
         if(BattleGround *bg = _player->GetBattleGround())
             bg->EventPlayerLoggedOut(_player);
-
-        ///- Remove from OutdoorPvP
-        sOutdoorPvPMgr.HandlePlayerLeaveZone(_player,_player->GetZoneId());
 
         ///- Teleport to home if the player is in an invalid instance
         if(!_player->m_InstanceValid && !_player->isGameMaster())
