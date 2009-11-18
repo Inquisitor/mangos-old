@@ -196,9 +196,6 @@ void Unit::Update( uint32 p_time )
     m_Events.Update( p_time );
     _UpdateSpells( p_time );
 
-    if (CanHaveThreatList() && getThreatManager().isNeedUpdateToClient(p_time))
-        SendThreatListUpdate();
-
     if (m_lastManaUseTimer)
     {
         if (p_time >= m_lastManaUseTimer)
@@ -10695,9 +10692,6 @@ void Unit::AddThreat(Unit* pVictim, float threat, SpellSchoolMask schoolMask, Sp
 
 void Unit::DeleteThreatList()
 {
-    if(CanHaveThreatList() && !m_ThreatManager.isThreatListEmpty())
-        SendClearThreatListOpcode();
-
     m_ThreatManager.clearReferences();
 }
 
@@ -13113,66 +13107,6 @@ void Unit::BuildVehicleInfo(Unit *target)
     data << uint32(0);
     if(GetTypeId() == TYPEID_PLAYER)
         ((Player*)this)->GetSession()->SendPacket(&data);
-}
-
-void Unit::SendThreatListUpdate()
-{
-    if (uint32 count = getThreatManager().getThreatList().size())
-    {
-        sLog.outDebug( "WORLD: Send SMSG_THREAT_UPDATE Message" );
-        WorldPacket data(SMSG_THREAT_UPDATE, 8 + count * 8);
-        data.append(GetPackGUID());
-        data << uint32(count);
-        std::list<HostilReference*>& tlist = getThreatManager().getThreatList();
-        for (std::list<HostilReference*>::const_iterator itr = tlist.begin(); itr != tlist.end(); ++itr)
-        {
-            data.appendPackGUID((*itr)->getUnitGuid());
-            data << uint32((*itr)->getThreat());
-        }
-        SendMessageToSet(&data, false);
-    }
-}
-
-void Unit::SendChangeCurrentVictimOpcode(HostilReference* pHostilReference)
-{
-    if(!pHostilReference)
-        return;
-
-    if (uint32 count = getThreatManager().getThreatList().size())
-    {
-        sLog.outDebug( "WORLD: Send SMSG_HIGHEST_THREAT_UPDATE Message" );
-        WorldPacket data(SMSG_HIGHEST_THREAT_UPDATE, 8 + 8 + count * 8);
-        data.append(GetPackGUID());
-        data.appendPackGUID(pHostilReference->getUnitGuid());
-        data << uint32(count);
-        std::list<HostilReference*>& tlist = getThreatManager().getThreatList();
-        for (std::list<HostilReference*>::const_iterator itr = tlist.begin(); itr != tlist.end(); ++itr)
-        {
-            data.appendPackGUID((*itr)->getUnitGuid());
-            data << uint32((*itr)->getThreat());
-        }
-        SendMessageToSet(&data, false);
-    }
-}
-
-void Unit::SendClearThreatListOpcode()
-{
-    sLog.outDebug( "WORLD: Send SMSG_THREAT_CLEAR Message" );
-    WorldPacket data(SMSG_THREAT_CLEAR, 8);
-    data.append(GetPackGUID());
-    SendMessageToSet(&data, false);
-}
-
-void Unit::SendRemoveFromThreatListOpcode(HostilReference* pHostilReference)
-{
-    if(!pHostilReference)
-        return;
-
-    sLog.outDebug( "WORLD: Send SMSG_THREAT_REMOVE Message" );
-    WorldPacket data(SMSG_THREAT_REMOVE, 8 + 8);
-    data.append(GetPackGUID());
-    data.appendPackGUID(pHostilReference->getUnitGuid());
-    SendMessageToSet(&data, false);
 }
 
 void Unit::KnockBackFrom(Unit* target, float horizintalSpeed, float verticalSpeed)

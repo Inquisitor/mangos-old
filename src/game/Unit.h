@@ -1194,11 +1194,6 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         void BuildHeartBeatMsg( WorldPacket *data ) const;
 
-        void SendChangeCurrentVictimOpcode(HostilReference* pHostilReference);
-        void SendClearThreatListOpcode();
-        void SendRemoveFromThreatListOpcode(HostilReference* pHostilReference);
-        void SendThreatListUpdate();
-
         virtual void MoveOutOfRange(Player &) {  };
 
         bool isAlive() const { return (m_deathState == ALIVE); };
