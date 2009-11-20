@@ -58,6 +58,7 @@
 #include "CellImpl.h"
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
+#include "Vehicle.h"
 
 
 pEffect SpellEffects[TOTAL_SPELL_EFFECTS]=
@@ -4089,7 +4090,7 @@ void Spell::EffectSummonType(uint32 i)
                 case SUMMON_PROP_TYPE_SIEGE_VEH:
                 case SUMMON_PROP_TYPE_DRAKE_VEH:
                 {
-                    //EffectSummonVehicle(i);
+                    EffectSummonVehicle(i);
                     break;
                 }
                 case SUMMON_PROP_TYPE_TOTEM:
@@ -4157,7 +4158,7 @@ void Spell::EffectSummonType(uint32 i)
         }
         case SUMMON_PROP_GROUP_VEHICLE:
         {
-             //EffectSummonVehicle(i);
+             EffectSummonVehicle(i);
              break;
         }
          default:
@@ -7857,6 +7858,42 @@ void Spell::EffectRenamePet(uint32 /*eff_idx*/)
         return;
 
     unitTarget->SetByteValue(UNIT_FIELD_BYTES_2, 2, UNIT_RENAME_ALLOWED);
+}
+
+void Spell::EffectSummonVehicle(uint32 i)
+{
+    uint32 creature_entry = m_spellInfo->EffectMiscValue[i];
+    if(!creature_entry)
+        return;
+
+    float px, py, pz;
+    // If dest location if present
+    if (m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION)
+    {
+        // Summon unit in dest location
+        px = m_targets.m_destX;
+        py = m_targets.m_destY;
+        pz = m_targets.m_destZ;
+    }
+    // Summon if dest location not present near caster
+    else
+        m_caster->GetClosePoint(px,py,pz,3.0f);
+
+    Vehicle *v = m_caster->SummonVehicle(creature_entry, px, py, pz, m_caster->GetOrientation());
+    if(!v)
+        return;
+
+    v->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
+    v->SetCreatorGUID(m_caster->GetGUID());
+
+    if(damage)
+    {
+        m_caster->CastSpell(v, damage, true);
+        m_caster->EnterVehicle(v, 0);
+    }
+    int32 duration = GetSpellMaxDuration(m_spellInfo);
+    if(duration > 0)
+        v->SetSpawnDuration(duration);
 }
 
 void Spell::EffectPlayMusic(uint32 i)
