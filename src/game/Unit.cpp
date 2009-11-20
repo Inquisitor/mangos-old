@@ -23,6 +23,7 @@
 #include "WorldSession.h"
 #include "World.h"
 #include "ObjectMgr.h"
+#include "ObjectDefines.h"
 #include "SpellMgr.h"
 #include "Unit.h"
 #include "QuestDef.h"
@@ -595,6 +596,14 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
         {
             player->RewardPlayerAndGroupAtKill(pVictim);
             player->ProcDamageAndSpell(pVictim, PROC_FLAG_KILL, PROC_FLAG_KILLED, PROC_EX_NONE, 0);
+
+            WorldPacket data(SMSG_PARTYKILLLOG, (8+8)); //send event PARTY_KILL
+            data << uint64(player->GetGUID()); //player with killing blow
+            data << uint64(pVictim->GetGUID()); //victim
+            if (Group *group =  player->GetGroup())
+                group->BroadcastPacket(&data, group->GetMemberGroup(player->GetGUID()));
+            else
+                player->SendDirectMessage(&data);
         }
 
         DEBUG_LOG("DealDamageAttackStop");
@@ -6044,20 +6053,32 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     }
                     return true;
                 }
-                // Judgements of the Wise
-                case 31876:
-                case 31877:
-                case 31878:
-                    // triggered only at casted Judgement spells, not at additional Judgement effects
-                    if(!procSpell || procSpell->Category != 1210)
-                        return false;
-
-                    target = this;
-                    triggered_spell_id = 31930;
-
-                    // Replenishment
-                    CastSpell(this, 57669, true, NULL, triggeredByAura);
+                // Heart of the Crusader (Rank 1)
+                case 20335:
+                    triggered_spell_id = 21183;
                     break;
+                // Heart of the Crusader (Rank 2)
+                case 20336:
+                    triggered_spell_id = 54498;
+                    break;
+                // Heart of the Crusader (Rank 3)
+                case 20337:
+                    triggered_spell_id = 54499;
+                    break;
+                case 20911:                                 // Blessing of Sanctuary
+                case 25899:                                 // Greater Blessing of Sanctuary
+                {
+                    target = this;
+                    switch (target->getPowerType())
+                    {
+                        case POWER_MANA:
+                            triggered_spell_id = 57319;
+                            break;
+                        default:
+                            return false;
+                    }
+                    break;
+                }
                 // Holy Power (Redemption Armor set)
                 case 28789:
                 {
@@ -6089,20 +6110,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     }
                     break;
                 }
-                case 25899:                                 // Greater Blessing of Sanctuary
-                case 20911:                                 // Blessing of Sanctuary
-                {
-                    target = this;
-                    switch (target->getPowerType())
-                    {
-                        case POWER_MANA:
-                            triggered_spell_id = 57319;
-                            break;
-                        default:
-                            return false;
-                    }
-                    break;
-                }
                 // Seal of Vengeance (damage calc on apply aura)
                 case 31801:
                 {
@@ -6126,6 +6133,62 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                         CastSpell(target,42463,true,NULL,triggeredByAura);
                     break;
                 }
+                // Judgements of the Wise
+                case 31876:
+                case 31877:
+                case 31878:
+                    // triggered only at casted Judgement spells, not at additional Judgement effects
+                    if(!procSpell || procSpell->Category != 1210)
+                        return false;
+
+                    target = this;
+                    triggered_spell_id = 31930;
+
+                    // Replenishment
+                    CastSpell(this, 57669, true, NULL, triggeredByAura);
+                    break;
+                // Spiritual Attunement
+                case 31785:
+                case 33776:
+                {
+                    // if healed by another unit (pVictim)
+                    if(this == pVictim)
+                        return false;
+
+                    // heal amount
+                    basepoints0 = triggerAmount*damage/100;
+                    target = this;
+                    triggered_spell_id = 31786;
+                    break;
+                }
+                // Paladin Tier 6 Trinket (Ashtongue Talisman of Zeal)
+                case 40470:
+                {
+                    if (!procSpell)
+                        return false;
+
+                    float  chance;
+
+                    // Flash of light/Holy light
+                    if (procSpell->SpellFamilyFlags & UI64LIT(0x00000000C0000000))
+                    {
+                        triggered_spell_id = 40471;
+                        chance = 15.0f;
+                    }
+                    // Judgement (any)
+                    else if (GetSpellSpecific(procSpell->Id)==SPELL_JUDGEMENT)
+                    {
+                        triggered_spell_id = 40472;
+                        chance = 50.0f;
+                    }
+                    else
+                        return false;
+
+                    if (!roll_chance_f(chance))
+                        return false;
+
+                    break;
+                }
                 // Seal of Corruption (damage calc on apply aura)
                 case 53736:
                 {
@@ -6147,20 +6210,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     }
                     if(stacks >= 5)
                         CastSpell(target,53739,true,NULL,triggeredByAura);
-                    break;
-                }
-                // Spiritual Attunement
-                case 31785:
-                case 33776:
-                {
-                    // if healed by another unit (pVictim)
-                    if(this == pVictim)
-                        return false;
-
-                    // heal amount
-                    basepoints0 = triggerAmount*damage/100;
-                    target = this;
-                    triggered_spell_id = 31786;
                     break;
                 }
                 // Light's Beacon (heal target area aura)
@@ -6197,34 +6246,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     // cast with original caster set but beacon to beacon for apply caster mods and avoid LoS check
                     beacon->CastCustomSpell(beacon,triggered_spell_id,&basepoints0,NULL,NULL,true,castItem,triggeredByAura,pVictim->GetGUID());
                     return true;
-                }
-                // Paladin Tier 6 Trinket (Ashtongue Talisman of Zeal)
-                case 40470:
-                {
-                    if (!procSpell)
-                        return false;
-
-                    float  chance;
-
-                    // Flash of light/Holy light
-                    if (procSpell->SpellFamilyFlags & UI64LIT(0x00000000C0000000))
-                    {
-                        triggered_spell_id = 40471;
-                        chance = 15.0f;
-                    }
-                    // Judgement (any)
-                    else if (GetSpellSpecific(procSpell->Id)==SPELL_JUDGEMENT)
-                    {
-                        triggered_spell_id = 40472;
-                        chance = 50.0f;
-                    }
-                    else
-                        return false;
-
-                    if (!roll_chance_f(chance))
-                        return false;
-
-                    break;
                 }
                 // Glyph of Divinity
                 case 54939:
@@ -6703,6 +6724,85 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
             {
                 basepoints0 = triggerAmount * damage / 100;
                 triggered_spell_id = 51460;
+                break;
+            }
+            // Threat of Thassarian
+            if (dummySpell->SpellIconID == 2023)
+            {
+                // Must Dual Wield
+                if (!procSpell || !haveOffhandWeapon())
+                    return false;
+                // Chance as basepoints for dummy aura
+                if (!roll_chance_i(triggerAmount))
+                    return false;
+
+                switch (procSpell->Id)
+                {
+                    // Obliterate
+                    case 49020:                             // Rank 1
+                        triggered_spell_id = 66198; break;
+                    case 51423:                             // Rank 2
+                        triggered_spell_id = 66972; break;
+                    case 51424:                             // Rank 3
+                        triggered_spell_id = 66973; break;
+                    case 51425:                             // Rank 4
+                        triggered_spell_id = 66974; break;
+                    // Frost Strike
+                    case 49143:                             // Rank 1
+                        triggered_spell_id = 66196; break;
+                    case 51416:                             // Rank 2
+                        triggered_spell_id = 66958; break;
+                    case 51417:                             // Rank 3
+                        triggered_spell_id = 66959; break;
+                    case 51418:                             // Rank 4
+                        triggered_spell_id = 66960; break;
+                    case 51419:                             // Rank 5
+                        triggered_spell_id = 66961; break;
+                    case 51420:                             // Rank 6
+                        triggered_spell_id = 66962; break;
+                    // Plague Strike
+                    case 45462:                             // Rank 1
+                        triggered_spell_id = 66216; break;
+                    case 49917:                             // Rank 2
+                        triggered_spell_id = 66988; break;
+                    case 49918:                             // Rank 3
+                        triggered_spell_id = 66989; break;
+                    case 49919:                             // Rank 4
+                        triggered_spell_id = 66990; break;
+                    case 49920:                             // Rank 5
+                        triggered_spell_id = 66991; break;
+                    case 49921:                             // Rank 6
+                        triggered_spell_id = 66992; break;
+                    // Death Strike
+                    case 49998:                             // Rank 1
+                        triggered_spell_id = 66188; break;
+                    case 49999:                             // Rank 2
+                        triggered_spell_id = 66950; break;
+                    case 45463:                             // Rank 3
+                        triggered_spell_id = 66951; break;
+                    case 49923:                             // Rank 4
+                        triggered_spell_id = 66952; break;
+                    case 49924:                             // Rank 5
+                        triggered_spell_id = 66953; break;
+                    // Rune Strike
+                    case 56815:
+                        triggered_spell_id = 66217; break;
+                    // Blood Strike
+                    case 45902:                             // Rank 1
+                        triggered_spell_id = 66215; break;
+                    case 49926:                             // Rank 2
+                        triggered_spell_id = 66975; break;
+                    case 49927:                             // Rank 3
+                        triggered_spell_id = 66976; break;
+                    case 49928:                             // Rank 4
+                        triggered_spell_id = 66977; break;
+                    case 49929:                             // Rank 5
+                        triggered_spell_id = 66978; break;
+                    case 49930:                             // Rank 6
+                        triggered_spell_id = 66979; break;
+                    default:
+                        return false;
+                }
                 break;
             }
             // Runic Power Back on Snare/Root

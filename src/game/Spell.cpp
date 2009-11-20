@@ -1260,7 +1260,7 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
 
 void Spell::DoAllEffectOnTarget(GOTargetInfo *target)
 {
-    if (target->processed)                                  // Check target
+    if (!target || target->processed)                                  // Check target
         return;
     target->processed = true;                               // Target checked in apply effects procedure
 
