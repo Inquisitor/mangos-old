@@ -1750,18 +1750,16 @@ void Spell::EffectDummy(uint32 i)
                 }
                 case 48610: // Q:Shredder Repair
                 {
-                    /*
                     if( m_caster->GetVehicleGUID() != 0 )
                         m_caster->ExitVehicle();
-                    */
+
                     return;
                 }
                 case 45877: // Q:Bring 'Em Back Alive
                 {
-                    /*
                     if( m_caster->GetVehicleGUID() != 0 )
                         m_caster->ExitVehicle();
-                    */
+
                     return;
                 }
                 case 49319: // Q:The Horse Hollerer
