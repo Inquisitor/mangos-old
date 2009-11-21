@@ -4795,7 +4795,7 @@ void Aura::HandlePeriodicEnergize(bool apply, bool Real)
             case 61782:                                     // Infinite Replenishment
                 m_modifier.m_amount = m_target->GetMaxPower(POWER_MANA) * 25 / 10000;
                 break;
-            case 29166: //Innervate
+            case 29166: // Innervate
                 if (Player *caster = sObjectMgr.GetPlayer(m_caster_guid))
                     m_modifier.m_amount = caster->GetCreateMana() * 45 / 200;
                 break;

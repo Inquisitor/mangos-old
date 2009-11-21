@@ -6354,7 +6354,7 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     next = iter;
                     ++next;
                     Aura *aur = iter->second;
-                    if(GetAllSpellMechanicMask(aur->GetSpellProto()) & (1<<MECHANIC_IMMUNE_SHIELD))
+                    if(GetAllSpellMechanicMask(aur->GetSpellProto()) & (1 << (MECHANIC_IMMUNE_SHIELD-1)))
                     {
                         unitTarget->RemoveAurasDueToSpell(aur->GetId());
                         if(Auras.empty())
