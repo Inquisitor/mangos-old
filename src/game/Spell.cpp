@@ -1397,6 +1397,21 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
     // Get spell max affected targets
     uint32 unMaxTargets = m_spellInfo->MaxAffectedTargets;
 
+    switch(m_spellInfo->Id)
+     {
+        case 28542: // Life Drain ( npc )
+                unMaxTargets = 2;
+         case 29213: // Curse of the Plaguebringer
+         case 54835: // Curse of the Plaguebringer (H)
+         case 28796: // Poison Bolt Volley
+         case 54098: // Poison Bolt Volley (H)
+                 unMaxTargets = 3;
+        case 55665: // Life Drain ( npc )
+                unMaxTargets = 5;
+         default:
+             break;
+     }
+
     // custom target amount cases
     switch(m_spellInfo->SpellFamilyName)
     {
