@@ -9439,10 +9439,6 @@ uint32 Unit::SpellCriticalHealingBonus(SpellEntry const *spellProto, uint32 dama
 
 uint32 Unit::SpellHealingBonus(Unit *pVictim, SpellEntry const *spellProto, uint32 healamount, DamageEffectType damagetype, uint32 stack)
 {
-    // No heal amount for this class spells
-    if (spellProto->DmgClass == SPELL_DAMAGE_CLASS_NONE && spellProto->SpellFamilyName == SPELLFAMILY_GENERIC)
-        return healamount;
-
     // prevent any additional bonuses in case of negative value
     SpellBonusEntry const* bonus = sSpellMgr.GetSpellBonusData(spellProto->Id);
     if (bonus)
@@ -9458,10 +9454,33 @@ uint32 Unit::SpellHealingBonus(Unit *pVictim, SpellEntry const *spellProto, uint
         if(Unit* owner = GetOwner())
             return owner->SpellHealingBonus(pVictim, spellProto, healamount, damagetype, stack);
 
+    float  TakenTotalMod = 1.0f;
+
+    // Healing taken percent
+    // Healing taken percent
+    float minval = pVictim->GetMaxNegativeAuraModifier(SPELL_AURA_MOD_HEALING_PCT);
+    if (damagetype == DOT)
+    {
+        float minDotVal = pVictim->GetMaxNegativeAuraModifier(SPELL_AURA_MOD_PERIODIC_HEAL);
+        minval = (minDotVal < minval) ? minDotVal : minval;
+    }
+    if(minval)
+        TakenTotalMod *= (100.0f + minval) / 100.0f;
+
+    float maxval = pVictim->GetMaxPositiveAuraModifier(SPELL_AURA_MOD_HEALING_PCT);
+    if(maxval)
+        TakenTotalMod *= (100.0f + maxval) / 100.0f;
+
+    // No heal amount for this class spells
+    if (spellProto->DmgClass == SPELL_DAMAGE_CLASS_NONE)
+    {
+        healamount = healamount * TakenTotalMod;
+        return healamount < 0 ? 0 : uint32(healamount);
+    }
+
     // Healing Done
     // Taken/Done total percent damage auras
     float  DoneTotalMod = 1.0f;
-    float  TakenTotalMod = 1.0f;
     int32  DoneTotal = 0;
     int32  TakenTotal = 0;
 
@@ -9597,20 +9616,6 @@ uint32 Unit::SpellHealingBonus(Unit *pVictim, SpellEntry const *spellProto, uint
             if((*itr)->GetId() == 29203)
                 TakenTotalMod *= ((*itr)->GetModifier()->m_amount+100.0f) / 100.0f;
     }
-
-    // Healing taken percent
-    float minval = pVictim->GetMaxNegativeAuraModifier(SPELL_AURA_MOD_HEALING_PCT);
-    if (damagetype == DOT)
-    {
-        float minDotVal = pVictim->GetMaxNegativeAuraModifier(SPELL_AURA_MOD_PERIODIC_HEAL);
-        minval = (minDotVal < minval) ? minDotVal : minval;
-    }
-    if(minval)
-        TakenTotalMod *= (100.0f + minval) / 100.0f;
-
-    float maxval = pVictim->GetMaxPositiveAuraModifier(SPELL_AURA_MOD_HEALING_PCT);
-    if(maxval)
-        TakenTotalMod *= (100.0f + maxval) / 100.0f;
 
     AuraList const& mHealingGet= pVictim->GetAurasByType(SPELL_AURA_MOD_HEALING_RECEIVED);
     for(AuraList::const_iterator i = mHealingGet.begin(); i != mHealingGet.end(); ++i)
