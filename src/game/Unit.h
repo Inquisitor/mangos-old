@@ -294,6 +294,7 @@ class Item;
 class Pet;
 class Path;
 class PetAura;
+class Vehicle;
 
 struct SpellImmune
 {
@@ -872,6 +873,24 @@ typedef std::set<uint64> GuardianPetList;
 #define REGEN_TIME_PRECISE  500                             // Used in Spell::CheckPower for precise regeneration in spell cast time
 
 struct SpellProcEventEntry;                                 // used only privately
+
+// vehicle system
+struct SeatData
+{
+    SeatData() : OffsetX(0.0f), OffsetY(0.0f),  OffsetZ(0.0f), Orientation(0.0f),
+                c_time(0), dbc_seat(0), seat(0), s_flags(0), v_flags(0) {}
+
+    float OffsetX;
+    float OffsetY;
+    float OffsetZ;
+    float Orientation;
+    uint32 c_time;
+    uint32 dbc_seat;
+    uint8 seat;
+    //custom, used as speedup
+    uint32 s_flags;
+    uint32 v_flags;
+};
 
 class MANGOS_DLL_SPEC Unit : public WorldObject
 {
@@ -1574,6 +1593,15 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void AddPetAura(PetAura const* petSpell);
         void RemovePetAura(PetAura const* petSpell);
 
+        // vehicle system
+        void EnterVehicle(Vehicle *vehicle, int8 seat_id, bool force = false);
+        void ExitVehicle();
+        uint64 GetVehicleGUID() { return m_vehicleGUID; }
+        void SetVehicleGUID(uint64 guid) { m_vehicleGUID = guid; }
+        // using extra variables to favoid problems with transports
+        SeatData m_SeatData;
+        void BuildVehicleInfo(Unit *target = NULL);
+
     protected:
         explicit Unit ();
 
@@ -1623,6 +1651,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         uint32 m_reactiveTimer[MAX_REACTIVE];
         uint32 m_regenTimer;
         uint32 m_lastManaUseTimer;
+        uint64 m_vehicleGUID;
 
     private:
         bool IsTriggeredAtSpellProcEvent(Unit *pVictim, Aura* aura, SpellEntry const* procSpell, uint32 procFlag, uint32 procExtra, WeaponAttackType attType, bool isVictim, bool active, SpellProcEventEntry const*& spellProcEvent );
