@@ -1750,18 +1750,16 @@ void Spell::EffectDummy(uint32 i)
                 }
                 case 48610: // Q:Shredder Repair
                 {
-                    /*
                     if( m_caster->GetVehicleGUID() != 0 )
                         m_caster->ExitVehicle();
-                    */
+
                     return;
                 }
                 case 45877: // Q:Bring 'Em Back Alive
                 {
-                    /*
                     if( m_caster->GetVehicleGUID() != 0 )
                         m_caster->ExitVehicle();
-                    */
+
                     return;
                 }
                 case 49319: // Q:The Horse Hollerer
@@ -5270,7 +5268,7 @@ void Spell::EffectWeaponDmg(uint32 i)
     // multiple weapon dmg effect workaround
     // execute only the last weapon damage
     // and handle all effects at once
-    for (int j = i + 1; j < 3; j++)
+    for (int j = 0; j < 3; ++j)
     {
         switch(m_spellInfo->Effect[j])
         {
@@ -5278,7 +5276,8 @@ void Spell::EffectWeaponDmg(uint32 i)
             case SPELL_EFFECT_WEAPON_DAMAGE_NOSCHOOL:
             case SPELL_EFFECT_NORMALIZED_WEAPON_DMG:
             case SPELL_EFFECT_WEAPON_PERCENT_DAMAGE:
-                return;
+                if (j < i)                                  // we must calculate only at last weapon effect
+                    return;
             break;
         }
     }
@@ -5481,17 +5480,12 @@ void Spell::EffectWeaponDmg(uint32 i)
             case RANGED_ATTACK: unitMod = UNIT_MOD_DAMAGE_RANGED;   break;
         }
 
-        float weapon_total_pct = 1.0f;
-        if ( m_spellInfo->SchoolMask & SPELL_SCHOOL_MASK_NORMAL )
-             weapon_total_pct = m_caster->GetModifierValue(unitMod, TOTAL_PCT);
+        float weapon_total_pct  = m_caster->GetModifierValue(unitMod, TOTAL_PCT);
         bonus = int32(bonus*weapon_total_pct);
     }
 
     // + weapon damage with applied weapon% dmg to base weapon damage in call
-    if ( m_spellInfo->SchoolMask & SPELL_SCHOOL_MASK_NORMAL )
-        bonus += int32(m_caster->CalculateDamage(m_attackType, normalized, true)*weaponDamagePercentMod);
-    else
-        bonus += int32(m_caster->CalculateDamage(m_attackType, normalized, false)*weaponDamagePercentMod);
+    bonus += int32(m_caster->CalculateDamage(m_attackType, normalized)*weaponDamagePercentMod);
 
     // total damage
     bonus = int32(bonus*totalDamagePercentMod);
@@ -5567,7 +5561,7 @@ void Spell::EffectHealMaxHealth(uint32 /*i*/)
     m_healing += heal;
 }
 
-void Spell::EffectInterruptCast(uint32 /*i*/)
+void Spell::EffectInterruptCast(uint32 i)
 {
     if(!unitTarget)
         return;
@@ -5576,16 +5570,16 @@ void Spell::EffectInterruptCast(uint32 /*i*/)
 
     // TODO: not all spells that used this effect apply cooldown at school spells
     // also exist case: apply cooldown to interrupted cast only and to all spells
-    for (uint32 i = CURRENT_FIRST_NON_MELEE_SPELL; i < CURRENT_MAX_SPELL; ++i)
+    for (uint32 x = CURRENT_FIRST_NON_MELEE_SPELL; x < CURRENT_MAX_SPELL; ++x)
     {
-        if (Spell* spell = unitTarget->GetCurrentSpell(CurrentSpellTypes(i)))
+        if (Spell* spell = unitTarget->GetCurrentSpell(CurrentSpellTypes(x)))
         {
             SpellEntry const* curSpellInfo = spell->m_spellInfo;
             // check if we can interrupt spell
             if ((curSpellInfo->InterruptFlags & SPELL_INTERRUPT_FLAG_INTERRUPT) && curSpellInfo->PreventionType == SPELL_PREVENTION_TYPE_SILENCE )
             {
-                unitTarget->ProhibitSpellScholl(GetSpellSchoolMask(curSpellInfo), GetSpellDuration(m_spellInfo));
-                unitTarget->InterruptSpell(CurrentSpellTypes(i),false);
+                unitTarget->ProhibitSpellScholl(GetSpellSchoolMask(curSpellInfo), unitTarget->CalculateSpellDuration(m_spellInfo, i, unitTarget));
+                unitTarget->InterruptSpell(CurrentSpellTypes(x),false);
             }
         }
     }
@@ -6359,7 +6353,7 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     next = iter;
                     ++next;
                     Aura *aur = iter->second;
-                    if(GetAllSpellMechanicMask(aur->GetSpellProto()) & (1<<MECHANIC_IMMUNE_SHIELD))
+                    if(GetAllSpellMechanicMask(aur->GetSpellProto()) & (1 << (MECHANIC_IMMUNE_SHIELD-1)))
                     {
                         unitTarget->RemoveAurasDueToSpell(aur->GetId());
                         if(Auras.empty())

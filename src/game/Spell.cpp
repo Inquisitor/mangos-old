@@ -1397,6 +1397,21 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
     // Get spell max affected targets
     uint32 unMaxTargets = m_spellInfo->MaxAffectedTargets;
 
+    switch(m_spellInfo->Id)
+     {
+        case 28542: // Life Drain ( npc )
+                unMaxTargets = 2;
+         case 29213: // Curse of the Plaguebringer
+         case 54835: // Curse of the Plaguebringer (H)
+         case 28796: // Poison Bolt Volley
+         case 54098: // Poison Bolt Volley (H)
+                 unMaxTargets = 3;
+        case 55665: // Life Drain ( npc )
+                unMaxTargets = 5;
+         default:
+             break;
+     }
+
     // custom target amount cases
     switch(m_spellInfo->SpellFamilyName)
     {
@@ -4300,7 +4315,9 @@ SpellCastResult Spell::CheckCast(bool strict)
             //Exclusion for Pounce:  Facing Limitation was removed in 2.0.1, but it still uses the same, old Ex-Flags
             //Exclusion for Mutilate:Facing Limitation was removed in 2.0.1 and 3.0.3, but they still use the same, old Ex-Flags
             if ((m_spellInfo->SpellFamilyName != SPELLFAMILY_DRUID || (m_spellInfo->SpellFamilyFlags != UI64LIT(0x0000000000020000))) &&
-                (m_spellInfo->SpellFamilyName != SPELLFAMILY_ROGUE || (m_spellInfo->SpellFamilyFlags != UI64LIT(0x0020000000000000))))
+                (m_spellInfo->SpellFamilyName != SPELLFAMILY_ROGUE || (m_spellInfo->SpellFamilyFlags != UI64LIT(0x0020000000000000))) &&
+                m_spellInfo->Id != 2764
+                )
             {
                 SendInterrupted(2);
                 return SPELL_FAILED_NOT_BEHIND;
