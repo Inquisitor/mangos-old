@@ -5627,7 +5627,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     if (!healingAura)
                         return false;
 
-                    int32 healingfromticks = SpellHealingBonus(pVictim, procSpell, (healingAura->GetModifier()->m_amount* GetSpellAuraMaxTicks(procSpell)), DOT);
+                    int32 healingfromticks = GetSpellAuraMaxTicks(procSpell)*SpellHealingBonus(pVictim, procSpell, healingAura->GetModifier()->m_amount, DOT);
                     basepoints0 = healingfromticks * triggerAmount / 100;
                     triggered_spell_id = 63544;
                     break;
@@ -5642,7 +5642,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     if (!leachAura)
                         return false;
 
-                    int32 damagefromticks = SpellDamageBonus(pVictim, procSpell, (leachAura->GetModifier()->m_amount* GetSpellAuraMaxTicks(procSpell)), DOT);
+                    int32 damagefromticks = GetSpellAuraMaxTicks(procSpell)*SpellDamageBonus(pVictim, procSpell, leachAura->GetModifier()->m_amount, DOT);
                     basepoints0 = damagefromticks * triggerAmount / 100;
                     triggered_spell_id = 63675;
                     break;
@@ -5691,7 +5691,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                            break;
                         }
                         default:
-                            sLog.outError("Changes in R-dummy spell???: effect 3");
+                            sLog.outError("Changes in 2894 dummy spell???: effect 3");
                             break;
                     }
                     break;
