@@ -182,8 +182,8 @@ void Object::BuildCreateUpdateBlockForPlayer(UpdateData *data, Player *target) c
 
         if(isType(TYPEMASK_UNIT))
         {
-            if(((Unit*)this)->GetTargetGUID())
-                flags |= UPDATEFLAG_HAS_TARGET;
+            if(((Unit*)this)->getVictim())
+                flags |= UPDATEFLAG_HAS_ATTACKING_TARGET;
         }
     }
 
@@ -262,7 +262,28 @@ void Object::BuildMovementUpdate(ByteBuffer * data, uint16 flags, uint32 flags2)
         {
             case TYPEID_UNIT:
             {
-                flags2 = ((Creature*)this)->canFly() ? (MOVEMENTFLAG_FORWARD | MOVEMENTFLAG_LEVITATING) : MOVEMENTFLAG_NONE;
+                flags2 = MOVEMENTFLAG_NONE;
+
+                if (!((Creature*)this)->IsStopped())
+                    flags2 |= MOVEMENTFLAG_FORWARD;         // not set if not really moving
+
+                if (((Creature*)this)->canFly())
+                {
+                    flags2 |= MOVEMENTFLAG_LEVITATING;      // (ok) most seem to have this
+
+                    if (((Creature*)this)->IsStopped())
+                        flags2 |= MOVEMENTFLAG_FLY_UNK1;    // (ok) possibly some "hover" mode
+                    else
+                    {
+                        if (((Creature*)this)->IsMounted())
+                            flags2 |= MOVEMENTFLAG_FLYING;  // seems to be often when mounted
+                        /* for further research
+                        else
+                            flags2 |= MOVEMENTFLAG_FLYING2; // not seen, but work on some, even if not "correct"
+                        */
+                    }
+                }
+
                 if(((Creature*)this)->GetVehicleGUID())
                     flags2 |= (MOVEMENTFLAG_ONTRANSPORT | MOVEMENTFLAG_FLY_UNK1);
             }
@@ -563,9 +584,12 @@ void Object::BuildMovementUpdate(ByteBuffer * data, uint16 flags, uint32 flags2)
     }
 
     // 0x4
-    if(flags & UPDATEFLAG_HAS_TARGET)                       // packed guid (current target guid)
+    if(flags & UPDATEFLAG_HAS_ATTACKING_TARGET)             // packed guid (current target guid)
     {
-        data->appendPackGUID(((Unit*)this)->GetTargetGUID());
+        if (((Unit*)this)->getVictim())
+            data->append(((Unit*)this)->getVictim()->GetPackGUID());
+        else
+            data->appendPackGUID(0);
     }
 
     // 0x2
