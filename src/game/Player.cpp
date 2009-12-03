@@ -2881,6 +2881,7 @@ bool Player::AddTalent(uint32 spell_id, uint8 spec, bool learning)
         newtalent->spec = spec;
 
         (*m_talents[spec])[spell_id] = newtalent;
+        _SaveTalents();
         return true;
     }
     return false;
