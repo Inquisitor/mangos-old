@@ -725,6 +725,14 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                     if(stacks)
                         damage += damage * stacks * 10 /100;
                 }
+                // Judgement of Righteousness - receive benefit from SP and AP
+                else if (m_spellInfo->Id == 20187)
+                {
+                    float ap = m_caster->GetTotalAttackPowerValue(BASE_ATTACK);
+                    int32 holy = m_caster->SpellBaseDamageBonus(GetSpellSchoolMask(m_spellInfo)) +
+                                 m_caster->SpellBaseDamageBonusForVictim(GetSpellSchoolMask(m_spellInfo), unitTarget);
+                    damage += int32(ap * 0.2f + holy * 0.32f);
+                }
                 // Avenger's Shield ($m1+0.07*$SPH+0.07*$AP) - ranged sdb for future
                 else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000004000))
                 {
@@ -3362,6 +3370,14 @@ void Spell::EffectHeal( uint32 /*i*/ )
 
             addhealth += damageAmount;
         }
+        // Seal of Light proc
+        else if (m_spellInfo->Id == 20167)
+        {
+            float ap = caster->GetTotalAttackPowerValue(BASE_ATTACK);
+            int32 holy = caster->SpellBaseHealingBonus(GetSpellSchoolMask(m_spellInfo)) +
+                         caster->SpellBaseHealingBonusForVictim(GetSpellSchoolMask(m_spellInfo), unitTarget);
+            addhealth += int32(ap * 0.15 + holy * 0.15);  
+        }
         // Swiftmend - consumes Regrowth or Rejuvenation
         else if (m_spellInfo->TargetAuraState == AURA_STATE_SWIFTMEND && unitTarget->HasAuraState(AURA_STATE_SWIFTMEND))
         {
@@ -5401,9 +5417,10 @@ void Spell::EffectWeaponDmg(uint32 i)
             // Judgement of Command - receive benefit from Spell Damage and Attack Power
             if(m_spellInfo->SpellFamilyFlags & UI64LIT(0x00020000000000))
             {
-                spellBonusNeedWeaponDamagePercentMod = true;// apply weaponDamagePercentMod to spell_bonus (and then to all bonus, fixes and weapon already have applied)
-                spell_bonus += int32(0.08f*m_caster->GetTotalAttackPowerValue(BASE_ATTACK));
-                spell_bonus += int32(0.13f*m_caster->SpellBaseDamageBonus(GetSpellSchoolMask(m_spellInfo)));
+                float ap = m_caster->GetTotalAttackPowerValue(BASE_ATTACK);
+                int32 holy = m_caster->SpellBaseDamageBonus(GetSpellSchoolMask(m_spellInfo)) +
+                             m_caster->SpellBaseDamageBonusForVictim(GetSpellSchoolMask(m_spellInfo), unitTarget);
+                spell_bonus += int32(ap * 0.08f + holy * 0.13f);
             }
             break;
         }
