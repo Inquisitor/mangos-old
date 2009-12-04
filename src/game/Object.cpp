@@ -1738,14 +1738,13 @@ GameObject* WorldObject::SummonGameObject(uint32 id, float x, float y, float z, 
 
 Vehicle* WorldObject::SummonVehicle(uint32 id, float x, float y, float z, float ang, uint32 vehicleId)
 {
-    Vehicle *v = new Vehicle;
+    Vehicle *v = new Vehicle();
 
-    Map *map = GetMap();
     uint32 team = 0;
     if (GetTypeId()==TYPEID_PLAYER)
         team = ((Player*)this)->GetTeam();
 
-    if(!v->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_VEHICLE), map, GetPhaseMask(), id, vehicleId, team))
+    if(!v->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_VEHICLE), GetMap(), GetPhaseMask(), id, vehicleId, team))
     {
         delete v;
         return NULL;
@@ -1763,7 +1762,8 @@ Vehicle* WorldObject::SummonVehicle(uint32 id, float x, float y, float z, float 
         delete v;
         return NULL;
     }
-    map->Add((Creature*)v);
+
+    GetMap()->Add((Creature*)v);
     v->AIM_Initialize();
 
     if(GetTypeId()==TYPEID_UNIT && ((Creature*)this)->AI())

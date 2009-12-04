@@ -38,7 +38,7 @@ Vehicle::~Vehicle()
 void Vehicle::AddToWorld()
 {
     ///- Register the vehicle for guid lookup
-    if(!IsInWorld())
+    if(!IsInWorld() && GetGUIDHigh() == HIGHGUID_VEHICLE)
         GetMap()->GetObjectsStore().insert<Vehicle>(GetGUID(), (Vehicle*)this);
 
     Unit::AddToWorld();
@@ -47,7 +47,7 @@ void Vehicle::AddToWorld()
 void Vehicle::RemoveFromWorld()
 {
     ///- Remove the vehicle from the accessor
-    if(IsInWorld())
+    if(IsInWorld() && GetGUIDHigh() == HIGHGUID_VEHICLE)
         GetMap()->GetObjectsStore().erase<Vehicle>(GetGUID(), (Vehicle*)NULL);
 
     ///- Don't call the function for Creature, normal mobs + totems go in a different storage

@@ -583,7 +583,7 @@ void WorldSession::HandleSpellClick( WorldPacket & recv_data )
 
         // create vehicle if no one present and kill the original creature to avoid double, triple etc spawns
         if(!unit->isVehicle())
-         {
+        {
             Vehicle *v = _player->SummonVehicle(unit->GetEntry(), unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ(), unit->GetOrientation(), vehicleId);
             if(!v)
                 return;
