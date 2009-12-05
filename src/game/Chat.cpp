@@ -494,6 +494,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "message",        SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleSendMessageCommand,         "", NULL },
         { "money",          SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleSendMoneyCommand,           "", NULL },
         { "channel",        SEC_MODERATOR,      true,  &ChatHandler::HandleSendChannelMsgCommand,      "", NULL },
+        { "sysmessage",     SEC_MODERATOR,      true,  &ChatHandler::HandleSendSysMsgCommand,          "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 

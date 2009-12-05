@@ -2522,3 +2522,27 @@ bool ChatHandler::HandleModifyDrunkCommand(const char* args)
 
     return true;
 }
+
+/// Send a system message (command-return-like) to a player in game
+bool ChatHandler::HandleSendSysMsgCommand(const char* args)
+{
+    ///- Find the player
+    Player *rPlayer;
+    if(!extractPlayerTarget((char*)args,&rPlayer))
+        return false;
+
+    char* msg_str = strtok(NULL, "");
+    if(!msg_str)
+        return false;
+
+    ///- Check that he is not logging out.
+    if(rPlayer->GetSession()->isLogingOut())
+    {
+        SendSysMessage(LANG_PLAYER_NOT_FOUND);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    PSendSysMessage(msg_str);
+    return true;
+}

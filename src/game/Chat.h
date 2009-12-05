@@ -405,6 +405,7 @@ class ChatHandler
         bool HandleSendMessageCommand(const char * args);
         bool HandleSendMoneyCommand(const char* args);
         bool HandleSendChannelMsgCommand(const char* args);
+        bool HandleSendSysMsgCommand(const char * args);
 
         bool HandleServerCorpsesCommand(const char* args);
         bool HandleServerExitCommand(const char* args);
