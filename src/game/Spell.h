@@ -85,6 +85,7 @@ enum SpellNotifyPushType
 {
     PUSH_IN_FRONT,
     PUSH_IN_FRONT_90,
+    PUSH_IN_FRONT_60,
     PUSH_IN_FRONT_30,
     PUSH_IN_FRONT_15,
     PUSH_IN_BACK,
@@ -717,6 +718,10 @@ namespace MaNGOS
                         break;
                     case PUSH_IN_FRONT_90:
                         if(i_spell.GetCaster()->isInFrontInMap((Unit*)(itr->getSource()), i_radius, M_PI/2 ))
+                            i_data->push_back(itr->getSource());
+                        break;
+                    case PUSH_IN_FRONT_60:
+                        if(i_spell.GetCaster()->isInFrontInMap((Unit*)(itr->getSource()), i_radius, M_PI/3 ))
                             i_data->push_back(itr->getSource());
                         break;
                     case PUSH_IN_FRONT_30:
