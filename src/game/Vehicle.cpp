@@ -25,7 +25,7 @@
 #include "WorldPacket.h"
 #include "InstanceData.h"
 
-Vehicle::Vehicle() : Creature(), m_vehicleId(0)
+Vehicle::Vehicle() : Creature(), m_vehicleId(0), m_VehicleData(NULL), m_vehicleInfo(NULL)
 {
     m_isVehicle = true;
     m_updateFlag = (UPDATEFLAG_LIVING | UPDATEFLAG_HAS_POSITION | UPDATEFLAG_VEHICLE);
@@ -119,9 +119,7 @@ bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, u
     //Only works if you create the object in it, not if it is moves to that map.
     //Normally non-players do not teleport to other maps.
     if(map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
-    {
         ((InstanceMap*)map)->GetInstanceData()->OnCreatureCreate(this);
-    }
 
     return true;
 }
@@ -137,8 +135,10 @@ bool Vehicle::SetVehicleId(uint32 vehicleid)
 
     // can be NULL
     VehicleDataStructure const *VDStructure = sObjectMgr.GetVehicleData(vehicleid);
-    if(VDStructure)
-        m_VehicleData = VDStructure;
+    if (!VDStructure)
+        return false;
+
+    m_VehicleData = VDStructure;
  
     InitSeats();
     EmptySeatsCountChanged();

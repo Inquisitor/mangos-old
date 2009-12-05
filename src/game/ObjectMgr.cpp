@@ -5870,7 +5870,7 @@ uint32 ObjectMgr::GenerateLowGuid(HighGuid guidhigh)
                 sLog.outError("Vehicle guid overflow!! Can't continue, shutting down server. ");
                 World::StopNow(ERROR_EXIT_CODE);
             }
-            return m_hiVehicleGuid;
+            return m_hiVehicleGuid++;
         default:
             ASSERT(0);
     }
