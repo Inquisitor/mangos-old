@@ -430,7 +430,7 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                     damage+=int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK) * 12 / 100);
                 }
                 // Shattering Throw / Heroic Throw
-                else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x100000000))
+                else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x40000100000000))
                 {
                     damage+=int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK) * 0.5f);
                 }
