@@ -5693,55 +5693,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 63675;
                     break;
                 }
-                // Rapture (Ranks 1-3)
-                case 2894:
-                {
-                    switch(effIndex)
-                    {
-                        case 0:
-                        {
-                            // energize caster
-                            int32 manapct1000 = 5 * (triggerAmount + sSpellMgr.GetSpellRank(dummySpell->Id));
-                            int32 basepoints0 = this->GetMaxPower(POWER_MANA) * manapct1000 / 1000;
-                            CastCustomSpell(this, 47755, &basepoints0, NULL, NULL, true);
-                            break;
-                        }
-                        case 1:
-                        {
-                            // energize target
-                           if (!roll_chance_i(triggerAmount) || this->HasAura(63853))
-                               break;
-
-                           switch(pVictim->getPowerType())
-                           {
-                                case POWER_RUNIC_POWER:
-                                    pVictim->CastSpell(pVictim, 63652, true, NULL, triggeredByAura);
-                                    break;
-                                case POWER_RAGE:
-                                    pVictim->CastSpell(pVictim, 63653, true, NULL, triggeredByAura);
-                                    break;
-                                case POWER_MANA:
-                                {
-                                    int32 basepoints0 = pVictim->GetMaxPower(POWER_MANA) * 2 / 100;
-                                    pVictim->CastCustomSpell(pVictim, 63654, &basepoints0, NULL, NULL, true, NULL, triggeredByAura);
-                                    break;
-                                }
-                                case POWER_ENERGY:
-                                    pVictim->CastSpell(pVictim, 63655, true, NULL, triggeredByAura);
-                                    break;
-                                default:
-                                    break;
-                           }
-                           //cooldown aura
-                           this->CastSpell(this, 63853, true);
-                           break;
-                        }
-                        default:
-                            sLog.outError("Changes in 2894 dummy spell???: effect 3");
-                            break;
-                    }
-                    break;
-                }
             }
 
             switch(dummySpell->Id)
