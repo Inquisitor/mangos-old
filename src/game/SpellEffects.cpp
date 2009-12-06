@@ -265,8 +265,8 @@ void Spell::EffectInstaKill(uint32 /*i*/)
     if( !unitTarget || !unitTarget->isAlive() )
         return;
 
- //   if ((m_caster->GetTypeId() == TYPEID_PLAYER) && (m_caster == unitTarget))
- //       return;
+    if ((m_caster->GetTypeId() == TYPEID_PLAYER) && (m_caster == unitTarget) && m_spellInfo->Id != 14050)
+        return;
 
     // Demonic Sacrifice
     if(m_spellInfo->Id==18788 && unitTarget->GetTypeId()==TYPEID_UNIT)
