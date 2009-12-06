@@ -2515,8 +2515,11 @@ void Spell::EffectDummy(uint32 i)
             // Healing Stream Totem
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000002000))
             {
+                int32 healval = m_caster->SpellDamageBonus(unitTarget, m_spellInfo, damage, DOT );
+                if( m_caster->GetOwner() )
+                    healval += m_caster->GetOwner()->SpellDamageBonus(unitTarget, m_spellInfo, healval, HEAL );
                 if (unitTarget)
-                    m_caster->CastCustomSpell(unitTarget, 52042, &damage, 0, 0, true, 0, 0, m_originalCasterGUID);
+                    m_caster->CastCustomSpell(unitTarget, 52042, &healval, 0, 0, true, 0, 0, m_originalCasterGUID);
                 return;
             }
             // Mana Spring Totem
