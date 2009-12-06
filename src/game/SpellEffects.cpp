@@ -3464,6 +3464,14 @@ void Spell::EffectHeal( uint32 /*i*/ )
                 // Health bonus is X% from max health, not flat X
                 addhealth = int32(caster->GetMaxHealth()*damage/100.0f);
         }
+        else if( m_spellInfo->SpellFamilyFlags == UI64LIT(0x40000000) && m_spellInfo->SpellIconID == 242 )
+        {
+            if( unitTarget->HasAura(53601, 0) )
+            {
+                int32 healval = (caster->SpellHealingBonus(unitTarget, m_spellInfo, addhealth, HEAL)) / 12;
+                m_caster->CastCustomSpell(unitTarget, 66922, &healval, 0, 0, false );
+            }
+        }
         else
             addhealth = caster->SpellHealingBonus(unitTarget, m_spellInfo, addhealth, HEAL);
 
