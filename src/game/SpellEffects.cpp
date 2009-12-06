@@ -6237,6 +6237,12 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     }
                     return;
                 }
+                // Guarded by The Light (Why it is warlock's spellfamily..?)
+                case 63521:
+                {
+                    if( Aura * pAur = unitTarget->GetAura(54428, 0) )
+                        pAur->RefreshAura();
+                }
             }
             break;
         }
