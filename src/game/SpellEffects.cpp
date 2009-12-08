@@ -550,20 +550,14 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                 // Ferocious Bite
                 if (m_caster->GetTypeId()==TYPEID_PLAYER && (m_spellInfo->SpellFamilyFlags & UI64LIT(0x000800000)) && m_spellInfo->SpellVisual[0]==6587)
                 {
-                    // converts each extra point of energy into ($f1+$AP/410) additional damage, not more than 30 energy
+                    // converts up to 30 points of energy into ($f1+$AP/410) additional damage
                     float ap = m_caster->GetTotalAttackPowerValue(BASE_ATTACK);
                     float multiple = ap / 410 + m_spellInfo->DmgMultiplier[effect_idx];
                     damage += int32(((Player*)m_caster)->GetComboPoints() * ap * 7 / 100);
-                    if (m_caster->GetPower(POWER_ENERGY) > 30)
-                    {
-                        damage += int32(30 * multiple);
-                        m_caster->SetPower(POWER_ENERGY,(m_caster->GetPower(POWER_ENERGY) - 30));
-                    }
-                    else 
-                    {
-                        damage += int32(m_caster->GetPower(POWER_ENERGY) * multiple);
-                        m_caster->SetPower(POWER_ENERGY,0);
-                    }
+                    uint32 energy = m_caster->GetPower(POWER_ENERGY);
+                    uint32 used_energy = energy > 30 ? 30 : energy;
+                    damage += int32(used_energy * multiple);
+                    m_caster->SetPower(POWER_ENERGY,energy-used_energy);
                 }
                 // Rake
                 else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000001000) && m_spellInfo->Effect[2]==SPELL_EFFECT_ADD_COMBO_POINTS)
@@ -2031,14 +2025,14 @@ void Spell::EffectDummy(uint32 i)
                 uint32 rage = m_caster->GetPower(POWER_RAGE);
 
                 // up to max 30 rage cost
-                if(rage > 30)
-                    rage = 30;
+                if(rage > 300)
+                    rage = 300;
 
                 // Glyph of Execution bonus
                 uint32 rage_modified = rage;
 
                 if (Aura *aura = m_caster->GetDummyAura(58367))
-                    rage_modified +=  aura->GetModifier()->m_amount;
+                    rage_modified +=  aura->GetModifier()->m_amount*10;
 
                 int32 basePoints0 = damage+int32(rage_modified * m_spellInfo->DmgMultiplier[i] +
                                                  m_caster->GetTotalAttackPowerValue(BASE_ATTACK)*0.2f);
@@ -2055,7 +2049,7 @@ void Spell::EffectDummy(uint32 i)
                         if ((*itr)->GetSpellProto()->SpellIconID == 1989)
                         {
                             // saved rage top stored in next affect
-                            uint32 lastrage = (*itr)->GetSpellProto()->CalculateSimpleValue(1);
+                            uint32 lastrage = (*itr)->GetSpellProto()->CalculateSimpleValue(1)*10;
                             if(lastrage < rage)
                                 rage -= lastrage;
                             break;
@@ -2081,6 +2075,7 @@ void Spell::EffectDummy(uint32 i)
                 m_damage+= uint32(damage * m_caster->GetTotalAttackPowerValue(BASE_ATTACK) / 100);
                 return;
             }
+
             switch(m_spellInfo->Id)
             {
                 // Warrior's Wrath
@@ -3395,6 +3390,11 @@ void Spell::EffectHeal( uint32 /*i*/ )
                          caster->SpellBaseHealingBonusForVictim(GetSpellSchoolMask(m_spellInfo), unitTarget);
             addhealth += int32(ap * 0.15 + holy * 0.15);  
         }
+        // Death Pact (percent heal)
+        else if (m_spellInfo->Id==48743)
+        {
+            addhealth = addhealth * unitTarget->GetMaxHealth() / 100;
+        }
         // Swiftmend - consumes Regrowth or Rejuvenation
         else if (m_spellInfo->TargetAuraState == AURA_STATE_SWIFTMEND && unitTarget->HasAuraState(AURA_STATE_SWIFTMEND))
         {
@@ -3458,23 +3458,6 @@ void Spell::EffectHeal( uint32 /*i*/ )
             {
                 addhealth += addhealth * riptide->GetSpellProto()->EffectBasePoints[2] / 100;
                 unitTarget->RemoveAurasDueToSpell(riptide->GetId());
-            }
-        }
-        // Death Pact - requires alive pet or guardian (ghoul or gargoyle)
-        else if (m_spellInfo->Id == 48743)
-        {
-            if (m_caster->GetPet() || m_caster->FindGuardianWithEntry(26125) || m_caster->FindGuardianWithEntry(27829))
-                // Health bonus is X% from max health, not flat X
-                addhealth = int32(caster->GetMaxHealth()*damage/100.0f);
-        }
-        // Flash of Light + Sacred Shield HoT
-        else if( m_spellInfo->SpellFamilyFlags == UI64LIT(0x40000000) && m_spellInfo->SpellIconID == 242 )
-        {
-            addhealth = caster->SpellHealingBonus(unitTarget, m_spellInfo, addhealth, HEAL);
-            if( unitTarget->HasAura(53601, 0) )
-            {
-                int32 healval = addhealth / 12;
-                m_caster->CastCustomSpell(unitTarget, 66922, &healval, 0, 0, false );
             }
         }
         else
@@ -4226,7 +4209,7 @@ void Spell::EffectSummonType(uint32 i)
                     sLog.outError("EffectSummonType: Unhandled summon type %u", summon_prop->Type);
                 break;
             }
-             break;
+            break;
         }
         case SUMMON_PROP_GROUP_PETS:
         {
@@ -4237,25 +4220,24 @@ void Spell::EffectSummonType(uint32 i)
                 EffectSummonGuardian(i, summon_prop->FactionId);
             else
                 EffectSummon(i);
-
-             break;
+            break;
         }
         case SUMMON_PROP_GROUP_CONTROLLABLE:
         {
             // no type here
             // maybe wrong - but thats the handler currently used for those
             EffectSummonGuardian(i, summon_prop->FactionId);
-             break;
+            break;
         }
         case SUMMON_PROP_GROUP_VEHICLE:
         {
-             EffectSummonVehicle(i);
-             break;
+            EffectSummonVehicle(i);
+            break;
         }
-         default:
+        default:
             sLog.outError("EffectSummonType: Unhandled summon group type %u", summon_prop->Group);
-        break;
-     }
+            break;
+    }
  }
 
 void Spell::EffectSummon(uint32 i)
@@ -4627,9 +4609,7 @@ void Spell::EffectSummonWild(uint32 i, uint32 forceFaction)
         {
             uint16 skill202 = ((Player*)m_caster)->GetSkillValue(SKILL_ENGINERING);
             if (skill202)
-            {
                 level = skill202/5;
-            }
         }
     }
 
@@ -4668,7 +4648,7 @@ void Spell::EffectSummonWild(uint32 i, uint32 forceFaction)
         {
             summon->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
             summon->SetCreatorGUID(m_caster->GetGUID());
- 
+
             if(forceFaction)
                 summon->setFaction(forceFaction);
 
@@ -6250,11 +6230,13 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     }
                     return;
                 }
-                // Guarded by The Light (Why it is warlock's spellfamily..?)
+                // Guarded by The Light (Paladin spell with SPELLFAMILY_WARLOCK)
                 case 63521:
                 {
-                    if( Aura * pAur = unitTarget->GetAura(54428, 0) )
-                        pAur->RefreshAura();
+                    // Divine Plea, refresh on target (3 aura slots)
+                    if (Aura* aura = unitTarget->GetAura(54428,0))
+                        aura->RefreshAura();
+                    return;
                 }
             }
             break;
@@ -6796,7 +6778,8 @@ void Spell::EffectApplyGlyph(uint32 i)
 
 void Spell::EffectSummonTotem(uint32 i, uint8 slot)
 {
-    slot = slot ? (slot-1) : 255;
+    slot = slot ? (slot - 1): 255;
+
     if(slot < MAX_TOTEM)
     {
         uint64 guid = m_caster->m_TotemSlot[slot];
@@ -7338,17 +7321,6 @@ void Spell::EffectCharge(uint32 /*i*/)
     // not all charge effects used in negative spells
     if (unitTarget != m_caster && !IsPositiveSpell(m_spellInfo->Id))
         m_caster->Attack(unitTarget,true);
-
-    //Warbringer - remove movement imparing effects
-    Unit::AuraList const& auraClassScripts = m_caster->GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
-    for(Unit::AuraList::const_iterator itr = auraClassScripts.begin(); itr != auraClassScripts.end(); itr++)
-    {
-        if((*itr)->GetModifier()->m_miscvalue == 6953)
-        {
-            m_caster->RemoveAurasAtMechanicImmunity(IMMUNE_TO_ROOT_AND_SNARE_MASK,(*itr)->GetId(),true);
-            break;
-        }
-    }
 }
 
 void Spell::EffectCharge2(uint32 /*i*/)
@@ -7439,9 +7411,9 @@ void Spell::EffectSummonCritter(uint32 i, uint32 forceFaction)
 
     critter->SetOwnerGUID(m_caster->GetGUID());
     critter->SetCreatorGUID(m_caster->GetGUID());
-    critter->setFaction(forceFaction ? forceFaction : m_caster->getFaction());
-    critter->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
 
+    critter->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
+    critter->setFaction(forceFaction ? forceFaction : m_caster->getFaction());
     critter->AIM_Initialize();
     critter->InitPetCreateSpells();                         // e.g. disgusting oozeling has a create spell as critter...
     //critter->InitLevelupSpellsForLevel();                 // none?
