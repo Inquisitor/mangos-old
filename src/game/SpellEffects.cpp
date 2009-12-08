@@ -3460,23 +3460,6 @@ void Spell::EffectHeal( uint32 /*i*/ )
                 unitTarget->RemoveAurasDueToSpell(riptide->GetId());
             }
         }
-        // Death Pact - requires alive pet or guardian (ghoul or gargoyle)
-        else if (m_spellInfo->Id == 48743)
-        {
-            if (m_caster->GetPet() || m_caster->FindGuardianWithEntry(26125) || m_caster->FindGuardianWithEntry(27829))
-                // Health bonus is X% from max health, not flat X
-                addhealth = int32(caster->GetMaxHealth()*damage/100.0f);
-        }
-        // Flash of Light + Sacred Shield HoT
-        else if( m_spellInfo->SpellFamilyFlags == UI64LIT(0x40000000) && m_spellInfo->SpellIconID == 242 )
-        {
-            addhealth = caster->SpellHealingBonus(unitTarget, m_spellInfo, addhealth, HEAL);
-            if( unitTarget->HasAura(53601, 0) )
-            {
-                int32 healval = addhealth / 12;
-                m_caster->CastCustomSpell(unitTarget, 66922, &healval, 0, 0, false );
-            }
-        }
         else
             addhealth = caster->SpellHealingBonus(unitTarget, m_spellInfo, addhealth, HEAL);
 
@@ -6250,12 +6233,6 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     }
                     return;
                 }
-                // Guarded by The Light (Why it is warlock's spellfamily..?)
-                case 63521:
-                {
-                    if( Aura * pAur = unitTarget->GetAura(54428, 0) )
-                        pAur->RefreshAura();
-                }
             }
             break;
         }
@@ -7338,17 +7315,6 @@ void Spell::EffectCharge(uint32 /*i*/)
     // not all charge effects used in negative spells
     if (unitTarget != m_caster && !IsPositiveSpell(m_spellInfo->Id))
         m_caster->Attack(unitTarget,true);
-
-    //Warbringer - remove movement imparing effects
-    Unit::AuraList const& auraClassScripts = m_caster->GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
-    for(Unit::AuraList::const_iterator itr = auraClassScripts.begin(); itr != auraClassScripts.end(); itr++)
-    {
-        if((*itr)->GetModifier()->m_miscvalue == 6953)
-        {
-            m_caster->RemoveAurasAtMechanicImmunity(IMMUNE_TO_ROOT_AND_SNARE_MASK,(*itr)->GetId(),true);
-            break;
-        }
-    }
 }
 
 void Spell::EffectCharge2(uint32 /*i*/)

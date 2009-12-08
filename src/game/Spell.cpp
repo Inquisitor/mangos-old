@@ -479,42 +479,6 @@ void Spell::FillCustomTargetMap(uint32 i, UnitList& TagUnitMap)
     // Resulting effect depends on spell that we want to cast
     switch (m_spellInfo->Id)
     {
-        case 48743: // Death Pact
-        {
-            Unit* unit_to_add = NULL;
-            if (Player* modOwner = m_caster->GetSpellModOwner())
-            {
-                // If we have regular pet
-                Pet* pet = modOwner->GetPet();
-                if (pet && pet->GetCreatureInfo()->type == CREATURE_TYPE_UNDEAD)
-                    unit_to_add = pet;
-                else
-                {
-                    // Maybe we have a summoned guardian?
-                    GuardianPetList const& guardians = modOwner->GetGuardians();
-                    for (GuardianPetList::const_iterator itr = guardians.begin(); itr != guardians.end(); ++itr)
-                    {
-                        Pet* temp_pet = m_caster->GetMap()->GetPet(*itr);
-                        if(temp_pet && temp_pet->isAlive())
-                            if (temp_pet->GetEntry() == 26125 || temp_pet->GetEntry() == 27829)
-                            {
-                                unit_to_add = temp_pet;
-                                break;
-                            }
-                    }
-                }
-                if (unit_to_add)
-                    TagUnitMap.push_back(unit_to_add);
-                else
-                {
-                    if (modOwner->GetTypeId()==TYPEID_PLAYER)
-                        modOwner->RemoveSpellCooldown(m_spellInfo->Id,true);
-                    SendCastResult(SPELL_FAILED_NO_PET);
-                    finish(false);
-                }
-            }
-            break;
-        }
         case 46584: // Raise Dead
         {
             WorldObject* result = FindCorpseUsing <MaNGOS::RaiseDeadObjectCheck>  ();
@@ -600,7 +564,7 @@ void Spell::FillTargetMap()
                 }
                 break;
             case TARGET_EFFECT_SELECT:
-                if (m_spellInfo->Id == 46584 || m_spellInfo->Id == 47496 || m_spellInfo->Id == 48018 || m_spellInfo->Id == 48743)
+                if (m_spellInfo->Id == 46584 || m_spellInfo->Id == 47496 || m_spellInfo->Id == 48018)
                 {
                     FillCustomTargetMap(i,tmpUnitMap);
                     break;
@@ -4723,7 +4687,7 @@ SpellCastResult Spell::CheckCast(bool strict)
             }
             case SPELL_EFFECT_CHARGE:
             {
-                if (m_caster->hasUnitState(UNIT_STAT_ROOT) && !m_caster->HasAura(57499, 0))
+                if (m_caster->hasUnitState(UNIT_STAT_ROOT))
                     return SPELL_FAILED_ROOTED;
 
                 break;
