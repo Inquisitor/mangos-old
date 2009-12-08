@@ -3447,6 +3447,19 @@ void Spell::EffectHeal( uint32 /*i*/ )
                 }
             }
 
+            // Glyph of Nourish
+            if( Aura * pAur = caster->GetAura(62971, 0) )
+            {
+                for(Unit::AuraList::const_iterator i = RejorRegr.begin(); i != RejorRegr.end(); ++i)
+                {
+                    if((*i)->GetSpellProto()->SpellFamilyName == SPELLFAMILY_DRUID && (*i)->GetCaster() == caster)
+                    {
+                        addhealth += int32(addhealth* pAur->GetModifier()->m_amount*0.01);
+                        break;
+                    }
+                }
+            }
+
             addhealth = caster->SpellHealingBonus(unitTarget, m_spellInfo, addhealth, HEAL);
         }
         // Chain Heal consumes Riptide
