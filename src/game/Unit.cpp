@@ -6126,7 +6126,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 break;
             }
             // Sacred Shield
-            if (dummySpell->SpellFamilyFlags & UI64LIT(0x0008000000000000) && procSpell->Id != 66922)
+            if (dummySpell->SpellFamilyFlags & UI64LIT(0x0008000000000000))
             {
                 triggered_spell_id = 58597;
                 target = this;
