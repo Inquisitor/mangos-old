@@ -1831,8 +1831,16 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
             }
             break;
         case TARGET_ALL_FRIENDLY_UNITS_IN_AREA:
+            // Death Pact (in fact selection by player selection)
+            if (m_spellInfo->Id == 48743)
+            {
+                // checked in Spell::CheckCast
+                if (m_caster->GetTypeId()==TYPEID_PLAYER)
+                    if (Unit* target = m_caster->GetMap()->GetPet(((Player*)m_caster)->GetSelection()))
+                        TagUnitMap.push_back(target);
+            }
             // Wild Growth
-            if (m_spellInfo->SpellFamilyName == SPELLFAMILY_DRUID && m_spellInfo->SpellIconID == 2864)
+            else if (m_spellInfo->SpellFamilyName == SPELLFAMILY_DRUID && m_spellInfo->SpellIconID == 2864)
             {
                 Unit* target = m_targets.getUnitTarget();
                 if(!target)
@@ -2362,7 +2370,7 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
                     }
                     break;
                 case SPELL_EFFECT_SUMMON:
-                     TagUnitMap.push_back(m_caster);
+                    TagUnitMap.push_back(m_caster);
                     break;
                 case SPELL_EFFECT_SUMMON_CHANGE_ITEM:
                 case SPELL_EFFECT_TRANS_DOOR:
@@ -4512,6 +4520,34 @@ SpellCastResult Spell::CheckCast(bool strict)
         // for effects of spells that have only one target
         switch(m_spellInfo->Effect[i])
         {
+            case SPELL_EFFECT_INSTAKILL:
+                // Death Pact
+                if(m_spellInfo->Id == 48743)
+                {
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
+                        return SPELL_FAILED_ERROR;
+
+                    if (!((Player*)m_caster)->GetSelection())
+                        return SPELL_FAILED_BAD_IMPLICIT_TARGETS;
+                    Pet* target = m_caster->GetMap()->GetPet(((Player*)m_caster)->GetSelection());
+
+                    // alive 
+                    if (!target || target->isDead())
+                        return SPELL_FAILED_BAD_IMPLICIT_TARGETS;
+                    // undead
+                    if (target->GetCreatureType() != CREATURE_TYPE_UNDEAD)
+                        return SPELL_FAILED_BAD_IMPLICIT_TARGETS;
+                    // owned
+                    if (target->GetOwnerGUID() != m_caster->GetGUID())
+                        return SPELL_FAILED_BAD_IMPLICIT_TARGETS;
+
+                    float dist = GetSpellRadius(sSpellRadiusStore.LookupEntry(m_spellInfo->EffectRadiusIndex[i]));
+                    if (!target->IsWithinDistInMap(m_caster,dist))
+                        return SPELL_FAILED_OUT_OF_RANGE;
+
+                    // will set in target selection code
+                }
+                break;
             case SPELL_EFFECT_DUMMY:
             {
                 if(m_spellInfo->SpellIconID == 1648)        // Execute
@@ -4787,31 +4823,17 @@ SpellCastResult Spell::CheckCast(bool strict)
             // This is generic summon effect
             case SPELL_EFFECT_SUMMON:
             {
-                if(m_spellInfo->EffectMiscValue[i] == 18225 && m_caster->GetTypeId() == TYPEID_PLAYER)
-                {
-                    // if not in halaa or not in flight, cannot be used
-                    if(m_caster->GetAreaId() != 3628 || !m_caster->isInFlight())
-                        return SPELL_FAILED_NOT_HERE;
-
-                    // if not on one of the specific taxi paths, then cannot be used
-                    uint32 src_node = ((Player*)m_caster)->m_taxi.GetTaxiSource();
-                    if( src_node != 103 && src_node != 105 && src_node != 107 && src_node != 109 )
-                        return SPELL_FAILED_NOT_HERE;
-                }
-
                 if(SummonPropertiesEntry const *summon_prop = sSummonPropertiesStore.LookupEntry(m_spellInfo->EffectMiscValueB[i]))
                 {
                     if(summon_prop->Group == SUMMON_PROP_GROUP_PETS)
-                     {
-                         if(m_caster->GetPetGUID())
-                             return SPELL_FAILED_ALREADY_HAVE_SUMMON;
- 
-                         if(m_caster->GetCharmGUID())
-                             return SPELL_FAILED_ALREADY_HAVE_CHARM;
-                     }
-                }
+                    {
+                        if(m_caster->GetPetGUID())
+                            return SPELL_FAILED_ALREADY_HAVE_SUMMON;
 
-                break;
+                        if(m_caster->GetCharmGUID())
+                            return SPELL_FAILED_ALREADY_HAVE_CHARM;
+                    }
+                }
             }
             // Not used for summon?
             case SPELL_EFFECT_SUMMON_PHANTASM:

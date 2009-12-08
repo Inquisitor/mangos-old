@@ -295,7 +295,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleUnused,                                    //242 SPELL_AURA_MOD_SPELL_DAMAGE_FROM_HEALING (only 2 test spels in 3.2.2a)
     &Aura::HandleNULL,                                      //243 faction reaction override spells
     &Aura::HandleComprehendLanguage,                        //244 SPELL_AURA_COMPREHEND_LANGUAGE
-    &Aura::HandleNULL,                                      //245 SPELL_AURA_MOD_DURATION_OF_MAGIC_EFFECTS
+    &Aura::HandleNoImmediateEffect,                         //245 SPELL_AURA_MOD_DURATION_OF_MAGIC_EFFECTS     implemented in Unit::CalculateSpellDuration
     &Aura::HandleNoImmediateEffect,                         //246 SPELL_AURA_MOD_DURATION_OF_EFFECTS_BY_DISPEL implemented in Unit::CalculateSpellDuration
     &Aura::HandleAuraCloneCaster,                           //247 SPELL_AURA_CLONE_CASTER
     &Aura::HandleNoImmediateEffect,                         //248 SPELL_AURA_MOD_COMBAT_RESULT_CHANCE         implemented in Unit::RollMeleeOutcomeAgainst
@@ -355,7 +355,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleUnused,                                    //302 unused (3.2.2a)
     &Aura::HandleNULL,                                      //303 17 spells
     &Aura::HandleNULL,                                      //304 2 spells (alcohol effect?)
-    &Aura::HandleNULL,                                      //305 2 spells
+    &Aura::HandleAuraModIncreaseSpeed,                      //305 SPELL_AURA_MOD_MINIMUM_SPEED
     &Aura::HandleNULL                                       //306 1 spell
 };
 
@@ -1361,25 +1361,41 @@ bool Aura::isAffectedOnSpell(SpellEntry const *spell) const
 
 void Aura::ReapplyAffectedPassiveAuras( Unit* target )
 {
-    std::set<uint32> affectedPassives;
+    std::set<uint32> affectedSelf;
+    std::set<uint32> affectedAuraCaster;
 
     for(Unit::AuraMap::const_iterator itr = target->GetAuras().begin(); itr != target->GetAuras().end(); ++itr)
     {
-        // permanent passive
-        if (itr->second->IsPassive() && itr->second->IsPermanent() &&
+        // permanent passive or permanent area aura
+        if (itr->second->IsPermanent() && (itr->second->IsPassive() || itr->second->IsAreaAura()) &&
             // non deleted and not same aura (any with same spell id)
             !itr->second->IsDeleted() && itr->second->GetId() != GetId() &&
-            // only applied by self and affected by aura
-            itr->second->GetCasterGUID() == target->GetGUID() && isAffectedOnSpell(itr->second->GetSpellProto()))
+            // and affected by aura
+            isAffectedOnSpell(itr->second->GetSpellProto()))
         {
-            affectedPassives.insert(itr->second->GetId());
+            // only applied by self or aura caster
+            if(itr->second->GetCasterGUID() == target->GetGUID())
+                affectedSelf.insert(itr->second->GetId());
+            else if(itr->second->GetCasterGUID() == GetCasterGUID())
+                affectedAuraCaster.insert(itr->second->GetId());
         }
     }
 
-    for(std::set<uint32>::const_iterator set_itr = affectedPassives.begin(); set_itr != affectedPassives.end(); ++set_itr)
+    for(std::set<uint32>::const_iterator set_itr = affectedSelf.begin(); set_itr != affectedSelf.end(); ++set_itr)
     {
         target->RemoveAurasDueToSpell(*set_itr);
         target->CastSpell(m_target, *set_itr, true);
+    }
+
+    if (!affectedAuraCaster.empty())
+    {
+        Unit* caster = GetCaster();
+        for(std::set<uint32>::const_iterator set_itr = affectedAuraCaster.begin(); set_itr != affectedAuraCaster.end(); ++set_itr)
+        {
+            target->RemoveAurasDueToSpell(*set_itr);
+            if (caster)
+                caster->CastSpell(m_target, *set_itr, true);
+        }
     }
 }
 
@@ -1449,7 +1465,6 @@ void Aura::HandleAddModifier(bool apply, bool Real)
     // reapply talents to own passive persistent auras
     ReapplyAffectedPassiveAuras(m_target);
 
-
     // Improved Barkskin
     if(m_spellProto->SpellFamilyName==SPELLFAMILY_DRUID && (m_spellmod->mask2 & UI64LIT(0x20000)))
     {
@@ -1477,14 +1492,22 @@ void Aura::HandleAddModifier(bool apply, bool Real)
         m_target->CastSpell(m_target, activeAuraId, true);
     }
 
-    // re-aplly talents and passives applied to pet (it affected by player spellmods)
+    // re-apply talents/passives/area auras applied to pet (it affected by player spellmods)
     if(Pet* pet = m_target->GetPet())
         ReapplyAffectedPassiveAuras(pet);
 
+    // re-apply talents/passives/area auras applied to totems (it affected by player spellmods)
     for(int i = 0; i < MAX_TOTEM; ++i)
         if(m_target->m_TotemSlot[i])
             if(Creature* totem = m_target->GetMap()->GetCreature(m_target->m_TotemSlot[i]))
                 ReapplyAffectedPassiveAuras(totem);
+
+    // re-apply talents/passives/area auras applied to group members (it affected by player spellmods)
+    if (Group* group = ((Player*)m_target)->GetGroup())
+        for(GroupReference *itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
+            if (Player* member = itr->getSource())
+                if (member != m_target)
+                    ReapplyAffectedPassiveAuras(member);
 }
 void Aura::HandleAddTargetTrigger(bool apply, bool /*Real*/)
 {
@@ -2409,14 +2432,54 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 }
         }
 
-        // Earth Shield
-        if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_SHAMAN && (GetSpellProto()->SpellFamilyFlags & UI64LIT(0x40000000000)))
+        switch(m_spellProto->SpellFamilyName)
         {
-            // prevent double apply bonuses
-            if(m_target->GetTypeId() != TYPEID_PLAYER || !((Player*)m_target)->GetSession()->PlayerLoading())
-                if (Unit* caster = GetCaster())
-                    m_modifier.m_amount = caster->SpellHealingBonus(m_target, GetSpellProto(), m_modifier.m_amount, SPELL_DIRECT_DAMAGE);
-            return;
+            case SPELLFAMILY_WARRIOR:
+                // Overpower
+                if(m_spellProto->SpellFamilyFlags & UI64LIT(0x0000000000000004))
+                {
+                    // Must be casting target
+                    if (!m_target->IsNonMeleeSpellCasted(false))
+                        return;
+
+                    Unit* caster = GetCaster();
+                    if (!caster)
+                        return;
+
+                    Unit::AuraList const& modifierAuras = caster->GetAurasByType(SPELL_AURA_ADD_FLAT_MODIFIER);
+                    for(Unit::AuraList::const_iterator itr = modifierAuras.begin(); itr != modifierAuras.end(); ++itr)
+                    {
+                        // Unrelenting Assault
+                        if((*itr)->GetSpellProto()->SpellFamilyName==SPELLFAMILY_WARRIOR && (*itr)->GetSpellProto()->SpellIconID == 2775)
+                        {
+                            switch ((*itr)->GetSpellProto()->Id)
+                            {
+                                case 46859:                 // Unrelenting Assault, rank 1
+                                    m_target->CastSpell(m_target,64849,true,NULL,(*itr));
+                                    break;
+                                case 46860:                 // Unrelenting Assault, rank 2
+                                    m_target->CastSpell(m_target,64850,true,NULL,(*itr));
+                                    break;
+                                default:
+                                    break;
+                            }
+                            break;
+                        }
+                    }
+                    return;
+                }
+                break;
+            case SPELLFAMILY_SHAMAN:
+                // Earth Shield
+                if ((GetSpellProto()->SpellFamilyFlags & UI64LIT(0x40000000000)))
+                {
+                    // prevent double apply bonuses
+                    if(m_target->GetTypeId() != TYPEID_PLAYER || !((Player*)m_target)->GetSession()->PlayerLoading())
+                        if (Unit* caster = GetCaster())
+                            m_modifier.m_amount = caster->SpellHealingBonus(m_target, GetSpellProto(), m_modifier.m_amount, SPELL_DIRECT_DAMAGE);
+                    return;
+                }
+                break;
         }
     }
     // AT REMOVE
@@ -2946,6 +3009,18 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
         case SPELLFAMILY_HUNTER:
             break;
         case SPELLFAMILY_PALADIN:
+            switch(GetId())
+            {
+                case 20911:                                 // Blessing of Sanctuary
+                case 25899:                                 // Greater Blessing of Sanctuary
+                {
+                    if (apply)
+                        m_target->CastSpell(m_target, 67480, true, NULL, this);
+                    else
+                        m_target->RemoveAurasDueToSpell(67480);
+                    return;
+                }
+            }
             break;
         case SPELLFAMILY_SHAMAN:
         {
@@ -6075,6 +6150,8 @@ void Aura::HandleShapeshiftBoosts(bool apply)
                 ((Player*)m_target)->RemoveSpellCooldown(49868);
             break;
         case FORM_GHOSTWOLF:
+            spellId1 = 67116;
+            break;
         case FORM_AMBIENT:
         case FORM_GHOUL:
         case FORM_STEALTH:
@@ -6860,26 +6937,6 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
             DoneActualBenefit *= caster->CalculateLevelPenalty(GetSpellProto());
 
             m_modifier.m_amount += (int32)DoneActualBenefit;
-
-            // now that the correct amount is computed, apply caster aura, if any
-            switch(m_spellProto->SpellFamilyName)
-            {
-                case SPELLFAMILY_PRIEST:
-                    // Power Word: Shield
-                    if (m_spellProto->SpellFamilyFlags & UI64LIT(0x0000000000000001))
-                    {
-                        // Glyph of Power Word: Shield
-                        if(Aura* glyph = caster->GetAura(55672,0))
-                        {
-                            // instant heal glyph m_amount% of the absorbed amount
-                            int32 heal = (glyph->GetModifier()->m_amount * m_modifier.m_amount)/100;
-                            caster->CastCustomSpell(m_target, 56160, &heal, NULL, NULL, true, 0, this);
-                        }
-                    }
-                    break;
-                default:
-                    break;
-            }
         }
     }
     else
