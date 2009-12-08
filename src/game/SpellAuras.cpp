@@ -4136,20 +4136,37 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
         data << uint32(0);
         m_target->SendMessageToSet(&data, true);
 
-        // Summon the Naj'entus Spine GameObject on target if spell is Impaling Spine
-        if(GetId() == 39837)
+        switch( GetId() )
         {
-            GameObject* pObj = new GameObject;
-            if(pObj->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), 185584, m_target->GetMap(), m_target->GetPhaseMask(),
-                m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
+            // Summon the Naj'entus Spine GameObject on target if spell is Impaling Spine
+            case 39837:
             {
-                pObj->SetRespawnTime(GetAuraDuration()/IN_MILISECONDS);
-                pObj->SetSpellId(GetId());
-                m_target->AddGameObject(pObj);
-                m_target->GetMap()->Add(pObj);
+                GameObject* pObj = new GameObject;
+                if(pObj->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), 185584, m_target->GetMap(), m_target->GetPhaseMask(),
+                    m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
+                {
+                    pObj->SetRespawnTime(GetAuraDuration()/IN_MILISECONDS);
+                    pObj->SetSpellId(GetId());
+                    m_target->AddGameObject(pObj);
+                    m_target->GetMap()->Add(pObj);
+                }
+                else
+                    delete pObj;
             }
-            else
-                delete pObj;
+            break;
+            // Glyph of Seduction handler
+            case 6358:
+            {
+                if( Unit* caster = GetCaster() )
+                {
+                    if( caster->GetOwner() && caster->GetOwner()->HasAura(56250) )
+                    {
+                        m_target->RemoveSpellsCausingAura(SPELL_AURA_PERIODIC_DAMAGE);
+                        m_target->RemoveSpellsCausingAura(SPELL_AURA_PERIODIC_DAMAGE_PERCENT);
+                    }
+                }
+            }
+            break;
         }
     }
     else
