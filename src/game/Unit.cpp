@@ -5748,6 +5748,12 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 63321;
                     break;
                 }
+                // Glyph of Shadowflame
+                case 63310:
+                {
+                    triggered_spell_id = 63311;
+                    break;
+                }
             }
             break;
         }
