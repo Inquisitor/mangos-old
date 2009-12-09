@@ -4306,24 +4306,6 @@ void Unit::RemoveAura(AuraMap::iterator &i, AuraRemoveMode mode)
     Aura* Aur = i->second;
     SpellEntry const* AurSpellInfo = Aur->GetSpellProto();
 
-    if(this->IsLastAura(AurSpellInfo->Id, Aur->GetEffIndex()))
-    {
-        Unit* originalCaster = Aur->GetCaster();
-        if(originalCaster)
-        {
-            uint32 procEx = PROC_EX_NONE;
-
-            if(mode == AURA_REMOVE_BY_DISPEL)
-                procEx |= PROC_EX_DISPEL;
-
-            //if absorb aura was removed (ice barrier, power word: shield, etc..)
-            if(mode == AURA_REMOVE_BY_DEFAULT && Aur->GetModifier()->m_auraname == SPELL_AURA_SCHOOL_ABSORB && !Aur->GetModifier()->m_amount)
-                procEx |= PROC_EX_ABSORB;
-
-            this->ProcDamageAndSpell(originalCaster, PROC_FLAG_NONE, PROC_FLAG_ON_AURA_REMOVE, procEx, 0, BASE_ATTACK, AurSpellInfo);
-        }
-    }
-
     Aur->UnregisterSingleCastAura();
 
     // remove from list before mods removing (prevent cyclic calls, mods added before including to aura list - use reverse order)
@@ -4496,18 +4478,6 @@ bool Unit::HasAura(uint32 spellId) const
             return true;
     }
     return false;
-}
-
-bool Unit::IsLastAura(uint32 spellId, uint32 effIndex) const
-{
-    for (int i = 0; i < 3 ; ++i)
-    {
-        AuraMap::const_iterator iter = m_Auras.find(spellEffectPair(spellId, i));
-        if (iter != m_Auras.end() && iter->second->GetEffIndex() != effIndex)
-            return false;
-    }
-
-    return true;
 }
 
 void Unit::AddDynObject(DynamicObject* dynObj)
@@ -5520,15 +5490,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     CastSpell(this, 28682, true, castItem, triggeredByAura);
                     return (procEx & PROC_EX_CRITICAL_HIT); // charge update only at crit hits, no hidden cooldowns
                 }
-                // Shattered Barrier
-                case 44745:
-                case 54787:
-                {
-                    if(procSpell->SpellIconID != 32)
-                        return false;
-                    CastSpell(this, 55080, true);
-                    return true;
-                }
                 // Glyph of Ice Block
                 case 56372:
                 {
@@ -5842,15 +5803,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     int32 self = triggerAmount*damage/100 - team;
                     pVictim->CastCustomSpell(pVictim,15290,&team,&self,NULL,true,castItem,triggeredByAura);
                     return true;                                // no hidden cooldown
-                }
-                // Shadow Affinity (Ranks 1-3)
-                case 15318:
-                case 15272:
-                case 15320:
-                {
-                    basepoints0 = triggerAmount * target->GetCreateMana() / 100;
-                    triggered_spell_id = 64103;
-                    break;
                 }
                 // Priest Tier 6 Trinket (Ashtongue Talisman of Acumen)
                 case 40438:
@@ -6652,17 +6604,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     target = this;
                     break;
                 }
-                // Tidal Force
-                case 55166:
-                {
-                    if (procEx & PROC_EX_CRITICAL_HIT)
-                    {
-                        if (triggeredByAura->modStackAmount(-1))
-                            RemoveAurasDueToSpell(55166);
-                        return true;
-                    }
-                    return false;
-                }
                 // Glyph of Healing Wave
                 case 55440:
                 {
@@ -6792,7 +6733,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                         uint32 spell = (*itr)->GetSpellProto()->EffectTriggerSpell[(*itr)->GetEffIndex()];
                         CastSpell(this, spell, true, castItem, triggeredByAura);
                         if ((*itr)->DropAuraCharge())
-                            RemoveAurasDueToSpell((*itr)->GetId());
+                            RemoveSingleSpellAurasFromStack((*itr)->GetId());
                         return true;
                     }
                 }
@@ -6894,7 +6835,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                         }
                         CastSpell(target, spell, true, castItem, triggeredByAura);
                         if ((*itr)->DropAuraCharge())
-                            RemoveAurasDueToSpell((*itr)->GetId());
+                            RemoveSingleSpellAurasFromStack((*itr)->GetId());
                         return true;
                     }
                 }
@@ -9606,10 +9547,9 @@ bool Unit::isSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolM
         case SPELL_DAMAGE_CLASS_RANGED:
         {
             if (pVictim)
-            {
                 crit_chance = GetUnitCriticalChance(attackType, pVictim);
-                crit_chance+= GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_SPELL_CRIT_CHANCE_SCHOOL, schoolMask);
-            }
+
+            crit_chance+= GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_SPELL_CRIT_CHANCE_SCHOOL, schoolMask);
             break;
         }
         default:
@@ -12681,7 +12621,7 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
         removedSpells.unique();
         // Remove auras from removedAuras
         for(RemoveSpellList::const_iterator i = removedSpells.begin(); i != removedSpells.end();++i)
-            RemoveAurasDueToSpell(*i);
+            RemoveSingleSpellAurasFromStack(*i);
     }
 }
 
