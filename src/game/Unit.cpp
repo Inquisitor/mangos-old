@@ -7507,7 +7507,7 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                             return false;
                     }
                 }
-                */
+                */               
                 // Healing Discount
                 if (auraSpellInfo->Id==37705)
                 {
@@ -7793,6 +7793,12 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
             // Do not summont our knights if we arent fighting specific enemy
             if( GetTypeId() != TYPEID_PLAYER || pVictim->GetEntry() != 19457)
                 return false;
+        }
+        // Glyph of Seal of Command
+        case 54925:
+        {
+            basepoints[0] = int32(GetCreateMana() * 8 / 100);
+            break;
         }
         // Decimation
         case 63156:
