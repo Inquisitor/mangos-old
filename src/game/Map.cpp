@@ -2876,7 +2876,7 @@ void Map::ScriptsProcess()
 
         bool requirement_passed = true;
 
-        if( source && source->GetTypeId() == TYPEID_UNIT  )
+        if( source && (source->GetTypeId() == TYPEID_UNIT || source->GetTypeId() == TYPEID_PLAYER) )
         {
             Unit * uSource = static_cast<Unit*>(source);
 
@@ -2897,7 +2897,7 @@ void Map::ScriptsProcess()
             }
         }
 
-        if( target && target->GetTypeId() == TYPEID_UNIT )
+        if( target && (target->GetTypeId() == TYPEID_UNIT || target->GetTypeId() == TYPEID_PLAYER) )
         {
             Unit * uTarget = static_cast<Unit*>(target);
 
@@ -2920,7 +2920,7 @@ void Map::ScriptsProcess()
                         requirement_passed = false;
                     break;
                 case REQUIREMENT_T_ENTRY:
-                    if( uTarget->GetEntry() != step.script->reqvalue )
+                    if( uTarget->GetTypeId() != TYPEID_UNIT || uTarget->GetEntry() != step.script->reqvalue )
                         requirement_passed = false;
                     break;
             }
@@ -3523,7 +3523,11 @@ void Map::ScriptsProcess()
                     break;
                 }
 
-                if(source->GetTypeId() != TYPEID_PLAYER) return;
+                if(source->GetTypeId() != TYPEID_PLAYER) 
+                {
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT call for non-player (QuestId: %u), skipping.",step.script->datalong);
+                    break;
+                }
                 Player * user = static_cast<Player*>(source);
 
                 uint32 QuestID = step.script->datalong;
@@ -3531,11 +3535,17 @@ void Map::ScriptsProcess()
                 uint32 increment = step.script->dataint;
 
                 if( increment < 1 ) // We havent anything to increment (it cant be either 0 nor minus value )
+                {
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT increment is lower than 0 for quest: %u",QuestID);
                     break;
+                }
 
                 Quest const* pQuest = sObjectMgr.GetQuestTemplate(QuestID);
                 if( !pQuest )
+                {
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT Quest Template doesnt exist for quest: %u",QuestID);
                     break;
+                }
 
                 uint16 log_slot = user->FindQuestSlot( pQuest->GetQuestId() );
                 if( log_slot > MAX_QUEST_LOG_SIZE)
@@ -3577,7 +3587,8 @@ void Map::ScriptsProcess()
                     summoner->GetPhaseMask(), x==0?summoner->GetPositionX():x, y==0?summoner->GetPositionY():y, z==0?summoner->GetPositionZ():z, o==0?summoner->GetOrientation():o, 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
                 {
                     delete pGameObj;
-                    return;
+                    sLog.outError("SCRIPT_COMMAND_TEMP_SUMMON_OBJECT GameObject could not be created Entry: %u.", step.script->datalong);
+                    break;
                 }
 
                 pGameObj->SetRespawnTime(step.script->datalong2 > 0 ? step.script->datalong2/IN_MILISECONDS : 0);
