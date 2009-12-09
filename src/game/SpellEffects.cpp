@@ -255,7 +255,7 @@ void Spell::EffectResurrectNew(uint32 i)
         return;
 
     uint32 health = damage;
-    if( m_caster->HasAura(54733, 0) )
+    if( m_caster->HasAura(54733, 0) ) // Glyph of Rebirth
         health = pTarget->GetMaxHealth();
 
     uint32 mana = m_spellInfo->EffectMiscValue[i];

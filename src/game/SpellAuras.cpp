@@ -4719,6 +4719,16 @@ void Aura::HandleModMechanicImmunity(bool apply, bool /*Real*/)
 
     m_target->ApplySpellImmune(GetId(),IMMUNITY_MECHANIC,misc,apply);
 
+     // Demonic Circle
+    if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_WARLOCK && GetSpellProto()->SpellIconID == 3221)
+    {
+        if (m_target->GetTypeId() != TYPEID_PLAYER)
+            return;
+        if (apply)
+            if( GameObject* obj = m_target->GetGameObject(48018) )
+                ((Player*)m_target)->TeleportTo(obj->GetMapId(),obj->GetPositionX(),obj->GetPositionY(),obj->GetPositionZ(),obj->GetOrientation());
+    }
+
     // Bestial Wrath
     if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_HUNTER && GetSpellProto()->SpellIconID == 1680)
     {
@@ -5009,6 +5019,22 @@ void Aura::HandleAuraPeriodicDummy(bool apply, bool Real)
             if (spell->SpellIconID == 3041 || spell->SpellIconID == 22 || spell->SpellIconID == 2622)
                 m_modifier.m_amount = 0;
             break;
+        }
+        case SPELLFAMILY_WARLOCK:
+        {
+            switch (spell->Id)
+            {
+                // Demonic Circle
+                case 48018:
+                {
+                    if( !apply )
+                        m_target->RemoveGameObject(spell->Id, true);
+
+                    SendFakeAuraUpdate(62388,apply);
+                    break;
+                }
+                break;
+            }
         }
     }
 
@@ -7846,6 +7872,24 @@ void Aura::PeriodicDummyTick()
             }
             break;
         }
+        case SPELLFAMILY_WARLOCK:
+            switch (spell->Id)
+            {
+                // Demonic Circle
+                case 48018:
+                {
+                    GameObject* obj = m_target->GetGameObject(spell->Id);
+                    if (!obj) return;
+                    // We must take a range of teleport spell, not summon.
+                    const SpellEntry* goToCircleSpell = sSpellStore.LookupEntry(48020);
+                    if (m_target->IsWithinDist(obj,GetSpellMaxRange(sSpellRangeStore.LookupEntry(goToCircleSpell->rangeIndex))))
+                        SendFakeAuraUpdate(62388, true);
+                    else
+                        SendFakeAuraUpdate(62388, false);
+                    break;
+                }
+            }
+            break;
         case SPELLFAMILY_ROGUE:
         {
             switch (spell->Id)
@@ -8323,24 +8367,7 @@ void Aura::HandleAuraModAllCritChance(bool apply, bool Real)
 void Aura::HandleIgnoreAuraState(bool apply, bool Real)
 {
     if (GetId() == 64976 || GetId() == 57499 )
-    {
-        WorldPacket data(SMSG_AURA_UPDATE);
-        data.append(m_target->GetPackGUID());
-        data << uint8(255);
-        data << uint32( apply ? GetId() : 0 );
-
-        if(!apply)
-        {
-            m_target->SendMessageToSet(&data, true);
-            return;
-        }
-
-        data << uint8(19);
-        data << uint8(80);
-        data << uint8(1);
-        data << uint8(0);
-        m_target->SendMessageToSet(&data, true);
-    }
+        SendFakeAuraUpdate(GetId(), apply);
 }
 
 void Aura::HandleAuraInitializeImages(bool apply, bool Real)
@@ -8380,4 +8407,34 @@ void Aura::HandleAuraCloneCaster(bool apply, bool Real)
     // Set item visual
     m_target->SetDisplayId(caster->GetDisplayId());
     m_target->SetUInt32Value(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE | UNIT_FLAG2_REGENERATE_POWER);
+}
+
+void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply)
+{
+    WorldPacket data(SMSG_AURA_UPDATE);
+    data.append(m_target->GetPackGUID());
+    data << uint8(255);
+    data << uint32(apply ? auraId : 0);
+
+    if(!apply)
+    {
+        m_target->SendMessageToSet(&data, true);
+        return;
+    }
+
+    uint8 auraFlags = GetAuraFlags();
+    data << uint8(auraFlags);
+    data << uint8(GetAuraLevel());
+    data << uint8(m_procCharges ? m_procCharges : m_stackAmount);
+
+    if(!(auraFlags & AFLAG_NOT_CASTER))
+        data << uint8(0);                                   // pguid
+
+    if(auraFlags & AFLAG_DURATION)
+    {
+        data << uint32(GetAuraMaxDuration());
+        data << uint32(GetAuraDuration());
+    }
+
+    m_target->SendMessageToSet(&data, true);
 }
