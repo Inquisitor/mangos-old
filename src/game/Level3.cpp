@@ -139,7 +139,6 @@ bool ChatHandler::HandleReloadAllScriptsCommand(const char*)
     HandleReloadQuestEndScriptsCommand("a");
     HandleReloadQuestStartScriptsCommand("a");
     HandleReloadSpellScriptsCommand("a");
-    HandleReloadGossipScriptsCommand("a");
     SendGlobalSysMessage("DB tables `*_scripts` reloaded.");
     HandleReloadDbScriptStringCommand("a");
     return true;
@@ -272,27 +271,6 @@ bool ChatHandler::HandleReloadGossipMenuOptionCommand(const char*)
     SendGlobalSysMessage("DB table `gossip_menu_option` reloaded.");
     return true;
 }
-
-bool ChatHandler::HandleReloadGossipScriptsCommand(const char* arg)
-{
-    if(sWorld.IsScriptScheduled())
-    {
-        SendSysMessage("DB scripts used currently, please attempt reload later.");
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    if(*arg!='a')
-        sLog.outString( "Re-Loading Scripts from `gossip_scripts`...");
-
-    sObjectMgr.LoadGossipScripts();
-
-    if(*arg!='a')
-        SendGlobalSysMessage("DB table `gossip_scripts` reloaded.");
-
-    return true;
-}
-
 
 bool ChatHandler::HandleReloadGOQuestRelationsCommand(const char*)
 {
