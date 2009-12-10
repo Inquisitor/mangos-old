@@ -12623,7 +12623,12 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
         removedSpells.unique();
         // Remove auras from removedAuras
         for(RemoveSpellList::const_iterator i = removedSpells.begin(); i != removedSpells.end();++i)
-            RemoveSingleSpellAurasFromStack(*i);
+        {
+            if( (*i) == 53817 )
+                RemoveAurasDueToSpell(*i);
+            else
+                RemoveSingleSpellAurasFromStack(*i);
+        }
     }
 }
 
