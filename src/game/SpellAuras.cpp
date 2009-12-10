@@ -8487,7 +8487,7 @@ void Aura::HandleAuraCloneCaster(bool apply, bool Real)
     m_target->SetUInt32Value(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE | UNIT_FLAG2_REGENERATE_POWER);
 }
 
-void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply)
+void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply, Player * pPlayer )
 {
     WorldPacket data(SMSG_AURA_UPDATE);
     data.append(m_target->GetPackGUID());
@@ -8496,14 +8496,17 @@ void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply)
 
     if(!apply)
     {
-        m_target->SendMessageToSet(&data, true);
+        if( pPlayer )
+            pPlayer->SendMessageToSet(&data, true);
+        else
+            m_target->SendMessageToSet(&data, true);
         return;
     }
 
     uint8 auraFlags = GetAuraFlags();
-    data << uint8(auraFlags);
-    data << uint8(GetAuraLevel());
-    data << uint8(m_procCharges ? m_procCharges : m_stackAmount);
+    data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 19 : auraFlags );
+    data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 1 : GetAuraLevel() );
+    data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 0 : (m_procCharges ? m_procCharges : m_stackAmount) );
 
     if(!(auraFlags & AFLAG_NOT_CASTER))
         data << uint8(0);                                   // pguid
@@ -8514,7 +8517,10 @@ void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply)
         data << uint32(GetAuraDuration());
     }
 
-    m_target->SendMessageToSet(&data, true);
+    if( pPlayer )
+        pPlayer->SendMessageToSet(&data, true);
+    else
+        m_target->SendMessageToSet(&data, true);
 }
 
 void Aura::HandleAllowOnlyAbility(bool apply, bool Real)

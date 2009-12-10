@@ -18999,18 +18999,8 @@ void Player::SendInitialPacketsAfterAddToMap()
     SendEnchantmentDurations();                             // must be after add to map
     SendItemDurations();                                    // must be after add to map
 
-    if (HasSpell(64976) || HasSpell(57499) )
-    {
-        WorldPacket data(SMSG_AURA_UPDATE);
-        data.append(GetPackGUID());
-        data << uint8(255);
-        data << uint32( HasSpell(64976) ? 64976 : 57499 );
-        data << uint8(19);
-        data << uint8(80);
-        data << uint8(1);
-        data << uint8(0);
-        SendMessageToSet(&data, true);
-    }
+    if( Aura * pAura = GetAura((HasSpell(64976) ? 64976 : 57499), 0) )
+        pAura->SendFakeAuraUpdate( pAura->GetId(), true, this);
 }
 
 void Player::SendUpdateToOutOfRangeGroupMembers()
