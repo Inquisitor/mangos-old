@@ -1426,8 +1426,6 @@ void Aura::HandleAddModifier(bool apply, bool Real)
             case 57761:    // Fireball!
                 SetAuraCharges(1);
                 break;
-            case 55166:    // Tidal Force
-                SetAuraCharges(0);
             break;
         }
 
@@ -1455,7 +1453,10 @@ void Aura::HandleAddModifier(bool apply, bool Real)
 
         mod->mask = (uint64)ptr[0] | (uint64)ptr[1]<<32;
         mod->mask2= (uint64)ptr[2];
-        mod->charges = m_procCharges;
+
+        // prevent expire spell mods with (charges > 0 && m_stackAmount > 1)
+        // all this spell expected expire not at use but at spell proc event check
+        mod->charges = m_spellProto->StackAmount > 1 ? 0 : m_procCharges;
 
         m_spellmod = mod;
     }
@@ -1508,7 +1509,7 @@ void Aura::HandleAddModifier(bool apply, bool Real)
     if (Group* group = ((Player*)m_target)->GetGroup())
         for(GroupReference *itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
             if (Player* member = itr->getSource())
-                if (member != m_target)
+                if (member != m_target && member->IsInMap(m_target))
                     ReapplyAffectedPassiveAuras(member);
 }
 void Aura::HandleAddTargetTrigger(bool apply, bool /*Real*/)
@@ -2321,121 +2322,118 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
     // AT APPLY
     if(apply)
     {
-        switch(GetId())
+        switch(m_spellProto->SpellFamilyName)
         {
-            case 1515:                                      // Tame beast
-                // FIX_ME: this is 2.0.12 threat effect replaced in 2.1.x by dummy aura, must be checked for correctness
-                if (m_target->CanHaveThreatList())
-                    if (Unit* caster = GetCaster())
-                        m_target->AddThreat(caster, 10.0f, false, GetSpellSchoolMask(GetSpellProto()), GetSpellProto());
-                return;
-            case 13139:                                     // net-o-matic
-                // root to self part of (root_target->charge->root_self sequence
-                if (Unit* caster = GetCaster())
-                    caster->CastSpell(caster, 13138, true, NULL, this);
-                return;
-            case 39850:                                     // Rocket Blast
-                if(roll_chance_i(20))                       // backfire stun
-                    m_target->CastSpell(m_target, 51581, true, NULL, this);
-                return;
-            case 43873:                                     // Headless Horseman Laugh
-                m_target->PlayDistanceSound(11965);
-                return;
-            case 46354:                                     // Blood Elf Illusion
-                if (Unit* caster = GetCaster())
+            case SPELLFAMILY_GENERIC:
+                switch(GetId())
                 {
-                    switch(caster->getGender())
-                    {
-                        case GENDER_FEMALE:
-                            caster->CastSpell(m_target, 46356, true, NULL, this);
-                            break;
-                        case GENDER_MALE:
-                            caster->CastSpell(m_target, 46355, true, NULL, this);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                return;
-            case 39246:
-                {
-                    if (Unit* caster = GetCaster())
-                    {
-                        int32 roll = rand()%100;
-                        if( roll > 20 )
+                    case 1515:                              // Tame beast
+                        // FIX_ME: this is 2.0.12 threat effect replaced in 2.1.x by dummy aura, must be checked for correctness
+                        if (m_target->CanHaveThreatList())
+                            if (Unit* caster = GetCaster())
+                                m_target->AddThreat(caster, 10.0f, false, GetSpellSchoolMask(GetSpellProto()), GetSpellProto());
+                        return;
+                    case 13139:                             // net-o-matic
+                        // root to self part of (root_target->charge->root_self sequence
+                        if (Unit* caster = GetCaster())
+                            caster->CastSpell(caster, 13138, true, NULL, this);
+                        return;
+                    case 39850:                             // Rocket Blast
+                        if(roll_chance_i(20))               // backfire stun
+                            m_target->CastSpell(m_target, 51581, true, NULL, this);
+                        return;
+                    case 43873:                             // Headless Horseman Laugh
+                        m_target->PlayDistanceSound(11965);
+                        return;
+                    case 46354:                             // Blood Elf Illusion
+                        if (Unit* caster = GetCaster())
                         {
-                            for(uint32 x =0; x < (rand()%2 > 0 ? 2 : 3); ++x)
-                                caster->SummonCreature(rand()%2 > 0 ? 22482 : 22483, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
-                        }
-                        else 
-                            caster->SummonCreature(22038, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
-                    }
-                    return;
-                }
-            case 55198:                                     // Tidal Force
-                m_target->CastSpell(m_target, 55166, true);
-                if (Aura *aur = m_target->GetAura(55166, 0))
-                    aur->SetStackAmount(3);
-                return;
-            case 46699:                                     // Requires No Ammo
-                if(m_target->GetTypeId() == TYPEID_PLAYER)
-                    ((Player*)m_target)->RemoveAmmo();      // not use ammo and not allow use
-                return;
-            case 45611:
-                {
-                    if (Unit* caster = GetCaster())
-                    {
-                        if( caster->GetTypeId() == TYPEID_PLAYER && m_target->GetEntry() == 25316 && (m_target->GetHealth() * 100 < m_target->GetMaxHealth() * 35) )
-                        {
-                            m_target->SetVisibility(VISIBILITY_OFF);
-                            m_target->DealDamage(m_target, m_target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                            caster->CastSpell( caster, 45626, true );
-                        }
-                    }
-                }
-                case 59579:
-                {                    
-                    CellPair pair(MaNGOS::ComputeCellPair( m_target->GetPositionX(), m_target->GetPositionY() ) );
-                    Cell cell(pair);
-                    cell.data.Part.reserved = ALL_DISTRICT;
-                    cell.SetNoCreate();
-
-                    std::list<Creature*> creatureList;
-                    std::vector<Creature*> creatureVector;
-
-                    MaNGOS::AnyUnitInObjectRangeCheck go_check(m_target, 15); // 25 yards check
-                    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(m_target, creatureList, go_check);
-                    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-
-                    CellLock<GridReadGuard> cell_lock(cell, pair);
-                    // Get Creatures
-                    cell_lock->Visit(cell_lock, go_visit, *(m_target->GetMap()));
-
-                    if (!creatureList.empty())
-                    {
-                        for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
-                        {
-                            if( (*itr)->isAlive() && (*itr)->GetTypeId() != TYPEID_PLAYER && ( (*itr)->GetEntry() == 31142 || (*itr)->GetEntry() == 31147 || (*itr)->GetEntry() == 31205 ) )
+                            switch(caster->getGender())
                             {
-                                m_target->CastSpell( (*itr), 59580, true );
-                                if( m_target->GetOwner() )
+                                case GENDER_FEMALE:
+                                    caster->CastSpell(m_target, 46356, true, NULL, this);
+                                    break;
+                                case GENDER_MALE:
+                                    caster->CastSpell(m_target, 46355, true, NULL, this);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        return;
+                    case 46699:                                     // Requires No Ammo
+                        if(m_target->GetTypeId() == TYPEID_PLAYER)
+                            ((Player*)m_target)->RemoveAmmo();      // not use ammo and not allow use
+                        return;
+
+                    case 39246:
+                    {
+                        if (Unit* caster = GetCaster())
+                        {
+                            int32 roll = rand()%100;
+                            if( roll > 20 )
+                            {
+                                for(uint32 x =0; x < (rand()%2 > 0 ? 2 : 3); ++x)
+                                    caster->SummonCreature(rand()%2 > 0 ? 22482 : 22483, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
+                            }
+                            else 
+                                caster->SummonCreature(22038, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
+                        }
+                        return;
+                    }
+                    case 45611:
+                    {
+                        if (Unit* caster = GetCaster())
+                        {
+                            if( caster->GetTypeId() == TYPEID_PLAYER && m_target->GetEntry() == 25316 && (m_target->GetHealth() * 100 < m_target->GetMaxHealth() * 35) )
+                            {
+                                m_target->SetVisibility(VISIBILITY_OFF);
+                                m_target->DealDamage(m_target, m_target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                                caster->CastSpell( caster, 45626, true );
+                            }
+                        }
+                    }
+                    case 59579:
+                    {                    
+                        CellPair pair(MaNGOS::ComputeCellPair( m_target->GetPositionX(), m_target->GetPositionY() ) );
+                        Cell cell(pair);
+                        cell.data.Part.reserved = ALL_DISTRICT;
+                        cell.SetNoCreate();
+
+                        std::list<Creature*> creatureList;
+                        std::vector<Creature*> creatureVector;
+
+                        MaNGOS::AnyUnitInObjectRangeCheck go_check(m_target, 15); // 25 yards check
+                        MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(m_target, creatureList, go_check);
+                        TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+                        CellLock<GridReadGuard> cell_lock(cell, pair);
+                        // Get Creatures
+                        cell_lock->Visit(cell_lock, go_visit, *(m_target->GetMap()));
+
+                        if (!creatureList.empty())
+                        {
+                            for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+                            {
+                                if( (*itr)->isAlive() && (*itr)->GetTypeId() != TYPEID_PLAYER && ( (*itr)->GetEntry() == 31142 || (*itr)->GetEntry() == 31147 || (*itr)->GetEntry() == 31205 ) )
                                 {
-                                    switch( (*itr)->GetEntry() )
+                                    m_target->CastSpell( (*itr), 59580, true );
+                                    if( m_target->GetOwner() )
                                     {
-                                        case 31142: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 59591, true); break;
-                                        case 31147: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 60042, true); break;
-                                        case 31205: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 60040, true); break;
+                                        switch( (*itr)->GetEntry() )
+                                        {
+                                            case 31142: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 59591, true); break;
+                                            case 31147: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 60042, true); break;
+                                            case 31205: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 60040, true); break;
+                                        }
                                     }
                                 }
                             }
                         }
+                        return;
                     }
-                    return;
                 }
-        }
-
-        switch(m_spellProto->SpellFamilyName)
-        {
+                break;
             case SPELLFAMILY_WARRIOR:
                 // Overpower
                 if(m_spellProto->SpellFamilyFlags & UI64LIT(0x0000000000000004))
@@ -2472,8 +2470,18 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 }
                 break;
             case SPELLFAMILY_SHAMAN:
+                // Tidal Force
+                if (GetId() == 55198)
+                {
+                    // apply max stack bufs
+                    SpellEntry const* buffEntry = sSpellStore.LookupEntry(55166);
+                    if (!buffEntry)
+                        return;
+                    for(int k = 0; k < buffEntry->StackAmount; ++k)
+                        m_target->CastSpell(m_target, buffEntry, true, NULL, this);
+                }
                 // Earth Shield
-                if ((GetSpellProto()->SpellFamilyFlags & UI64LIT(0x40000000000)))
+                else if ((GetSpellProto()->SpellFamilyFlags & UI64LIT(0x40000000000)))
                 {
                     // prevent double apply bonuses
                     if(m_target->GetTypeId() != TYPEID_PLAYER || !((Player*)m_target)->GetSession()->PlayerLoading())
@@ -3534,6 +3542,22 @@ void Aura::HandleAuraTransform(bool apply, bool Real)
                 }
                 // Murloc costume
                 case 42365: m_target->SetDisplayId(21723); break;
+                // Honor the Dead
+                case 65386:
+                case 65495:
+                {
+                    switch(m_target->getGender())
+                    {
+                        case GENDER_MALE:
+                            m_target->SetDisplayId(29203);  // Chapman
+                            break;
+                        case GENDER_FEMALE:
+                        case GENDER_NONE:
+                            m_target->SetDisplayId(29204);  // Catrina
+                            break;
+                    }
+                    break;
+                }
                 default: break;
             }
         }
@@ -4024,22 +4048,6 @@ void Aura::HandleModFear(bool apply, bool Real)
         return;
 
     m_target->SetFeared(apply, GetCasterGUID(), GetId());
-
-    // Improved Fear
-    if(!apply && m_spellProto->SpellFamilyName == SPELLFAMILY_WARLOCK && m_spellProto->SpellIconID == 98)
-    {
-       Unit* caster = GetCaster();
-       int32 spell_id = 0;
-       if(caster && caster->GetTypeId() == TYPEID_PLAYER)
-       {
-           if(caster->HasAura(53754, 0))
-              spell_id = 60946;
-           else if(caster->HasAura(53759, 0))
-              spell_id = 60947;
-       }
-       if(spell_id)
-          m_target->CastSpell(m_target, spell_id, false);
-    }
 }
 
 void Aura::HandleFeignDeath(bool apply, bool Real)
@@ -6349,6 +6357,7 @@ void Aura::HandleShapeshiftBoosts(bool apply)
 
 void Aura::HandleSpellSpecificBoosts(bool apply)
 {
+    bool cast_at_remove = false;                            // if spell must be casted at aura remove
     uint32 spellId1 = 0;
     uint32 spellId2 = 0;
     uint32 spellId3 = 0;
@@ -6356,6 +6365,33 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
 
     switch(GetSpellProto()->SpellFamilyName)
     {
+        case SPELLFAMILY_MAGE:
+        {
+            // Ice Barrier
+            if (m_spellProto->SpellIconID == 32)        
+            {
+                if (!apply && (m_removeMode == AURA_REMOVE_BY_DISPEL || (m_removeMode == AURA_REMOVE_BY_DEFAULT && !GetModifier()->m_amount)))
+                {
+                    Unit::AuraList const& dummyAuras = m_target->GetAurasByType(SPELL_AURA_DUMMY);
+                    for(Unit::AuraList::const_iterator itr = dummyAuras.begin(); itr != dummyAuras.end(); ++itr)
+                    {
+                        // Shattered Barrier
+                        if ((*itr)->GetSpellProto()->SpellIconID == 2945)
+                        {
+                            cast_at_remove = true;
+                            // first rank have 50% chance
+                            if ((*itr)->GetId() != 44745 || roll_chance_i(50))
+                                spellId1 = 55080;
+                            break;
+                        }
+                    }
+                }
+                else
+                    return;
+            }
+            else
+                return;
+        }
         case SPELLFAMILY_WARRIOR:
         {
             if(!apply)
@@ -6377,14 +6413,72 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
             }
             break;
         }
+        case SPELLFAMILY_WARLOCK:
+            // Fear
+            if (m_spellProto->SpellFamilyFlags & UI64LIT(0x0000040000000000))
+            {
+                if(!apply)
+                {
+                    Unit* caster = GetCaster();
+                    if(!caster)
+                        return;
+
+                    Unit::AuraList const& dummyAuras = caster->GetAurasByType(SPELL_AURA_DUMMY);
+                    for(Unit::AuraList::const_iterator itr = dummyAuras.begin(); itr != dummyAuras.end(); ++itr)
+                    {
+                        SpellEntry const* dummyEntry = (*itr)->GetSpellProto();
+                        // Improved Fear
+                        if (dummyEntry->SpellFamilyName == SPELLFAMILY_WARLOCK && dummyEntry->SpellIconID == 98)
+                        {
+                            cast_at_remove = true;
+                            switch((*itr)->GetModifier()->m_amount)
+                            {
+                                // Rank 1
+                                case 0: spellId1 = 60946; break;
+                                // Rank 1
+                                case 1: spellId1 = 60947; break;
+                            }
+                            break;
+                        }
+                    }
+                }
+                else
+                    return;
+            }
+            else
+                return;
+            break;
         case SPELLFAMILY_PRIEST:
+        {
+            // Shadow Word: Pain (need visual check fro skip improvement talent) or Vampiric Touch
+            if (m_spellProto->SpellIconID == 234 && m_spellProto->SpellVisual[0] || m_spellProto->SpellIconID == 2213)
+            {
+                if (!apply && m_removeMode == AURA_REMOVE_BY_DISPEL)
+                {
+                    Unit* caster = GetCaster();
+                    if(!caster)
+                        return;
+
+                    Unit::AuraList const& dummyAuras = caster->GetAurasByType(SPELL_AURA_DUMMY);
+                    for(Unit::AuraList::const_iterator itr = dummyAuras.begin(); itr != dummyAuras.end(); ++itr)
+                    {
+                        // Shadow Affinity
+                        if ((*itr)->GetSpellProto()->SpellFamilyName == SPELLFAMILY_PRIEST 
+                            && (*itr)->GetSpellProto()->SpellIconID == 178)
+                        {
+                            // custom cast code
+                            int32 basepoints0 = (*itr)->GetModifier()->m_amount * caster->GetCreateMana() / 100;
+                            caster->CastCustomSpell(caster, 64103, &basepoints0, NULL, NULL, true, NULL, this);
+                            return;
+                        }
+                    }
+                }
+                else
+                    return;
+            }
+
             switch(GetId())
             {
-                // Dispersion mana reg and immunity
-                case 47585:
-                    spellId1 = 60069;                       // Dispersion
-                    spellId2 = 63230;                       // Dispersion
-                    break;
                 // Abolish Disease (remove 1 more poison effect with Body and Soul)
                 case 552:
                 {
@@ -6411,10 +6505,16 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
                         spellId1 = 64134;                   // Body and Soul (periodic dispel effect)
                     break;
                 }
+                // Dispersion mana reg and immunity
+                case 47585:
+                    spellId1 = 60069;                       // Dispersion
+                    spellId2 = 63230;                       // Dispersion
+                    break;
                 default:
                     return;
             }
             break;
+        }
         case SPELLFAMILY_ROGUE:
             // Sprint (skip non player casted spells by category)
             if (GetSpellProto()->SpellFamilyFlags & UI64LIT(0x0000000000000040) && GetSpellProto()->Category == 44)
@@ -6687,7 +6787,7 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
     // prevent aura deletion, specially in multi-boost case
     SetInUse(true);
 
-    if (apply)
+    if (apply || cast_at_remove)
     {
         if (spellId1)
             m_target->CastSpell(m_target, spellId1, true, NULL, this);
@@ -6995,7 +7095,6 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
     }
     else
     {
-        // Rapture
         if (caster &&
             // Power Word: Shield
             m_spellProto->SpellFamilyName == SPELLFAMILY_PRIEST && m_spellProto->Mechanic == MECHANIC_SHIELD &&
@@ -8318,29 +8417,6 @@ bool Aura::IsCritFromAbilityAura(Unit* caster, uint32& damage)
     return false;
 }
 
-void Aura::HandleAllowOnlyAbility(bool apply, bool Real)
-{
-    if(!Real)
-       return;
-
-    if(apply)
-    {
-       m_target->setAttackTimer(BASE_ATTACK,m_duration);
-       m_target->setAttackTimer(RANGED_ATTACK,m_duration);
-       m_target->setAttackTimer(OFF_ATTACK,m_duration);
-    }
-    else
-    {
-       m_target->resetAttackTimer(BASE_ATTACK);
-       m_target->resetAttackTimer(RANGED_ATTACK);
-       m_target->resetAttackTimer(OFF_ATTACK);
-    }
-
-    m_target->UpdateDamagePhysical(BASE_ATTACK);
-    m_target->UpdateDamagePhysical(RANGED_ATTACK);
-    m_target->UpdateDamagePhysical(OFF_ATTACK);
-}
-
 void Aura::HandleModTargetArmorPct(bool apply, bool Real)
 {
     if(m_target->GetTypeId() != TYPEID_PLAYER)
@@ -8440,3 +8516,27 @@ void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply)
 
     m_target->SendMessageToSet(&data, true);
 }
+
+void Aura::HandleAllowOnlyAbility(bool apply, bool Real)
+{
+    if(!Real)
+       return;
+
+    if(apply)
+    {
+       m_target->setAttackTimer(BASE_ATTACK,m_duration);
+       m_target->setAttackTimer(RANGED_ATTACK,m_duration);
+       m_target->setAttackTimer(OFF_ATTACK,m_duration);
+    }
+    else
+    {
+       m_target->resetAttackTimer(BASE_ATTACK);
+       m_target->resetAttackTimer(RANGED_ATTACK);
+       m_target->resetAttackTimer(OFF_ATTACK);
+    }
+
+    m_target->UpdateDamagePhysical(BASE_ATTACK);
+    m_target->UpdateDamagePhysical(RANGED_ATTACK);
+    m_target->UpdateDamagePhysical(OFF_ATTACK);
+}
+
