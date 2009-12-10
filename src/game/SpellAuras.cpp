@@ -1490,6 +1490,8 @@ void Aura::HandleAddModifier(bool apply, bool Real)
             return;
 
         m_target->CastSpell(m_target, activeAuraId, true);
+        if( !apply )
+            m_target->RemoveAurasDueToSpell(64364);
     }
 
     // re-apply talents/passives/area auras applied to pet (it affected by player spellmods)
