@@ -218,6 +218,14 @@ bool ChatHandler::HandleCharacterDeleteCommand(const char* args)
     return true;
 }
 
+/// Close RA connection
+bool ChatHandler::HandleQuitCommand(const char* /*args*/)
+{
+    // processed in RASocket
+    SendSysMessage(LANG_QUIT_WRONG_USE_ERROR);
+    return true;
+}
+
 /// Exit the realm
 bool ChatHandler::HandleServerExitCommand(const char* /*args*/)
 {
