@@ -8052,6 +8052,8 @@ void Spell::EffectRedirectThreat(uint32 /*i*/)
 {
     if(unitTarget)
     {
+        m_caster->SetThreatRedirectionTarget(unitTarget->GetGUID(), (uint32)damage);
+
         // Tricks of trade hacky buff applying (15% damage increase)
         if( m_spellInfo->Id == 57934 )
             unitTarget->CastSpell(unitTarget, 57933, true);
