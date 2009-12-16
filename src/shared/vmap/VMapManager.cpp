@@ -476,11 +476,11 @@ namespace VMAP
         {
             Vector3 pPos = convertPositionToInternalRep(x,y,z);
             MapTree* mapTree = iInstanceMapTrees.get(pMapId);
-			height = mapTree->getHeight(pPos,RayLenght);
-			if(!(height < inf()))
-			{
-				height = VMAP_INVALID_HEIGHT_VALUE;         //no height
-			}
+            height = mapTree->getHeight(pPos,RayLenght);
+            if(!(height < inf()))
+            {
+                height = VMAP_INVALID_HEIGHT_VALUE;         //no height
+            }
 #ifdef _VMAP_LOG_DEBUG
             Command c = Command();
             c.fillTestHeightCmd(pMapId,Vector3(x,y,z),height);

@@ -3713,8 +3713,8 @@ bool Player::resetTalents(bool no_cost)
 
         for (PlayerTalentMap::iterator itr2 = m_talents[m_activeSpec]->begin(); itr2 != m_talents[m_activeSpec]->end(); ++itr2)
         {
-			removeSpell(itr2->first, !IsPassiveSpell(itr2->first),false);
-			itr2->second->state = PLAYERSPELL_REMOVED;
+            removeSpell(itr2->first, !IsPassiveSpell(itr2->first),false);
+            itr2->second->state = PLAYERSPELL_REMOVED;
         }
     }
 
@@ -15063,9 +15063,9 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
         sLog.outError("Player %s(GUID: %u) has SpecCount = %u and ActiveSpec = %u.", GetName(), GetGUIDLow(), m_specsCount, m_activeSpec);
     }
  
-	_LoadTalents(holder->GetResult(PLAYER_LOGIN_QUERY_LOADTALENTS));
-	
-	_LoadGlyphs(holder->GetResult(PLAYER_LOGIN_QUERY_LOADGLYPHS));
+    _LoadTalents(holder->GetResult(PLAYER_LOGIN_QUERY_LOADTALENTS));
+    
+    _LoadGlyphs(holder->GetResult(PLAYER_LOGIN_QUERY_LOADGLYPHS));
     _LoadAuras(holder->GetResult(PLAYER_LOGIN_QUERY_LOADAURAS), time_diff);
     _LoadGlyphAuras();
 
@@ -16296,7 +16296,7 @@ void Player::SaveToDB()
 
     ss << m_taxi.SaveTaxiDestinationsToString() << "', ";
     ss << "'0', ";                                           // arena_pending_points
-	
+    
     ss << uint32(m_specsCount);
     ss << ", ";
     ss << uint32(m_activeSpec);
