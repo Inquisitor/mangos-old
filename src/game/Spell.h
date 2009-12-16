@@ -305,6 +305,7 @@ class Spell
         void EffectPlayerPull(uint32 i);
         void EffectDispelMechanic(uint32 i);
         void EffectSummonDeadPet(uint32 i);
+        void EffectSummonAllTotems(uint32 i);
         void EffectDestroyAllTotems(uint32 i);
         void EffectDurabilityDamage(uint32 i);
         void EffectSkill(uint32 i);
@@ -331,6 +332,7 @@ class Spell
         void EffectPlayMusic(uint32 i);
         void EffectSpecCount(uint32 i);
         void EffectActivateSpec(uint32 i);
+        void EffectRedirectThreat(uint32 i);
 
         Spell( Unit* Caster, SpellEntry const *info, bool triggered, uint64 originalCasterGUID = 0, Spell** triggeringContainer = NULL );
         ~Spell();

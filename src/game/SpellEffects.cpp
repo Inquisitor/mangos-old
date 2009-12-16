@@ -160,7 +160,7 @@ pEffect SpellEffects[TOTAL_SPELL_EFFECTS]=
     &Spell::EffectSelfResurrect,                            // 94 SPELL_EFFECT_SELF_RESURRECT
     &Spell::EffectSkinning,                                 // 95 SPELL_EFFECT_SKINNING
     &Spell::EffectCharge,                                   // 96 SPELL_EFFECT_CHARGE
-    &Spell::EffectUnused,                                   // 97 SPELL_EFFECT_97
+    &Spell::EffectSummonAllTotems,                          // 97 SPELL_EFFECT_SUMMON_ALL_TOTEMS
     &Spell::EffectKnockBack,                                // 98 SPELL_EFFECT_KNOCK_BACK
     &Spell::EffectDisEnchant,                               // 99 SPELL_EFFECT_DISENCHANT
     &Spell::EffectInebriate,                                //100 SPELL_EFFECT_INEBRIATE
@@ -193,7 +193,7 @@ pEffect SpellEffects[TOTAL_SPELL_EFFECTS]=
     &Spell::EffectProspecting,                              //127 SPELL_EFFECT_PROSPECTING              Prospecting spell
     &Spell::EffectApplyAreaAura,                            //128 SPELL_EFFECT_APPLY_AREA_AURA_FRIEND
     &Spell::EffectApplyAreaAura,                            //129 SPELL_EFFECT_APPLY_AREA_AURA_ENEMY
-    &Spell::EffectNULL,                                     //130 SPELL_EFFECT_REDIRECT_THREAT
+    &Spell::EffectRedirectThreat,                           //130 SPELL_EFFECT_REDIRECT_THREAT
     &Spell::EffectUnused,                                   //131 SPELL_EFFECT_131                      used in some test spells
     &Spell::EffectPlayMusic,                                //132 SPELL_EFFECT_PLAY_MUSIC               sound id in misc value (SoundEntries.dbc)
     &Spell::EffectUnlearnSpecialization,                    //133 SPELL_EFFECT_UNLEARN_SPECIALIZATION   unlearn profession specialization
@@ -7576,6 +7576,31 @@ void Spell::EffectSummonDeadPet(uint32 /*i*/)
     pet->SavePetToDB(PET_SAVE_AS_CURRENT);
 }
 
+void Spell::EffectSummonAllTotems(uint32 i)
+{
+    if(m_caster->GetTypeId() != TYPEID_PLAYER)
+        return;
+
+    switch(m_spellInfo->Id)
+    {
+        case 66842:         // Call of the Elements
+        case 66843:         // Call of the Ancestors
+        case 66844:         // Call of the Spirits
+        {
+            for(int32 slot = 0; slot != MAX_TOTEM; ++slot)
+            {
+                uint8 button = m_spellInfo->EffectMiscValue[i]+slot+132;
+                uint32 spell_id = ((Player*)m_caster)->GetActionByActionButton(button);
+                if(spell_id)
+                    m_caster->CastSpell(unitTarget,spell_id,true);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 void Spell::EffectDestroyAllTotems(uint32 /*i*/)
 {
     int32 mana = 0;
@@ -8067,4 +8092,16 @@ void Spell::EffectActivateSpec(uint32 /*eff_idx*/)
         return;
 
     ((Player*)unitTarget)->ActivateSpec(damage-1);  // damage is 1 or 2, spec is 0 or 1
+}
+
+void Spell::EffectRedirectThreat(uint32 /*i*/)
+{
+    if(unitTarget)
+    {
+        m_caster->SetThreatRedirectionTarget(unitTarget->GetGUID(), (uint32)damage);
+
+        // Tricks of trade hacky buff applying (15% damage increase)
+        if( m_spellInfo->Id == 57934 )
+            unitTarget->CastSpell(unitTarget, 57933, true);
+    }
 }
