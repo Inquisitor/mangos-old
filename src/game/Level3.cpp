@@ -6326,37 +6326,3 @@ bool ChatHandler::HandleModifyGenderCommand(const char *args)
 
     return true;
 }
-/*
-bool ChatHandler::HandleCharacterAddTalentPoint(const char* args)
-{
-    if (!*args)
-        return false;
-
-    Player *chr = getSelectedPlayer();
-    if (chr == NULL)
-    {
-        SendSysMessage(LANG_NO_CHAR_SELECTED);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    uint32 points = atoi((char*)args);
-    chr->AddQuestRewardTalentCount(points);
-    chr->InitTalentForLevel();
-
-    return true;
-}
-
-bool ChatHandler::HandleCharacterGetTalentsCount(const char* args)
-{
-    Player *chr = getSelectedPlayer();
-    if (chr == NULL)
-    {
-        SendSysMessage(LANG_NO_CHAR_SELECTED);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    PSendSysMessage("Player %s has %i talents.", chr->GetName(), chr->CalculateTalentsPoints() );
-    return true;
-}*/

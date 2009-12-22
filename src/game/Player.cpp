@@ -21530,16 +21530,10 @@ void Player::ActivateSpec(uint8 spec)
     if(GetSpecsCount() != MAX_TALENT_SPECS)
         return;
 
- /*   if (GetMap()->IsBattleGround() && !HasAura(44521)) // In BattleGround with no Preparation buff
-        return;
-*/
     _SaveActions();
     
     UnsummonPetTemporaryIfAny();
- /*   ClearComboPointHolders();
-    ClearAllReactives();
-    UnsummonAllTotems();
-   */ 
+
     uint32 const* talentTabIds = GetTalentTabPages(getClass());
     
     for(uint8 i = 0; i < 3; ++i)
@@ -21562,11 +21556,6 @@ void Player::ActivateSpec(uint8 spec)
                 if(talentInfo->RankID[rank] != 0 && HasTalent(talentInfo->RankID[rank], m_activeSpec))
                 {
                     removeSpell(talentInfo->RankID[rank],true,false);
-                   /* if (const SpellEntry *_spellEntry = sSpellStore.LookupEntry(talentInfo->RankID[rank]))
-                        for (uint8 i = 0; i < 3; ++i)                  // search through the SpellEntry for valid trigger spells
-                            if (_spellEntry->EffectTriggerSpell[i] > 0 && _spellEntry->Effect[i] == SPELL_EFFECT_LEARN_SPELL)
-                                removeSpell(_spellEntry->EffectTriggerSpell[i], true); // and remove any spells that the talent teaches
-                    */
                 }
             }
         }
