@@ -6326,7 +6326,7 @@ bool ChatHandler::HandleModifyGenderCommand(const char *args)
 
     return true;
 }
-
+/*
 bool ChatHandler::HandleCharacterAddTalentPoint(const char* args)
 {
     if (!*args)
@@ -6359,4 +6359,4 @@ bool ChatHandler::HandleCharacterGetTalentsCount(const char* args)
 
     PSendSysMessage("Player %s has %i talents.", chr->GetName(), chr->CalculateTalentsPoints() );
     return true;
-}
+}*/
