@@ -338,6 +338,7 @@ bool IsSingleFromSpellSpecificPerTargetPerCaster(SpellSpecific spellSpec1,SpellS
         case SPELL_AURA:
         case SPELL_STING:
         case SPELL_CURSE:
+        case SPELL_ASPECT:
         case SPELL_POSITIVE_SHOUT:
         case SPELL_JUDGEMENT:
         case SPELL_HAND:
@@ -355,6 +356,7 @@ bool IsSingleFromSpellSpecificSpellRanksPerTarget(SpellSpecific spellSpec1,Spell
         case SPELL_BLESSING:
         case SPELL_AURA:
         case SPELL_CURSE:
+        case SPELL_ASPECT:
         case SPELL_HAND:
             return spellSpec1==spellSpec2;
         default:
@@ -368,7 +370,6 @@ bool IsSingleFromSpellSpecificPerTarget(SpellSpecific spellSpec1,SpellSpecific s
     switch(spellSpec1)
     {
         case SPELL_SEAL:
-        case SPELL_ASPECT:
         case SPELL_TRACKER:
         case SPELL_WARLOCK_ARMOR:
         case SPELL_MAGE_ARMOR:
@@ -424,6 +425,39 @@ bool IsPositiveTarget(uint32 targetA, uint32 targetB)
     if (targetB)
         return IsPositiveTarget(targetB, 0);
     return true;
+}
+
+bool IsExplicitPositiveTarget(uint32 targetA)
+{
+    // positive targets that in target selection code expect target in m_targers, so not that auto-select target by spell data by m_caster and etc
+    switch(targetA)
+    {
+        case TARGET_SINGLE_FRIEND:
+        case TARGET_SINGLE_PARTY:
+        case TARGET_CHAIN_HEAL:
+        case TARGET_SINGLE_FRIEND_2:
+        case TARGET_AREAEFFECT_PARTY_AND_CLASS:
+        case TARGET_SELF2:
+            return true;
+        default:
+            break;
+    }
+    return false;
+}
+
+bool IsExplicitNegativeTarget(uint32 targetA)
+{
+    // non-positive targets that in target selection code expect target in m_targers, so not that auto-select target by spell data by m_caster and etc
+    switch(targetA)
+    {
+        case TARGET_CHAIN_DAMAGE:
+        case TARGET_CURRENT_ENEMY_COORDINATES:
+        case TARGET_SINGLE_ENEMY:
+            return true;
+        default:
+            break;
+    }
+    return false;
 }
 
 bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
@@ -507,12 +541,11 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
                             break;
                     }
                 }   break;
-                case SPELL_AURA_MOD_DAMAGE_DONE:            // dependent from bas point sign (negative -> negative)
+                case SPELL_AURA_MOD_DAMAGE_DONE:            // dependent from base point sign (negative -> negative)
                 case SPELL_AURA_MOD_STAT:
                 case SPELL_AURA_MOD_SKILL:
                 case SPELL_AURA_MOD_HEALING_PCT:
                 case SPELL_AURA_MOD_HEALING_DONE:
-                case SPELL_AURA_MOD_DAMAGE_PERCENT_DONE:
                     if(spellproto->CalculateSimpleValue(effIndex) < 0)
                         return false;
                     break;
@@ -521,8 +554,10 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
                         return false;
                     break;
                 case SPELL_AURA_MOD_SPELL_CRIT_CHANCE:
+                case SPELL_AURA_MOD_INCREASE_HEALTH_PERCENT:
+                case SPELL_AURA_MOD_DAMAGE_PERCENT_DONE:
                     if(spellproto->CalculateSimpleValue(effIndex) > 0)
-                        return true;                        // some expected positive spells have SPELL_ATTR_EX_NEGATIVE
+                        return true;                        // some expected positive spells have SPELL_ATTR_EX_NEGATIVE or unclear target modes
                     break;
                 case SPELL_AURA_ADD_TARGET_TRIGGER:
                     return true;
@@ -604,6 +639,8 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
                     // some spells negative
                     switch(spellproto->Id)
                     {
+                        case 802:                           // Mutate Bug, wrongly negative by target modes
+                            return true;
                         case 36900:                         // Soul Split: Evil!
                         case 36901:                         // Soul Split: Good
                         case 36893:                         // Transporter Malfunction (decrease size case)
@@ -855,130 +892,6 @@ void SpellMgr::LoadSpellTargetPositions()
 
     sLog.outString();
     sLog.outString( ">> Loaded %u spell teleport coordinates", count );
-}
-
-void SpellMgr::LoadSpellAffects()
-{
-    mSpellAffectMap.clear();                                // need for reload case
-
-    uint32 count = 0;
-
-    //                                                0      1         2                3                4
-    QueryResult *result = WorldDatabase.Query("SELECT entry, effectId, SpellClassMask0, SpellClassMask1, SpellClassMask2 FROM spell_affect");
-    if( !result )
-    {
-
-        barGoLink bar( 1 );
-
-        bar.step();
-
-        sLog.outString();
-        sLog.outString( ">> Loaded %u spell affect definitions", count );
-        return;
-    }
-
-    barGoLink bar( result->GetRowCount() );
-
-    do
-    {
-        Field *fields = result->Fetch();
-
-        bar.step();
-
-        uint32 entry = fields[0].GetUInt32();
-        uint8 effectId = fields[1].GetUInt8();
-
-        SpellEntry const* spellInfo = sSpellStore.LookupEntry(entry);
-
-        if (!spellInfo)
-        {
-            sLog.outErrorDb("Spell %u listed in `spell_affect` does not exist", entry);
-            continue;
-        }
-
-        if (effectId >= 3)
-        {
-            sLog.outErrorDb("Spell %u listed in `spell_affect` have invalid effect index (%u)", entry,effectId);
-            continue;
-        }
-
-        SpellAffectEntry affect;
-        affect.SpellClassMask[0] = fields[2].GetUInt32();
-        affect.SpellClassMask[1] = fields[3].GetUInt32();
-        affect.SpellClassMask[2] = fields[4].GetUInt32();
-
-        // Spell.dbc have own data
-        uint32 const *ptr = 0;
-        switch (effectId)
-        {
-            case 0: ptr = &spellInfo->EffectSpellClassMaskA[0]; break;
-            case 1: ptr = &spellInfo->EffectSpellClassMaskB[0]; break;
-            case 2: ptr = &spellInfo->EffectSpellClassMaskC[0]; break;
-            default:
-                continue;
-        }
-
-        mSpellAffectMap[(entry<<8) + effectId] = affect;
-
-        ++count;
-    } while( result->NextRow() );
-
-    delete result;
-
-    sLog.outString();
-    sLog.outString( ">> Loaded %u custom spell affect definitions", count );
-
-    for (uint32 id = 0; id < sSpellStore.GetNumRows(); ++id)
-    {
-        SpellEntry const* spellInfo = sSpellStore.LookupEntry(id);
-        if (!spellInfo)
-            continue;
-
-        for (int effectId = 0; effectId < 3; ++effectId)
-        {
-            if( spellInfo->Effect[effectId] != SPELL_EFFECT_APPLY_AURA ||
-                (spellInfo->EffectApplyAuraName[effectId] != SPELL_AURA_ADD_FLAT_MODIFIER &&
-                spellInfo->EffectApplyAuraName[effectId] != SPELL_AURA_ADD_PCT_MODIFIER  &&
-                spellInfo->EffectApplyAuraName[effectId] != SPELL_AURA_ADD_TARGET_TRIGGER) )
-                continue;
-
-            uint32 const *ptr = 0;
-            switch (effectId)
-            {
-                case 0: ptr = &spellInfo->EffectSpellClassMaskA[0]; break;
-                case 1: ptr = &spellInfo->EffectSpellClassMaskB[0]; break;
-                case 2: ptr = &spellInfo->EffectSpellClassMaskC[0]; break;
-                default:
-                    continue;
-            }
-            if(ptr[0] || ptr[1] || ptr[2])
-                continue;
-
-            if(mSpellAffectMap.find((id<<8) + effectId) !=  mSpellAffectMap.end())
-                continue;
-
-            sLog.outErrorDb("Spell %u (%s) misses spell_affect for effect %u",id,spellInfo->SpellName[sWorld.GetDefaultDbcLocale()], effectId);
-        }
-    }
-}
-
-bool SpellMgr::IsAffectedByMod(SpellEntry const *spellInfo, SpellModifier *mod) const
-{
-    // false for spellInfo == NULL
-    if (!spellInfo || !mod)
-        return false;
-
-    SpellEntry const *affect_spell = sSpellStore.LookupEntry(mod->spellId);
-    // False if affect_spell == NULL or spellFamily not equal
-    if (!affect_spell || affect_spell->SpellFamilyName != spellInfo->SpellFamilyName)
-        return false;
-
-    // true
-    if (mod->mask  & spellInfo->SpellFamilyFlags ||
-        mod->mask2 & spellInfo->SpellFamilyFlags2)
-        return true;
-
-    return false;
 }
 
 struct DoSpellProcEvent
