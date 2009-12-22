@@ -989,7 +989,7 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
     // Skip if m_originalCaster not available
     if (!caster)
         return;
-
+/*
     if( caster->GetTypeId() == TYPEID_PLAYER )
     {
         Player * plr = (Player*)caster;
@@ -1003,7 +1003,7 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
             }
         }
     }
-
+*/
     SpellMissInfo missInfo = target->missCondition;
     // Need init unitTarget by default unit (can changed in code on reflect)
     // Or on missInfo!=SPELL_MISS_NONE unitTarget undefined (but need in trigger subsystem)
