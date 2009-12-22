@@ -2315,6 +2315,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         void UpdateAchievementCriteria(AchievementCriteriaTypes type, uint32 miscvalue1=0, uint32 miscvalue2=0, Unit *unit=NULL, uint32 time=0);
         void CompletedAchievement(AchievementEntry const* entry);
 
+        void AddQuestRewardTalentCount(uint8 count) {m_questRewardTalentCount+=count;}
+
         bool HasTitle(uint32 bitIndex);
         bool HasTitle(CharTitlesEntry const* title) { return HasTitle(title->bit_index); }
         void SetTitle(CharTitlesEntry const* title, bool lost = false);

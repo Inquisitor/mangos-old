@@ -125,6 +125,8 @@ ChatCommand * ChatHandler::getCommandTable()
         { "rename",         SEC_GAMEMASTER,     true,  &ChatHandler::HandleCharacterRenameCommand,     "", NULL },
         { "reputation",     SEC_GAMEMASTER,     true,  &ChatHandler::HandleCharacterReputationCommand, "", NULL },
         { "titles",         SEC_GAMEMASTER,     true,  &ChatHandler::HandleCharacterTitlesCommand,     "", NULL },
+        { "addtalent",      SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleCharacterAddTalentPoint,    "", NULL },
+        { "gettalentscount",SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleCharacterGetTalentsCount,   "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
