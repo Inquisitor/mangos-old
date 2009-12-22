@@ -990,6 +990,20 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
     if (!caster)
         return;
 
+    if( caster->GetTypeId() == TYPEID_PLAYER )
+    {
+        Player * plr = (Player*)caster;
+        PlayerSpellMap::iterator itr = plr->GetSpellMap().find(m_spellInfo->Id);
+        if (itr != plr->GetSpellMap().end())
+        {
+            if((*itr).second->disabled == 1)
+            {
+                sLog.outDebug("Player %s casted a spell %u which is disabled in his spellmap",   m_caster->GetName(), m_spellInfo->Id);
+                return;
+            }
+        }
+    }
+
     SpellMissInfo missInfo = target->missCondition;
     // Need init unitTarget by default unit (can changed in code on reflect)
     // Or on missInfo!=SPELL_MISS_NONE unitTarget undefined (but need in trigger subsystem)
