@@ -220,6 +220,9 @@ bool IsPositiveSpell(uint32 spellId);
 bool IsPositiveEffect(uint32 spellId, uint32 effIndex);
 bool IsPositiveTarget(uint32 targetA, uint32 targetB);
 
+bool IsExplicitPositiveTarget(uint32 targetA);
+bool IsExplicitNegativeTarget(uint32 targetA);
+
 bool IsSingleTargetSpell(SpellEntry const *spellInfo);
 bool IsSingleTargetSpells(SpellEntry const *spellInfo1, SpellEntry const *spellInfo2);
 
@@ -744,17 +747,6 @@ class SpellMgr
 
     // Accessors (const or static functions)
     public:
-        // Spell affects
-        SpellAffectEntry const*GetSpellAffect(uint32 spellId, uint8 effectId) const
-        {
-            SpellAffectMap::const_iterator itr = mSpellAffectMap.find((spellId<<8) + effectId);
-            if( itr != mSpellAffectMap.end( ) )
-                return &itr->second;
-            return 0;
-        }
-
-        bool IsAffectedByMod(SpellEntry const *spellInfo, SpellModifier *mod) const;
-
         SpellElixirMap const& GetSpellElixirMap() const { return mSpellElixirs; }
 
         uint32 GetSpellElixirMask(uint32 spellid) const
@@ -1023,7 +1015,6 @@ class SpellMgr
         void LoadSpellLearnSkills();
         void LoadSpellLearnSpells();
         void LoadSpellScriptTarget();
-        void LoadSpellAffects();
         void LoadSpellElixirs();
         void LoadSpellProcEvents();
         void LoadSpellProcItemEnchant();
