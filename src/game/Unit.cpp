@@ -5664,22 +5664,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 30294;
                     break;
                 }
-                // Improved Fear
-                case 53754:
-                {
-                    if(!pVictim || !pVictim->isAlive())
-                        return false;
-                    pVictim->CastSpell(pVictim, 60946,true, castItem, triggeredByAura);
-                    return true;
-                }
-                // Improved Fear (Rank 2)
-                case 53759:
-                {
-                    if(!pVictim || !pVictim->isAlive())
-                        return false;
-                    pVictim->CastSpell(pVictim, 60947,true, castItem, triggeredByAura);
-                    return true;
-                }
                 // Shadowflame (Voidheart Raiment set bonus)
                 case 37377:
                 {
