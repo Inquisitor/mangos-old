@@ -7328,12 +7328,6 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                     if( GetTypeId() != TYPEID_PLAYER || pVictim->GetEntry() != 19457)
                         return false;
                 }
-                // Glyph of Seal of Command
-                case 54925:
-                {
-                    basepoints[0] = int32(GetCreateMana() * 8 / 100);
-                    break;
-                }
             }
             break;
         case SPELLFAMILY_MAGE:
@@ -7531,6 +7525,12 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
             break;
         case SPELLFAMILY_PALADIN:
         {
+            // Glyph of Seal of Command
+            if( auraSpellInfo->Id == 54925 )
+            {
+                basepoints[0] = GetCreateMana() * 8 / 100;
+                break;
+            }
             /*
             // Blessed Life
             if (auraSpellInfo->SpellIconID == 2137)
