@@ -6123,6 +6123,19 @@ void Spell::EffectScriptEffect(uint32 effIndex)
 
                     break;
                 }
+                // Vigilance
+                case 50725:
+                {
+                    if(!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    // Remove Taunt cooldown
+                    if( Aura * pAur = unitTarget->GetAura(50720, 0) )
+                        if( pAur->GetCaster() && pAur->GetCaster()->GetTypeId() == TYPEID_PLAYER )
+                            ((Player*)pAur->GetCaster())->RemoveSpellCooldown(355, true);
+
+                    return;
+                }
                 // Emblazon Runeblade
                 case 51770:
                 {
