@@ -391,7 +391,7 @@ void Unit::RemoveSpellbyDamageTaken(AuraType auraType, uint32 damage, Unit *pCas
     // The chance to dispel an aura depends on the damage taken with respect to the casters level.
     uint32 max_dmg = getLevel() > 8 ? 25 * getLevel() - 150 : 50;
 
-    // Glyph of Fear and Glyph of Entangling Roots bonus
+    // Glyph of Fear and Glyph of Entangling Roots and Glyph of Frost Nova bonus
     if (pCaster && pCaster->GetTypeId() == TYPEID_PLAYER)
     {
         AuraList const& m_OverrideClassScript = pCaster->GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
@@ -7778,6 +7778,27 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
     // dummy basepoints or other customs
     switch(trigger_spell_id)
     {
+        // Auras which should proc on area aura source (caster in this case):
+        // Turn the Tables
+        case 52914:
+        case 52915:
+        case 52910:
+        // Honor Among Thieves
+        case 52916:
+        {
+            target = triggeredByAura->GetCaster();
+            if(!target)
+                return false;
+
+            if( cooldown && GetTypeId() == TYPEID_PLAYER && ((Player*)target)->HasSpellCooldown(trigger_spell_id))
+                return false;
+
+            target->CastSpell(target,trigger_spell_id,true,castItem,triggeredByAura);
+
+            if( cooldown && GetTypeId() == TYPEID_PLAYER )
+                ((Player*)this)->AddSpellCooldown(trigger_spell_id,0,time(NULL) + cooldown);
+            return true;
+        }
         // Cast positive spell on enemy target
         case 7099:  // Curse of Mending
         case 39647: // Curse of Mending
