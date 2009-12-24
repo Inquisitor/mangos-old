@@ -1766,8 +1766,8 @@ void Spell::EffectDummy(uint32 i)
                 }
                 case 48610: // Q:Shredder Repair
                 {
-                    if( m_caster->GetVehicleGUID() != 0 )
-                        m_caster->ExitVehicle();
+                    if(m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->isVehicle())
+                        ((Vehicle*)m_caster)->RemoveAllPassengers();
 
                     return;
                 }
