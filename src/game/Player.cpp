@@ -3730,6 +3730,10 @@ bool Player::resetTalents(bool no_cost)
                 if (itrFirstId == talentInfo->RankID[j])
                 {
                     removeSpell(itr->first,!IsPassiveSpell(itr->first),false);
+                    if (const SpellEntry *_spellEntry = sSpellStore.LookupEntry(talentInfo->RankID[j]))
+                        for (uint8 i = 0; i < 3; ++i)                  // search through the SpellEntry for valid trigger spells
+                            if (_spellEntry->EffectTriggerSpell[i] > 0 && _spellEntry->Effect[i] == SPELL_EFFECT_LEARN_SPELL)
+                                removeSpell(_spellEntry->EffectTriggerSpell[i], true); // and remove any spells that the talent teaches
                     itr = GetSpellMap().begin();
                     continue;
                 }
@@ -21586,9 +21590,26 @@ void Player::ActivateSpec(uint8 spec)
             // remove all talent ranks, starting at highest rank
             for(int8 rank = MAX_TALENT_RANK-1; rank >= 0; --rank)
             {
-                if(talentInfo->RankID[rank] != 0 && HasTalent(talentInfo->RankID[rank], m_activeSpec))
+                if(talentInfo->RankID[rank] != 0)
                 {
-                    removeSpell(talentInfo->RankID[rank],true,false);
+                    removeSpell(talentInfo->RankID[rank],true );
+                    if (const SpellEntry *_spellEntry = sSpellStore.LookupEntry(talentInfo->RankID[rank]))
+                    {
+                        for (uint8 i = 0; i < 3; ++i)                  // search through the SpellEntry for valid trigger spells
+                        {
+                            if (_spellEntry->EffectTriggerSpell[i] > 0 && _spellEntry->Effect[i] == SPELL_EFFECT_LEARN_SPELL)
+                            {
+                                removeSpell(_spellEntry->EffectTriggerSpell[i], true); // and remove any spells that the talent teaches
+                                PlayerSpellMap::iterator itr = m_spells.find(_spellEntry->EffectTriggerSpell[i]);
+                                if (itr != m_spells.end())
+                                    (*itr).second->state = PLAYERSPELL_REMOVED;
+                            }
+                        }
+
+                        PlayerSpellMap::iterator itr = m_spells.find(_spellEntry->Id);
+                        if (itr != m_spells.end())
+                            (*itr).second->state = PLAYERSPELL_REMOVED;
+                    }
                 }
             }
         }
