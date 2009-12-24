@@ -5507,6 +5507,34 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_PERIODIC_DAMAGE_PERCENT);
                     return true;
                 }
+                // Glyph of Drain Soul 
+                case 58070:
+                {
+                    triggered_spell_id = 58068;
+                    break;
+                }
+                // Glyph of Icy Veins
+                case 56374:
+                {
+                //    pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_HASTE);
+                    pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
+                    AuraList::const_iterator iter, next;
+                    for (iter = m_modAuras[SPELL_AURA_MOD_HASTE].begin(); iter != m_modAuras[SPELL_AURA_MOD_HASTE].end(); iter = next)
+                    {
+                        next = iter;
+                        ++next;
+
+                        if (*iter && !IsPositiveSpell((*iter)->GetId()) )
+                        {
+                            RemoveAurasDueToSpell((*iter)->GetId());
+                            if (!m_modAuras[SPELL_AURA_MOD_HASTE].empty())
+                                next = m_modAuras[SPELL_AURA_MOD_HASTE].begin();
+                            else
+                                return false;
+                        }
+                    }
+                    return true;
+                }
             }
             break;
         }
