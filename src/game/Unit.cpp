@@ -5590,6 +5590,17 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 triggered_spell_id = 58374;
                 break;
             }
+            // Glyph of Devastate
+            if (dummySpell->Id == 58388)
+            {
+                if (!pVictim || !pVictim->isAlive())
+                    return false;
+
+                if (Aura* aur = pVictim->GetAura(58567,0))
+                    aur->modStackAmount(1);
+
+                return true;
+            }
             break;
         }
         case SPELLFAMILY_WARLOCK:
