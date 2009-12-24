@@ -357,7 +357,7 @@ bool Unit::canReachWithAttack(Unit *pVictim) const
     return IsWithinDistInMap(pVictim, reach);
 }
 
-void Unit::RemoveSpellsCausingAura(AuraType auraType)
+void Unit::RemoveSpellsCausingAura(AuraType auraType, bool negative, bool positive)
 {
     if (auraType >= TOTAL_AURAS) return;
     AuraList::const_iterator iter, next;
@@ -366,7 +366,7 @@ void Unit::RemoveSpellsCausingAura(AuraType auraType)
         next = iter;
         ++next;
 
-        if (*iter)
+        if (*iter && ((negative && !(*iter)->IsPositive()) || (positive && (*iter)->IsPositive())) )
         {
             RemoveAurasDueToSpell((*iter)->GetId());
             if (!m_modAuras[auraType].empty())
@@ -5516,23 +5516,9 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 // Glyph of Icy Veins
                 case 56374:
                 {
-                //    pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_HASTE);
+                    pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_HASTE, true, false);
+                    pVictim->RemoveSpellsCausingAura(SPELL_AURA_HASTE_SPELLS, true, false);
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
-                    AuraList::const_iterator iter, next;
-                    for (iter = m_modAuras[SPELL_AURA_MOD_HASTE].begin(); iter != m_modAuras[SPELL_AURA_MOD_HASTE].end(); iter = next)
-                    {
-                        next = iter;
-                        ++next;
-
-                        if (*iter && !IsPositiveSpell((*iter)->GetId()) )
-                        {
-                            RemoveAurasDueToSpell((*iter)->GetId());
-                            if (!m_modAuras[SPELL_AURA_MOD_HASTE].empty())
-                                next = m_modAuras[SPELL_AURA_MOD_HASTE].begin();
-                            else
-                                return false;
-                        }
-                    }
                     return true;
                 }
             }
