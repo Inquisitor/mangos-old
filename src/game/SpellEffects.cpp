@@ -3341,6 +3341,8 @@ void Spell::EffectPowerBurn(uint32 i)
 
     new_damage = int32(new_damage * multiplier);
     m_damage += new_damage;
+
+    unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_FEAR);
 }
 
 void Spell::EffectHeal( uint32 /*i*/ )
