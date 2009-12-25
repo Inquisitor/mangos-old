@@ -2909,6 +2909,13 @@ void Spell::EffectTriggerSpell(uint32 effIndex)
         caster = IsSpellWithCasterSourceTargetsOnly(spellInfo) ? unitTarget : m_caster;
     }
 
+    // Remove spell cooldown (not category) if spell triggering spell with cooldown and same category
+    // Needed by freezing arrow and few other spells
+    if (m_caster->GetTypeId() == TYPEID_PLAYER && m_spellInfo->CategoryRecoveryTime && spellInfo->CategoryRecoveryTime
+        && m_spellInfo->Category == spellInfo->Category)
+        ((Player*)m_caster)->RemoveSpellCooldown(spellInfo->Id);
+
+
     caster->CastSpell(unitTarget,spellInfo,true,NULL,NULL,m_originalCasterGUID);
 }
 
@@ -2928,6 +2935,12 @@ void Spell::EffectTriggerMissileSpell(uint32 effect_idx)
 
     if (m_CastItem)
         DEBUG_LOG("WORLD: cast Item spellId - %i", spellInfo->Id);
+
+    // Remove spell cooldown (not category) if spell triggering spell with cooldown and same category
+    // Needed by freezing arrow and few other spells
+    if (m_caster->GetTypeId() == TYPEID_PLAYER && m_spellInfo->CategoryRecoveryTime && spellInfo->CategoryRecoveryTime
+        && m_spellInfo->Category == spellInfo->Category)
+        ((Player*)m_caster)->RemoveSpellCooldown(spellInfo->Id);
 
     m_caster->CastSpell(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, spellInfo, true, m_CastItem, 0, m_originalCasterGUID);
 }
