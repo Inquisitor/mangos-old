@@ -6623,13 +6623,16 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     if(mainTarget == unitTarget && !m_caster->HasAura(63334))
                         return;
 
-                    // Blood Plague
-                    if(mainTarget->HasAura(55078))
-                        m_caster->CastSpell(unitTarget, 55078, true);
+                    if( unitTarget != m_caster )
+                    {
+                        // Blood Plague
+                        if(mainTarget->HasAura(55078))
+                            m_caster->CastSpell(unitTarget, 55078, true);
 
-                    // Frost Fever
-                    if(mainTarget->HasAura(55095))
-                        m_caster->CastSpell(unitTarget, 55095, true);
+                        // Frost Fever
+                        if(mainTarget->HasAura(55095))
+                            m_caster->CastSpell(unitTarget, 55095, true);
+                    }
 
                     break;
                 }
