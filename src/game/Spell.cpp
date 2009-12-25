@@ -1767,9 +1767,6 @@ void Spell::SetTargetMap(uint32 effIndex,uint32 targetMode,UnitList& TagUnitMap)
                     break;
                 default:
                     FillAreaTargets(TagUnitMap,m_targets.m_destX, m_targets.m_destY,radius,PUSH_DEST_CENTER,SPELL_TARGETS_AOE_DAMAGE);
-
-                    // exclude caster (this can be important if this not original caster)
-                    TagUnitMap.remove(m_caster);
                     break;
             }
             break;
@@ -2564,13 +2561,21 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
         m_caster->RemoveAurasDueToSpell(32612);
     }
 
-    if(m_IsTriggeredSpell)
-        cast(true);
-    else
+    // add non-triggered (with cast time and without)
+    if (!m_IsTriggeredSpell)
     {
+        // add to cast type slot
         m_caster->SetCurrentCastedSpell( this );
+
+        // will show cast bar
         SendSpellStart();
     }
+    // execute triggered without cast time explicitly in call point
+    else if(m_timer == 0)
+        cast(true);
+    // else triggered with cast time will execute execute at next tick or later
+    // without adding to cast type slot
+    // will not show cast bar but will show effects at casting time etc
 }
 
 void Spell::cancel()
@@ -3720,6 +3725,7 @@ void Spell::SendChannelStart(uint32 duration)
     data.append(m_caster->GetPackGUID());
     data << uint32(m_spellInfo->Id);
     data << uint32(duration);
+
     m_caster->SendMessageToSet(&data, true);
 
     m_timer = duration;
