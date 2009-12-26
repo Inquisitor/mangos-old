@@ -10881,6 +10881,8 @@ void Player::RemoveItem( uint8 bag, uint8 slot, bool update )
                     // remove held enchantments, update expertise
                     if ( slot == EQUIPMENT_SLOT_MAINHAND )
                     {
+                        RemoveAura(49152, 0); // Remove Titans Grip 10% damage reduction
+
                         if (pItem->GetItemSuffixFactor())
                         {
                             pItem->ClearEnchantment(PROP_ENCHANTMENT_SLOT_3);
@@ -10897,6 +10899,8 @@ void Player::RemoveItem( uint8 bag, uint8 slot, bool update )
                     }
                     else if( slot == EQUIPMENT_SLOT_OFFHAND )
                     {
+                        RemoveAura(49152, 0); // Remove Titans Grip 10% damage reduction
+
                         UpdateExpertise(OFF_ATTACK);
                         UpdateArmorPenetration();
                     }
@@ -19587,8 +19591,19 @@ void Player::AutoUnequipOffhandIfNeed()
     if(!offItem)
         return;
 
+    if( CanTitanGrip() )
+    {
+        if( offItem->GetProto()->InventoryType == INVTYPE_2HWEAPON )
+            if( !HasAura(49152, 0) )
+                CastSpell(this, 49152, true);
+        else 
+            RemoveAura(49152, 0);
+
+        return;
+    }
+
     // need unequip offhand for 2h-weapon without TitanGrip (in any from hands)
-    if (CanTitanGrip() || (offItem->GetProto()->InventoryType != INVTYPE_2HWEAPON && !IsTwoHandUsed()))
+    if ( (offItem->GetProto()->InventoryType != INVTYPE_2HWEAPON && !IsTwoHandUsed()))
         return;
 
     ItemPosCountVec off_dest;
