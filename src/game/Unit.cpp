@@ -9980,8 +9980,10 @@ bool Unit::IsImmunedToSpell(SpellEntry const* spellInfo)
 
         AuraList const& immuneAuraApply = GetAurasByType(SPELL_AURA_MECHANIC_IMMUNITY_MASK);
         for(AuraList::const_iterator iter = immuneAuraApply.begin(); iter != immuneAuraApply.end(); ++iter)
-            if (((*iter)->GetModifier()->m_miscvalue & (1 << (mechanic-1))) || ((*iter)->GetId() == 46924 && spellInfo->Mechanic & IMMUNE_TO_MOVEMENT_IMPAIRMENT_AND_LOSS_CONTROL_MASK) )
+        {
+            if (((*iter)->GetModifier()->m_miscvalue & (1 << (mechanic-1))) || ((*iter)->GetId() == 46924 && (GetAllSpellMechanicMask(spellInfo) & IMMUNE_TO_MOVEMENT_IMPAIRMENT_AND_LOSS_CONTROL_MASK)) )
                 return true;
+        }
     }
 
     SpellImmuneList const& damageList = m_spellImmune[IMMUNITY_DAMAGE];
