@@ -12350,6 +12350,7 @@ bool InitTriggerAuraData()
     isTriggerAura[SPELL_AURA_MOD_DAMAGE_FROM_CASTER] = true;
     isTriggerAura[SPELL_AURA_MOD_SPELL_CRIT_CHANCE] = true;
     isTriggerAura[SPELL_AURA_ADD_FLAT_MODIFIER] = true;
+    isTriggerAura[SPELL_AURA_ADD_PCT_MODIFIER] = true;
     isTriggerAura[SPELL_AURA_MAELSTROM_WEAPON] = true;
 
     isNonTriggerAura[SPELL_AURA_MOD_POWER_REGEN]=true;
@@ -12532,6 +12533,7 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
             }
             case SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN:
             case SPELL_AURA_ADD_FLAT_MODIFIER:
+            case SPELL_AURA_ADD_PCT_MODIFIER:
             case SPELL_AURA_MANA_SHIELD:
             case SPELL_AURA_OBS_MOD_MANA:
             case SPELL_AURA_DUMMY:
