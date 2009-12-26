@@ -7522,6 +7522,23 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                 if (!(procSpell->SpellFamilyFlags & UI64LIT(0x0000000000000020)))
                     return false;
             }
+            // Improved Aspect of the Hawk check for talent existance for Aspect of Dragonhawk
+            else if( auraSpellInfo->Id == 61846 || auraSpellInfo->Id == 61847 )
+            {
+                bool bFoundTalent = false;
+                AuraList const& talentAuras = GetAurasByType(SPELL_AURA_ADD_FLAT_MODIFIER);
+                for (AuraList::const_iterator i = talentAuras.begin(); i != talentAuras.end(); ++i)
+                {
+                    SpellEntry const * mProto = (*i)->GetSpellProto();
+                    if (mProto->SpellFamilyName == SPELLFAMILY_HUNTER && mProto->SpellIconID == 112 && mProto->activeIconID == 0)
+                    {
+                        bFoundTalent = true;
+                        break;
+                    }
+                }
+                if( !bFoundTalent )
+                    return false;
+            }
             break;
         case SPELLFAMILY_PALADIN:
         {
@@ -7531,22 +7548,6 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                 basepoints[0] = GetCreateMana() * 8 / 100;
                 break;
             }
-            /*
-            // Blessed Life
-            if (auraSpellInfo->SpellIconID == 2137)
-            {
-                switch (auraSpellInfo->Id)
-                {
-                    case 31828:                         // Rank 1
-                    case 31829:                         // Rank 2
-                    case 31830:                         // Rank 3
-                        break;
-                    default:
-                        sLog.outError("Unit::HandleProcTriggerSpell: Spell %u miss posibly Blessed Life", auraSpellInfo->Id);
-                        return false;
-                }
-            }
-            */
             // Healing Discount
             if (auraSpellInfo->Id==37705)
             {
