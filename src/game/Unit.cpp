@@ -1572,7 +1572,6 @@ void Unit::DealMeleeDamage(CalcDamageInfo *damageInfo, bool durabilityLoss)
     // If not miss
     if (!(damageInfo->HitInfo & HITINFO_MISS))
     {
-        this->MonsterSay("DealMeleeDamage", 0,0 );
         // on weapon hit casts
         if(GetTypeId() == TYPEID_PLAYER && pVictim->isAlive())
             ((Player*)this)->CastItemCombatSpell(pVictim, damageInfo->attackType);
