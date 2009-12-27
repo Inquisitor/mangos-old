@@ -449,7 +449,12 @@ void InstanceSaveManager::LoadResetTimes()
                 continue;
             }
 
-            SetResetTimeFor(mapid,difficulty, fields[2].GetUInt64());
+            // update the reset time if the hour in the configs changes
+            uint64 newresettime = (oldresettime / DAY) * DAY + diff;
+            if(oldresettime != newresettime)
+                CharacterDatabase.DirectPExecute("UPDATE instance_reset SET resettime = '"UI64FMTD"' WHERE mapid = '%u' AND difficulty = '%u'", newresettime, mapid, difficulty);
+
+            SetResetTimeFor(mapid,difficulty, newresettime);
         } while(result->NextRow());
         delete result;
     }
@@ -484,7 +489,8 @@ void InstanceSaveManager::LoadResetTimes()
         {
             // assume that expired instances have already been cleaned
             // calculate the next reset time
-            t = (t / DAY) * DAY + period + diff;
+            t = (t / DAY) * DAY;
+            t += ((today - t) / period + 1) * period + diff;
             CharacterDatabase.DirectPExecute("UPDATE instance_reset SET resettime = '"UI64FMTD"' WHERE mapid = '%u' AND difficulty= '%u'", (uint64)t, mapid, difficulty);
         }
 
@@ -543,7 +549,7 @@ void InstanceSaveManager::Update()
         {
             // global reset/warning for a certain map
             time_t resetTime = GetResetTimeFor(event.mapid,event.difficulty);
-            _ResetOrWarnAll(event.mapid, event.difficulty, event.type != 4, (resetTime > now)? resetTime - now : 0);
+            _ResetOrWarnAll(event.mapid, event.difficulty, event.type != 4, resetTime - now)
             if(event.type != 4)
             {
                 // schedule the next warning/reset
