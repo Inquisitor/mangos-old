@@ -468,7 +468,7 @@ void BattleGround::Update(uint32 diff)
                         {
                             if(!first_team)
                             {
-                                 first_team = plr->GetGroup();
+                                first_team = plr->GetGroup();
                                 plr->SetUInt32Value(PLAYER_DUEL_TEAM, 1);
                             }
                             else if(plr->GetGroup() == first_team)
