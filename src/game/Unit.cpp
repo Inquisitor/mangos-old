@@ -6202,6 +6202,11 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
         }
         case SPELLFAMILY_PALADIN:
         {
+            // Safety check for Art of War proccing, it should not be removed by spellfamily mask 1073741824 that are not from Flash of Light
+            if( dummySpell->Id == 53489 || dummySpell->Id == 59578 )
+                if( procSpell->SpellFamilyName == 10 && procSpell->SpellIconID == 13 )
+                    return false;
+
             // Heart of the Crusader
             if (dummySpell->SpellIconID == 237)
             {
