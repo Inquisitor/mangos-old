@@ -1646,6 +1646,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     (spellId_2 == 33891 && spellId_1 == 34123))
                     return false;
 
+                //  Moonfire and Lacarate
+                if ((spellInfo_1->SpellIconID == 225 && spellInfo_2->SpellIconID == 2246) ||
+                    (spellInfo_2->SpellIconID == 225 && spellInfo_1->SpellIconID == 2246))
+                    return false;
+
                 //  Innervate and Glyph of Innervate and some other spells
                 if (spellInfo_1->SpellIconID == 62 && spellInfo_2->SpellIconID == 62)
                     return false;
