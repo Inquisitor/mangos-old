@@ -5561,6 +5561,12 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
                     return true;
                 }
+                // Arcane Blast proc-off only from arcane school and not from self
+                case 36032:
+                {
+                    if(procSpell->EffectTriggerSpell[1] == 36032 || GetSpellSchoolMask(procSpell) != SPELL_SCHOOL_MASK_ARCANE)
+                        return false;
+                }
             }
             break;
         }
