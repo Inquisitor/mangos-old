@@ -6316,6 +6316,13 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
                 cast_at_remove = true;
                 spellId1 = 60242;                           // Darkmoon Card: Illusion
             }
+            // Deathbloom of Loatheb
+            else if( (GetId() == 29865 || GetId() == 55053) && !apply )
+            {
+                cast_at_remove = true;
+                // normal | heroic
+                spellId1 = ((GetId() == 29865) ? 55594 : 55601 );
+            }
             else
                 return;
             break;
