@@ -2688,6 +2688,9 @@ void Spell::EffectDummy(uint32 i)
                 }
 
                 int32 bp = count * m_caster->GetMaxHealth() * m_spellInfo->DmgMultiplier[0] / 100;
+                // Improved Death Strike
+                bp = ((m_caster->HasAura(62908))? bp*1.5 : ((m_caster->HasAura(62905)) ? bp*1.25 : bp) );
+
                 m_caster->CastCustomSpell(m_caster, 45470, &bp, NULL, NULL, true);
                 return;
             }
