@@ -1177,8 +1177,6 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         bool isFrozen() const;
 
-        void RemoveSpellbyDamageTaken(AuraType auraType, uint32 damage, Unit * pCaster);
-
         void InitPossessCreateSpells();
 
         bool isTargetableForAttack(bool inversAlive = false) const;
