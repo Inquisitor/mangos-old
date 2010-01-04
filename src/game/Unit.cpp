@@ -2184,38 +2184,6 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
     }
 
     *absorb = damage - RemainingDamage - *resist;
-
-    if( *absorb > 0 )
-    {
-        for( int i = 1; i < 4; ++i )
-        {
-            if( pVictim->GetDummyAura(44393+i) )
-            {
-                int32 absorbval = (*absorb * (i*5))/100;
-                //int32 dmgApplied = 0;
-
-                SpellEntry *spellInfo = (SpellEntry*)GetSpellStore()->LookupEntry(44413);
-                spellInfo->StackAmount = 100; // Hacky..ye...
-
-                AuraMap const& AurasOn = pVictim->GetAuras();
-                for(AuraMap::const_iterator itr = AurasOn.begin(); itr != AurasOn.end(); ++itr)
-                {
-                    if (itr->second->GetId() == 44413 )
-                    {
-                        //dmgApplied += itr->second->GetBasePoints() * itr->second->GetStackAmount();
-                        if( itr->second->GetModifier()->m_amount > pVictim->GetMaxHealth() * 5 / 100 )
-                            return;
-                    }
-                }
-
-                Aura * Aur = CreateAura(spellInfo, 0, &absorbval, pVictim );
-                if( !Aur )
-                    return;
-
-                pVictim->AddAura( Aur );
-            }
-        }
-    }
 }
 
 void Unit::AttackerStateUpdate (Unit *pVictim, WeaponAttackType attType, bool extra )
