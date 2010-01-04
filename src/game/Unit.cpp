@@ -5790,6 +5790,9 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     if (!procSpell)
                         return false;
 
+                    if (effIndex != 1)
+                        return true;
+
                     Aura* leachAura = pVictim->GetAura(procSpell->Id,0);
                     if (!leachAura)
                         return false;
