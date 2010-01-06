@@ -880,8 +880,24 @@ bool Pet::InitStatsForLevel(uint32 petlevel, Unit* owner)
                 }
                 case 19668: // Shadowfiend
                 {
-                    //6% damage bonus of priest's shadow damage
-                    float val = owner->GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + SPELL_SCHOOL_SHADOW) * 0.06f;
+                    //35.7% damage bonus of priest's shadow damage per hit
+                    float val = owner->GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS + SPELL_SCHOOL_SHADOW) * 0.357f;
+                    if(val < 0)
+                        val = 0;
+
+                    SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, float(petlevel - (petlevel / 4) + val) );
+                    SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, float(petlevel + (petlevel / 4) + val) );
+                    break;
+                }
+                case 29264: // Spirit Wolf
+                {
+                    float ap_bonus = 0.35f;
+
+                    // Glyph of Feral Spirit
+                    if (Aura * aur = owner->GetAura(63271, 0))
+                        ap_bonus += aur->GetModifier()->m_amount / 100.0f;
+
+                    float val = owner->GetTotalAttackPowerValue(BASE_ATTACK) * ap_bonus;
                     if(val < 0)
                         val = 0;
 
