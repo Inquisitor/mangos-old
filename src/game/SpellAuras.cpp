@@ -2535,7 +2535,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             case 28169:                                     // Mutating Injection
             {
                 // Poison Cloud
-                m_target->CastSpell(m_target, 28206, true);  // <- Feanor - is this proper ?
+                m_target->CastSpell(m_target, 28206, true, NULL, this, GetCasterGUID());  // <- Feanor - is this proper ?
                 m_target->CastSpell(m_target, 28240, true, NULL, this);
                 return;
             }
