@@ -8623,6 +8623,7 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
     if(!Real)
         return;
 
+    /*
     Unit* caster = GetCaster();
     if(!caster)
         return;
@@ -8686,6 +8687,7 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
 
         caster->SetCharm(NULL);
     }
+    */
 }
 
 
