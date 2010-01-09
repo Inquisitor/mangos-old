@@ -5614,7 +5614,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 if (effIndex!=0)
                     return true;
 
-                basepoints0 = caster->GetMaxPower(POWER_MANA)* triggerAmount / 100;
+                basepoints0 = caster->GetMaxPower(POWER_MANA)* dummySpell->EffectBasePoints[2] / 100;
                 triggered_spell_id = 18371;
                 break;
             }
