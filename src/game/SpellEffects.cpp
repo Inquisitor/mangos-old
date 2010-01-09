@@ -349,14 +349,8 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                                     case 39090: spellId = 39089; break;
                                     case 39093: spellId = 39092; break;
                                 }
-                                Aura *aur = m_caster->GetAura(spellId, 0);
-                                if (!aur)
-                                {
-                                    m_caster->CastSpell(m_caster, spellId, true);
-                                    aur = m_caster->GetAura(spellId, 0);
-                                }
-                                if (aur)
-                                    aur->SetStackAmount(count);
+                                   
+                                m_caster->CastSpell(m_caster, spellId, true);
                             }
                         }
 
@@ -5928,6 +5922,7 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                 case 24590:
                     unitTarget->RemoveSingleSpellAurasFromStack(24575);
                     return;
+                // Widow's Embrace
                 case 28732:
                     m_caster->DealDamage(m_caster, m_caster->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                     return;
