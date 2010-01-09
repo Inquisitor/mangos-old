@@ -5928,6 +5928,9 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                 case 24590:
                     unitTarget->RemoveSingleSpellAurasFromStack(24575);
                     return;
+                case 28732:
+                    m_caster->DealDamage(m_caster, m_caster->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                    return;
                 // Mercurial Shield - need remove one 26464 Mercurial Shield aura
                 case 26465:
                     unitTarget->RemoveSingleSpellAurasFromStack(26464);

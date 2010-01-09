@@ -5223,10 +5223,8 @@ SpellCastResult Spell::CheckPetCast(Unit* target)
                                                             //TARGET_DUELVSPLAYER is positive AND negative
                     duelvsplayertar |= (m_spellInfo->EffectImplicitTargetA[j] == TARGET_DUELVSPLAYER);
                 }
-                if(m_caster->IsFriendlyTo(target) && !duelvsplayertar)
-                {
+                if(m_caster->IsFriendlyTo(target) && !duelvsplayertar && m_spellInfo->Id != 28732 )
                     return SPELL_FAILED_BAD_TARGETS;
-                }
             }
         }
                                                             //cooldown
