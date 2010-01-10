@@ -8689,17 +8689,17 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
         target->SetCharmerGUID(GetCasterGUID());
         target->setFaction(caster->getFaction());
         target->CastStop();
-        caster->SetCharm(m_target);
+        uCaster->SetCharm(m_target);
         target->SetClientControl(target, 0);
 
         target->CombatStop();
         target->DeleteThreatList();
 
         // Check if caster can have threat list at all.
-        if( !caster->CanHaveThreatList() )
+        if( !uCaster->CanHaveThreatList() )
             return;
 
-        ThreatList m_threatlist = caster->getThreatManager().getThreatList();
+        ThreatList m_threatlist = uCaster->getThreatManager().getThreatList();
         std::vector<Unit*> targetlist;
 
         if( !m_threatlist.empty() )
@@ -8734,7 +8734,7 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
         target->SetClientControl(m_target, 1);
         target->CombatStop();
 
-        caster->SetCharm(NULL);
+        uCaster->SetCharm(NULL);
     }
 }
 
