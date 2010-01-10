@@ -8664,32 +8664,40 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
     if(!Real)
         return;
 
-    /*
-    Unit* caster = GetCaster();
-    if(!caster)
+    // At this moment effect is implemented only for Chains of Kel'thuzad.
+    if( GetId() != 28410 )
         return;
 
+    // Get Caster
+    Unit* uCaster = GetCaster();
+    if(!uCaster)
+        return;
+
+    // Check types, target must be player and caster must be creature
+    if( uCaster->GetTypeId() != TYPEID_UNIT )
+        return;
     if( m_target->GetTypeId() != TYPEID_PLAYER )
         return;
-    
+
+    // Cast our object types
+    Creature * caster = static_cast<Creature*>(uCaster);
     Player * target = static_cast<Player*>(m_target);
 
     if( apply )
     {
-        if (target->GetCharmerGUID())
-        {
-            target->RemoveSpellsCausingAura(SPELL_AURA_MOD_CHARM);
-            target->RemoveSpellsCausingAura(SPELL_AURA_MOD_POSSESS);
-        }
-
+        target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
         target->SetCharmerGUID(GetCasterGUID());
         target->setFaction(caster->getFaction());
         target->CastStop();
         caster->SetCharm(m_target);
+        target->SetClientControl(target, 0);
 
         target->CombatStop();
         target->DeleteThreatList();
-        target->SetClientControl(target, 0);
+
+        // Check if caster can have threat list at all.
+        if( !caster->CanHaveThreatList() )
+            return;
 
         ThreatList m_threatlist = caster->getThreatManager().getThreatList();
         std::vector<Unit*> targetlist;
@@ -8709,26 +8717,25 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
 
         if( !targetlist.empty() )
         {
+            // Select random player to attack from caster threat list
             Unit * selectedTarget = targetlist[int32(rand32())%targetlist.size()];
             if (target->Attack(selectedTarget, true))
             {
                 target->SetInCombatWith(selectedTarget);
-                selectedTarget->SetInCombatWith(target);
-
                 target->GetMotionMaster()->MoveChase(selectedTarget);
             }
         }
     }
     else
     {
+        m_target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
         target->SetCharmerGUID(0);
-        target->SetClientControl(m_target, 1);
         target->setFactionForRace(m_target->getRace());
+        target->SetClientControl(m_target, 1);
         target->CombatStop();
 
         caster->SetCharm(NULL);
     }
-    */
 }
 
 
