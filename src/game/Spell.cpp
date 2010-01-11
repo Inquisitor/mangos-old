@@ -2703,9 +2703,6 @@ void Spell::cast(bool skipCheck)
             if(m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000004000000000))    //Devastate
                 AddPrecastSpell(58567);
 
-            if(m_spellInfo->Id == 1680 || m_spellInfo->Id == 50622) // Whirlwind
-                AddTriggeredSpell(44949);
-
             if(m_spellInfo->Id == 64382)                    // Shattering Throw
                 AddPrecastSpell(64380);
 
