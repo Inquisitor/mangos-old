@@ -2244,6 +2244,29 @@ void Aura::TriggerSpell()
                 target->CastCustomSpell(target, trigger_spell_id, &mana, NULL, NULL, true, NULL, this);
                 return;
             }
+            // Grobbulus Poison Cloud called from script (modified ID)
+            case 30914:
+            {
+                if( triggeredSpellInfo->Id == 54363 ) // If it triggers our hacky-moded spell
+                {
+                    uint32 irangeIndex;
+                    if( GetAuraDuration() > 50000 )
+                        irangeIndex = 7; // 2 yards
+                    else if( GetAuraDuration() > 40000 && GetAuraDuration() < 50000 )
+                        irangeIndex = 8; // 5 yards
+                    else if( GetAuraDuration() > 30000 && GetAuraDuration() < 40000 )
+                        irangeIndex = 14; // 8 yards
+                    else if( GetAuraDuration() > 20000 && GetAuraDuration() < 30000 )
+                        irangeIndex = 13; // 10 yards
+                    else if( GetAuraDuration() > 10000 && GetAuraDuration() < 20000 )
+                        irangeIndex = 17; // 13 yards
+                    else if( GetAuraDuration() < 10000 )
+                        irangeIndex = 18; // 15 yards
+
+                    const_cast<SpellEntry*>(triggeredSpellInfo)->EffectRadiusIndex[0] = irangeIndex;
+                }
+                break;
+            }
         }
     }
 
@@ -2532,6 +2555,24 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
 
         switch(GetId())
         {
+            case 28059: // Positive 25m
+            case 39088: // Positive 10m
+            case 28084: // Negative 25m
+            case 39091: // Negative 10m
+            {
+                uint32 toRemove = 0;
+                switch(GetId())
+                {
+                    case 28059: toRemove = 39089; break;
+                    case 39088: toRemove = 29659; break;
+                    case 28084: toRemove = 39092; break;
+                    case 39091: toRemove = 29660; break;
+                }
+                if( toRemove )
+                    m_target->RemoveAura(toRemove, 0);
+                return;
+            }
+
             case 28169:                                     // Mutating Injection
             {
                 // Poison Cloud
@@ -8623,34 +8664,42 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
     if(!Real)
         return;
 
-    /*
-    Unit* caster = GetCaster();
-    if(!caster)
+    // At this moment effect is implemented only for Chains of Kel'thuzad.
+    if( GetId() != 28410 )
         return;
 
+    // Get Caster
+    Unit* uCaster = GetCaster();
+    if(!uCaster)
+        return;
+
+    // Check types, target must be player and caster must be creature
+    if( uCaster->GetTypeId() != TYPEID_UNIT )
+        return;
     if( m_target->GetTypeId() != TYPEID_PLAYER )
         return;
-    
+
+    // Cast our object types
+    Creature * caster = static_cast<Creature*>(uCaster);
     Player * target = static_cast<Player*>(m_target);
 
     if( apply )
     {
-        if (target->GetCharmerGUID())
-        {
-            target->RemoveSpellsCausingAura(SPELL_AURA_MOD_CHARM);
-            target->RemoveSpellsCausingAura(SPELL_AURA_MOD_POSSESS);
-        }
-
+        target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
         target->SetCharmerGUID(GetCasterGUID());
         target->setFaction(caster->getFaction());
         target->CastStop();
-        caster->SetCharm(m_target);
+        uCaster->SetCharm(m_target);
+        target->SetClientControl(target, 0);
 
         target->CombatStop();
         target->DeleteThreatList();
-        target->SetClientControl(target, 0);
 
-        ThreatList m_threatlist = caster->getThreatManager().getThreatList();
+        // Check if caster can have threat list at all.
+        if( !uCaster->CanHaveThreatList() )
+            return;
+
+        ThreatList m_threatlist = uCaster->getThreatManager().getThreatList();
         std::vector<Unit*> targetlist;
 
         if( !m_threatlist.empty() )
@@ -8668,26 +8717,25 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
 
         if( !targetlist.empty() )
         {
+            // Select random player to attack from caster threat list
             Unit * selectedTarget = targetlist[int32(rand32())%targetlist.size()];
             if (target->Attack(selectedTarget, true))
             {
                 target->SetInCombatWith(selectedTarget);
-                selectedTarget->SetInCombatWith(target);
-
                 target->GetMotionMaster()->MoveChase(selectedTarget);
             }
         }
     }
     else
     {
+        m_target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
         target->SetCharmerGUID(0);
-        target->SetClientControl(m_target, 1);
         target->setFactionForRace(m_target->getRace());
+        target->SetClientControl(m_target, 1);
         target->CombatStop();
 
-        caster->SetCharm(NULL);
+        uCaster->SetCharm(NULL);
     }
-    */
 }
 
 

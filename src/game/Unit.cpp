@@ -3656,9 +3656,36 @@ bool Unit::AddAura(Aura *Aur)
                     {
                         // can be created with >1 stack by some spell mods
                         i2->second->modStackAmount(Aur->GetStackAmount());
+
+                        switch(Aur->GetId())
+                        {
+                        case 28832: // Mark of Korth'azz
+                        case 28833: // Mark of Blaumeux
+                        case 28834: // Mark of Rivendare
+                        case 28835: // Mark of Zeliek
+                            if(Unit *caster = Aur->GetCaster()) // actually we can also use cast(this, originalcasterguid)
+                            {
+                                int32 damageToDeal;
+                                switch(i2->second->GetStackAmount())
+                                {
+                                    case 1: damageToDeal = 0;     break;
+                                    case 2: damageToDeal = 500;   break;
+                                    case 3: damageToDeal = 1000;  break;
+                                    case 4: damageToDeal = 1500;  break;
+                                    case 5: damageToDeal = 4000;  break;
+                                    case 6: damageToDeal = 12000; break;
+                                    default:damageToDeal = 20000 + 1000 * (i2->second->GetStackAmount() - 7); break;
+                                }
+                                if(damageToDeal)
+                                    caster->CastCustomSpell(this, 28836, &damageToDeal, NULL, NULL, true);
+                            }
+                            break;
+                        }
+
                         delete Aur;
                         return false;
                     }
+
                     // can be only single (this check done at _each_ aura add
                     RemoveAura(i2,AURA_REMOVE_BY_STACK);
                     break;
@@ -5617,7 +5644,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 if (effIndex!=0)
                     return true;
 
-                basepoints0 = caster->GetMaxPower(POWER_MANA)* triggerAmount / 100;
+                basepoints0 = caster->GetMaxPower(POWER_MANA)* dummySpell->EffectBasePoints[2] / 100;
                 triggered_spell_id = 18371;
                 break;
             }
