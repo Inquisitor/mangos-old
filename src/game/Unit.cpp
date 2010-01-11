@@ -5395,6 +5395,9 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 if(!procSpell)
                     return false;
 
+                if (effIndex!=1)
+                    return true;
+
                 int32 cost = procSpell->manaCost + procSpell->ManaCostPercentage * GetCreateMana() / 100;
                 basepoints0 = cost * triggerAmount/100;
                 if( basepoints0 <=0 )
@@ -5742,6 +5745,9 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 {
                     if (!procSpell)
                         return false;
+
+                    if (effIndex != 1)
+                        return true;
 
                     Aura* healingAura = pVictim->GetAura(procSpell->Id,0);
                     if (!healingAura)
@@ -6660,6 +6666,9 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
             {
                 // Earthbind Totem summon only
                 if(procSpell->Id != 2484)
+                    return false;
+
+                if (effIndex != 1)
                     return false;
 
                 float chance = triggerAmount;
