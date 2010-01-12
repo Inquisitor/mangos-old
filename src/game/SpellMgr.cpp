@@ -1426,25 +1426,25 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                         (spellInfo_2->Id == 50756 && spellInfo_1->Id == 50758))
                         return false;
 
-                    // Positive / Negative charges of Thaddius
-                    // Positive 25m
-                    if ((spellInfo_1->Id == 28059 && spellInfo_2->Id == 39089) ||
-                        (spellInfo_2->Id == 28059 && spellInfo_1->Id == 39089))
+                    // Positive / Negative charges of Thaddius and Chrono
+                    // Positive Thaddius
+                    if ((spellInfo_1->Id == 28059 && spellInfo_2->Id == 29659) ||
+                        (spellInfo_2->Id == 28059 && spellInfo_1->Id == 29659))
                         return false;
 
-                    // Positive 10m
-                    if ((spellInfo_1->Id == 39088 && spellInfo_2->Id == 29659) ||
-                        (spellInfo_2->Id == 39088 && spellInfo_1->Id == 29659))
+                    // Positive Chrono
+                    if ((spellInfo_1->Id == 39088 && spellInfo_2->Id == 39089) ||
+                        (spellInfo_2->Id == 39088 && spellInfo_1->Id == 39089))
                         return false;
 
-                    // Negative 25m
-                    if ((spellInfo_1->Id == 28084 && spellInfo_2->Id == 39092) ||
-                        (spellInfo_2->Id == 28084 && spellInfo_1->Id == 39092))
+                    // Negative Thaddius
+                    if ((spellInfo_1->Id == 28084 && spellInfo_2->Id == 29660) ||
+                        (spellInfo_2->Id == 28084 && spellInfo_1->Id == 29660))
                         return false;
 
-                    // Negative 10m
-                    if ((spellInfo_1->Id == 39091 && spellInfo_2->Id == 29660) ||
-                        (spellInfo_2->Id == 39091 && spellInfo_1->Id == 29660))
+                    // Negative Chrono
+                    if ((spellInfo_1->Id == 39091 && spellInfo_2->Id == 39092) ||
+                        (spellInfo_2->Id == 39091 && spellInfo_1->Id == 39092))
                         return false;
 
                     break;

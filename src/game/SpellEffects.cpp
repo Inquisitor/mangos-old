@@ -349,8 +349,14 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                                     case 39090: spellId = 39089; break;
                                     case 39093: spellId = 39092; break;
                                 }
-                                   
-                                m_caster->CastSpell(m_caster, spellId, true);
+                                Aura *aur = m_caster->GetAura(spellId,0);
+                                if (!aur)
+                                {
+                                    m_caster->CastSpell(m_caster, spellId, true);
+                                    aur = m_caster->GetAura(spellId,0);
+                                }
+                                if (aur)
+                                    aur->SetStackAmount(count);
                             }
                         }
 
@@ -1227,6 +1233,21 @@ void Spell::EffectDummy(uint32 i)
                         m_caster->CastSpell(unitTarget, 29294, true);
                     return;
                 }
+                // Polarity Shift
+                case 28089:
+                    if(unitTarget)
+                    {
+                        m_caster->MonsterTextEmote("The polarity has shifted!", 0, true);
+                        uint32 toCast = (roll_chance_i(50) ? 28059 : 28084);
+                        unitTarget->RemoveAurasDueToSpell( (toCast == 28059)? 28084 : 28059 );
+                        unitTarget->CastSpell(unitTarget, toCast, true);
+                    }
+                    break;
+                // Polarity Shift
+                case 39096:
+                    if(unitTarget)
+                        unitTarget->CastSpell(unitTarget, roll_chance_i(50) ? 39088 : 39091, true);
+                    break;
                 case 29200:                                 // Purify Helboar Meat
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)

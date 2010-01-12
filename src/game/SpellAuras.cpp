@@ -2555,21 +2555,21 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
 
         switch(GetId())
         {
-            case 28059: // Positive 25m
-            case 39088: // Positive 10m
-            case 28084: // Negative 25m
-            case 39091: // Negative 10m
+            case 28059: // Positive Thaddius
+            case 39088: // Positive Chrono
+            case 28084: // Negative Thaddius
+            case 39091: // Negative Chrono
             {
                 uint32 toRemove = 0;
                 switch(GetId())
                 {
-                    case 28059: toRemove = 39089; break;
-                    case 39088: toRemove = 29659; break;
-                    case 28084: toRemove = 39092; break;
-                    case 39091: toRemove = 29660; break;
+                    case 28059: toRemove = 29659; break;
+                    case 39088: toRemove = 39089; break;
+                    case 28084: toRemove = 29660; break;
+                    case 39091: toRemove = 39092; break;
                 }
                 if( toRemove )
-                    m_target->RemoveAura(toRemove, 0);
+                    m_target->RemoveAurasDueToSpell(toRemove);
                 return;
             }
 
