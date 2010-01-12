@@ -18207,6 +18207,9 @@ uint32 Player::GetMaxPersonalArenaRatingRequirement()
     {
         if(ArenaTeam * at = sObjectMgr.GetArenaTeamById(GetArenaTeamId(i)))
         {
+            if( at->GetType() == ARENA_TEAM_2v2 )
+                continue;
+
             uint32 p_rating = GetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (i * ARENA_TEAM_END) + ARENA_TEAM_PERSONAL_RATING);
             uint32 t_rating = at->GetRating();
             p_rating = p_rating < t_rating ? p_rating : t_rating;
