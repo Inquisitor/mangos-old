@@ -1174,7 +1174,10 @@ void Player::Update( uint32 p_time )
             // default combat reach 10
             // TODO add weapon,skill check
 
+
             float dist = pVictim->GetTypeId() == TYPEID_PLAYER ? ATTACK_DISTANCE : (GetFloatValue(UNIT_FIELD_COMBATREACH) + pVictim->GetFloatValue(UNIT_FIELD_COMBATREACH));
+            // Check for creatures that somehow have lower combat-reach than minimal attack distance
+            if( dist < ATTACK_DISTANCE ) dist = ATTACK_DISTANCE;
 
             if (isAttackReady(BASE_ATTACK))
             {

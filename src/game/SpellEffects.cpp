@@ -1237,7 +1237,7 @@ void Spell::EffectDummy(uint32 i)
                 case 28089:
                     if(unitTarget)
                     {
-                        m_caster->MonsterTextEmote("The polarity has shifted!", 0, true);
+                        //m_caster->MonsterTextEmote("The polarity has shifted!", 0, true);
                         uint32 toCast = (roll_chance_i(50) ? 28059 : 28084);
                         unitTarget->RemoveAurasDueToSpell( (toCast == 28059)? 28084 : 28059 );
                         unitTarget->CastSpell(unitTarget, toCast, true);
