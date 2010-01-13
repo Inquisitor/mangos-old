@@ -750,10 +750,6 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Scripts()
                             }
                         }
                         break;
-                    case ACTION_T_ADD_GOSSIP:
-                        if( action.add_gossip.id < 1 )
-                            sLog.outErrorDb("CreatureEventAI:  Event %u Action %u uses wrong Gossip Id value %u.", i, j+1, action.add_gossip.id );
-                        break;
                     case ACTION_T_ADD_ITEM:
                         if( action.add_item.id < 1 )
                             sLog.outErrorDb("CreatureEventAI:  Event %u Action %u uses wrong item Id value %u.", i, j+1, action.add_item.id );
