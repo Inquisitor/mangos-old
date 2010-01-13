@@ -1003,9 +1003,9 @@ void Spell::EffectDummy(uint32 i)
 
                     switch (m_spellInfo->Id)
                     {
-                        case 12162: damage *= 0.16f; break; // Rank 1
-                        case 12850: damage *= 0.32f; break; // Rank 2
-                        case 12868: damage *= 0.48f; break; // Rank 3
+                        case 12162: damage *= 1*0.16f; break; // Rank 1
+                        case 12850: damage *= 2*0.16f; break; // Rank 2
+                        case 12868: damage *= 3*0.16f; break; // Rank 3
                         default:
                             sLog.outError("Spell::EffectDummy: Spell %u not handled in DW",m_spellInfo->Id);
                             return;
@@ -1019,8 +1019,8 @@ void Spell::EffectDummy(uint32 i)
                         damage += remainingTicks * deepWound->GetModifier()->m_amount;
                     }
 
-                    // 1 tick/sec * 6 sec = 6 ticks
-                    int32 deepWoundsDotBasePoints0 = int32(damage / 6);
+                    // 0.5 tick/sec * 6 sec = 3 ticks
+                    int32 deepWoundsDotBasePoints0 = int32(damage / 3);
                     m_caster->CastCustomSpell(unitTarget, 12721, &deepWoundsDotBasePoints0, NULL, NULL, true, NULL);
                     return;
                 }
