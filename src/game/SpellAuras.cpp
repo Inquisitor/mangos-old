@@ -4915,6 +4915,7 @@ void Aura::HandlePeriodicTriggerSpell(bool apply, bool /*Real*/)
             case 27819:                                     //Detonate Mana
             {
                 int32 damage = m_target->GetMaxPower(POWER_MANA);
+                m_target->ModifyPower(POWER_MANA, -(damage/4));
                 m_target->CastCustomSpell(m_target, 27820, &damage , 0, 0, true );
                 return;
             }

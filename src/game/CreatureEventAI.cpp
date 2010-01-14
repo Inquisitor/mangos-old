@@ -820,20 +820,6 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
                 InvinceabilityHpLevel = action.invincibility_hp_level.hp_level;
             break;
         }
-        case ACTION_T_ADD_GOSSIP:
-        {
-            char const* text = "Text missing, please report this on bugtracker.";
-            CreatureEventAI_TextMap::const_iterator i = sEventAIMgr.GetCreatureEventAITextMap().find(action.add_gossip.text);
-            if( i != sEventAIMgr.GetCreatureEventAITextMap().end() )
-            {
-                uint32 loc_idx = ((Player*)pActionInvoker)->GetSession()->GetSessionDbLocaleIndex();
-                text = sObjectMgr.GetMangosString(action.add_gossip.text,loc_idx);
-            }
-            ((Player*)pActionInvoker)->PlayerTalkClass->ClearMenus();
-            ((Player*)pActionInvoker)->PlayerTalkClass->GetGossipMenu().AddMenuItem(0, text, 1, action.add_gossip.id, "", 0 );
-            ((Player*)pActionInvoker)->PlayerTalkClass->SendGossipMenu( action.add_gossip.titletext == 0 ? ((Player*)pActionInvoker)->GetGossipTextId(m_creature) : action.add_gossip.titletext, m_creature->GetGUID() );
-            break;
-        }
         case ACTION_T_SUMMON_GOBJECT:
         {
             if( !pActionInvoker )
@@ -855,12 +841,6 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
             target->GetMap()->Add(pGameObj);
             target->AddGameObject(pGameObj);
 
-            break;
-        }
-        case ACTION_T_CLOSE_GOSSIP:
-        {
-            if (pActionInvoker)
-                ((Player*)pActionInvoker)->PlayerTalkClass->CloseGossip();
             break;
         }
         case ACTION_T_ADD_ITEM:
