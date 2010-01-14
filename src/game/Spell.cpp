@@ -5172,6 +5172,10 @@ SpellCastResult Spell::CheckCast(bool strict)
         if( !IsPositiveSpell(m_spellInfo->Id) )
             break;
 
+        // Do not check spells casted by items (scrolls / food / drinks)
+        if (m_CastItem)
+            break;
+
         Aura * pAura = (*Aurmap).second;
 
         if (!pAura->GetSpellProto())
@@ -5181,6 +5185,9 @@ SpellCastResult Spell::CheckCast(bool strict)
             continue;
 
         if (IsPassiveSpell(pAura->GetId()))
+            continue;
+
+        if (pAura->GetCastItemGUID())
             continue;
 
         SpellEntry const* i_spellProto = pAura->GetSpellProto();
