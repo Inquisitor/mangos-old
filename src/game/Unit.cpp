@@ -1176,6 +1176,11 @@ void Unit::DealSpellDamage(SpellNonMeleeDamage *damageInfo, bool durabilityLoss)
             break;
         }
     }
+
+    // Check if effect can trigger anything actually (is this a right ATTR ?)
+    if( spellProto->AttributesEx3 & SPELL_ATTR_EX3_UNK16 )
+        hasWeaponDmgEffect = false;
+
     if (!(damageInfo->HitInfo & HITINFO_MISS) && hasWeaponDmgEffect)
     {
         WeaponAttackType attType = GetWeaponAttackType(spellProto);
