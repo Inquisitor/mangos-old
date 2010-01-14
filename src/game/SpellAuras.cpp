@@ -8697,7 +8697,39 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
         target->CombatStop();
         target->DeleteThreatList();
 
-        target->i_AI = new PlayerAI(target);
+        // Check if caster can have threat list at all.
+        if( !uCaster->CanHaveThreatList() )
+            return;
+
+        ThreatList m_threatlist = uCaster->getThreatManager().getThreatList();
+        std::vector<Unit*> targetlist;
+
+        if( !m_threatlist.empty() )
+        {
+            for( ThreatList::iterator i = m_threatlist.begin(); i != m_threatlist.end(); ++i )
+            {
+                if( (*i)->getTarget() )
+                {
+                    Unit * mToAttack = (*i)->getTarget();
+                    if( mToAttack->GetTypeId() == TYPEID_PLAYER && mToAttack != target )
+                        targetlist.push_back(mToAttack);
+                }
+            }
+        }
+
+        if( !targetlist.empty() )
+        {
+            // Select random player to attack from caster threat list
+            Unit * selectedTarget = targetlist[int32(rand32())%targetlist.size()];
+            if (target->Attack(selectedTarget, true))
+            {
+                target->SetInCombatWith(selectedTarget);
+                target->GetMotionMaster()->MoveChase(selectedTarget);
+            }
+        }
+
+
+        //target->i_AI = new PlayerAI(target);
 
     }
     else
@@ -8710,11 +8742,13 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
 
         uCaster->SetCharm(NULL);
 
+        /*
         PlayerAI* tmpAI = target->i_AI;
         target->i_AI = NULL;
 
         if (tmpAI != NULL)
             delete tmpAI;
+        */
     }
 }
 
