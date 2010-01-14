@@ -60,6 +60,7 @@
 #include "Spell.h"
 #include "SocialMgr.h"
 #include "AchievementMgr.h"
+#include "PlayerAI.h"
 
 #include <cmath>
 
@@ -510,6 +511,7 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
     m_lastFallZ = 0;
 
     m_comboCountAfterCalc = 0;
+    i_AI = NULL;
 }
 
 Player::~Player ()
@@ -562,6 +564,9 @@ Player::~Player ()
 
     delete m_declinedname;
     delete m_runes;
+
+    if (i_AI)
+        delete i_AI;
 }
 
 void Player::CleanupsBeforeDelete()
@@ -1117,6 +1122,9 @@ void Player::Update( uint32 p_time )
     SetCanDelayTeleport(true);
     Unit::Update( p_time );
     SetCanDelayTeleport(false);
+
+     if (i_AI != NULL)
+        i_AI->UpdateAI(p_time);
 
     // update player only attacks
     if(uint32 ranged_att = getAttackTimer(RANGED_ATTACK))

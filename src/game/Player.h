@@ -52,6 +52,7 @@ class UpdateMask;
 class SpellCastTargets;
 class PlayerSocial;
 class Vehicle;
+class PlayerAI;
 
 typedef std::deque<Mail*> PlayerMails;
 
@@ -2155,6 +2156,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         /*********************************************************/
         /***                 VARIOUS SYSTEMS                   ***/
         /*********************************************************/
+
+        PlayerAI *i_AI;
         MovementInfo m_movementInfo;
         SafePosition m_safeposition;
         bool HasMovementFlag(MovementFlags f) const;        // for script access to m_movementInfo.HasMovementFlag
