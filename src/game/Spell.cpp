@@ -5160,6 +5160,40 @@ SpellCastResult Spell::CheckCast(bool strict)
         }
     }
 
+    Unit * Target = m_targets.getUnitTarget();
+    Unit::AuraMap::iterator Aurmap,next;
+    for (Aurmap = Target->GetAuras().begin(); Aurmap != Target->GetAuras().end(); Aurmap = next)
+    {
+        next = Aurmap;
+        ++next;
+        if (!(*Aurmap).second) continue;
+
+        // Do not check for negative auras stacking yet.
+        if( !IsPositiveSpell(m_spellInfo->Id) )
+            break;
+
+        Aura * pAura = (*Aurmap).second;
+
+        if (!pAura->GetSpellProto())
+            continue;
+
+        if (pAura->IsPassive())
+            continue;
+
+        if (IsPassiveSpell(pAura->GetId()))
+            continue;
+
+        SpellEntry const* i_spellProto = pAura->GetSpellProto();
+        if( i_spellProto->Id == m_spellInfo->Id && m_caster == (*Aurmap).second->GetCaster() )
+            continue;
+
+        int32 EffectValue = CalculateDamage(0,Target);
+
+        if( m_spellInfo->EffectApplyAuraName[0] == i_spellProto->EffectApplyAuraName[0] )
+            if( pAura->GetModifier()->m_amount > EffectValue || ( pAura->GetModifier()->m_amount == EffectValue && pAura->GetAuraDuration() > Target->CalculateSpellDuration(m_spellInfo, 0, Target) ) )
+                return SPELL_FAILED_AURA_BOUNCED;
+    }
+
     // all ok
     return SPELL_CAST_OK;
 }
