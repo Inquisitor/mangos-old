@@ -5160,45 +5160,44 @@ SpellCastResult Spell::CheckCast(bool strict)
         }
     }
 
-    Unit * Target = m_targets.getUnitTarget();
-    Unit::AuraMap::iterator Aurmap,next;
-    for (Aurmap = Target->GetAuras().begin(); Aurmap != Target->GetAuras().end(); Aurmap = next)
+    if (Unit * Target = m_targets.getUnitTarget())
     {
-        next = Aurmap;
-        ++next;
-        if (!(*Aurmap).second) continue;
+        Unit::AuraMap::iterator Aurmap,next;
+        for (Aurmap = Target->GetAuras().begin(); Aurmap != Target->GetAuras().end(); Aurmap = next)
+        {
+            next = Aurmap;
+            ++next;
+            if (!(*Aurmap).second) continue;
 
-        // Do not check for negative auras stacking yet.
-        if( !IsPositiveSpell(m_spellInfo->Id) )
-            break;
+            // Do not check for negative auras stacking yet.
+            if( !IsPositiveSpell(m_spellInfo->Id) )
+                break;
 
-        // Do not check spells casted by items (scrolls / food / drinks)
-        if (m_CastItem)
-            break;
+            // Do not check spells casted by items (scrolls / food / drinks)
+            if (m_CastItem)
+                break;
 
-        Aura * pAura = (*Aurmap).second;
+            Aura * pAura = (*Aurmap).second;
 
-        if (!pAura->GetSpellProto())
-            continue;
+            if (!pAura->GetSpellProto())
+                continue;
 
-        if (pAura->IsPassive())
-            continue;
+            if (pAura->IsPassive() || IsPassiveSpell(pAura->GetId()))
+                continue;
 
-        if (IsPassiveSpell(pAura->GetId()))
-            continue;
+            if (pAura->GetCastItemGUID())
+                continue;
 
-        if (pAura->GetCastItemGUID())
-            continue;
+            SpellEntry const* i_spellProto = pAura->GetSpellProto();
+            if( i_spellProto->Id == m_spellInfo->Id && m_caster == pAura->GetCaster() )
+                continue;
 
-        SpellEntry const* i_spellProto = pAura->GetSpellProto();
-        if( i_spellProto->Id == m_spellInfo->Id && m_caster == (*Aurmap).second->GetCaster() )
-            continue;
+            int32 EffectValue = CalculateDamage(0,Target);
 
-        int32 EffectValue = CalculateDamage(0,Target);
-
-        if( m_spellInfo->EffectApplyAuraName[0] == i_spellProto->EffectApplyAuraName[0] )
-            if( pAura->GetModifier()->m_amount > EffectValue || ( pAura->GetModifier()->m_amount == EffectValue && pAura->GetAuraDuration() > Target->CalculateSpellDuration(m_spellInfo, 0, Target) ) )
-                return SPELL_FAILED_AURA_BOUNCED;
+            if( m_spellInfo->EffectApplyAuraName[0] == i_spellProto->EffectApplyAuraName[0] )
+                if( pAura->GetModifier()->m_amount > EffectValue || ( pAura->GetModifier()->m_amount == EffectValue && pAura->GetAuraDuration() > Target->CalculateSpellDuration(m_spellInfo, 0, Target) ) )
+                    return SPELL_FAILED_AURA_BOUNCED;
+        }
     }
 
     // all ok
@@ -6472,7 +6471,42 @@ void Spell::FillRaidOrPartyTargets( UnitList &TagUnitMap, Unit* member, Unit* ce
             {
                 if ((Target==center || center->IsWithinDistInMap(Target, radius)) &&
                     (withcaster || Target != m_caster))
+                {
+                    bool hasMorePowerful = false;
+                    Unit::AuraMap::iterator Aurmap,next;
+                    for (Aurmap = Target->GetAuras().begin(); Aurmap != Target->GetAuras().end(); Aurmap = next)
+                    {
+                        next = Aurmap;
+                        ++next;
+
+                        if (m_CastItem)
+                            break;
+
+                        if (!(*Aurmap).second) continue;
+
+                        Aura * pAura = (*Aurmap).second;
+
+                        if (!pAura->GetSpellProto())
+                            continue;
+
+                        if (pAura->IsPassive() || IsPassiveSpell(pAura->GetId()))
+                            continue;
+
+                        if (pAura->GetCastItemGUID())
+                            continue;
+
+                        SpellEntry const* i_spellProto = pAura->GetSpellProto();
+
+                        if (m_spellInfo->EffectApplyAuraName[0] == i_spellProto->EffectApplyAuraName[0])
+                            if (pAura->GetModifier()->m_amount > CalculateDamage(0,Target) || ( pAura->GetModifier()->m_amount == CalculateDamage(0,Target) && pAura->GetAuraDuration() > Target->CalculateSpellDuration(m_spellInfo, 0, Target)))
+                                hasMorePowerful = true;
+                    }
+
+                    if( hasMorePowerful )
+                        continue;
+
                     TagUnitMap.push_back(Target);
+                }
 
                 if (withPets)
                     if (Pet* pet = Target->GetPet())

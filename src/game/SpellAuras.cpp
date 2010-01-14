@@ -727,7 +727,41 @@ void AreaAura::Update(uint32 diff)
                             if(Target && Target->isAlive() && caster->IsFriendlyTo(Target))
                             {
                                 if(caster->IsWithinDistInMap(Target, m_radius))
+                                {
+                                    bool hasMorePowerful = false;
+                                    Unit::AuraMap::iterator Aurmap,next;
+                                    for (Aurmap = Target->GetAuras().begin(); Aurmap != Target->GetAuras().end(); Aurmap = next)
+                                    {
+                                        next = Aurmap;
+                                        ++next;
+
+                                        if (GetCastItemGUID())
+                                            break;
+
+                                        if (!(*Aurmap).second) continue;
+
+                                        Aura * pAura = (*Aurmap).second;
+
+                                        if (!pAura->GetSpellProto())
+                                            continue;
+
+                                        if (pAura->IsPassive() || IsPassiveSpell(pAura->GetId()))
+                                            continue;
+
+                                        if (pAura->GetCastItemGUID())
+                                            continue;
+
+                                        SpellEntry const* i_spellProto = pAura->GetSpellProto();
+
+                                        if (GetSpellProto()->EffectApplyAuraName[0] == i_spellProto->EffectApplyAuraName[0])
+                                            if (pAura->GetModifier()->m_amount > GetModifier()->m_amount || ( pAura->GetModifier()->m_amount == GetModifier()->m_amount && pAura->GetAuraDuration() > Target->CalculateSpellDuration(GetSpellProto(), 0, Target)))
+                                                hasMorePowerful = true;
+                                    }
+
+                                    if( hasMorePowerful )
+                                        continue;
                                     targets.push_back(Target);
+                                }
                                 Pet *pet = Target->GetPet();
                                 if(pet && pet->isAlive() && caster->IsWithinDistInMap(pet, m_radius))
                                     targets.push_back(pet);
