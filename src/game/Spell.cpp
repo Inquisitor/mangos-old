@@ -5160,7 +5160,7 @@ SpellCastResult Spell::CheckCast(bool strict)
         }
     }
 
-    /*if (Unit * Target = m_targets.getUnitTarget())
+    if (Unit * Target = m_targets.getUnitTarget())
     {
         Unit::AuraMap::iterator Aurmap,next;
         for (Aurmap = Target->GetAuras().begin(); Aurmap != Target->GetAuras().end(); Aurmap = next)
@@ -5182,6 +5182,9 @@ SpellCastResult Spell::CheckCast(bool strict)
             if (!pAura->GetSpellProto())
                 continue;
 
+            if (pAura->GetSpellProto()->EffectAmplitude[0] > 0)
+                continue;
+
             if (pAura->IsPassive() || IsPassiveSpell(pAura->GetId()))
                 continue;
 
@@ -5198,7 +5201,7 @@ SpellCastResult Spell::CheckCast(bool strict)
                 if( pAura->GetModifier()->m_amount > EffectValue || ( pAura->GetModifier()->m_amount == EffectValue && pAura->GetAuraDuration() > Target->CalculateSpellDuration(m_spellInfo, 0, Target) ) )
                     return SPELL_FAILED_AURA_BOUNCED;
         }
-    }*/
+    }
 
     // all ok
     return SPELL_CAST_OK;
@@ -6472,7 +6475,7 @@ void Spell::FillRaidOrPartyTargets( UnitList &TagUnitMap, Unit* member, Unit* ce
                 if ((Target==center || center->IsWithinDistInMap(Target, radius)) &&
                     (withcaster || Target != m_caster))
                 {
-                    /*bool hasMorePowerful = false;
+                    bool hasMorePowerful = false;
                     Unit::AuraMap::iterator Aurmap,next;
                     for (Aurmap = Target->GetAuras().begin(); Aurmap != Target->GetAuras().end(); Aurmap = next)
                     {
@@ -6503,7 +6506,7 @@ void Spell::FillRaidOrPartyTargets( UnitList &TagUnitMap, Unit* member, Unit* ce
                     }
 
                     if( hasMorePowerful )
-                        continue;*/
+                        continue;
 
                     TagUnitMap.push_back(Target);
                 }
