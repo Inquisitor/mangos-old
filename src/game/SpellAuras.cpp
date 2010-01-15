@@ -728,7 +728,7 @@ void AreaAura::Update(uint32 diff)
                             {
                                 if(caster->IsWithinDistInMap(Target, m_radius))
                                 {
-                                    bool hasMorePowerful = false;
+                                    /*bool hasMorePowerful = false;
                                     Unit::AuraMap::iterator Aurmap,next;
                                     for (Aurmap = Target->GetAuras().begin(); Aurmap != Target->GetAuras().end(); Aurmap = next)
                                     {
@@ -759,7 +759,7 @@ void AreaAura::Update(uint32 diff)
                                     }
 
                                     if( hasMorePowerful )
-                                        continue;
+                                        continue;*/
                                     targets.push_back(Target);
                                 }
                                 Pet *pet = Target->GetPet();
