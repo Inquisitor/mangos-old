@@ -41,6 +41,7 @@ Player* PlayerAI::GetNewTarget()
 {
     Player* pPlayer = NULL;
 
+    /*
     uint32 radius = 50.0f;
 
     CellPair pair(MaNGOS::ComputeCellPair(m_player->GetPositionX(), m_player->GetPositionY()));
@@ -57,6 +58,7 @@ Player* PlayerAI::GetNewTarget()
 
     TypeContainerVisitor<MaNGOS::PlayerSearcher<MaNGOS::AnyPlayerInObjectRangeCheck>, WorldTypeMapContainer > world_object_checker(checker);
     cell_lock->Visit(cell_lock, world_object_checker, *m_player->GetMap(), *plr, radius);
+    */
 
     return pPlayer;
 }
