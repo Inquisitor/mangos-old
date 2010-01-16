@@ -5160,7 +5160,7 @@ SpellCastResult Spell::CheckCast(bool strict)
         }
     }
 
-    if (Unit * Target = m_targets.getUnitTarget())
+    /*if (Unit * Target = m_targets.getUnitTarget())
     {
         Unit::AuraMap::iterator Aurmap,next;
         for (Aurmap = Target->GetAuras().begin(); Aurmap != Target->GetAuras().end(); Aurmap = next)
@@ -5201,7 +5201,7 @@ SpellCastResult Spell::CheckCast(bool strict)
                 if( pAura->GetModifier()->m_amount > EffectValue || ( pAura->GetModifier()->m_amount == EffectValue && pAura->GetAuraDuration() > Target->CalculateSpellDuration(m_spellInfo, 0, Target) ) )
                     return SPELL_FAILED_AURA_BOUNCED;
         }
-    }
+    }*/
 
     // all ok
     return SPELL_CAST_OK;
