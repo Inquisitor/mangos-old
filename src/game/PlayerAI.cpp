@@ -53,8 +53,10 @@ Player* PlayerAI::GetNewTarget()
 
     CellLock<GridReadGuard> cell_lock(cell, pair);
 
+    Player * const plr = m_player;
+
     TypeContainerVisitor<MaNGOS::PlayerSearcher<MaNGOS::AnyPlayerInObjectRangeCheck>, WorldTypeMapContainer > world_object_checker(checker);
-    cell_lock->Visit(cell_lock, world_object_checker, *m_player->GetMap(), *m_player, radius);
+    cell_lock->Visit(cell_lock, world_object_checker, *m_player->GetMap(), *plr, radius);
 
     return pPlayer;
 }
