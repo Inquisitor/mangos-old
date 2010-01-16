@@ -6475,7 +6475,7 @@ void Spell::FillRaidOrPartyTargets( UnitList &TagUnitMap, Unit* member, Unit* ce
                 if ((Target==center || center->IsWithinDistInMap(Target, radius)) &&
                     (withcaster || Target != m_caster))
                 {
-                    bool hasMorePowerful = false;
+                    /*bool hasMorePowerful = false;
                     Unit::AuraMap::iterator Aurmap,next;
                     for (Aurmap = Target->GetAuras().begin(); Aurmap != Target->GetAuras().end(); Aurmap = next)
                     {
@@ -6506,7 +6506,7 @@ void Spell::FillRaidOrPartyTargets( UnitList &TagUnitMap, Unit* member, Unit* ce
                     }
 
                     if( hasMorePowerful )
-                        continue;
+                        continue;*/
 
                     TagUnitMap.push_back(Target);
                 }
