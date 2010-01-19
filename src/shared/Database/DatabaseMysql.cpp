@@ -167,8 +167,8 @@ bool DatabaseMysql::Initialize(const char *infoString)
 
         #if MYSQL_VERSION_ID >= 50019
             my_bool my_true = (my_bool)1;
-            if (!mysql_options(mMysql, MYSQL_OPT_RECONNECT, &my_true))
-            sLog.outDetail("MYSQL_OPT_RECONNECT SET TO 1");
+            if (mysql_options(mMysql, MYSQL_OPT_RECONNECT, &my_true))
+                sLog.outDetail("MYSQL_OPT_RECONNECT SET TO 1");
         #endif
 
         return true;
