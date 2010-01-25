@@ -1698,8 +1698,11 @@ void Aura::TriggerSpell()
                     // Frost Blast
                     case 27808:
                     {
-                        int32 bpDamage = target->GetMaxHealth()*26/100;
-                        target->CastCustomSpell(target, 29879, &bpDamage, NULL, NULL, true, NULL, this, casterGUID);
+                        if(GetAuraDuration() <= 4*IN_MILISECONDS)
+                        {
+                            int32 bpDamage = target->GetMaxHealth()*26/100;
+                            target->CastCustomSpell(target, 29879, &bpDamage, NULL, NULL, true, NULL, this, casterGUID);
+                        }
                         return;
                     }
 //                    // Detonate Mana
