@@ -1711,7 +1711,7 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
             i++;
         }
 
-        *resist += uint32(damage * ((double(i) / 10));
+        *resist += uint32(damage * (double(i) / 10));
 
         if(*resist > damage)
             *resist = damage;
