@@ -1673,9 +1673,10 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
     // Magic damage, check for resists
     if ((schoolMask & SPELL_SCHOOL_MASK_NORMAL)==0)
     {
-        float baseVictimResistance = float(pVictim->GetResistance(GetFirstSchoolInMask(schoolMask)));
-        float ignoredResistance = float(GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_TARGET_RESISTANCE, schoolMask));
-        float victimResistance = baseVictimResistance + ignoredResistance;
+        float victimResistance = float(pVictim->GetResistance(GetFirstSchoolInMask(schoolMask)));
+        victimResistance += float(GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_TARGET_RESISTANCE, schoolMask));
+        if(victimResistance < 0.0f)
+            victimResistance = 0.0f;
 
         // http://elitistjerks.com/f15/t44675-resistance_mechanics_wotlk/
         float resistConst = pVictim->getLevel() * 5.0f;
