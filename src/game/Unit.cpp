@@ -1673,24 +1673,28 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
     // Magic damage, check for resists
     if ((schoolMask & SPELL_SCHOOL_MASK_NORMAL)==0)
     {
-        /*
         float baseVictimResistance = float(pVictim->GetResistance(GetFirstSchoolInMask(schoolMask)));
         float ignoredResistance = float(GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_TARGET_RESISTANCE, schoolMask));
         float victimResistance = baseVictimResistance + ignoredResistance;
 
+        // http://elitistjerks.com/f15/t44675-resistance_mechanics_wotlk/
         float resistConst = pVictim->getLevel() * 5.0f;
         if(pVictim->GetTypeId()==TYPEID_UNIT && ((Creature*)pVictim)->isWorldBoss())
             resistConst = 510;
 
         float averageResist = victimResistance / (victimResistance + resistConst);
+
+        // partial resists occur in multiples of 10%
         float discreteResistProbability[11];
-        for (int i = 0; i < 11; i++)
+        int i = 0;
+        for ( ; i < 11; i++)
         {
             discreteResistProbability[i] = 0.5f - 2.5f * abs(0.1f * i - averageResist);
             if (discreteResistProbability[i] < 0.0f)
                 discreteResistProbability[i] = 0.0f;
         }
 
+        // formula for low resistance values
         if (averageResist <= 0.1f)
         {
             discreteResistProbability[0] = 1.0f - 7.5f * averageResist;
@@ -1698,20 +1702,21 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
             discreteResistProbability[2] = 2.5f * averageResist;
         }
 
-        int i = 0;
-        float probabilitySum = discreteResistProbability[0];
-        while (rand_norm() >= probabilitySum && i < 10)
+        float psum = 0.0f;
+        i = 0;
+        double norm = rand_norm();
+        while (norm >= psum && i < 11)
         {
+            psum += discreteResistProbability[i];
             i++;
-            probabilitySum += discreteResistProbability[i];
         }
 
-        *resist += (damage * i) / 10;
+        *resist += uint32(damage * ((double(i) / 10));
 
         if(*resist > damage)
             *resist = damage;
-        */
-
+       
+        /*
         // Get base victim resistance for school
         float tmpvalue2 = (float)pVictim->GetResistance(GetFirstSchoolInMask(schoolMask));
         // Ignore resistance by self SPELL_AURA_MOD_TARGET_RESISTANCE aura
@@ -1740,6 +1745,7 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
             *resist += uint32(damage * m / 4);
         if(*resist > damage)
             *resist = damage;
+        */
     }
     else
         *resist = 0;
