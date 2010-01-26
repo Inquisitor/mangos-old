@@ -18114,7 +18114,7 @@ bool Player::BuyItemFromVendor(uint64 vendorguid, uint32 item, uint8 count, uint
         }
 
         // check for personal arena rating requirement
-        if( GetMaxPersonalArenaRatingRequirement() < iece->reqpersonalarenarating )
+        if( GetMaxPersonalArenaRatingRequirement(iece->reqarenaslot) < iece->reqpersonalarenarating )
         {
             // probably not the proper equip err
             SendEquipError(EQUIP_ERR_CANT_EQUIP_RANK,NULL,NULL);
@@ -18228,19 +18228,16 @@ bool Player::BuyItemFromVendor(uint64 vendorguid, uint32 item, uint8 count, uint
     return crItem->maxcount != 0;
 }
 
-uint32 Player::GetMaxPersonalArenaRatingRequirement()
+uint32 Player::GetMaxPersonalArenaRatingRequirement(uint32 minarenaslot)
 {
     // returns the maximal personal arena rating that can be used to purchase items requiring this condition
     // the personal rating of the arena team must match the required limit as well
     // so return max[in arenateams](min(personalrating[teamtype], teamrating[teamtype]))
     uint32 max_personal_rating = 0;
-    for(int i = 0; i < MAX_ARENA_SLOT; ++i)
+    for(int i = minarenaslot; i < MAX_ARENA_SLOT; ++i)
     {
         if(ArenaTeam * at = sObjectMgr.GetArenaTeamById(GetArenaTeamId(i)))
         {
-            if( at->GetType() == ARENA_TEAM_2v2 )
-                continue;
-
             uint32 p_rating = GetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (i * ARENA_TEAM_END) + ARENA_TEAM_PERSONAL_RATING);
             uint32 t_rating = at->GetRating();
             p_rating = p_rating < t_rating ? p_rating : t_rating;
