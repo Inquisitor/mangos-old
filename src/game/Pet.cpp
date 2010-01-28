@@ -125,9 +125,14 @@ bool Pet::LoadPetFromDB( Player* owner, uint32 petentry, uint32 petnumber, bool 
 
     uint32 summon_spell_id = fields[17].GetUInt32();
     SpellEntry const* spellInfo = sSpellStore.LookupEntry(summon_spell_id);
+    if (!owner->HasActiveSpell(summon_spell_id))
+    {
+        delete result;
+        return false;
+    }
 
     bool is_temporary_summoned = spellInfo && GetSpellDuration(spellInfo) > 0;
-
+    
     // check temporary summoned pets like mage water elemental
     if (current && is_temporary_summoned)
     {
