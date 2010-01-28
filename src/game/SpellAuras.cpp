@@ -2682,6 +2682,15 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     caster->SetThreatRedirectionTarget(0, 0);
                 return;
             }
+            case 39238:
+            {
+                if(Unit * caster = GetCaster())
+                {
+                    if( Creature * pCreat = caster->SummonCreature(urand(0,1) ? 22482 : 22483, caster->GetPositionX(), caster->GetPositionY(), caster->GetPositionZ(), caster->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 300000) )
+                        if(pCreat->GetEntry() == 22483)
+                            pCreat->MonsterYell( "YIEEEEEEEAA!", LANG_UNIVERSAL, 0);
+                }
+            }
         }
 
         // Living Bomb
