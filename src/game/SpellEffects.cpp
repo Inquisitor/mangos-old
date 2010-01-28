@@ -6280,11 +6280,20 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                 case 47724:
                 case 47703:
                 {
-                    if( !GetCaster() || GetCaster()->GetTypeId() != TYPEID_PLAYER )
-                        return;
+                    Unit * caster = GetCaster();
+                    if( !caster || caster->GetTypeId() != TYPEID_PLAYER )
+                    {
+                        if(GetOriginalCaster())
+                        {
+                            caster = GetOriginalCaster();
+                            if(caster->GetTypeId() != TYPEID_PLAYER )
+                                return;
+                        }
+                        else return;
+                    }
 
                     // triggered spell is stored in m_spellInfo->EffectBasePoints[0]
-                    GetCaster()->CastSpell(GetCaster(), damage, true);
+                    caster->CastSpell(caster, damage, true);
                     return;
                 }
                 // Winged Steed of the Ebon Blade
