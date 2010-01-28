@@ -132,7 +132,7 @@ bool Pet::LoadPetFromDB( Player* owner, uint32 petentry, uint32 petnumber, bool 
     }
 
     bool is_temporary_summoned = spellInfo && GetSpellDuration(spellInfo) > 0;
-    
+
     // check temporary summoned pets like mage water elemental
     if (current && is_temporary_summoned)
     {

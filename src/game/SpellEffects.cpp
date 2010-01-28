@@ -2764,7 +2764,7 @@ void Spell::EffectDummy(uint32 i)
                     float z = m_caster->GetPositionZ() + 1.0f;
                     float orientation = unitTarget->GetOrientation();
 
-                    m_caster->CastSpell(unitTarget, 51399, true, NULL);                
+                    m_caster->CastSpell(unitTarget, 51399, true, NULL);
                     
                     if(unitTarget->GetTypeId() != TYPEID_PLAYER)
                     {
