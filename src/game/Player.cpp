@@ -21624,11 +21624,27 @@ void Player::ActivateSpec(uint8 spec)
         return;
 
     _SaveActions();
-    
+
     UnsummonPetTemporaryIfAny();
 
+    Unit::AuraMap& Auras = GetAuras();
+    for(Unit::AuraMap::iterator aura_iter = Auras.begin(), next; aura_iter != Auras.end(); aura_iter = next)
+    {
+        next = aura_iter;
+        ++next;
+        Aura *aur = aura_iter->second;
+        if (aur->GetCaster() == this && !aur->IsPassive() && aur->IsPositive() && !aur->IsPermanent() && aur->GetAuraDuration() > 0 && !aur->GetCastItemGUID())
+        {
+            RemoveAurasDueToSpell(aur->GetId());
+            if(Auras.empty())
+                break;
+            else
+                next = Auras.begin();
+        }
+    }
+
     uint32 const* talentTabIds = GetTalentTabPages(getClass());
-    
+
     for(uint8 i = 0; i < 3; ++i)
     {
         uint32 talentTabId = talentTabIds[i];
