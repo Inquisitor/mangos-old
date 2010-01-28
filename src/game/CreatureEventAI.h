@@ -58,8 +58,6 @@ enum EventAI_Type
     EVENT_T_RECEIVE_EMOTE           = 22,                   // EmoteId, Condition, CondValue1, CondValue2
     EVENT_T_BUFFED                  = 23,                   // Param1 = SpellID, Param2 = Number of Time STacked, Param3/4 Repeat Min/Max
     EVENT_T_TARGET_BUFFED           = 24,                   // Param1 = SpellID, Param2 = Number of Time STacked, Param3/4 Repeat Min/Max
-    EVENT_T_PLAYER_TALK                = 25,                   // NONE
-    EVENT_T_GOSSIP_SELECT           = 26,                   // Param1 = GossipId
 
     EVENT_T_END,
 };
@@ -544,11 +542,6 @@ struct CreatureEventAI_Event
             uint32 repeatMin;
             uint32 repeatMax;
         } buffed;
-        // EVENT_T_GOSSIP_SELECT
-        struct
-        {
-            uint32 GossipId;
-        } gossip;
         // RAW
         struct
         {
@@ -612,8 +605,6 @@ class MANGOS_DLL_SPEC CreatureEventAI : public CreatureAI
         void AttackStart(Unit *who);
         void MoveInLineOfSight(Unit *who);
         void SpellHit(Unit* pUnit, const SpellEntry* pSpell);
-        bool OnTalk(Player* pPlayer);
-        bool OnGossipSelect(Player* pPlayer, uint32 Id);
         void DamageTaken(Unit* done_by, uint32& damage);
         void UpdateAI(const uint32 diff);
         bool IsVisible(Unit *) const;

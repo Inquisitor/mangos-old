@@ -1103,39 +1103,6 @@ void CreatureEventAI::SpellHit(Unit* pUnit, const SpellEntry* pSpell)
                     ProcessEvent(*i, pUnit);
 }
 
-bool CreatureEventAI::OnTalk(Player* pUnit)
-{
-    if (bEmptyList)
-        return false;
-
-    for (std::list<CreatureEventAIHolder>::iterator i = CreatureEventAIList.begin(); i != CreatureEventAIList.end(); ++i)
-        if ((*i).Event.event_type == EVENT_T_PLAYER_TALK)
-        {
-            if( ProcessEvent(*i, (Unit*)pUnit) )
-                return true;
-            return false;
-        }
-        return false;
-}
-
-bool CreatureEventAI::OnGossipSelect(Player* pPlayer, uint32 Id)
-{
-    if (bEmptyList)
-        return false;
-
-    for (std::list<CreatureEventAIHolder>::iterator i = CreatureEventAIList.begin(); i != CreatureEventAIList.end(); ++i)
-        if ((*i).Event.event_type == EVENT_T_GOSSIP_SELECT)
-        {
-            if ((*i).Event.gossip.GossipId && (*i).Event.gossip.GossipId == Id)
-            {
-                if( ProcessEvent(*i, (Unit*)pPlayer) )
-                    return true;
-                return false;
-            }
-        }
-    return false;
-}
-
 void CreatureEventAI::UpdateAI(const uint32 diff)
 {
     //Check if we are in combat (also updates calls threat update code)
