@@ -8720,29 +8720,29 @@ int32 Aura::CalculateCrowdControlAuraAmount(Unit * caster)
 
 void Aura::HandleCharmConvert(bool apply, bool Real)
 {
-    if(!Real)
+    if (!Real)
         return;
 
     // At this moment effect is implemented only for Chains of Kel'thuzad.
-    if( GetId() != 28410 )
+    if (GetId() != 28410)
         return;
 
     // Get Caster
     Unit* uCaster = GetCaster();
-    if(!uCaster)
+    if (!uCaster)
         return;
 
     // Check types, target must be player and caster must be creature
-    if( uCaster->GetTypeId() != TYPEID_UNIT )
+    if (uCaster->GetTypeId() != TYPEID_UNIT)
         return;
-    if( m_target->GetTypeId() != TYPEID_PLAYER )
+    if (m_target->GetTypeId() != TYPEID_PLAYER)
         return;
 
     // Cast our object types
     Creature * caster = static_cast<Creature*>(uCaster);
     Player * target = static_cast<Player*>(m_target);
 
-    if( apply )
+    if (apply)
     {
         target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
         target->SetCharmerGUID(GetCasterGUID());
@@ -8755,26 +8755,26 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
         target->DeleteThreatList();
 
         // Check if caster can have threat list at all.
-        if( !uCaster->CanHaveThreatList() )
+        if (!uCaster->CanHaveThreatList())
             return;
 
         ThreatList m_threatlist = uCaster->getThreatManager().getThreatList();
         std::vector<Unit*> targetlist;
 
-        if( !m_threatlist.empty() )
+        if (!m_threatlist.empty())
         {
-            for( ThreatList::iterator i = m_threatlist.begin(); i != m_threatlist.end(); ++i )
+            for (ThreatList::iterator i = m_threatlist.begin(); i != m_threatlist.end(); ++i)
             {
-                if( (*i)->getTarget() )
+                if ((*i)->getTarget())
                 {
                     Unit * mToAttack = (*i)->getTarget();
-                    if( mToAttack->GetTypeId() == TYPEID_PLAYER && mToAttack != target )
+                    if (mToAttack->GetTypeId() == TYPEID_PLAYER && mToAttack != target)
                         targetlist.push_back(mToAttack);
                 }
             }
         }
 
-        if( !targetlist.empty() )
+        if (!targetlist.empty())
         {
             // Select random player to attack from caster threat list
             Unit * selectedTarget = targetlist[int32(rand32())%targetlist.size()];
