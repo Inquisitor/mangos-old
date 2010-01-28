@@ -13059,7 +13059,7 @@ bool Player::CanCompleteQuest( uint32 quest_id )
                 }
             }
 
-            if ( qInfo->HasFlag(QUEST_MANGOS_FLAGS_KILL_OR_CAST | QUEST_MANGOS_FLAGS_SPEAKTO) )
+            if ( qInfo->HasFlag(QUEST_MANGOS_FLAGS_KILL_OR_CAST) )
             {
                 for(int i = 0; i < QUEST_OBJECTIVES_COUNT; ++i)
                 {
@@ -13215,7 +13215,7 @@ void Player::AddQuest( Quest const *pQuest, Object *questGiver )
             questStatusData.m_itemcount[i] = 0;
     }
 
-    if ( pQuest->HasFlag(QUEST_MANGOS_FLAGS_KILL_OR_CAST | QUEST_MANGOS_FLAGS_SPEAKTO) )
+    if ( pQuest->HasFlag(QUEST_MANGOS_FLAGS_KILL_OR_CAST) )
     {
         for(int i = 0; i < QUEST_OBJECTIVES_COUNT; ++i)
             questStatusData.m_creatureOrGOcount[i] = 0;
@@ -14261,7 +14261,7 @@ void Player::TalkedToCreature( uint32 entry, uint64 guid )
 
         if ( q_status.m_status == QUEST_STATUS_INCOMPLETE )
         {
-            if( qInfo->HasFlag( QUEST_MANGOS_FLAGS_KILL_OR_CAST | QUEST_MANGOS_FLAGS_SPEAKTO ) )
+            if( qInfo->HasFlag( QUEST_MANGOS_FLAGS_KILL_OR_CAST ) )
             {
                 for (int j = 0; j < QUEST_OBJECTIVES_COUNT; ++j)
                 {

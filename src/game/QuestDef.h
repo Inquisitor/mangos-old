@@ -144,7 +144,6 @@ enum __QuestFlags
 
     // Mangos flags for internal use only
     QUEST_MANGOS_FLAGS_DELIVER              = 0x040000,     // Internal flag computed only
-    QUEST_MANGOS_FLAGS_SPEAKTO              = 0x080000,     // Internal flag computed only
     QUEST_MANGOS_FLAGS_KILL_OR_CAST         = 0x100000,     // Internal flag computed only
     QUEST_MANGOS_FLAGS_TIMED                = 0x200000,     // Internal flag computed only
 };

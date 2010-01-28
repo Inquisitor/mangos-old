@@ -3761,7 +3761,7 @@ void ObjectMgr::LoadQuests()
             {
                 // In fact SpeakTo and Kill are quite same: either you can speak to mob:SpeakTo or you can't:Kill/Cast
 
-                qinfo->SetFlag(QUEST_MANGOS_FLAGS_KILL_OR_CAST | QUEST_MANGOS_FLAGS_SPEAKTO);
+                qinfo->SetFlag(QUEST_MANGOS_FLAGS_KILL_OR_CAST);
 
                 if(!qinfo->ReqCreatureOrGOCount[j])
                 {
