@@ -2005,6 +2005,14 @@ void Spell::EffectDummy(uint32 i)
 	                }
                     return;
                 }
+                case 37867: // Q:Frankly, It Makes No Sense...
+                case 37892:
+                case 37894:
+                {
+                    if (Creature * pScorpion = m_caster->GetClosestCreatureWithEntry(m_caster, 21909, 70))
+                        m_caster->CastSpell(pScorpion, 37868, true);
+                    return;
+                }
                 case 67019:                                 // Flask of the North
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
