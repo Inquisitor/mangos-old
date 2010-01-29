@@ -6296,6 +6296,16 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     caster->CastSpell(caster, damage, true);
                     return;
                 }
+                case 32580:
+                {
+                    uint32 toSummon = 0;
+                    if( unitTarget->GetClosestCreatureWithEntry(unitTarget, 21351, 10) )
+                        toSummon = 21446;
+                    else if( unitTarget->GetClosestCreatureWithEntry(unitTarget, 21456, 10) )
+                        toSummon = 21452;
+                    unitTarget->SummonCreature(toSummon, unitTarget->GetPositionX(), unitTarget->GetPositionY(), unitTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 300000 );
+                    return;
+                }
                 // Winged Steed of the Ebon Blade
                 case 54729:
                 {
