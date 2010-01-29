@@ -1970,19 +1970,39 @@ void Spell::EffectDummy(uint32 i)
 
                     return;
                 }
-                case 47530:
+                case 47530: // Q:Strengthen the Ancients
                 {
-                    if( m_caster->GetTypeId() == TYPEID_PLAYER && unitTarget->GetTypeId() != TYPEID_PLAYER && unitTarget->GetEntry() == 26321 )
+                    if (m_caster->GetTypeId() == TYPEID_PLAYER && unitTarget->GetTypeId() != TYPEID_PLAYER && unitTarget->GetEntry() == 26321)
                     {
                         unitTarget->MonsterTextEmote("The Lothalor Acient gives you its thanks.", 0);
                         ((Player*)m_caster)->KilledMonsterCredit(26321, 0);
                     }
                     return;
                 }
-                case 35772:
+                case 35772: // Q:Flora of the Eco-Domes
                 {
-                    if( unitTarget->GetTypeId() == TYPEID_UNIT && unitTarget->GetEntry() == 20774 )
+                    if (unitTarget->GetTypeId() == TYPEID_UNIT && unitTarget->GetEntry() == 20774)
                         ((Creature*)unitTarget)->UpdateEntry(20983);
+                    return;
+                }
+                case 34526: // Q:Torching Sunfury Hold
+                {
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    Creature * Ballista = m_caster->GetClosestCreatureWithEntry(m_caster, 19723, 5);
+                    if (Ballista && Ballista->GetDistance(m_caster) < 5.5f)
+	                {
+                        ((Player*)m_caster)->KilledMonsterCredit(19723, 0);
+		                return;
+	                }
+
+	                Creature * Tent = m_caster->GetClosestCreatureWithEntry(m_caster, 19724, 5);
+	                if (Tent && Tent->GetDistance(m_caster) < 5.5f )
+	                {
+                        ((Player*)m_caster)->KilledMonsterCredit(19724, 0);
+                        return;
+	                }
                     return;
                 }
                 case 67019:                                 // Flask of the North
