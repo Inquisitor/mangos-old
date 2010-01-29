@@ -1633,7 +1633,6 @@ void Spell::EffectDummy(uint32 i)
                     }
                     return;
                 }
-
                 case 38173: // Q: On Spirit's Wings
                 {
                     if( !unitTarget || GetCaster()->GetTypeId() != TYPEID_PLAYER || ((Player*)GetCaster())->GetQuestStatus(10714) == QUEST_STATUS_COMPLETE )
@@ -1671,7 +1670,6 @@ void Spell::EffectDummy(uint32 i)
                     }
                     return;
                 }
-
                 case 33655: // Q: Mission: Gateways Murketh and Shaadraz
                 {
                     if( m_caster->GetTypeId() != TYPEID_PLAYER )
@@ -1979,6 +1977,12 @@ void Spell::EffectDummy(uint32 i)
                         unitTarget->MonsterTextEmote("The Lothalor Acient gives you its thanks.", 0);
                         ((Player*)m_caster)->KilledMonsterCredit(26321, 0);
                     }
+                    return;
+                }
+                case 35772:
+                {
+                    if( unitTarget->GetTypeId() == TYPEID_UNIT && unitTarget->GetEntry() == 20774 )
+                        ((Creature*)unitTarget)->UpdateEntry(20983);
                     return;
                 }
                 case 67019:                                 // Flask of the North
