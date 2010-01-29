@@ -2876,6 +2876,12 @@ void Map::ScriptsProcess()
 
         bool requirement_passed = true;
 
+        if (step.script->reqtype == REQUIREMENT_T_CHANCE_PASS)
+        {
+            if (!roll_chance_i(step.script->reqvalue))
+                requirement_passed = false;
+        }
+
         if( source && (source->GetTypeId() == TYPEID_UNIT || source->GetTypeId() == TYPEID_PLAYER) )
         {
             Unit * uSource = static_cast<Unit*>(source);
@@ -2883,7 +2889,7 @@ void Map::ScriptsProcess()
             switch( step.script->reqtype )
             {
                 case REQUIREMENT_T_INVOKER_AURA:
-                    if( !uSource->HasAura( step.script->reqvalue ) )
+                    if (!uSource->HasAura(step.script->reqvalue))
                         requirement_passed = false;
                     break;
                 case REQUIREMENT_T_QUEST:
@@ -2891,7 +2897,7 @@ void Map::ScriptsProcess()
                         requirement_passed = false;
                     break;
                 case REQUIREMENT_T_INVOKER_HAS_NO_AURA:
-                    if( uSource->HasAura( step.script->reqvalue ) )
+                    if (uSource->HasAura(step.script->reqvalue))
                         requirement_passed = false;
                     break;
             }
