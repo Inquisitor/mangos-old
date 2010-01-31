@@ -66,7 +66,7 @@ ChatCommand * ChatHandler::getCommandTable()
     {
         { "addon",          SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleAccountSetAddonCommand,     "", NULL },
         { "gmlevel",        SEC_CONSOLE,        true,  &ChatHandler::HandleAccountSetGmLevelCommand,   "", NULL },
-        { "password",       SEC_CONSOLE,        true,  &ChatHandler::HandleAccountSetPasswordCommand,  "", NULL },
+        //{ "password",       SEC_PLAYER,        true,  &ChatHandler::HandleAccountSetPasswordCommand,  "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
@@ -74,6 +74,7 @@ ChatCommand * ChatHandler::getCommandTable()
     {
         { "create",         SEC_CONSOLE,        true,  &ChatHandler::HandleAccountCreateCommand,       "", NULL },
         { "delete",         SEC_CONSOLE,        true,  &ChatHandler::HandleAccountDeleteCommand,       "", NULL },
+        { "whisper",        SEC_CONSOLE,        true,  &ChatHandler::HandleCharacterWhisperCommand,     "", NULL },
         { "onlinelist",     SEC_CONSOLE,        true,  &ChatHandler::HandleAccountOnlineListCommand,   "", NULL },
         { "lock",           SEC_PLAYER,         false, &ChatHandler::HandleAccountLockCommand,         "", NULL },
         { "set",            SEC_ADMINISTRATOR,  true,  NULL,                                           "", accountSetCommandTable },
@@ -484,7 +485,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "spells",         SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleResetSpellsCommand,         "", NULL },
         { "stats",          SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleResetStatsCommand,          "", NULL },
         { "talents",        SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleResetTalentsCommand,        "", NULL },
-        { "all",            SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleResetAllCommand,            "", NULL },
+        //{ "all",            SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleResetAllCommand,            "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
@@ -494,6 +495,8 @@ ChatCommand * ChatHandler::getCommandTable()
         { "mail",           SEC_MODERATOR,      true,  &ChatHandler::HandleSendMailCommand,            "", NULL },
         { "message",        SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleSendMessageCommand,         "", NULL },
         { "money",          SEC_ADMINISTRATOR,  true,  &ChatHandler::HandleSendMoneyCommand,           "", NULL },
+        { "channel",        SEC_MODERATOR,      true,  &ChatHandler::HandleSendChannelMsgCommand,      "", NULL },
+        { "sysmessage",     SEC_MODERATOR,      true,  &ChatHandler::HandleSendSysMsgCommand,          "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
@@ -669,6 +672,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "flusharenapoints",SEC_ADMINISTRATOR, false, &ChatHandler::HandleFlushArenaPointsCommand,    "", NULL },
         { "repairitems",    SEC_GAMEMASTER,     true,  &ChatHandler::HandleRepairitemsCommand,         "", NULL },
         { "waterwalk",      SEC_GAMEMASTER,     false, &ChatHandler::HandleWaterwalkCommand,           "", NULL },
+        { "password",       SEC_PLAYER,         false, &ChatHandler::HandleAccountPasswordCommand,     "", NULL },
         { "quit",           SEC_CONSOLE,        true,  &ChatHandler::HandleQuitCommand,                "", NULL },
 
         { NULL,             0,                  false, NULL,                                           "", NULL }
@@ -840,6 +844,17 @@ void ChatHandler::PSendSysMessage(const char *format, ...)
     vsnprintf(str,2048,format, ap );
     va_end(ap);
     SendSysMessage(str);
+}
+
+void ChatHandler::StrReplaceStr(std::string &str, const std::string &find_what, const std::string &replace_with)
+{
+    std::string::size_type pos = 0;
+    while((pos = str.find(find_what, pos)) != std::string::npos)
+    {
+        str.erase(pos, find_what.length());
+        str.insert(pos, replace_with);
+        pos += replace_with.length();
+    }
 }
 
 bool ChatHandler::ExecuteCommandInTable(ChatCommand *table, const char* text, const std::string& fullcmd)
@@ -1686,7 +1701,7 @@ bool ChatHandler::ShowHelpForCommand(ChatCommand *table, const char* cmd)
 }
 
 //Note: target_guid used only in CHAT_MSG_WHISPER_INFORM mode (in this case channelName ignored)
-void ChatHandler::FillMessageData( WorldPacket *data, WorldSession* session, uint8 type, uint32 language, const char *channelName, uint64 target_guid, const char *message, Unit *speaker)
+void ChatHandler::FillMessageData( WorldPacket *data, WorldSession* session, uint8 type, uint32 language, const char *channelName, uint64 target_guid, const char *message, Unit *speaker, bool forceGMIcon)
 {
     uint32 messageLength = (message ? strlen(message) : 0) + 1;
 
@@ -1762,7 +1777,7 @@ void ChatHandler::FillMessageData( WorldPacket *data, WorldSession* session, uin
     if(session != 0 && type != CHAT_MSG_WHISPER_INFORM && type != CHAT_MSG_DND && type != CHAT_MSG_AFK)
         *data << uint8(session->GetPlayer()->chatTag());
     else
-        *data << uint8(0);
+        *data << uint8( forceGMIcon ? 4 : 0);
 }
 
 Player * ChatHandler::getSelectedPlayer()
@@ -2253,8 +2268,26 @@ bool CliHandler::isAvailable(ChatCommand const& cmd) const
 
 void CliHandler::SendSysMessage(const char *str)
 {
-    m_print(str);
-    m_print("\r\n");
+    if (guid)
+    {
+        std::string out = str;
+        char guidStr[64];
+
+        snprintf( (char*)guidStr, 64, "\r\n%u|", guid);
+        StrReplaceStr(out, "\r\n", guidStr);
+
+        snprintf( (char*)guidStr, 64, "\n\r%u|", guid);
+        StrReplaceStr(out, "\n\r", guidStr);
+
+        char resultMsg[2048];
+        snprintf( (char*)resultMsg, 2048, "%u|%s\r\n", guid, out.c_str());
+        m_print(resultMsg);
+    }
+    else
+    {
+        m_print(str);
+        m_print("\r\n");
+    }
 }
 
 std::string CliHandler::GetNameLink() const

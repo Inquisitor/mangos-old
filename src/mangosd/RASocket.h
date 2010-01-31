@@ -40,7 +40,7 @@ class RASocket: public TcpSocket
 
         void OnAccept();
         void OnRead();
-
+        static void zprint( const char * szText );
     private:
 
         char * buff;
@@ -58,8 +58,6 @@ class RASocket: public TcpSocket
             LG,                                             //only login was entered
             OK,                                             //both login and pass were given, and they are correct and user have enough priv.
         }stage;
-
-        static void zprint( const char * szText );
 };
 #endif
 /// @}

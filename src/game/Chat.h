@@ -46,7 +46,7 @@ class ChatHandler
         explicit ChatHandler(Player* player) : m_session(player->GetSession()) {}
         ~ChatHandler() {}
 
-        static void FillMessageData( WorldPacket *data, WorldSession* session, uint8 type, uint32 language, const char *channelName, uint64 target_guid, const char *message, Unit *speaker);
+        static void FillMessageData( WorldPacket *data, WorldSession* session, uint8 type, uint32 language, const char *channelName, uint64 target_guid, const char *message, Unit *speaker, bool forceGMIcon = false);
 
         void FillMessageData( WorldPacket *data, uint8 type, uint32 language, uint64 target_guid, const char* message)
         {
@@ -67,6 +67,7 @@ class ChatHandler
         void SendSysMessage(          int32     entry);
         void PSendSysMessage(         const char *format, ...) ATTR_PRINTF(2,3);
         void PSendSysMessage(         int32     entry, ...  );
+        void StrReplaceStr(std::string &str, const std::string &find_what, const std::string &replace_with);
 
         int ParseCommands(const char* text);
 
@@ -103,7 +104,7 @@ class ChatHandler
         bool HandleAccountPasswordCommand(const char* args);
         bool HandleAccountSetAddonCommand(const char* args);
         bool HandleAccountSetGmLevelCommand(const char* args);
-        bool HandleAccountSetPasswordCommand(const char* args);
+        //bool HandleAccountSetPasswordCommand(const char* args);
 
         bool HandleBanAccountCommand(const char* args);
         bool HandleBanCharacterCommand(const char* args);
@@ -393,7 +394,7 @@ class ChatHandler
         bool HandleReloadSpellPetAurasCommand(const char* args);
 
         bool HandleResetAchievementsCommand(const char * args);
-        bool HandleResetAllCommand(const char * args);
+        //bool HandleResetAllCommand(const char * args);
         bool HandleResetHonorCommand(const char * args);
         bool HandleResetLevelCommand(const char * args);
         bool HandleResetSpellsCommand(const char * args);
@@ -404,6 +405,9 @@ class ChatHandler
         bool HandleSendMailCommand(const char* args);
         bool HandleSendMessageCommand(const char * args);
         bool HandleSendMoneyCommand(const char* args);
+        bool HandleSendChannelMsgCommand(const char* args);
+        bool HandleSendSysMsgCommand(const char * args);
+        bool HandleCharacterWhisperCommand(const char* args);
 
         bool HandleServerCorpsesCommand(const char* args);
         bool HandleServerExitCommand(const char* args);
@@ -551,7 +555,7 @@ class CliHandler : public ChatHandler
 {
     public:
         typedef void Print(char const*);
-        explicit CliHandler(Print* zprint) : m_print(zprint) {}
+        explicit CliHandler(Print* zprint, uint32 _guid) : m_print(zprint), guid(_guid) {}
 
         // overwrite functions
         const char *GetMangosString(int32 entry) const;
@@ -564,6 +568,7 @@ class CliHandler : public ChatHandler
 
     private:
         Print* m_print;
+        uint32 guid;
 };
 
 char const *fmtstring( char const *format, ... );

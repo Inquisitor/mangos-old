@@ -35,6 +35,7 @@
 #ifdef _DEBUG_VMAPS
 #include "VMapFactory.h"
 #endif
+#include "ChannelMgr.h"
 
 //-----------------------Npc Commands-----------------------
 bool ChatHandler::HandleNpcSayCommand(const char* args)
@@ -2494,5 +2495,60 @@ bool ChatHandler::HandleModifyDrunkCommand(const char* args)
 
     m_session->GetPlayer()->SetDrunkValue(drunkMod);
 
+    return true;
+}
+
+// Send a system message (command-return-like) to a player in game
+bool ChatHandler::HandleSendSysMsgCommand(const char* args)
+{
+    ///- Find the player
+    Player *rPlayer;
+    if(!extractPlayerTarget((char*)args,&rPlayer))
+        return false;
+
+    char* msg_str = strtok(NULL, "");
+    if(!msg_str)
+        return false;
+
+    ///- Check that he is not logging out.
+    if(rPlayer->GetSession()->isLogingOut())
+    {
+        SendSysMessage(LANG_PLAYER_NOT_FOUND);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    PSendSysMessage(msg_str);
+    return true;
+}
+
+//Send message to channel
+bool ChatHandler::HandleSendChannelMsgCommand(const char *args)
+{
+    ChannelMgr* cMgr = channelMgr(HORDE);
+    if( !cMgr )
+        return false;
+
+    char* channel_name = strtok((char*)args, " ");
+    char* irc_name = strtok(NULL, " ");
+    char* arg_GM = strtok(NULL, " ");
+    char* text = strtok(NULL, "");
+
+    if( !channel_name || !irc_name || !text || !arg_GM )
+        return false;
+
+    Channel * channel = cMgr->GetChannel(channel_name, NULL, false );
+    if( !channel )
+        return false;
+
+    char msg[256];
+    snprintf( ( char* )msg, 256, "[%s]: %s",irc_name, text );
+    bool isGM = false;
+    if(!strcmp(arg_GM,"GM"))
+        isGM = true;
+
+    WorldPacket dataa;
+    ChatHandler::FillMessageData(&dataa, NULL, CHAT_MSG_CHANNEL, LANG_UNIVERSAL, channel->GetName().c_str(), NULL, msg, NULL, isGM);
+    channel->SendToAll(&dataa);
     return true;
 }

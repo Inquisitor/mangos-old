@@ -361,16 +361,35 @@ struct CliCommandHolder
 {
     typedef void Print(const char*);
 
+    uint32 guid;
     char *m_command;
     Print* m_print;
 
     CliCommandHolder(const char *command, Print* zprint)
-        : m_print(zprint)
-    {
-        size_t len = strlen(command)+1;
+        : guid(0), m_command(NULL), m_print(zprint)
+     {
+        char* command_clean = NULL;
+        sscanf (command, "%d|", &guid);
+        if(guid)
+        {
+            for(uint32 x = 0; command[x]; ++x)
+                if(command[x] == '|' && command[x+1])
+                {
+                    command_clean = (char*)command + x + 1;
+                    break;
+                }
+        }
+
+        if(!command_clean)
+        {
+            command_clean = (char*)command;
+            guid = 0;
+        }
+
+        size_t len = strlen(command_clean)+1;
         m_command = new char[len];
-        memcpy(m_command, command, len);
-    }
+        memcpy(m_command, command_clean, len);
+     }
 
     ~CliCommandHolder() { delete[] m_command; }
 };
