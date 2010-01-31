@@ -4315,6 +4315,26 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
                 }
                 break;
             }
+            case SCRIPT_COMMAND_ADD_QUEST_COUNT:
+            {
+                Quest const* quest = GetQuestTemplate(tmp.datalong);
+                if( tmp.datalong2 > 4 )
+                {
+                    sLog.outErrorDb("Table `%s` has x for requirement [] (x: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `datalong2` for script id %u",tablename,tmp.datalong2,tmp.id);
+                    continue;
+                }
+                if( tmp.dataint < 1 )
+                {
+                    sLog.outErrorDb("Table `%s` has increment value (Value: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `dataint` for script id %u",tablename,tmp.dataint,tmp.id);
+                    continue;
+                }
+                if(!quest)
+                {
+                    sLog.outErrorDb("Table `%s` has invalid quest (ID: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `datalong` for script id %u",tablename,tmp.datalong,tmp.id);
+                    continue;
+                }
+                break;
+            } 
         }
 
         if (scripts.find(tmp.id) == scripts.end())
