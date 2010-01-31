@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -557,8 +557,8 @@ namespace MaNGOS
             }
             bool operator()(Creature* u)
             {
-               if ((u->getDeathState()!=CORPSE && u->getDeathState()!=GHOULED) || u->isInFlight() ||
-                    u->isDeadByDefault() || (u->GetDisplayId() != u->GetNativeDisplayId()) ||
+                if (u->getDeathState()!=CORPSE || u->isInFlight() || u->isDeadByDefault() ||
+                    (u->GetDisplayId() != u->GetNativeDisplayId()) ||
                     (u->GetCreatureTypeMask() & CREATURE_TYPEMASK_MECHANICAL_OR_ELEMENTAL)!=0)
                     return false;
 
@@ -654,22 +654,6 @@ namespace MaNGOS
             NearestGameObjectFishingHole(NearestGameObjectFishingHole const&);
     };
 
-    class AnyGameObjectInPointRangeCheck
-    {
-        public:
-            AnyGameObjectInPointRangeCheck(float posX, float posY, float posZ, float range) : x(posX), y(posY), z(posZ), i_range(range) {}
-            bool operator()(GameObject* g)
-            {
-                if(g && g->GetDistance(x, y, z) < i_range)
-                    return true;
-
-                return false;
-            }
-        private:
-            float x, y, z;
-            float i_range;
-    };
-
     // Success at unit in range, range update for next check (this can be use with GameobjectLastSearcher to find nearest GO)
     class NearestGameObjectEntryInObjectRangeCheck
     {
@@ -735,7 +719,7 @@ namespace MaNGOS
             bool operator()(Unit* u)
             {
                 if(u->isAlive() && u->isInCombat() && !i_obj->IsHostileTo(u) && i_obj->IsWithinDistInMap(u, i_range) &&
-                    (u->isFeared() || u->isCharmed() || u->isFrozen() || u->hasUnitState(UNIT_STAT_STUNNED | UNIT_STAT_CONFUSED | UNIT_STAT_DIED)))
+                    (u->isCharmed() || u->isFrozen() || u->hasUnitState(UNIT_STAT_CAN_NOT_REACT)))
                 {
                     return true;
                 }
@@ -757,23 +741,6 @@ namespace MaNGOS
                 {
                     return true;
                 }
-                return false;
-            }
-        private:
-            Unit const* i_obj;
-            float i_range;
-            uint32 i_spell;
-    };
-
-    class AnyWithAuraInRange
-    {
-        public:
-            AnyWithAuraInRange(Unit const* obj, float range, uint32 spellid) : i_obj(obj), i_range(range), i_spell(spellid) {}
-            bool operator()(Unit* u)
-            {
-                if(u->isAlive() && i_obj->IsWithinDistInMap(u, i_range) && u->HasAura(i_spell))
-                    return true;
-
                 return false;
             }
         private:
@@ -848,22 +815,6 @@ namespace MaNGOS
             }
         private:
             WorldObject const* i_obj;
-            float i_range;
-    };
-
-    class AnyUnitInPointRangeCheck
-    {
-        public:
-            AnyUnitInPointRangeCheck(float posX, float posY, float posZ, float range) : x(posX), y(posY), z(posZ), i_range(range) {}
-            bool operator()(Unit* u)
-            {
-                if(u->isAlive() && u->GetDistance(x, y, z) < i_range)
-                    return true;
-
-                return false;
-            }
-        private:
-            float x, y, z;
             float i_range;
     };
 

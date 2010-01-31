@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -222,11 +222,11 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_RANGED                         0x00000002            // 1 All ranged abilites have this flag
 #define SPELL_ATTR_ON_NEXT_SWING_1                0x00000004            // 2 on next swing
 #define SPELL_ATTR_UNK3                           0x00000008            // 3 not set in 3.0.3
-#define SPELL_ATTR_UNK4                           0x00000010            // 4
+#define SPELL_ATTR_UNK4                           0x00000010            // 4 isAbility
 #define SPELL_ATTR_TRADESPELL                     0x00000020            // 5 trade spells, will be added by client to a sublist of profession spell
 #define SPELL_ATTR_PASSIVE                        0x00000040            // 6 Passive spell
-#define SPELL_ATTR_UNK7                           0x00000080            // 7 visible?
-#define SPELL_ATTR_UNK8                           0x00000100            // 8
+#define SPELL_ATTR_UNK7                           0x00000080            // 7 can't be linked in chat?
+#define SPELL_ATTR_UNK8                           0x00000100            // 8 hide created item in tooltip (for effect=24)
 #define SPELL_ATTR_UNK9                           0x00000200            // 9
 #define SPELL_ATTR_ON_NEXT_SWING_2                0x00000400            // 10 on next swing 2
 #define SPELL_ATTR_UNK11                          0x00000800            // 11
@@ -261,7 +261,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX_NEGATIVE                    0x00000080            // 7
 #define SPELL_ATTR_EX_NOT_IN_COMBAT_TARGET        0x00000100            // 8 Spell req target not to be in combat state
 #define SPELL_ATTR_EX_UNK9                        0x00000200            // 9
-#define SPELL_ATTR_EX_NO_INITIAL_AGGRO            0x00000400            // 10 no generates threat on cast 100% (UNUSED changed to SPELL_ATTR_EX3_NO_INITIAL_AGGRO)
+#define SPELL_ATTR_EX_NO_INITIAL_AGGRO            0x00000400            // 10 no generates threat on cast 100%
 #define SPELL_ATTR_EX_UNK11                       0x00000800            // 11
 #define SPELL_ATTR_EX_UNK12                       0x00001000            // 12
 #define SPELL_ATTR_EX_UNK13                       0x00002000            // 13
@@ -301,7 +301,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX2_UNK14                      0x00004000            // 14
 #define SPELL_ATTR_EX2_UNK15                      0x00008000            // 15 not set in 3.0.3
 #define SPELL_ATTR_EX2_UNK16                      0x00010000            // 16
-#define SPELL_ATTR_EX2_NOT_RESET_AUTOSHOT         0x00020000            // 17 Hunters Shot and Stings only have this flag
+#define SPELL_ATTR_EX2_UNK17                      0x00020000            // 17 Hunters Shot and Stings only have this flag
 #define SPELL_ATTR_EX2_UNK18                      0x00040000            // 18 Only Revive pet - possible req dead pet
 #define SPELL_ATTR_EX2_NOT_NEED_SHAPESHIFT        0x00080000            // 19 does not necessarly need shapeshift
 #define SPELL_ATTR_EX2_UNK20                      0x00100000            // 20
@@ -334,7 +334,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX3_UNK14                      0x00004000            // 14 "Honorless Target" only this spells have this flag
 #define SPELL_ATTR_EX3_UNK15                      0x00008000            // 15 Auto Shoot, Shoot, Throw,  - this is autoshot flag
 #define SPELL_ATTR_EX3_UNK16                      0x00010000            // 16 no triggers effects that trigger on casting a spell??
-#define SPELL_ATTR_EX3_NO_INITIAL_AGGRO           0x00020000            // 17 Soothe Animal, 39758, Mind Soothe
+#define SPELL_ATTR_EX3_UNK17                      0x00020000            // 17 no triggers effects that trigger on casting a spell??
 #define SPELL_ATTR_EX3_UNK18                      0x00040000            // 18
 #define SPELL_ATTR_EX3_UNK19                      0x00080000            // 19
 #define SPELL_ATTR_EX3_DEATH_PERSISTENT           0x00100000            // 20 Death persistent spells
@@ -449,12 +449,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX6_UNK30                      0x40000000            // 30 not set in 3.0.3
 #define SPELL_ATTR_EX6_UNK31                      0x80000000            // 31 not set in 3.0.3
 
-#define MIN_TALENT_SPEC         0
-#define MAX_TALENT_SPEC         1
-#define MIN_TALENT_SPECS        1
-#define MAX_TALENT_SPECS        2
 #define MAX_GLYPH_SLOT_INDEX    6
-#define MIN_LEVEL_FOR_DUAL_SPEC 40 
 
 enum SheathTypes
 {
@@ -629,7 +624,7 @@ enum SpellEffects
     SPELL_EFFECT_SELF_RESURRECT            = 94,
     SPELL_EFFECT_SKINNING                  = 95,
     SPELL_EFFECT_CHARGE                    = 96,
-    SPELL_EFFECT_SUMMON_ALL_TOTEMS         = 97,
+    SPELL_EFFECT_97                        = 97,
     SPELL_EFFECT_KNOCK_BACK                = 98,
     SPELL_EFFECT_DISENCHANT                = 99,
     SPELL_EFFECT_INEBRIATE                 = 100,
@@ -914,7 +909,7 @@ enum AuraState
     AURA_STATE_SWIFTMEND                    = 15,           //   T |
     AURA_STATE_DEADLY_POISON                = 16,           //   T |
     AURA_STATE_ENRAGE                       = 17,           // C   |
-    AURA_STATE_BLEEDING                     = 18,           // C  T|
+    //AURA_STATE_UNKNOWN18                  = 18,           // C  t|
     //AURA_STATE_UNKNOWN19                  = 19,           //     | not used
     //AURA_STATE_UNKNOWN20                  = 20,           //  c  | only (45317 Suicide)
     //AURA_STATE_UNKNOWN21                  = 21,           //     | not used
@@ -979,6 +974,13 @@ enum Mechanics
 
 #define IMMUNE_TO_INTERRUPT_AND_SILENCE_MASK ( \
     (1<<(MECHANIC_INTERRUPT-1))|(1<<(MECHANIC_SILENCE-1)))
+
+// Daze and all croud control spells except polymorph are not removed
+#define MECHANIC_NOT_REMOVED_BY_SHAPESHIFT ( \
+    (1<<(MECHANIC_CHARM -1))|(1<<(MECHANIC_DISORIENTED-1))|(1<<(MECHANIC_FEAR  -1))| \
+    (1<<(MECHANIC_PACIFY-1))|(1<<(MECHANIC_STUN       -1))|(1<<(MECHANIC_FREEZE-1))| \
+    (1<<(MECHANIC_BANISH-1))|(1<<(MECHANIC_SHACKLE    -1))|(1<<(MECHANIC_HORROR-1))| \
+    (1<<(MECHANIC_TURN  -1))|(1<<(MECHANIC_DAZE       -1))|(1<<(MECHANIC_SAPPED-1)))
 
 // Spell dispell type
 enum DispelType
@@ -1065,7 +1067,7 @@ enum Targets
     TARGET_CHAIN_HEAL                  = 45,
     TARGET_SCRIPT_COORDINATES          = 46,
     TARGET_DYNAMIC_OBJECT_FRONT        = 47,
-    TARGET_SUMMON                      = 48,
+    TARGET_DYNAMIC_OBJECT_BEHIND       = 48,
     TARGET_DYNAMIC_OBJECT_LEFT_SIDE    = 49,
     TARGET_DYNAMIC_OBJECT_RIGHT_SIDE   = 50,
     TARGET_AREAEFFECT_CUSTOM_2         = 52,
@@ -1096,7 +1098,7 @@ enum Targets
     TARGET_SELF2                       = 87,
     TARGET_DIRECTLY_FORWARD            = 89,
     TARGET_NONCOMBAT_PET               = 90,
-    TARGET_IN_FRONT_OF_CASTER_90       = 104,
+    TARGET_IN_FRONT_OF_CASTER_30       = 104,
 };
 
 enum SpellMissInfo
@@ -2268,13 +2270,15 @@ enum TotemCategory
 
 enum UnitDynFlags
 {
-    UNIT_DYNFLAG_LOOTABLE          = 0x0001,
-    UNIT_DYNFLAG_TRACK_UNIT        = 0x0002,
-    UNIT_DYNFLAG_OTHER_TAGGER      = 0x0004,
-    UNIT_DYNFLAG_ROOTED            = 0x0008,
-    UNIT_DYNFLAG_SPECIALINFO       = 0x0010,
-    UNIT_DYNFLAG_DEAD              = 0x0020,
-    UNIT_DYNFLAG_REFER_A_FRIEND    = 0x0040
+    UNIT_DYNFLAG_NONE                       = 0x0000,
+    UNIT_DYNFLAG_LOOTABLE                   = 0x0001,
+    UNIT_DYNFLAG_TRACK_UNIT                 = 0x0002,
+    UNIT_DYNFLAG_TAPPED                     = 0x0004,       // Lua_UnitIsTapped
+    UNIT_DYNFLAG_TAPPED_BY_PLAYER           = 0x0008,       // Lua_UnitIsTappedByPlayer
+    UNIT_DYNFLAG_SPECIALINFO                = 0x0010,
+    UNIT_DYNFLAG_DEAD                       = 0x0020,
+    UNIT_DYNFLAG_REFER_A_FRIEND             = 0x0040,
+    UNIT_DYNFLAG_TAPPED_BY_ALL_THREAT_LIST  = 0x0080        // Lua_UnitIsTappedByAllThreatList
 };
 
 enum CorpseDynFlags
@@ -2291,9 +2295,6 @@ enum CorpseDynFlags
 #define SPELL_ID_WEAPON_SWITCH_COOLDOWN_1_0s    6123
 #define SPELL_ID_AUTOSHOT                       75          // used for checks in other spells interruption
 #define SPELL_ID_SHADOWMELD                     58984       // used for check ignore stealth stance state
-#define SPELL_ID_BLOOD_PRESENCE                 48266       // Blood Presence
-#define SPELL_ID_FROST_PRESENCE                 48263       // Frost Presence
-#define SPELL_ID_UNHOLY_PRESENCE                48265       // Unholy Presence
 
 enum WeatherType
 {
@@ -2318,8 +2319,8 @@ enum ChatMsg
     CHAT_MSG_OFFICER                = 0x05,
     CHAT_MSG_YELL                   = 0x06,
     CHAT_MSG_WHISPER                = 0x07,
-    CHAT_MSG_WHISPER_INFORM         = 0x08, // WHISPER_FOREIGN?
-    CHAT_MSG_REPLY                  = 0x09, // WHISPER_INFORM?
+    CHAT_MSG_WHISPER_FOREIGN        = 0x08,
+    CHAT_MSG_WHISPER_INFORM         = 0x09,
     CHAT_MSG_EMOTE                  = 0x0A,
     CHAT_MSG_TEXT_EMOTE             = 0x0B,
     CHAT_MSG_MONSTER_SAY            = 0x0C,
@@ -2351,18 +2352,20 @@ enum ChatMsg
     CHAT_MSG_BG_SYSTEM_HORDE        = 0x26,
     CHAT_MSG_RAID_LEADER            = 0x27,
     CHAT_MSG_RAID_WARNING           = 0x28,
-    CHAT_MSG_RAID_BOSS_WHISPER      = 0x29,
-    CHAT_MSG_RAID_BOSS_EMOTE        = 0x2A,
+    CHAT_MSG_RAID_BOSS_EMOTE        = 0x29,
+    CHAT_MSG_RAID_BOSS_WHISPER      = 0x2A,
     CHAT_MSG_FILTERED               = 0x2B,
     CHAT_MSG_BATTLEGROUND           = 0x2C,
     CHAT_MSG_BATTLEGROUND_LEADER    = 0x2D,
     CHAT_MSG_RESTRICTED             = 0x2E,
-    CHAT_MSG_BN                     = 0x2F,
+    CHAT_MSG_BATTLENET              = 0x2F,
     CHAT_MSG_ACHIEVEMENT            = 0x30,
-    CHAT_MSG_GUILD_ACHIEVEMENT      = 0x31
+    CHAT_MSG_GUILD_ACHIEVEMENT      = 0x31,
+    CHAT_MSG_ARENA_POINTS           = 0x32,
+    CHAT_MSG_PARTY_LEADER           = 0x33
 };
 
-#define MAX_CHAT_MSG_TYPE 0x32
+#define MAX_CHAT_MSG_TYPE 0x34
 
 enum ChatLinkColors
 {
@@ -2443,29 +2446,6 @@ enum DiminishingGroup
     DIMINISHING_LIMITONLY
 };
 
-/* NOTE : vehicles and seats has their own flags in DBC,
-but for now, they are too unknown for us, to use them */
-enum CustomVehicleFLags
-{
-    VF_CANT_MOVE                    = 0x0001,                   // vehicle cant move, only turn, maybe handle by some auras?
-    VF_FACTION                      = 0x0002,                   // vehicle retain its own faction
-    VF_DESPAWN_NPC                  = 0x0004,                   // vehicle will delete npc on spellclick
-    VF_DESPAWN_AT_LEAVE             = 0x0008,                   // vehicle will be deleted when rider leaves
-    VF_CAN_BE_HEALED                = 0x0010,                   // vehicle can be healed
-    VF_GIVE_EXP                     = 0x0020,                   // vehicle will give exp for killing enemies
-    VF_MOVEMENT                     = 0x0040,                   // vehicle will move on its own, not depending on rider, however rider can cast spells
-    VF_NON_SELECTABLE               = 0x0080                    // vehicle will be not selectable after rider enter
-    //VF_HAS_FUEL                     = 0x0100,                   // TODO : find out what energy type is fuel and implement this
-};
-
-enum CustomVehicleSeatFLags
-{
-    SF_MAIN_RIDER                   = 0x0001,                   // the one who controlls vehicle, can also cast spells
-    SF_UNATTACKABLE                 = 0x0002,                   // hided inside, and unatackable until vehicle is destroyed
-    SF_CAN_CAST                     = 0x0004,                   // player/npc can rotate, and cast OWN spells
-    SF_UNACCESSIBLE                 = 0x0008                    // player cant enter this seat by normal way (only by script)
-};
-
 enum ResponseCodes
 {
     RESPONSE_SUCCESS                                       = 0x00,
@@ -2543,42 +2523,43 @@ enum ResponseCodes
     CHAR_CREATE_CHARACTER_SWAP_FACTION                     = 0x42,
     CHAR_CREATE_CHARACTER_RACE_ONLY                        = 0x43,
     CHAR_CREATE_CHARACTER_GOLD_LIMIT                       = 0x44,
+    CHAR_CREATE_FORCE_LOGIN                                = 0x45,
 
-    CHAR_DELETE_IN_PROGRESS                                = 0x45,
-    CHAR_DELETE_SUCCESS                                    = 0x46,
-    CHAR_DELETE_FAILED                                     = 0x47,
-    CHAR_DELETE_FAILED_LOCKED_FOR_TRANSFER                 = 0x48,
-    CHAR_DELETE_FAILED_GUILD_LEADER                        = 0x49,
-    CHAR_DELETE_FAILED_ARENA_CAPTAIN                       = 0x4A,
+    CHAR_DELETE_IN_PROGRESS                                = 0x46,
+    CHAR_DELETE_SUCCESS                                    = 0x47,
+    CHAR_DELETE_FAILED                                     = 0x48,
+    CHAR_DELETE_FAILED_LOCKED_FOR_TRANSFER                 = 0x49,
+    CHAR_DELETE_FAILED_GUILD_LEADER                        = 0x4A,
+    CHAR_DELETE_FAILED_ARENA_CAPTAIN                       = 0x4B,
 
-    CHAR_LOGIN_IN_PROGRESS                                 = 0x4B,
-    CHAR_LOGIN_SUCCESS                                     = 0x4C,
-    CHAR_LOGIN_NO_WORLD                                    = 0x4D,
-    CHAR_LOGIN_DUPLICATE_CHARACTER                         = 0x4E,
-    CHAR_LOGIN_NO_INSTANCES                                = 0x4F,
-    CHAR_LOGIN_FAILED                                      = 0x50,
-    CHAR_LOGIN_DISABLED                                    = 0x51,
-    CHAR_LOGIN_NO_CHARACTER                                = 0x52,
-    CHAR_LOGIN_LOCKED_FOR_TRANSFER                         = 0x53,
-    CHAR_LOGIN_LOCKED_BY_BILLING                           = 0x54,
+    CHAR_LOGIN_IN_PROGRESS                                 = 0x4C,
+    CHAR_LOGIN_SUCCESS                                     = 0x4D,
+    CHAR_LOGIN_NO_WORLD                                    = 0x4E,
+    CHAR_LOGIN_DUPLICATE_CHARACTER                         = 0x4F,
+    CHAR_LOGIN_NO_INSTANCES                                = 0x50,
+    CHAR_LOGIN_FAILED                                      = 0x51,
+    CHAR_LOGIN_DISABLED                                    = 0x52,
+    CHAR_LOGIN_NO_CHARACTER                                = 0x53,
+    CHAR_LOGIN_LOCKED_FOR_TRANSFER                         = 0x54,
+    CHAR_LOGIN_LOCKED_BY_BILLING                           = 0x55,
 
-    CHAR_NAME_SUCCESS                                      = 0x55,
-    CHAR_NAME_FAILURE                                      = 0x56,
-    CHAR_NAME_NO_NAME                                      = 0x57,
-    CHAR_NAME_TOO_SHORT                                    = 0x58,
-    CHAR_NAME_TOO_LONG                                     = 0x59,
-    CHAR_NAME_INVALID_CHARACTER                            = 0x5A,
-    CHAR_NAME_MIXED_LANGUAGES                              = 0x5B,
-    CHAR_NAME_PROFANE                                      = 0x5C,
-    CHAR_NAME_RESERVED                                     = 0x5D,
-    CHAR_NAME_INVALID_APOSTROPHE                           = 0x5E,
-    CHAR_NAME_MULTIPLE_APOSTROPHES                         = 0x5F,
-    CHAR_NAME_THREE_CONSECUTIVE                            = 0x60,
-    CHAR_NAME_INVALID_SPACE                                = 0x61,
-    CHAR_NAME_CONSECUTIVE_SPACES                           = 0x62,
-    CHAR_NAME_RUSSIAN_CONSECUTIVE_SILENT_CHARACTERS        = 0x63,
-    CHAR_NAME_RUSSIAN_SILENT_CHARACTER_AT_BEGINNING_OR_END = 0x64,
-    CHAR_NAME_DECLENSION_DOESNT_MATCH_BASE_NAME            = 0x65
+    CHAR_NAME_SUCCESS                                      = 0x56,
+    CHAR_NAME_FAILURE                                      = 0x57,
+    CHAR_NAME_NO_NAME                                      = 0x58,
+    CHAR_NAME_TOO_SHORT                                    = 0x59,
+    CHAR_NAME_TOO_LONG                                     = 0x5A,
+    CHAR_NAME_INVALID_CHARACTER                            = 0x5B,
+    CHAR_NAME_MIXED_LANGUAGES                              = 0x5C,
+    CHAR_NAME_PROFANE                                      = 0x5D,
+    CHAR_NAME_RESERVED                                     = 0x5E,
+    CHAR_NAME_INVALID_APOSTROPHE                           = 0x5F,
+    CHAR_NAME_MULTIPLE_APOSTROPHES                         = 0x60,
+    CHAR_NAME_THREE_CONSECUTIVE                            = 0x61,
+    CHAR_NAME_INVALID_SPACE                                = 0x62,
+    CHAR_NAME_CONSECUTIVE_SPACES                           = 0x63,
+    CHAR_NAME_RUSSIAN_CONSECUTIVE_SILENT_CHARACTERS        = 0x64,
+    CHAR_NAME_RUSSIAN_SILENT_CHARACTER_AT_BEGINNING_OR_END = 0x65,
+    CHAR_NAME_DECLENSION_DOESNT_MATCH_BASE_NAME            = 0x66
 };
 
 /// Ban function modes
@@ -2666,9 +2647,9 @@ enum PetTameFailureReason
 
 // we need to stick to 1 version or half of the stuff will work for someone
 // others will not and opposite
-// will only support WoW:WotLK 3.2.2a, client build 10505.
+// will only support WoW, WoW:TBC and WoW:WotLK 3.3.0a client build 11159...
 
-#define EXPECTED_MANGOSD_CLIENT_BUILD        {10505, 0}
+#define EXPECTED_MANGOSD_CLIENT_BUILD        {11159, 0}
 
 // max supported expansion level in mangosd
 // NOTE: not set it more that supported by targeted client version with all expansions installed

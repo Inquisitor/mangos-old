@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@
 #include "Player.h"
 #include "Opcodes.h"
 #include "Chat.h"
-#include "ChannelMgr.h"
 #include "Log.h"
 #include "MapManager.h"
 #include "ObjectAccessor.h"
@@ -394,7 +393,8 @@ bool ChatHandler::HandleNamegoCommand(const char* args)
             // when porting out from the bg, it will be reset to 0
             target->SetBattleGroundId(m_session->GetPlayer()->GetBattleGroundId(), m_session->GetPlayer()->GetBattleGroundTypeId());
             // remember current position as entry point for return at bg end teleportation
-            target->SetBattleGroundEntryPoint();
+            if (!target->GetMap()->IsBattleGroundOrArena())
+                target->SetBattleGroundEntryPoint();
         }
         else if (pMap->IsDungeon())
         {
@@ -508,7 +508,8 @@ bool ChatHandler::HandleGonameCommand(const char* args)
             // when porting out from the bg, it will be reset to 0
             _player->SetBattleGroundId(target->GetBattleGroundId(), target->GetBattleGroundTypeId());
             // remember current position as entry point for return at bg end teleportation
-            _player->SetBattleGroundEntryPoint();
+            if (!_player->GetMap()->IsBattleGroundOrArena())
+                _player->SetBattleGroundEntryPoint();
         }
         else if(cMap->IsDungeon())
         {
@@ -1135,11 +1136,11 @@ bool ChatHandler::HandleModifyASpeedCommand(const char* args)
     if (needReportToTarget(chr))
         ChatHandler(chr).PSendSysMessage(LANG_YOURS_ASPEED_CHANGED, GetNameLink().c_str(), ASpeed);
 
-    chr->SetSpeed(MOVE_WALK,    ASpeed,true);
-    chr->SetSpeed(MOVE_RUN,     ASpeed,true);
-    chr->SetSpeed(MOVE_SWIM,    ASpeed,true);
-    //chr->SetSpeed(MOVE_TURN,    ASpeed,true);
-    chr->SetSpeed(MOVE_FLIGHT,     ASpeed,true);
+    chr->SetSpeedRate(MOVE_WALK,   ASpeed,true);
+    chr->SetSpeedRate(MOVE_RUN,    ASpeed,true);
+    chr->SetSpeedRate(MOVE_SWIM,   ASpeed,true);
+    //chr->SetSpeed(MOVE_TURN,     ASpeed,true);
+    chr->SetSpeedRate(MOVE_FLIGHT, ASpeed,true);
     return true;
 }
 
@@ -1183,7 +1184,7 @@ bool ChatHandler::HandleModifySpeedCommand(const char* args)
     if (needReportToTarget(chr))
         ChatHandler(chr).PSendSysMessage(LANG_YOURS_SPEED_CHANGED, GetNameLink().c_str(), Speed);
 
-    chr->SetSpeed(MOVE_RUN,Speed,true);
+    chr->SetSpeedRate(MOVE_RUN,Speed,true);
 
     return true;
 }
@@ -1228,7 +1229,7 @@ bool ChatHandler::HandleModifySwimCommand(const char* args)
     if (needReportToTarget(chr))
         ChatHandler(chr).PSendSysMessage(LANG_YOURS_SWIM_SPEED_CHANGED, GetNameLink().c_str(), Swim);
 
-    chr->SetSpeed(MOVE_SWIM,Swim,true);
+    chr->SetSpeedRate(MOVE_SWIM,Swim,true);
 
     return true;
 }
@@ -1273,7 +1274,7 @@ bool ChatHandler::HandleModifyBWalkCommand(const char* args)
     if (needReportToTarget(chr))
         ChatHandler(chr).PSendSysMessage(LANG_YOURS_BACK_SPEED_CHANGED, GetNameLink().c_str(), BSpeed);
 
-    chr->SetSpeed(MOVE_RUN_BACK,BSpeed,true);
+    chr->SetSpeedRate(MOVE_RUN_BACK,BSpeed,true);
 
     return true;
 }
@@ -1309,7 +1310,7 @@ bool ChatHandler::HandleModifyFlyCommand(const char* args)
     if (needReportToTarget(chr))
         ChatHandler(chr).PSendSysMessage(LANG_YOURS_FLY_SPEED_CHANGED, GetNameLink().c_str(), FSpeed);
 
-    chr->SetSpeed(MOVE_FLIGHT,FSpeed,true);
+    chr->SetSpeedRate(MOVE_FLIGHT,FSpeed,true);
 
     return true;
 }
@@ -1321,30 +1322,33 @@ bool ChatHandler::HandleModifyScaleCommand(const char* args)
         return false;
 
     float Scale = (float)atof((char*)args);
-    if (Scale > 9.0f || Scale <= 0.0f)
+    if (Scale > 10.0f || Scale <= 0.0f)
     {
         SendSysMessage(LANG_BAD_VALUE);
         SetSentErrorMessage(true);
         return false;
     }
 
-    Player *chr = getSelectedPlayer();
-    if (chr == NULL)
+    Unit *target = getSelectedUnit();
+    if (target == NULL)
     {
-        SendSysMessage(LANG_NO_CHAR_SELECTED);
+        SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
         SetSentErrorMessage(true);
         return false;
     }
 
-    // check online security
-    if (HasLowerSecurity(chr, 0))
-        return false;
+    if (target->GetTypeId()==TYPEID_PLAYER)
+    {
+        // check online security
+        if (HasLowerSecurity((Player*)target, 0))
+            return false;
 
-    PSendSysMessage(LANG_YOU_CHANGE_SIZE, Scale, GetNameLink(chr).c_str());
-    if (needReportToTarget(chr))
-        ChatHandler(chr).PSendSysMessage(LANG_YOURS_SIZE_CHANGED, GetNameLink().c_str(), Scale);
+        PSendSysMessage(LANG_YOU_CHANGE_SIZE, Scale, GetNameLink((Player*)target).c_str());
+        if (needReportToTarget((Player*)target))
+            ChatHandler((Player*)target).PSendSysMessage(LANG_YOURS_SIZE_CHANGED, GetNameLink().c_str(), Scale);
+    }
 
-    chr->SetFloatValue(OBJECT_FIELD_SCALE_X, Scale);
+    target->SetFloatValue(OBJECT_FIELD_SCALE_X, Scale);
 
     return true;
 }
@@ -1937,36 +1941,6 @@ bool ChatHandler::HandleSaveAllCommand(const char* /*args*/)
     return true;
 }
 
-//Send message to channel
-bool ChatHandler::HandleSendChannelMsgCommand(const char *args)
-{
-    ChannelMgr* cMgr = channelMgr(HORDE);
-    if( !cMgr )
-        return false;
-
-    char* channel_name = strtok((char*)args, " ");
-    char* irc_name = strtok(NULL, " ");
-    char* arg_GM = strtok(NULL, " ");
-    char* text = strtok(NULL, "");
-
-    if( !channel_name || !irc_name || !text || !arg_GM )
-        return false;
-
-    Channel * channel = cMgr->GetChannel(channel_name, NULL, false );
-    if( !channel )
-        return false;
-
-    char msg[256];
-    snprintf( ( char* )msg, 256, "[%s]: %s",irc_name, text );
-    bool isGM = false;
-    if(!strcmp(arg_GM,"GM"))
-        isGM = true;
-    WorldPacket dataa;
-    ChatHandler::FillMessageData(&dataa, NULL, CHAT_MSG_CHANNEL, LANG_UNIVERSAL, channel->GetName().c_str(), NULL, msg, NULL, isGM);
-    channel->SendToAll(&dataa);
-    return true;
-}
-
 //Send mail by command
 bool ChatHandler::HandleSendMailCommand(const char* args)
 {
@@ -2520,29 +2494,5 @@ bool ChatHandler::HandleModifyDrunkCommand(const char* args)
 
     m_session->GetPlayer()->SetDrunkValue(drunkMod);
 
-    return true;
-}
-
-/// Send a system message (command-return-like) to a player in game
-bool ChatHandler::HandleSendSysMsgCommand(const char* args)
-{
-    ///- Find the player
-    Player *rPlayer;
-    if(!extractPlayerTarget((char*)args,&rPlayer))
-        return false;
-
-    char* msg_str = strtok(NULL, "");
-    if(!msg_str)
-        return false;
-
-    ///- Check that he is not logging out.
-    if(rPlayer->GetSession()->isLogingOut())
-    {
-        SendSysMessage(LANG_PLAYER_NOT_FOUND);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    PSendSysMessage(msg_str);
     return true;
 }

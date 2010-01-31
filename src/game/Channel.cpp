@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
 #include "ObjectMgr.h"
 #include "World.h"
 #include "SocialMgr.h"
-#include "../mangosd/RASocket.h"
 
 Channel::Channel(const std::string& name, uint32 channel_id)
 : m_announce(true), m_moderate(false), m_name(name), m_flags(0), m_channelId(channel_id), m_ownerGUID(0)
@@ -581,10 +580,6 @@ void Channel::Say(uint64 p, const char *what, uint32 lang)
         data << uint8(plr ? plr->chatTag() : 0);
 
         SendToAll(&data, !players[p].IsModerator() ? p : false);
-
-        char msg[256];
-        snprintf( ( char* )msg, 256, "MSG %s %s %s\n",GetName().c_str(), plr->GetName(), what );
-        RASocket::zprint(msg);
     }
 }
 
@@ -984,12 +979,6 @@ void Channel::JoinNotify(uint64 guid)
     data << uint32(GetNumPlayers());
     data << GetName();
     SendToAll(&data);
-    std::string name = "";
-    if(!sObjectMgr.GetPlayerNameByGUID(guid, name) || name.empty())
-        name = "UNKNOWN";
-    char msg[256];
-    snprintf( ( char* )msg, 256, "JOIN %s %s\n",GetName().c_str(), name.data());
-    RASocket::zprint(msg);
 }
 
 void Channel::LeaveNotify(uint64 guid)
@@ -1000,10 +989,4 @@ void Channel::LeaveNotify(uint64 guid)
     data << uint32(GetNumPlayers());
     data << GetName();
     SendToAll(&data);
-    std::string name = "";
-    if(!sObjectMgr.GetPlayerNameByGUID(guid, name) || name.empty())
-            name = "UNKNOWN";
-    char msg[256];
-    snprintf( ( char* )msg, 256, "PART %s %s\n",GetName().c_str(), name.data());
-    RASocket::zprint(msg);
 }

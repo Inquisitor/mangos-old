@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,9 +32,10 @@ namespace FactorySelector
 {
     CreatureAI* selectAI(Creature *creature)
     {
-        // Try to get scripting AI first - go on only if there is none assigned
-        if(CreatureAI* scriptedAI = Script->GetAI(creature))
-            return scriptedAI;
+        // Allow scripting AI for normal creatures and not controlled pets (guardians and mini-pets)
+        if ((!creature->isPet() || !((Pet*)creature)->isControlled()) && !creature->isCharmed())
+            if(CreatureAI* scriptedAI = Script->GetAI(creature))
+                return scriptedAI;
 
         CreatureAIRegistry &ai_registry(CreatureAIRepository::Instance());
 

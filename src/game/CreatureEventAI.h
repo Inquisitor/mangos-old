@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,24 +58,10 @@ enum EventAI_Type
     EVENT_T_RECEIVE_EMOTE           = 22,                   // EmoteId, Condition, CondValue1, CondValue2
     EVENT_T_BUFFED                  = 23,                   // Param1 = SpellID, Param2 = Number of Time STacked, Param3/4 Repeat Min/Max
     EVENT_T_TARGET_BUFFED           = 24,                   // Param1 = SpellID, Param2 = Number of Time STacked, Param3/4 Repeat Min/Max
+    EVENT_T_SUMMONED_JUST_DIED      = 25,                   // CreatureId, RepeatMin, RepeatMax
+    EVENT_T_SUMMONED_JUST_DESPAWN   = 26,                   // CreatureId, RepeatMin, RepeatMax
 
     EVENT_T_END,
-};
-
-enum EventAI_Requirement
-{
-    REQUIREMENT_T_NONE                  = 0,
-    REQUIREMENT_T_HP_PERCENT            = 1,
-    REQUIREMENT_T_MANA_PERCENT          = 2,
-    REQUIREMENT_T_AURA                  = 3,
-    REQUIREMENT_T_INVOKER_AURA          = 4,
-    REQUIREMENT_T_ZONE                  = 5,
-    REQUIREMENT_T_QUEST                 = 6,
-    REQUIREMENT_T_ENTRY                 = 7,  // not for creature_ai_scripts usage (all other *_scripts)
-    REQUIREMENT_T_HAS_NO_AURA           = 8,
-    REQUIREMENT_T_INVOKER_HAS_NO_AURA   = 9,
-    REQUIREMENT_T_CHANCE_PASS           = 10, // not for creature_ai_scripts usage (all other *_scripts)
-    REQUIREMENT_T_END,
 };
 
 enum EventAI_ActionType
@@ -123,8 +109,6 @@ enum EventAI_ActionType
     ACTION_T_SET_SHEATH                 = 40,               // Sheath (0-passive,1-melee,2-ranged)
     ACTION_T_FORCE_DESPAWN              = 41,               // No Params
     ACTION_T_SET_INVINCIBILITY_HP_LEVEL = 42,               // MinHpValue, format(0-flat,1-percent from max health)
-    ACTION_T_SUMMON_GOBJECT             = 43,               // Object ID, Target, Duration in ms
-    ACTION_T_ADD_ITEM                   = 44,               // Item Id
     ACTION_T_END,
 };
 
@@ -382,24 +366,17 @@ struct CreatureEventAI_Action
         {
             uint32 sheath;
         } set_sheath;
+        // ACTION_T_FORCE_DESPAWN                           = 41
+        struct
+        {
+            uint32 msDelay;
+        } forced_despawn;
         // ACTION_T_SET_INVINCIBILITY_HP_LEVEL              = 42
         struct
         {
             uint32 hp_level;
             uint32 is_percent;
         } invincibility_hp_level;
-        // ACTION_T_SUMMON_GOBJECT                          = 43
-        struct
-        {
-            uint32 id;
-            uint32 target;
-            uint32 duration;
-        } summon_gobject;
-        // ACTION_T_ADD_ITEM                                = 44
-        struct
-        {
-            uint32 id;
-        } add_item;
         // RAW
         struct
         {
@@ -421,9 +398,6 @@ struct CreatureEventAI_Event
     EventAI_Type event_type : 16;
     uint8 event_chance : 8;
     uint8 event_flags  : 8;
-
-    uint8 event_requirement_type;
-    uint32 event_requirement_value;
 
     union
     {
@@ -514,12 +488,14 @@ struct CreatureEventAI_Event
             uint32 repeatMax;
         } friendly_buff;
         // EVENT_T_SUMMONED_UNIT                            = 17
+        //EVENT_T_SUMMONED_JUST_DIED                        = 25
+        //EVENT_T_SUMMONED_JUST_DESPAWN                     = 26
         struct
         {
             uint32 creatureId;
             uint32 repeatMin;
             uint32 repeatMax;
-        } summon_unit;
+        } summoned;
         // EVENT_T_QUEST_ACCEPT                             = 19
         // EVENT_T_QUEST_COMPLETE                           = 20
         struct
@@ -543,6 +519,7 @@ struct CreatureEventAI_Event
             uint32 repeatMin;
             uint32 repeatMax;
         } buffed;
+
         // RAW
         struct
         {
@@ -551,7 +528,6 @@ struct CreatureEventAI_Event
             uint32 param3;
             uint32 param4;
         } raw;
-
     };
 
     CreatureEventAI_Action action[MAX_ACTIONS];
@@ -610,6 +586,9 @@ class MANGOS_DLL_SPEC CreatureEventAI : public CreatureAI
         void UpdateAI(const uint32 diff);
         bool IsVisible(Unit *) const;
         void ReceiveEmote(Player* pPlayer, uint32 text_emote);
+        void SummonedCreatureJustDied(Creature* unit);
+        void SummonedCreatureDespawn(Creature* unit);
+
         static int Permissible(const Creature *);
 
         bool ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pActionInvoker = NULL);

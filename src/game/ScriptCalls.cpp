@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,8 +69,6 @@ bool LoadScriptingModule(char const* libName)
         ||!(testScript->ChooseReward        =(scriptCallChooseReward        )MANGOS_GET_PROC_ADDR(testScript->hScriptsLib,"ChooseReward"        ))
         ||!(testScript->ItemHello           =(scriptCallItemHello           )MANGOS_GET_PROC_ADDR(testScript->hScriptsLib,"ItemHello"           ))
         ||!(testScript->GOHello             =(scriptCallGOHello             )MANGOS_GET_PROC_ADDR(testScript->hScriptsLib,"GOHello"             ))
-        ||!(testScript->GOSelect            =(scriptCallGOSelect            )MANGOS_GET_PROC_ADDR(testScript->hScriptsLib,"GOSelect"            ))
-        ||!(testScript->GOSelectWithCode    =(scriptCallGOSelectWithCode    )MANGOS_GET_PROC_ADDR(testScript->hScriptsLib,"GOSelectWithCode"    ))
         ||!(testScript->scriptAreaTrigger   =(scriptCallAreaTrigger         )MANGOS_GET_PROC_ADDR(testScript->hScriptsLib,"AreaTrigger"         ))
         ||!(testScript->ItemQuestAccept     =(scriptCallItemQuestAccept     )MANGOS_GET_PROC_ADDR(testScript->hScriptsLib,"ItemQuestAccept"     ))
         ||!(testScript->GOQuestAccept       =(scriptCallGOQuestAccept       )MANGOS_GET_PROC_ADDR(testScript->hScriptsLib,"GOQuestAccept"       ))

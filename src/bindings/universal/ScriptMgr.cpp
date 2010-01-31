@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -198,34 +198,6 @@ bool GOHello( Player *player, GameObject *_GO )
 
     player->PlayerTalkClass->ClearMenus();
     return tmpscript->pGOHello(player,_GO);
-}
-
-MANGOS_DLL_EXPORT
-bool GOSelect(Player* pPlayer, GameObject* pGO, uint32 uiSender, uint32 uiAction)
-{
-    if(!pGO)
-    return false;
-    debug_log("GameObject Gossip selection, sender: %d, action: %d", uiSender, uiAction);
-
-    Script *tmpscript = m_scripts[pGO->GetGOInfo()->ScriptId];
-    if(!tmpscript || !tmpscript->pGOSelect) return false;
-
-    pPlayer->PlayerTalkClass->ClearMenus();
-    return tmpscript->pGOSelect(pPlayer, pGO, uiSender, uiAction);
-}
-
-MANGOS_DLL_EXPORT
-bool GOSelectWithCode(Player* pPlayer, GameObject* pGO, uint32 uiSender, uint32 uiAction, const char* sCode)
-{
-    if(!pGO)
-    return false;
-    debug_log("GameObject Gossip selection, sender: %d, action: %d",uiSender, uiAction);
-
-    Script *tmpscript = m_scripts[pGO->GetGOInfo()->ScriptId];
-    if(!tmpscript || !tmpscript->pGOSelectWithCode) return false;
-
-    pPlayer->PlayerTalkClass->ClearMenus();
-    return tmpscript->pGOSelectWithCode(pPlayer, pGO, uiSender ,uiAction, sCode);
 }
 
 MANGOS_DLL_EXPORT

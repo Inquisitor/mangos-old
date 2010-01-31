@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -220,9 +220,6 @@ void ThreatContainer::clearReferences()
 // Return the HostileReference of NULL, if not found
 HostileReference* ThreatContainer::getReferenceByTarget(Unit* pVictim)
 {
-    if(!pVictim)
-        return NULL;
-
     HostileReference* result = NULL;
     uint64 guid = pVictim->GetGUID();
     for(ThreatList::const_iterator i = iThreatList.begin(); i != iThreatList.end(); ++i)
@@ -391,20 +388,9 @@ void ThreatManager::addThreat(Unit* pVictim, float pThreat, bool crit, SpellScho
     if(!pVictim->isAlive() || !getOwner()->isAlive() )
         return;
 
-   if (!getOwner()->IsHostileTo(pVictim))
-      return;
-
     assert(getOwner()->GetTypeId()== TYPEID_UNIT);
 
     float threat = ThreatCalcHelper::calcThreat(pVictim, iOwner, pThreat, crit, schoolMask, pThreatSpell);
-
-    if( pVictim->GetThreatRedirectionPercent() && threat > 0.0f )
-    {
-        float redirectedThreat = threat * pVictim->GetThreatRedirectionPercent() / 100;
-        threat -= redirectedThreat;
-        if(Unit *unit = pVictim->GetMisdirectionTarget())
-            iThreatContainer.addThreat(unit, redirectedThreat);
-    }
 
     HostileReference* ref = iThreatContainer.addThreat(pVictim, threat);
     // Ref is online

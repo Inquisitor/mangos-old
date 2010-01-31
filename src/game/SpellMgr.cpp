@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -415,7 +415,7 @@ bool IsPositiveTarget(uint32 targetA, uint32 targetB)
         case TARGET_ALL_ENEMY_IN_AREA_CHANNELED:
         case TARGET_CURRENT_ENEMY_COORDINATES:
         case TARGET_SINGLE_ENEMY:
-        case TARGET_IN_FRONT_OF_CASTER_90:
+        case TARGET_IN_FRONT_OF_CASTER_30:
             return false;
         case TARGET_CASTER_COORDINATES:
             return (targetB == TARGET_ALL_PARTY || targetB == TARGET_ALL_FRIENDLY_UNITS_AROUND_CASTER);
@@ -437,7 +437,6 @@ bool IsExplicitPositiveTarget(uint32 targetA)
         case TARGET_CHAIN_HEAL:
         case TARGET_SINGLE_FRIEND_2:
         case TARGET_AREAEFFECT_PARTY_AND_CLASS:
-        case TARGET_SELF2:
             return true;
         default:
             break;
@@ -465,29 +464,8 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
     SpellEntry const *spellproto = sSpellStore.LookupEntry(spellId);
     if (!spellproto) return false;
 
-    switch(spellId)
-    {
-        case 28441:                                         // not positive dummy spell
-        case 37675:                                         // Chaos Blast
-            return false;
-        case 36032:                                         // Arcane Blast
-        case 47540:                                         // Penance start dummy aura - Rank 1
-        case 53005:                                         // Penance start dummy aura - Rank 2
-        case 53006:                                         // Penance start dummy aura - Rank 3
-        case 53007:                                         // Penance start dummy aura - Rank 4
-        case 47757:                                         // Penance heal effect trigger - Rank 1
-        case 52986:                                         // Penance heal effect trigger - Rank 2
-        case 52987:                                         // Penance heal effect trigger - Rank 3
-        case 52988:                                         // Penance heal effect trigger - Rank 4
-        case 642:                                           // Divine Shield
-            return true;
-    }
-
     switch(spellproto->Effect[effIndex])
     {
-        // consider dispel as always negative effect (explicit check will be performed later)
-        case SPELL_EFFECT_DISPEL:
-            return false;
         case SPELL_EFFECT_DUMMY:
             // some explicitly required dummy effect sets
             switch(spellId)
@@ -506,9 +484,6 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
         case SPELL_EFFECT_ENERGIZE_PCT:
             return true;
 
-        // Charge casted on self to run - so must be positive
-        case SPELL_EFFECT_CHARGE:
-            return true;
             // non-positive aura use
         case SPELL_EFFECT_APPLY_AURA:
         case SPELL_EFFECT_APPLY_AREA_AURA_FRIEND:
@@ -580,12 +555,6 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
                         }
                     }
                     break;
-                case SPELL_AURA_PERIODIC_TRIGGER_SPELL_WITH_VALUE:
-                    {
-                        if(spellproto->SpellFamilyName == SPELLFAMILY_PRIEST && spellproto->SpellIconID == 548)
-                            return false;
-                    }
-                    break;
                 case SPELL_AURA_PROC_TRIGGER_SPELL:
                     // many positive auras have negative triggered spells at damage for example and this not make it negative (it can be canceled for example)
                     break;
@@ -615,12 +584,15 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
                     return false;
                 case SPELL_AURA_PERIODIC_DAMAGE:            // used in positive spells also.
                     // part of negative spell if casted at self (prevent cancel)
-                    if(spellproto->EffectImplicitTargetA[effIndex] == TARGET_SELF)
+                    if (spellproto->EffectImplicitTargetA[effIndex] == TARGET_SELF ||
+                        spellproto->EffectImplicitTargetA[effIndex] == TARGET_SELF2)
                         return false;
                     break;
                 case SPELL_AURA_MOD_DECREASE_SPEED:         // used in positive spells also
                     // part of positive spell if casted at self
-                    if(spellproto->EffectImplicitTargetA[effIndex] != TARGET_SELF)
+                    if ((spellproto->EffectImplicitTargetA[effIndex] == TARGET_SELF ||
+                        spellproto->EffectImplicitTargetA[effIndex] == TARGET_SELF2) &&
+                        spellproto->SpellFamilyName == SPELLFAMILY_GENERIC)
                         return false;
                     // but not this if this first effect (don't found batter check)
                     if(spellproto->Attributes & 0x4000000 && effIndex==0)
@@ -794,9 +766,7 @@ SpellCastResult GetErrorAtShapeshiftedCast (SpellEntry const *spellInfo, uint32 
     if(actAsShifted)
     {
         if (spellInfo->Attributes & SPELL_ATTR_NOT_SHAPESHIFT) // not while shapeshifted
-            //but we must allow cast of Berserk+modifier from any form... where for the hell should we do it?
-            if (!(spellInfo->SpellIconID == 1680 && (spellInfo->AttributesEx & 0x8000)))
-                return SPELL_FAILED_NOT_SHAPESHIFT;
+            return SPELL_FAILED_NOT_SHAPESHIFT;
         else if (spellInfo->Stances != 0)                   // needs other shapeshift
             return SPELL_FAILED_ONLY_SHAPESHIFT;
     }
@@ -1327,6 +1297,7 @@ bool SpellMgr::canStackSpellRanks(SpellEntry const *spellInfo)
                 if (spellInfo->Effect[i]==SPELL_EFFECT_APPLY_AURA &&
                     spellInfo->EffectApplyAuraName[i] == SPELL_AURA_MOD_SHAPESHIFT)
                     return false;
+                break;
         }
     }
     return true;
@@ -1355,15 +1326,6 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
     // Allow stack passive and not passive spells
     if ((spellInfo_1->Attributes & SPELL_ATTR_PASSIVE)!=(spellInfo_2->Attributes & SPELL_ATTR_PASSIVE))
         return false;
-
-     // Dispersion - stacks with everything
-     if ((spellInfo_1->Id == 47585 && spellInfo_2->Id == 60069) ||
-          (spellInfo_2->Id == 47585 && spellInfo_1->Id == 60069))
-          return false;
-
-     // Mistletoe debuff stack with everything
-     if (spellInfo_1->Id == 26218 || spellInfo_2->Id == 26218)
-         return false;
 
     // Specific spell family spells
     switch(spellInfo_1->SpellFamilyName)
@@ -1402,6 +1364,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                         (spellInfo_2->Id == 23170 && spellInfo_1->Id == 23171) )
                         return false;
 
+                    // Cool Down (See PeriodicAuraTick())
+                    if ((spellInfo_1->Id == 52441 && spellInfo_2->Id == 52443) ||
+                        (spellInfo_2->Id == 52441 && spellInfo_1->Id == 52443))
+                        return false;
+
                     // See Chapel Invisibility and See Noth Invisibility
                     if( (spellInfo_1->Id == 52950 && spellInfo_2->Id == 52707) ||
                         (spellInfo_2->Id == 52950 && spellInfo_1->Id == 52707) )
@@ -1411,41 +1378,6 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     if( (spellInfo_1->Id == 8326 && spellInfo_2->Id == 20584) ||
                         (spellInfo_2->Id == 8326 && spellInfo_1->Id == 20584) )
                          return false;
-
-                    // Kindred Spirits
-                    if( spellInfo_1->SpellIconID == 3559 && spellInfo_2->SpellIconID == 3559)
-                        return false;
-
-                    // Stoneform
-                    if ((spellInfo_1->Id == 20594 && spellInfo_2->Id == 65116) ||
-                        (spellInfo_2->Id == 20594 && spellInfo_1->Id == 65116))
-                        return false;
-
-                    // Unstable Sphere Passive and Detonation Timer
-                    if ((spellInfo_1->Id == 50756 && spellInfo_2->Id == 50758) ||
-                        (spellInfo_2->Id == 50756 && spellInfo_1->Id == 50758))
-                        return false;
-
-                    // Positive / Negative charges of Thaddius and Chrono
-                    // Positive Thaddius
-                    if ((spellInfo_1->Id == 28059 && spellInfo_2->Id == 29659) ||
-                        (spellInfo_2->Id == 28059 && spellInfo_1->Id == 29659))
-                        return false;
-
-                    // Positive Chrono
-                    if ((spellInfo_1->Id == 39088 && spellInfo_2->Id == 39089) ||
-                        (spellInfo_2->Id == 39088 && spellInfo_1->Id == 39089))
-                        return false;
-
-                    // Negative Thaddius
-                    if ((spellInfo_1->Id == 28084 && spellInfo_2->Id == 29660) ||
-                        (spellInfo_2->Id == 28084 && spellInfo_1->Id == 29660))
-                        return false;
-
-                    // Negative Chrono
-                    if ((spellInfo_1->Id == 39091 && spellInfo_2->Id == 39092) ||
-                        (spellInfo_2->Id == 39091 && spellInfo_1->Id == 39092))
-                        return false;
 
                     break;
                 }
@@ -1482,15 +1414,6 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 {
                     // Garrote-Silence -> Garrote (multi-family check)
                     if( spellInfo_1->SpellIconID == 498 && spellInfo_1->SpellVisual[0] == 0 && spellInfo_2->SpellIconID == 498  )
-                        return false;
-
-                    break;
-                }
-                case SPELLFAMILY_WARLOCK:
-                {
-                    // Shadowflame and Glyph of Shadowflame
-                    if( (spellInfo_1->Id == 63311 && spellInfo_2->SpellIconID == 3317) ||
-                        (spellInfo_2->Id == 63311 && spellInfo_1->SpellIconID == 3317) )
                         return false;
 
                     break;
@@ -1558,9 +1481,6 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
             if( spellInfo_1->Id == 11129 && spellInfo_2->SpellIconID == 33 && spellInfo_2->SpellVisual[0] == 321 )
                 return false;
 
-            if( spellInfo_1->EffectSpellClassMaskC[0] == 262144 && spellInfo_2->EffectSpellClassMaskC[0] == 262144)
-                return false;
-
             // Arcane Intellect and Insight
             if( spellInfo_1->SpellIconID == 125 && spellInfo_2->Id == 18820 )
                 return false;
@@ -1593,11 +1513,6 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 // Metamorphosis, diff effects
                 if (spellInfo_1->SpellIconID == 3314 && spellInfo_2->SpellIconID == 3314)
                     return false;
-
-                // (Corruption or Unstable Affliction or Curse of Agony or Curse of Doom) and Shadowflame
-                if( (spellInfo_1->SpellIconID == 313 || spellInfo_1->SpellIconID == 2039 || spellInfo_1->SpellIconID == 544 || spellInfo_1->SpellIconID == 91) && (spellInfo_2->SpellIconID == 3317) ||
-                    (spellInfo_2->SpellIconID == 313 || spellInfo_2->SpellIconID == 2039 || spellInfo_2->SpellIconID == 544 || spellInfo_1->SpellIconID == 91) && (spellInfo_1->SpellIconID == 3317) )
-                    return false;
             }
             // Detect Invisibility and Mana Shield (multi-family check)
             if( spellInfo_1->Id == 132 && spellInfo_2->SpellIconID == 209 && spellInfo_2->SpellVisual[0] == 968 )
@@ -1614,11 +1529,6 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 // Battle Shout and Rampage
                 if( (spellInfo_1->SpellIconID == 456 && spellInfo_2->SpellIconID == 2006) ||
                     (spellInfo_2->SpellIconID == 456 && spellInfo_1->SpellIconID == 2006) )
-                    return false;
-
-                // Taste of Blood and Sudden Death
-                if( (spellInfo_1->Id == 52437 && spellInfo_2->Id == 60503) ||
-                    (spellInfo_2->Id == 52437 && spellInfo_1->Id == 60503) )
                     return false;
             }
 
@@ -1647,10 +1557,9 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 if ((spellInfo_1->SpellFamilyFlags & UI64LIT(0x200000)) && (spellInfo_2->SpellFamilyFlags & UI64LIT(0x8000)) ||
                     (spellInfo_2->SpellFamilyFlags & UI64LIT(0x200000)) && (spellInfo_1->SpellFamilyFlags & UI64LIT(0x8000)))
                     return false;
-
-                // Shadowform
-                if ((spellInfo_1->Id == 15473 && spellInfo_2->Id == 49868) ||
-                    (spellInfo_2->Id == 15473 && spellInfo_1->Id == 49868))
+                // Dispersion
+                if ((spellInfo_1->Id == 47585 && spellInfo_2->Id == 60069) ||
+                    (spellInfo_2->Id == 47585 && spellInfo_1->Id == 60069))
                     return false;
             }
             break;
@@ -1667,9 +1576,9 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     (spellId_2 == 33891 && spellId_1 == 34123))
                     return false;
 
-                //  Moonfire and Lacarate
-                if ((spellInfo_1->SpellIconID == 225 && spellInfo_2->SpellIconID == 2246) ||
-                    (spellInfo_2->SpellIconID == 225 && spellInfo_1->SpellIconID == 2246))
+                // Lifebloom and Wild Growth
+                if (spellInfo_1->SpellIconID == 2101 && spellInfo_2->SpellIconID == 2864 ||
+                    spellInfo_2->SpellIconID == 2101 && spellInfo_1->SpellIconID == 2864 )
                     return false;
 
                 //  Innervate and Glyph of Innervate and some other spells
@@ -1699,10 +1608,6 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 // Frenzied Regeneration and Savage Defense
                 if( spellInfo_1->Id == 22842 && spellInfo_2->Id == 62606 || spellInfo_2->Id == 22842 && spellInfo_1->Id == 62606 )
                     return false;
-
-                // Nourish and Lifebloom
-                if( spellInfo_1->SpellIconID == 2864  && spellInfo_2->SpellIconID == 2101 || spellInfo_2->SpellIconID == 2864 && spellInfo_1->SpellIconID == 2101 )
-                    return false;
             }
 
             // Leader of the Pack and Scroll of Stamina (multi-family check)
@@ -1730,10 +1635,6 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
 
             //Overkill
             if( spellInfo_1->SpellIconID == 2285 && spellInfo_2->SpellIconID == 2285 )
-                return false;
-
-            //Tricks of Trade
-            if( spellInfo_1->SpellIconID == 3413 && spellInfo_2->SpellIconID == 3413 )
                 return false;
 
             // Garrote -> Garrote-Silence (multi-family check)
@@ -1767,23 +1668,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 return false;
             break;
         case SPELLFAMILY_PALADIN:
-            // Consecration removing Inner Fire
-            if(spellInfo_2->SpellFamilyName == SPELLFAMILY_PRIEST)
-                if(spellInfo_1->SpellIconID == 51 && spellInfo_2->SpellIconID == 51)
-                return false;
-
             if( spellInfo_2->SpellFamilyName == SPELLFAMILY_PALADIN )
             {
                 // Paladin Seals
                 if (IsSealSpell(spellInfo_1) && IsSealSpell(spellInfo_2))
-                    return true;
-
-                 // Concentration aura and Aura Mastery.
-                if (spellInfo_2->Id == 19746 && spellInfo_1->Id == 64364)
-                    return false;
-
-                // Other auras remove Aura Mastery immunity effect.
-                if (spellInfo_1->Id == 64364 && spellInfo_2->SpellFamilyFlags2 == UI64LIT(0x20))
                     return true;
 
                 // Swift Retribution / Improved Devotion Aura (talents) and Paladin Auras
@@ -1795,16 +1683,16 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 if ((spellInfo_1->SpellIconID == 3032) && (spellInfo_2->SpellIconID == 3032))
                     return false;
 
-               // Concentration Aura & Improved Concentration Aura
-               if((spellId_1 == 19746 && spellId_2 == 63510) || (spellId_1 == 63510 && spellId_2 == 19746))
-                   return false;
-
                 // Concentration Aura and Improved Concentration Aura and Aura Mastery
                 if ((spellInfo_1->SpellIconID == 1487) && (spellInfo_2->SpellIconID == 1487))
                     return false;
 
-                // Seal of Corruption
+                // Seal of Corruption (caster/target parts stacking allow, other stacking checked by spell specs)
                 if (spellInfo_1->SpellIconID == 2292 && spellInfo_2->SpellIconID == 2292)
+                    return false;
+
+                // Divine Sacrifice and Divine Guardian
+                if (spellInfo_1->SpellIconID == 3837 && spellInfo_2->SpellIconID == 3837)
                     return false;
             }
 
@@ -1841,28 +1729,18 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 return false;
             break;
         case SPELLFAMILY_DEATHKNIGHT:
-
-            // Presences and triggered effects
-            if( spellInfo_1->Category == 47 || spellInfo_2->Category == 47 )
-                return false;
-
             if (spellInfo_2->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT)
             {
+                // Lichborne  and Lichborne (triggered)
+                if( spellInfo_1->SpellIconID == 61 && spellInfo_2->SpellIconID == 61 )
+                    return false;
+
                 // Frost Presence and Frost Presence (triggered)
                 if( spellInfo_1->SpellIconID == 2632 && spellInfo_2->SpellIconID == 2632 )
                     return false;
 
                 // Unholy Presence and Unholy Presence (triggered)
                 if( spellInfo_1->SpellIconID == 2633 && spellInfo_2->SpellIconID == 2633 )
-                    return false;
-
-                 // Lichborne shapeshift and immunity
-                if (spellInfo_1->SpellFamilyFlags == UI64LIT(0x1000000000) && spellInfo_2->SpellFamilyFlags == UI64LIT(0x1000000000))
-                    return false;
-
-                 // Desecration (speed reduction aura) and Desecration (owner's damage bonus aura)
-                if (spellInfo_1->SpellIconID==2296 && spellInfo_2->SpellIconID==2296 &&
-                    spellInfo_1->SpellFamilyFlags == spellInfo_2->SpellFamilyFlags)
                     return false;
             }
             break;

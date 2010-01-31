@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -469,27 +469,6 @@ namespace VMAP
         return(height);
     }
 
-    float VMapManager::getHeight(unsigned int pMapId, float x, float y, float z, float RayLenght)
-    {
-        float height = VMAP_INVALID_HEIGHT_VALUE;           //no height
-        if(isHeightCalcEnabled() && iInstanceMapTrees.containsKey(pMapId))
-        {
-            Vector3 pPos = convertPositionToInternalRep(x,y,z);
-            MapTree* mapTree = iInstanceMapTrees.get(pMapId);
-            height = mapTree->getHeight(pPos,RayLenght);
-            if(!(height < inf()))
-            {
-                height = VMAP_INVALID_HEIGHT_VALUE;         //no height
-            }
-#ifdef _VMAP_LOG_DEBUG
-            Command c = Command();
-            c.fillTestHeightCmd(pMapId,Vector3(x,y,z),height);
-            iCommandLogger.appendCmd(c);
-#endif
-        }
-        return(height);
-    }
-
     //=========================================================
     /**
     used for debugging
@@ -659,19 +638,6 @@ namespace VMAP
         Ray ray = Ray::fromOriginAndDirection(pPos, dir);   // direction with length of 1
         float maxDist = VMapDefinitions::getMaxCanFallDistance();
         float dist = getIntersectionTime(ray, maxDist, false);
-        if(dist < inf())
-        {
-            height = (pPos + dir * dist).y;
-        }
-        return(height);
-    }
-
-    float MapTree::getHeight(const Vector3& pPos, float RayLenght)
-    {
-        float height = inf();
-        Vector3 dir = Vector3(0,-1,0);
-        Ray ray = Ray::fromOriginAndDirection(pPos, dir);   // direction with length of 1
-        float dist = getIntersectionTime(ray, RayLenght, false);
         if(dist < inf())
         {
             height = (pPos + dir * dist).y;

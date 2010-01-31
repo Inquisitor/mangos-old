@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -352,42 +352,21 @@ enum RealmZone
 #define SCRIPT_COMMAND_REMOVE_AURA          14              // source (datalong2!=0) or target (datalong==0) unit, datalong = spell_id
 #define SCRIPT_COMMAND_CAST_SPELL           15              // source/target cast spell at target/source (script->datalong2: 0: s->t 1: s->s 2: t->t 3: t->s
 #define SCRIPT_COMMAND_PLAY_SOUND           16              // source = any object, target=any/player, datalong (sound_id), datalong2 (bitmask: 0/1=anyone/target, 0/2=with distance dependent, so 1|2 = 3 is target with distance dependent)
-#define SCRIPT_COMMAND_ADD_QUEST_COUNT      17              // source = any, target = any, datalong = quest_id, datalong2 = quest_field, dataint = increment value
-#define SCRIPT_COMMAND_TEMP_SUMMON_OBJECT   18              // source = any (summoner), datalong=gameobject entry, datalong2=despawn_delay
 
 /// Storage class for commands issued for delayed execution
 struct CliCommandHolder
 {
     typedef void Print(const char*);
 
-    uint32 guid;
     char *m_command;
     Print* m_print;
 
     CliCommandHolder(const char *command, Print* zprint)
-        : guid(0), m_command(NULL), m_print(zprint)
+        : m_print(zprint)
     {
-        char* command_clean = NULL;
-        sscanf (command, "%d|", &guid);
-        if(guid)
-        {
-            for(uint32 x = 0; command[x]; ++x)
-                if(command[x] == '|' && command[x+1])
-                {
-                    command_clean = (char*)command + x + 1;
-                    break;
-                }
-        }
-
-        if(!command_clean)
-        {
-            command_clean = (char*)command;
-            guid = 0;
-        }
-
-        size_t len = strlen(command_clean)+1;
+        size_t len = strlen(command)+1;
         m_command = new char[len];
-        memcpy(m_command, command_clean, len);
+        memcpy(m_command, command, len);
     }
 
     ~CliCommandHolder() { delete[] m_command; }
@@ -455,6 +434,8 @@ class World
         time_t const& GetGameTime() const { return m_gameTime; }
         /// Uptime (in secs)
         uint32 GetUptime() const { return uint32(m_gameTime - m_startTime); }
+        /// Next daily quests reset time
+        time_t GetNextDailyQuestsResetTime() const { return m_NextDailyQuestReset; }
 
         /// Get the maximum skill level a player can reach
         uint16 GetConfigMaxSkillValue() const

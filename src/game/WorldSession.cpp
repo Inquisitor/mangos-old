@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@
 #include "Guild.h"
 #include "World.h"
 #include "BattleGroundMgr.h"
-#include "Language.h"                                       // for CMSG_DISMOUNT handler
-#include "Chat.h"
 #include "MapManager.h"
 #include "SocialMgr.h"
 #include "zlib/zlib.h"
@@ -151,7 +149,7 @@ void WorldSession::LogUnexpectedOpcode(WorldPacket* packet, const char *reason)
 /// Logging helper for unexpected opcodes
 void WorldSession::LogUnprocessedTail(WorldPacket *packet)
 {
-    sLog.outError( "SESSION: opcode %s (0x%.4X) have unprocessed tail data (read stop at %u from %u)",
+    sLog.outError( "SESSION: opcode %s (0x%.4X) have unprocessed tail data (read stop at " SIZEFMTD " from " SIZEFMTD ")",
         LookupOpcodeName(packet->GetOpcode()),
         packet->GetOpcode(),
         packet->rpos(),packet->wpos());
@@ -234,7 +232,7 @@ bool WorldSession::Update(uint32 /*diff*/)
                         LogUnprocessedTail(packet);
                     break;
                 case STATUS_NEVER:
-                    sLog.outDebug( "SESSION: received not allowed opcode %s (0x%.4X)",
+                    sLog.outError( "SESSION: received not allowed opcode %s (0x%.4X)",
                         LookupOpcodeName(packet->GetOpcode()),
                         packet->GetOpcode());
                     break;
@@ -244,7 +242,7 @@ bool WorldSession::Update(uint32 /*diff*/)
                         packet->GetOpcode());
                     break;
                 default:
-                    sLog.outDebug("SESSION: received wrong-status-req opcode %s (0x%.4X)",
+                    sLog.outError("SESSION: received wrong-status-req opcode %s (0x%.4X)",
                         LookupOpcodeName(packet->GetOpcode()),
                         packet->GetOpcode());
                     break;
@@ -354,10 +352,6 @@ void WorldSession::LogoutPlayer(bool Save)
         if(BattleGround *bg = _player->GetBattleGround())
             bg->EventPlayerLoggedOut(_player);
 
-        //remove Demonic Circle aura
-        if( _player->HasAura(48018, 0) )
-            _player->RemoveAura(48018, 0);
-
         ///- Teleport to home if the player is in an invalid instance
         if(!_player->m_InstanceValid && !_player->isGameMaster())
         {
@@ -377,16 +371,6 @@ void WorldSession::LogoutPlayer(bool Save)
             {
                 _player->RemoveBattleGroundQueueId(bgQueueTypeId);
                 sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(_player->GetGUID(), true);
-                if( bgQueueTypeId == BATTLEGROUND_QUEUE_2v2 || bgQueueTypeId == BATTLEGROUND_QUEUE_3v3 || bgQueueTypeId == BATTLEGROUND_QUEUE_5v5 )
-                    if (Group* group = ((Player*)_player)->GetGroup())
-                        for(GroupReference *itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
-                            if (Player* member = itr->getSource())
-                                if(BattleGroundQueueTypeId bgQueueTypeId = member->GetBattleGroundQueueTypeId(i))
-                                {
-                                    member->RemoveBattleGroundQueueId(bgQueueTypeId);
-                                    sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(member->GetGUID(), true);
-                                }
-                        
             }
         }
 
@@ -583,9 +567,10 @@ void WorldSession::SendAuthWaitQue(uint32 position)
     }
     else
     {
-        WorldPacket packet( SMSG_AUTH_RESPONSE, 5 );
-        packet << uint8( AUTH_WAIT_QUEUE );
-        packet << uint32 (position);
+        WorldPacket packet( SMSG_AUTH_RESPONSE, 1+4+1 );
+        packet << uint8(AUTH_WAIT_QUEUE);
+        packet << uint32(position);
+        packet << uint8(0);                                 // unk 3.3.0
         SendPacket(&packet);
     }
 }
@@ -642,8 +627,9 @@ void WorldSession::SetAccountData(AccountDataType type, time_t time_, std::strin
 
         CharacterDatabase.BeginTransaction ();
         CharacterDatabase.PExecute("DELETE FROM account_data WHERE account='%u' AND type='%u'", acc, type);
-        CharacterDatabase.escape_string(data);
-        CharacterDatabase.PExecute("INSERT INTO account_data VALUES ('%u','%u','%u','%s')", acc, type, (uint32)time_, data.c_str());
+        std::string safe_data = data;
+        CharacterDatabase.escape_string(safe_data);
+        CharacterDatabase.PExecute("INSERT INTO account_data VALUES ('%u','%u','%u','%s')", acc, type, (uint32)time_, safe_data.c_str());
         CharacterDatabase.CommitTransaction ();
     }
     else
@@ -654,8 +640,9 @@ void WorldSession::SetAccountData(AccountDataType type, time_t time_, std::strin
 
         CharacterDatabase.BeginTransaction ();
         CharacterDatabase.PExecute("DELETE FROM character_account_data WHERE guid='%u' AND type='%u'", m_GUIDLow, type);
-        CharacterDatabase.escape_string(data);
-        CharacterDatabase.PExecute("INSERT INTO character_account_data VALUES ('%u','%u','%u','%s')", m_GUIDLow, type, (uint32)time_, data.c_str());
+        std::string safe_data = data;
+        CharacterDatabase.escape_string(safe_data);
+        CharacterDatabase.PExecute("INSERT INTO character_account_data VALUES ('%u','%u','%u','%s')", m_GUIDLow, type, (uint32)time_, safe_data.c_str());
         CharacterDatabase.CommitTransaction ();
     }
 
@@ -757,7 +744,7 @@ void WorldSession::ReadMovementInfo(WorldPacket &data, MovementInfo *mi)
         data >> mi->t_seat;
     }
 
-    if((mi->HasMovementFlag(MovementFlags(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))) || (mi->unk1 & 0x20))
+    if((mi->HasMovementFlag(MovementFlags(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING))) || (mi->unk1 & 0x20))
     {
         data >> mi->s_pitch;
     }
@@ -802,7 +789,7 @@ void WorldSession::WriteMovementInfo(WorldPacket *data, MovementInfo *mi)
         *data << mi->t_seat;
     }
 
-    if((mi->HasMovementFlag(MovementFlags(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))) || (mi->unk1 & 0x20))
+    if((mi->HasMovementFlag(MovementFlags(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING))) || (mi->unk1 & 0x20))
     {
         *data << mi->s_pitch;
     }
@@ -939,6 +926,7 @@ void WorldSession::SendAddonsInfo()
         uint32
         string (16 bytes)
         string (16 bytes)
+        uint32
         uint32
     }*/
 

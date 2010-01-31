@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,8 +76,6 @@ struct ScriptInfo
 {
     uint32 id;
     uint32 delay;
-    uint32 reqtype;
-    uint32 reqvalue;
     uint32 command;
     uint32 datalong;
     uint32 datalong2;
@@ -251,6 +249,32 @@ typedef std::pair<GossipMenusMap::const_iterator, GossipMenusMap::const_iterator
 typedef std::multimap<uint32,GossipMenuItems> GossipMenuItemsMap;
 typedef std::pair<GossipMenuItemsMap::const_iterator, GossipMenuItemsMap::const_iterator> GossipMenuItemsMapBounds;
 
+struct QuestPOIPoint
+{
+    int32 x;
+    int32 y;
+
+    QuestPOIPoint() : x(0), y(0) {}
+    QuestPOIPoint(int32 _x, int32 _y) : x(_x), y(_y) {}
+};
+
+struct QuestPOI
+{
+    int32 ObjectiveIndex;
+    uint32 MapId;
+    uint32 Unk1;
+    uint32 Unk2;
+    uint32 Unk3;
+    uint32 Unk4;
+    std::vector<QuestPOIPoint> points;
+
+    QuestPOI() : ObjectiveIndex(0), MapId(0), Unk1(0), Unk2(0), Unk3(0), Unk4(0) {}
+    QuestPOI(int32 objIndex, uint32 mapId, uint32 unk1, uint32 unk2, uint32 unk3, uint32 unk4) : ObjectiveIndex(objIndex), MapId(mapId), Unk1(unk1), Unk2(unk2), Unk3(unk3), Unk4(unk4) {}
+};
+
+typedef std::vector<QuestPOI> QuestPOIVector;
+typedef UNORDERED_MAP<uint32, QuestPOIVector> QuestPOIMap;
+
 #define WEATHER_SEASONS 4
 struct WeatherSeasonChances
 {
@@ -288,9 +312,10 @@ enum ConditionType
     CONDITION_ACTIVE_EVENT          = 12,                   // event_id     0
     CONDITION_AREA_FLAG             = 13,                   // area_flag    area_flag_not
     CONDITION_RACE_CLASS            = 14,                   // race_mask    class_mask
+    CONDITION_LEVEL                 = 15,                   // player_level 0, 1 or 2 (0: equal to, 1: equal or higher than, 2: equal or less than)
 };
 
-#define MAX_CONDITION                 15                    // maximum value in ConditionType enum
+#define MAX_CONDITION                 16                    // maximum value in ConditionType enum
 
 struct PlayerCondition
 {
@@ -345,18 +370,6 @@ extern LanguageDesc lang_description[LANGUAGES_COUNT];
 MANGOS_DLL_SPEC LanguageDesc const* GetLanguageDescByID(uint32 lang);
 
 class PlayerDumpReader;
-// vehicle system
-#define MAX_VEHICLE_SPELLS 10
-
-struct VehicleDataStructure
-{
-    uint32 v_flags;                                         // vehicle flags, see enum CustomVehicleFLags
-    uint32 v_spells[MAX_VEHICLE_SPELLS];                    // spells
-    uint32 req_aura;                                        // requieres aura on player to enter (eg. in wintergrasp)
-};
-
-typedef UNORDERED_MAP<uint32, VehicleDataStructure> VehicleDataMap;
-typedef std::map<uint32,uint32> VehicleSeatDataMap;
 
 class ObjectMgr
 {
@@ -368,9 +381,9 @@ class ObjectMgr
 
         typedef UNORDERED_MAP<uint32, Item*> ItemMap;
 
-        typedef std::set< Group * > GroupSet;
+        typedef UNORDERED_MAP<uint32, Group*> GroupMap;
 
-        typedef UNORDERED_MAP<uint32, Guild *> GuildMap;
+        typedef UNORDERED_MAP<uint32, Guild*> GuildMap;
 
         typedef UNORDERED_MAP<uint32, ArenaTeam*> ArenaTeamMap;
 
@@ -395,9 +408,9 @@ class ObjectMgr
         void LoadGameobjectInfo();
         void AddGameobjectInfo(GameObjectInfo *goinfo);
 
-        Group * GetGroupByLeader(const uint64 &guid) const;
-        void AddGroup(Group* group) { mGroupSet.insert( group ); }
-        void RemoveGroup(Group* group) { mGroupSet.erase( group ); }
+        Group * GetGroupByLeaderLowGUID(uint32 lowguid) const;
+        void AddGroup(Group* group);
+        void RemoveGroup(Group* group);
 
         Guild* GetGuildByLeader(uint64 const&guid) const;
         Guild* GetGuildById(uint32 GuildId) const;
@@ -527,6 +540,14 @@ class ObjectMgr
             return NULL;
         }
 
+        QuestPOIVector const* GetQuestPOIVector(uint32 questId)
+        {
+            QuestPOIMap::const_iterator itr = mQuestPOIMap.find(questId);
+            if(itr != mQuestPOIMap.end())
+                return &itr->second;
+            return NULL;
+        }
+
         void LoadGuilds();
         void LoadArenaTeams();
         void LoadGroups();
@@ -600,6 +621,7 @@ class ObjectMgr
 
         void LoadReputationOnKill();
         void LoadPointsOfInterest();
+        void LoadQuestPOI();
 
         void LoadNPCSpellClickSpells();
 
@@ -614,12 +636,10 @@ class ObjectMgr
         void LoadVendors();
         void LoadTrainerSpell();
 
-        void LoadVehicleData();
-        void LoadVehicleSeatData();
-
         std::string GeneratePetName(uint32 entry);
-        uint32 GetBaseXP(uint32 level);
-        uint32 GetXPForLevel(uint32 level);
+        uint32 GetBaseXP(uint32 level) const;
+        uint32 GetXPForLevel(uint32 level) const;
+        uint32 GetXPForPetLevel(uint32 level) const { return GetXPForLevel(level)/20; }
 
         int32 GetFishingBaseSkillLevel(uint32 entry) const
         {
@@ -783,20 +803,6 @@ class ObjectMgr
 
         static bool CheckDeclinedNames(std::wstring mainpart, DeclinedName const& names);
 
-        void LoadSpellDisabledEntrys();
-        uint8 IsSpellDisabled(uint32 spellid)
-        {
-            uint8 result=0;
-            SpellDisabledMap::const_iterator itr = m_spell_disabled.find(spellid);
-            if(itr != m_spell_disabled.end())
-            {
-                result=1;
-                if(itr->second != 0)
-                    result=2;
-            }
-            return result;
-        }
-
         int GetIndexForLocale(LocaleConstant loc);
         LocaleConstant GetLocaleForIndex(int i);
 
@@ -857,24 +863,6 @@ class ObjectMgr
 
         int GetOrNewIndexForLocale(LocaleConstant loc);
 
-        VehicleDataMap mVehicleData;
-        VehicleSeatDataMap mVehicleSeatData;
-
-        uint32 GetSeatFlags(uint32 seatid)
-        {
-            VehicleSeatDataMap::iterator i = mVehicleSeatData.find(seatid);
-            if(i == mVehicleSeatData.end())
-                return NULL;
-            else
-                return i->second;
-        }
-        VehicleDataStructure const* GetVehicleData(uint32 entry) const
-        {
-            VehicleDataMap::const_iterator itr = mVehicleData.find(entry);
-            if(itr==mVehicleData.end()) return NULL;
-            return &itr->second;
-        }
-
         SpellClickInfoMapBounds GetSpellClickInfoMapBounds(uint32 creature_id) const
         {
             return SpellClickInfoMapBounds(mSpellClickInfoMap.lower_bound(creature_id),mSpellClickInfoMap.upper_bound(creature_id));
@@ -912,7 +900,6 @@ class ObjectMgr
         uint32 m_hiItemGuid;
         uint32 m_hiGoGuid;
         uint32 m_hiCorpseGuid;
-        uint32 m_hiVehicleGuid;
 
         QuestMap            mQuestTemplates;
 
@@ -922,7 +909,7 @@ class ObjectMgr
         typedef std::set<uint32> TavernAreaTriggerSet;
         typedef std::set<uint32> GameObjectForQuestSet;
 
-        GroupSet            mGroupSet;
+        GroupMap            mGroupMap;
         GuildMap            mGuildMap;
         ArenaTeamMap        mArenaTeamMap;
 
@@ -941,14 +928,13 @@ class ObjectMgr
         GossipMenuItemsMap  m_mGossipMenuItemsMap;
         PointOfInterestMap  mPointsOfInterest;
 
+        QuestPOIMap         mQuestPOIMap;
+
         WeatherZoneMap      mWeatherZoneMap;
 
         //character reserved names
         typedef std::set<std::wstring> ReservedNamesMap;
         ReservedNamesMap    m_ReservedNames;
-
-        typedef UNORDERED_MAP<uint32, uint32> SpellDisabledMap;
-        SpellDisabledMap  m_spell_disabled;
 
         GraveYardMap        mGraveYardMap;
 
@@ -970,7 +956,6 @@ class ObjectMgr
         void CheckScripts(ScriptMapMap const& scripts,std::set<int32>& ids);
         void LoadCreatureAddons(SQLStorage& creatureaddons, char const* entryName, char const* comment);
         void ConvertCreatureAddonAuras(CreatureDataAddon* addon, char const* table, char const* guidEntryStr);
-        void ConvertCreatureAddonPassengers(CreatureDataAddon* addon, char const* table, char const* guidEntryStr);
         void LoadQuestRelationsHelper(QuestRelations& map,char const* table);
 
         MailLevelRewardMap m_mailLevelRewardMap;

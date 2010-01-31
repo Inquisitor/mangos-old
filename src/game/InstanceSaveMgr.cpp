@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005,2006,2007 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -449,7 +449,12 @@ void InstanceSaveManager::LoadResetTimes()
                 continue;
             }
 
-            SetResetTimeFor(mapid,difficulty, fields[2].GetUInt64());
+            // update the reset time if the hour in the configs changes
+            uint64 newresettime = (oldresettime / DAY) * DAY + diff;
+            if(oldresettime != newresettime)
+                CharacterDatabase.DirectPExecute("UPDATE instance_reset SET resettime = '"UI64FMTD"' WHERE mapid = '%u' AND difficulty = '%u'", newresettime, mapid, difficulty);
+
+            SetResetTimeFor(mapid,difficulty,newresettime);
         } while(result->NextRow());
         delete result;
     }
@@ -484,7 +489,8 @@ void InstanceSaveManager::LoadResetTimes()
         {
             // assume that expired instances have already been cleaned
             // calculate the next reset time
-            t = (t / DAY) * DAY + period + diff;
+            t = (t / DAY) * DAY;
+            t += ((today - t) / period + 1) * period + diff;
             CharacterDatabase.DirectPExecute("UPDATE instance_reset SET resettime = '"UI64FMTD"' WHERE mapid = '%u' AND difficulty= '%u'", (uint64)t, mapid, difficulty);
         }
 
@@ -493,11 +499,9 @@ void InstanceSaveManager::LoadResetTimes()
         // schedule the global reset/warning
         uint8 type = 1;
         static int tim[4] = {3600, 900, 300, 60};
-        for(type; type < 4; type++)
+        for(; type < 4; type++)
             if(t - tim[type-1] > now)
                 break;
-
-        ScheduleReset(true, t - tim[type-1], InstResetEvent(type, mapid, difficulty, -1));
 
         for(ResetTimeMapDiffInstances::const_iterator in_itr = mapDiffResetInstances.lower_bound(map_diff_pair);
             in_itr != mapDiffResetInstances.upper_bound(map_diff_pair); ++in_itr)
@@ -545,7 +549,7 @@ void InstanceSaveManager::Update()
         {
             // global reset/warning for a certain map
             time_t resetTime = GetResetTimeFor(event.mapid,event.difficulty);
-            _ResetOrWarnAll(event.mapid, event.difficulty, event.type != 4, (resetTime > now)? resetTime - now : 0);
+            _ResetOrWarnAll(event.mapid, event.difficulty, event.type != 4, resetTime - now);
             if(event.type != 4)
             {
                 // schedule the next warning/reset
@@ -603,8 +607,7 @@ void InstanceSaveManager::_ResetOrWarnAll(uint32 mapid, Difficulty difficulty, b
     if (!mapEntry->Instanceable())
         return;
 
-    time_t now = time(NULL);
-    time_t today = (now / DAY) * DAY;
+    uint64 now = (uint64)time(NULL);
 
     if (!warn)
     {
@@ -633,12 +636,10 @@ void InstanceSaveManager::_ResetOrWarnAll(uint32 mapid, Difficulty difficulty, b
 
         // calculate the next reset time
         uint32 diff = sWorld.getConfig(CONFIG_INSTANCE_RESET_TIME_HOUR) * HOUR;
-        uint32 period = (mapDiff->resetTime / DAY * sWorld.getRate(RATE_INSTANCE_RESET_TIME)) * DAY;
-        time_t next_reset = today + period + diff;
+        uint32 period = mapDiff->resetTime * DAY;
+        uint64 next_reset = ((now + timeLeft + MINUTE) / DAY * DAY) + period + diff;
         // update it in the DB
-        CharacterDatabase.PExecute("UPDATE instance_reset SET resettime = '"UI64FMTD"' WHERE mapid = '%d' AND difficulty = '%d'", (uint64)next_reset, mapid, difficulty);
-        SetResetTimeFor(mapid,difficulty,(uint64)next_reset);
-        ScheduleReset(true, next_reset-3600, InstResetEvent(1, mapid, difficulty, -1));
+        CharacterDatabase.PExecute("UPDATE instance_reset SET resettime = '"UI64FMTD"' WHERE mapid = '%d' AND difficulty = '%d'", next_reset, mapid, difficulty);
     }
 
     // note: this isn't fast but it's meant to be executed very rarely

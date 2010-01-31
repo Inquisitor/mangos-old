@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -135,7 +135,6 @@ ObjectMgr::ObjectMgr()
     m_hiItemGuid        = 1;
     m_hiGoGuid          = 1;
     m_hiCorpseGuid      = 1;
-    m_hiVehicleGuid     = 1;
     m_hiPetNumber       = 1;
     m_ItemTextId        = 1;
     m_mailid            = 1;
@@ -165,8 +164,8 @@ ObjectMgr::~ObjectMgr()
             delete[] playerInfo[race][class_].levelInfo;
 
     // free group and guild objects
-    for (GroupSet::iterator itr = mGroupSet.begin(); itr != mGroupSet.end(); ++itr)
-        delete (*itr);
+    for (GroupMap::iterator itr = mGroupMap.begin(); itr != mGroupMap.end(); ++itr)
+        delete itr->second;
 
     for (GuildMap::iterator itr = mGuildMap.begin(); itr != mGuildMap.end(); ++itr)
         delete itr->second;
@@ -181,11 +180,11 @@ ObjectMgr::~ObjectMgr()
         itr->second.Clear();
 }
 
-Group * ObjectMgr::GetGroupByLeader(const uint64 &guid) const
+Group * ObjectMgr::GetGroupByLeaderLowGUID(uint32 guid) const
 {
-    for(GroupSet::const_iterator itr = mGroupSet.begin(); itr != mGroupSet.end(); ++itr)
-        if ((*itr)->GetLeaderGUID() == guid)
-            return *itr;
+    GroupMap::const_iterator itr = mGroupMap.find(guid);
+    if (itr != mGroupMap.end())
+        return itr->second;
 
     return NULL;
 }
@@ -226,16 +225,6 @@ Guild* ObjectMgr::GetGuildByLeader(const uint64 &guid) const
     return NULL;
 }
 
-void ObjectMgr::AddGuild(Guild* guild)
-{
-    mGuildMap[guild->GetId()] = guild;
-}
-
-void ObjectMgr::RemoveGuild(uint32 Id)
-{
-    mGuildMap.erase(Id);
-}
-
 ArenaTeam* ObjectMgr::GetArenaTeamById(uint32 arenateamid) const
 {
     ArenaTeamMap::const_iterator itr = mArenaTeamMap.find(arenateamid);
@@ -261,16 +250,6 @@ ArenaTeam* ObjectMgr::GetArenaTeamByCaptain(uint64 const& guid) const
             return itr->second;
 
     return NULL;
-}
-
-void ObjectMgr::AddArenaTeam(ArenaTeam* arenaTeam)
-{
-    mArenaTeamMap[arenaTeam->GetId()] = arenaTeam;
-}
-
-void ObjectMgr::RemoveArenaTeam(uint32 Id)
-{
-    mArenaTeamMap.erase(Id);
 }
 
 CreatureInfo const* ObjectMgr::GetCreatureTemplate(uint32 id)
@@ -678,7 +657,8 @@ void ObjectMgr::LoadCreatureTemplates()
             }
         }
 
-        if (cInfo->unit_class && ((1 << (cInfo->unit_class-1)) & CLASSMASK_ALL_CREATURES) == 0)
+        // use below code for 0-checks for unit_class
+        if (/*!cInfo->unit_class ||*/cInfo->unit_class && ((1 << (cInfo->unit_class-1)) & CLASSMASK_ALL_CREATURES) == 0)
             sLog.outErrorDb("Creature (Entry: %u) has invalid unit_class(%u) for creature_template", cInfo->Entry, cInfo->unit_class);
 
         if(cInfo->dmgschool >= MAX_SPELL_SCHOOL)
@@ -838,93 +818,6 @@ void ObjectMgr::ConvertCreatureAddonAuras(CreatureDataAddon* addon, char const* 
     endAura.effect_idx = 0;
 }
 
-void ObjectMgr::ConvertCreatureAddonPassengers(CreatureDataAddon* addon, char const* table, char const* guidEntryStr)
-{
-    // Now add the passengers, format "creature_entry/guid seatindex creature_entry/guid seatindex..."
-    char *p,*s;
-    std::vector<int> val;
-    s=p=(char*)reinterpret_cast<char const*>(addon->passengers);
-    if(p)
-    {
-        while (p[0]!=0)
-        {
-            ++p;
-            if (p[0]==' ')
-            {
-                val.push_back(atoi(s));
-                s=++p;
-            }
-        }
-        if (p!=s)
-            val.push_back(atoi(s));
-
-        // free char* loaded memory
-        delete[] (char*)reinterpret_cast<char const*>(addon->passengers);
-
-        // wrong list
-        if (val.size()%2)
-        {
-            addon->auras = NULL;
-            sLog.outErrorDb("Creature (%s: %u) has wrong `passengers` data in `%s`.",guidEntryStr,addon->guidOrEntry,table);
-            return;
-        }
-    }
-
-    // empty list
-    if(val.empty())
-    {
-        addon->passengers = NULL;
-        return;
-    }
-
-    // replace by new structures array
-    const_cast<CreatureDataAddonPassengers*&>(addon->passengers) = new CreatureDataAddonPassengers[val.size()/2+1];
-
-    int i=0;
-    for(int j=0;j<val.size()/2;++j)
-    {
-        CreatureDataAddonPassengers& cPas = const_cast<CreatureDataAddonPassengers&>(addon->passengers[i]);
-        if(guidEntryStr == "Entry")
-            cPas.entry = (uint32)val[2*j+0];
-        else
-            cPas.guid = (uint32)val[2*j+0];
-        cPas.seat_idx = (int8)val[2*j+1];
-        if ( cPas.seat_idx > 7 )
-        {
-            sLog.outErrorDb("Creature (%s: %u) has wrong seat %u for creature %u in `passengers` field in `%s`.",guidEntryStr,addon->guidOrEntry,cPas.seat_idx,cPas.entry,table);
-            continue;
-        }
-        if(cPas.entry == 0 && cPas.guid == 0)
-        {
-            sLog.outErrorDb("Creature (%s: %u) has NULL creature entry/guid in `passengers` field in `%s`.",guidEntryStr,addon->guidOrEntry,table);
-            continue;
-        }
-        if(cPas.entry > 0)
-        {
-            if(!sCreatureStorage.LookupEntry<CreatureInfo>(cPas.entry))
-            {
-                sLog.outErrorDb("Creature (%s: %u) has wrong creature entry/guid %u `passengers` field in `%s`.",guidEntryStr,addon->guidOrEntry,cPas.entry,table);
-                continue;
-            }
-        }
-        else
-        {
-            if(mCreatureDataMap.find(cPas.guid)==mCreatureDataMap.end())
-            {
-                sLog.outErrorDb("Creature (%s: %u) has wrong creature entry/guid %u `passengers` field in `%s`.",guidEntryStr,addon->guidOrEntry,cPas.guid,table);
-                continue;
-            }
-        }
-        ++i;
-    }
-
-    // fill terminator element (after last added)
-    CreatureDataAddonPassengers& endPassenger = const_cast<CreatureDataAddonPassengers&>(addon->passengers[i]);
-    endPassenger.entry = 0;
-    endPassenger.guid = 0;
-    endPassenger.seat_idx = -1;
-}
-
 void ObjectMgr::LoadCreatureAddons(SQLStorage& creatureaddons, char const* entryName, char const* comment)
 {
     creatureaddons.Load();
@@ -958,7 +851,6 @@ void ObjectMgr::LoadCreatureAddons(SQLStorage& creatureaddons, char const* entry
         }
 
         ConvertCreatureAddonAuras(const_cast<CreatureDataAddon*>(addon), creatureaddons.GetTableName(), entryName);
-        ConvertCreatureAddonPassengers(const_cast<CreatureDataAddon*>(addon), creatureaddons.GetTableName(), entryName);
     }
 }
 
@@ -2168,6 +2060,29 @@ void ObjectMgr::LoadItemPrototypes()
             const_cast<ItemPrototype*>(proto)->HolidayId = 0;
         }
     }
+
+    // check some dbc referenced items (avoid duplicate reports)
+    std::set<uint32> notFoundOutfit;
+    for (uint32 i = 1; i < sCharStartOutfitStore.GetNumRows(); ++i)
+    {
+        CharStartOutfitEntry const* entry = sCharStartOutfitStore.LookupEntry(i);
+        if (!entry)
+            continue;
+
+        for(int j = 0; j < MAX_OUTFIT_ITEMS; ++j)
+        {
+            if(entry->ItemId[j] <= 0)
+                continue;
+
+            uint32 item_id = entry->ItemId[j];
+
+            if(!GetItemPrototype(item_id))
+                notFoundOutfit.insert(item_id);
+        }
+    }
+
+    for(std::set<uint32>::const_iterator itr = notFoundOutfit.begin(); itr != notFoundOutfit.end(); ++itr)
+        sLog.outErrorDb("Item (Entry: %u) not exist in `item_template` but referenced in `CharStartOutfit.dbc`", *itr);
 }
 
 void ObjectMgr::LoadItemRequiredTarget()
@@ -2700,7 +2615,12 @@ void ObjectMgr::LoadPlayerInfo()
             }
 
             uint32 current_level = fields[1].GetUInt32();
-            if(current_level > sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
+            if(current_level == 0)
+            {
+                sLog.outErrorDb("Wrong level %u in `player_classlevelstats` table, ignoring.",current_level);
+                continue;
+            }
+            else if(current_level > sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
             {
                 if(current_level > STRONG_MAX_LEVEL)        // hardcoded level maximum
                     sLog.outErrorDb("Wrong (> %u) level %u in `player_classlevelstats` table, ignoring.",STRONG_MAX_LEVEL,current_level);
@@ -3110,9 +3030,11 @@ void ObjectMgr::LoadGuilds()
             delete newGuild;
             continue;
         }
+        newGuild->LoadGuildEventLogFromDB();
+        newGuild->LoadGuildBankEventLogFromDB();
+        newGuild->LoadGuildBankFromDB();
         AddGuild(newGuild);
-
-    }while( result->NextRow() );
+    } while( result->NextRow() );
 
     delete result;
     delete guildRanksResult;
@@ -3186,8 +3108,6 @@ void ObjectMgr::LoadArenaTeams()
 void ObjectMgr::LoadGroups()
 {
     // -- loading groups --
-    Group *group = NULL;
-    uint64 leaderGuid = 0;
     uint32 count = 0;
     //                                                     0         1              2           3           4              5      6      7      8      9      10     11     12     13      14         15              16
     QueryResult *result = CharacterDatabase.Query("SELECT mainTank, mainAssistant, lootMethod, looterGuid, lootThreshold, icon1, icon2, icon3, icon4, icon5, icon6, icon7, icon8, isRaid, difficulty, raiddifficulty, leaderGuid FROM groups");
@@ -3210,9 +3130,8 @@ void ObjectMgr::LoadGroups()
         bar.step();
         Field *fields = result->Fetch();
         ++count;
-        leaderGuid = MAKE_NEW_GUID(fields[16].GetUInt32(),0,HIGHGUID_PLAYER);
-
-        group = new Group;
+        uint64 leaderGuid = MAKE_NEW_GUID(fields[16].GetUInt32(),0,HIGHGUID_PLAYER);
+        Group *group = new Group;
         if(!group->LoadGroupFromDB(leaderGuid, result, false))
         {
             group->Disband();
@@ -3229,8 +3148,6 @@ void ObjectMgr::LoadGroups()
 
     // -- loading members --
     count = 0;
-    group = NULL;
-    leaderGuid = 0;
     //                                        0           1          2         3
     result = CharacterDatabase.Query("SELECT memberGuid, assistant, subgroup, leaderGuid FROM group_member ORDER BY leaderGuid");
     if(!result)
@@ -3240,28 +3157,34 @@ void ObjectMgr::LoadGroups()
     }
     else
     {
+        Group* group = NULL;                                // used as cached pointer for avoid relookup group for each member
+
         barGoLink bar2( result->GetRowCount() );
         do
         {
             bar2.step();
             Field *fields = result->Fetch();
             count++;
-            leaderGuid = MAKE_NEW_GUID(fields[3].GetUInt32(), 0, HIGHGUID_PLAYER);
-            if(!group || group->GetLeaderGUID() != leaderGuid)
+
+            uint32 memberGuidlow = fields[0].GetUInt32();
+            bool   assistent     = fields[1].GetBool();
+            uint8  subgroup      = fields[2].GetUInt8();
+            uint32 leaderGuidLow = fields[3].GetUInt32();
+            if(!group || GUID_LOPART(group->GetLeaderGUID()) != leaderGuidLow)
             {
-                group = GetGroupByLeader(leaderGuid);
+                group = GetGroupByLeaderLowGUID(leaderGuidLow);
                 if(!group)
                 {
-                    sLog.outErrorDb("Incorrect entry in group_member table : no group with leader %d for member %d!", fields[3].GetUInt32(), fields[0].GetUInt32());
-                    CharacterDatabase.PExecute("DELETE FROM group_member WHERE memberGuid = '%d'", fields[0].GetUInt32());
+                    sLog.outErrorDb("Incorrect entry in group_member table : no group with leader %d for member %d!", leaderGuidLow, memberGuidlow);
+                    CharacterDatabase.PExecute("DELETE FROM group_member WHERE memberGuid = '%d'", memberGuidlow);
                     continue;
                 }
             }
 
-            if(!group->LoadMemberFromDB(fields[0].GetUInt32(), fields[2].GetUInt8(), fields[1].GetBool()))
+            if(!group->LoadMemberFromDB(memberGuidlow, subgroup, assistent))
             {
-                sLog.outErrorDb("Incorrect entry in group_member table : member %d cannot be added to player %d's group!", fields[0].GetUInt32(), fields[3].GetUInt32());
-                CharacterDatabase.PExecute("DELETE FROM group_member WHERE memberGuid = '%d'", fields[0].GetUInt32());
+                sLog.outErrorDb("Incorrect entry in group_member table : member %d cannot be added to player %d's group!", memberGuidlow, leaderGuidLow);
+                CharacterDatabase.PExecute("DELETE FROM group_member WHERE memberGuid = '%d'", memberGuidlow);
             }
         }while( result->NextRow() );
         delete result;
@@ -3269,13 +3192,13 @@ void ObjectMgr::LoadGroups()
 
     // clean groups
     // TODO: maybe delete from the DB before loading in this case
-    for(GroupSet::iterator itr = mGroupSet.begin(); itr != mGroupSet.end();)
+    for (GroupMap::iterator itr = mGroupMap.begin(); itr != mGroupMap.end();)
     {
-        if((*itr)->GetMembersCount() < 2)
+        if (itr->second->GetMembersCount() < 2)
         {
-            (*itr)->Disband();
-            delete *itr;
-            mGroupSet.erase(itr++);
+            itr->second->Disband();
+            delete itr->second;
+            mGroupMap.erase(itr++);
         }
         else
             ++itr;
@@ -3283,8 +3206,6 @@ void ObjectMgr::LoadGroups()
 
     // -- loading instances --
     count = 0;
-    group = NULL;
-    leaderGuid = 0;
     result = CharacterDatabase.Query(
         //      0           1    2         3          4           5
         "SELECT leaderGuid, map, instance, permanent, difficulty, resettime, "
@@ -3300,31 +3221,36 @@ void ObjectMgr::LoadGroups()
     }
     else
     {
+        Group* group = NULL;                                // used as cached pointer for avoid relookup group for each member
+
         barGoLink bar2( result->GetRowCount() );
         do
         {
             bar2.step();
             Field *fields = result->Fetch();
             count++;
-            leaderGuid = MAKE_NEW_GUID(fields[0].GetUInt32(), 0, HIGHGUID_PLAYER);
-            if(!group || group->GetLeaderGUID() != leaderGuid)
+
+            uint32 leaderGuidLow = fields[0].GetUInt32();
+            uint32 mapId = fields[1].GetUInt32();
+            uint32 diff = fields[4].GetUInt8();
+
+            if(!group || GUID_LOPART(group->GetLeaderGUID()) != leaderGuidLow)
             {
-                group = GetGroupByLeader(leaderGuid);
+                group = GetGroupByLeaderLowGUID(leaderGuidLow);
                 if(!group)
                 {
-                    sLog.outErrorDb("Incorrect entry in group_instance table : no group with leader %d", fields[0].GetUInt32());
+                    sLog.outErrorDb("Incorrect entry in group_instance table : no group with leader %d", leaderGuidLow);
                     continue;
                 }
             }
 
-            MapEntry const* mapEntry = sMapStore.LookupEntry(fields[1].GetUInt32());
+            MapEntry const* mapEntry = sMapStore.LookupEntry(mapId);
             if(!mapEntry || !mapEntry->IsDungeon())
             {
-                sLog.outErrorDb("Incorrect entry in group_instance table : no dungeon map %d", fields[1].GetUInt32());
+                sLog.outErrorDb("Incorrect entry in group_instance table : no dungeon map %d", mapId);
                 continue;
             }
 
-            uint32 diff = fields[4].GetUInt8();
             if(diff >= (mapEntry->IsRaid() ? MAX_RAID_DIFFICULTY : MAX_DUNGEON_DIFFICULTY))
             {
                 sLog.outErrorDb("Wrong dungeon difficulty use in group_instance table: %d", diff + 1);
@@ -3432,7 +3358,7 @@ void ObjectMgr::LoadQuests()
         if (qinfo->QuestFlags & ~QUEST_MANGOS_FLAGS_DB_ALLOWED)
         {
             sLog.outErrorDb("Quest %u has `SpecialFlags` = %u > max allowed value. Correct `SpecialFlags` to value <= %u",
-                qinfo->GetQuestId(),qinfo->QuestFlags,QUEST_MANGOS_FLAGS_DB_ALLOWED >> 16);
+                qinfo->GetQuestId(),qinfo->QuestFlags  >> 24,QUEST_MANGOS_FLAGS_DB_ALLOWED >> 24);
             qinfo->QuestFlags &= QUEST_MANGOS_FLAGS_DB_ALLOWED;
         }
 
@@ -3761,7 +3687,7 @@ void ObjectMgr::LoadQuests()
             {
                 // In fact SpeakTo and Kill are quite same: either you can speak to mob:SpeakTo or you can't:Kill/Cast
 
-                qinfo->SetFlag(QUEST_MANGOS_FLAGS_KILL_OR_CAST);
+                qinfo->SetFlag(QUEST_MANGOS_FLAGS_KILL_OR_CAST | QUEST_MANGOS_FLAGS_SPEAKTO);
 
                 if(!qinfo->ReqCreatureOrGOCount[j])
                 {
@@ -4152,7 +4078,7 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
 
     scripts.clear();                                        // need for reload support
 
-    QueryResult *result = WorldDatabase.PQuery( "SELECT id,delay,requirement_type,requirement_value,command,datalong,datalong2,dataint, x, y, z, o FROM %s", tablename );
+    QueryResult *result = WorldDatabase.PQuery( "SELECT id,delay,command,datalong,datalong2,dataint, x, y, z, o FROM %s", tablename );
 
     uint32 count = 0;
 
@@ -4176,16 +4102,14 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
         ScriptInfo tmp;
         tmp.id        = fields[0].GetUInt32();
         tmp.delay     = fields[1].GetUInt32();
-        tmp.reqtype   = fields[2].GetUInt32();
-        tmp.reqvalue  = fields[3].GetUInt32();
-        tmp.command   = fields[4].GetUInt32();
-        tmp.datalong  = fields[5].GetUInt32();
-        tmp.datalong2 = fields[6].GetUInt32();
-        tmp.dataint   = fields[7].GetInt32();
-        tmp.x         = fields[8].GetFloat();
-        tmp.y         = fields[9].GetFloat();
-        tmp.z         = fields[10].GetFloat();
-        tmp.o         = fields[11].GetFloat();
+        tmp.command   = fields[2].GetUInt32();
+        tmp.datalong  = fields[3].GetUInt32();
+        tmp.datalong2 = fields[4].GetUInt32();
+        tmp.dataint   = fields[5].GetInt32();
+        tmp.x         = fields[6].GetFloat();
+        tmp.y         = fields[7].GetFloat();
+        tmp.z         = fields[8].GetFloat();
+        tmp.o         = fields[9].GetFloat();
 
         // generic command args check
         switch(tmp.command)
@@ -4391,41 +4315,6 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
                 }
                 break;
             }
-            case SCRIPT_COMMAND_ADD_QUEST_COUNT:
-            {
-                Quest const* quest = GetQuestTemplate(tmp.datalong);
-                if( tmp.datalong2 > 4 )
-                {
-                    sLog.outErrorDb("Table `%s` has x for requirement [] (x: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `datalong2` for script id %u",tablename,tmp.datalong2,tmp.id);
-                    continue;
-                }
-                if( tmp.dataint < 1 )
-                {
-                    sLog.outErrorDb("Table `%s` has increment value (Value: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `dataint` for script id %u",tablename,tmp.dataint,tmp.id);
-                    continue;
-                }
-                if(!quest)
-                {
-                    sLog.outErrorDb("Table `%s` has invalid quest (ID: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `datalong` for script id %u",tablename,tmp.datalong,tmp.id);
-                    continue;
-                }
-                break;
-            } 
-            case SCRIPT_COMMAND_TEMP_SUMMON_OBJECT:
-            {
-                if(!MaNGOS::IsValidMapCoord(tmp.x,tmp.y,tmp.z,tmp.o))
-                {
-                    sLog.outErrorDb("Table `%s` has invalid coordinates (X: %f Y: %f) in SCRIPT_COMMAND_TEMP_SUMMON_OBJECT for script id %u",tablename,tmp.x,tmp.y,tmp.id);
-                    continue;
-                }
-
-                if(!GetGameObjectInfo(tmp.datalong))
-                {
-                    sLog.outErrorDb("Table `%s` has invalid gameobject (Entry: %u) in SCRIPT_COMMAND_TEMP_SUMMON_OBJECT for script id %u",tablename,tmp.datalong,tmp.id);
-                    continue;
-                }
-                break;
-            }
         }
 
         if (scripts.find(tmp.id) == scripts.end())
@@ -4503,7 +4392,7 @@ void ObjectMgr::LoadSpellScripts()
             if( !spellInfo->Effect[i] )
                 continue;
 
-            if( spellInfo->Effect[i] == SPELL_EFFECT_SCRIPT_EFFECT || spellInfo->Effect[i] == SPELL_EFFECT_SEND_EVENT || spellInfo->Effect[i] == SPELL_EFFECT_DUMMY )
+            if( spellInfo->Effect[i] == SPELL_EFFECT_SCRIPT_EFFECT )
             {
                 found =  true;
                 break;
@@ -4650,7 +4539,7 @@ void ObjectMgr::LoadPageTexts()
                     ss << *itr << " ";
                 ss << "create(s) a circular reference, which can cause the server to freeze. Changing Next_Page of page "
                     << pageItr->Page_ID <<" to 0";
-                sLog.outErrorDb(ss.str().c_str());
+                sLog.outErrorDb("%s", ss.str().c_str());
                 const_cast<PageText*>(pageItr)->Next_Page = 0;
                 break;
             }
@@ -4934,7 +4823,7 @@ void ObjectMgr::ReturnOrDeleteOldMails(bool serverUp)
         Player *pl = 0;
         if (serverUp)
             pl = GetPlayer((uint64)m->receiver);
-        if (pl && pl->m_mailsLoaded)
+        if (pl)
         {                                                   //this code will run very improbably (the time is between 4 and 5 am, in game is online a player, who has old mail
             //his in mailbox and he has already listed his mails )
             delete m;
@@ -4960,7 +4849,7 @@ void ObjectMgr::ReturnOrDeleteOldMails(bool serverUp)
                 delete resultItems;
             }
             //if it is mail from AH, it shouldn't be returned, but deleted
-            if (m->messageType != MAIL_NORMAL || (m->checked & (MAIL_CHECK_MASK_COD_PAYMENT | MAIL_CHECK_MASK_RETURNED)))
+            if (m->messageType != MAIL_NORMAL || (m->checked & (MAIL_CHECK_MASK_AUCTION | MAIL_CHECK_MASK_COD_PAYMENT | MAIL_CHECK_MASK_RETURNED)))
             {
                 // mail open and then not returned
                 for(std::vector<MailItemInfo>::iterator itr2 = m->items.begin(); itr2 != m->items.end(); ++itr2)
@@ -5368,7 +5257,7 @@ WorldSafeLocsEntry const *ObjectMgr::GetClosestGraveYard(float x, float y, float
     GraveYardMap::const_iterator graveUp   = mGraveYardMap.upper_bound(zoneId);
     if(graveLow==graveUp)
     {
-        sLog.outDebug("Table `game_graveyard_zone` incomplete: Zone %u Team %u does not have a linked graveyard.",zoneId,team);
+        sLog.outErrorDb("Table `game_graveyard_zone` incomplete: Zone %u Team %u does not have a linked graveyard.",zoneId,team);
         return NULL;
     }
 
@@ -5687,7 +5576,6 @@ void ObjectMgr::SetHighestGuids()
     if( result )
     {
         m_hiCreatureGuid = (*result)[0].GetUInt32()+1;
-        m_hiVehicleGuid = m_hiCreatureGuid;
         delete result;
     }
 
@@ -5763,73 +5651,61 @@ void ObjectMgr::SetHighestGuids()
 
 uint32 ObjectMgr::GenerateArenaTeamId()
 {
-    ASSERT(m_arenaTeamId<0xFFFFFFFE);
-    /*
+    if(m_arenaTeamId>=0xFFFFFFFE)
     {
         sLog.outError("Arena team ids overflow!! Can't continue, shutting down server. ");
         World::StopNow(ERROR_EXIT_CODE);
     }
-    */
     return m_arenaTeamId++;
 }
 
 uint32 ObjectMgr::GenerateAuctionID()
 {
-    ASSERT(m_auctionid<0xFFFFFFFE);
-    /*
+    if(m_auctionid>=0xFFFFFFFE)
     {
         sLog.outError("Auctions ids overflow!! Can't continue, shutting down server. ");
         World::StopNow(ERROR_EXIT_CODE);
     }
-    */
     return m_auctionid++;
 }
 
 uint64 ObjectMgr::GenerateEquipmentSetGuid()
 {
-    ASSERT(m_equipmentSetGuid<0xFFFFFFFFFFFFFFFEll);
-    /*
+    if(m_equipmentSetGuid>=0xFFFFFFFFFFFFFFFEll)
     {
         sLog.outError("EquipmentSet guid overflow!! Can't continue, shutting down server. ");
         World::StopNow(ERROR_EXIT_CODE);
     }
-    */
     return m_equipmentSetGuid++;
 }
 
 uint32 ObjectMgr::GenerateGuildId()
 {
-    ASSERT(m_guildId<0xFFFFFFFE);
-    /*
+    if(m_guildId>=0xFFFFFFFE)
     {
         sLog.outError("Guild ids overflow!! Can't continue, shutting down server. ");
         World::StopNow(ERROR_EXIT_CODE);
     }
-    */
     return m_guildId++;
 }
 
 uint32 ObjectMgr::GenerateMailID()
 {
-    ASSERT(m_mailid<0xFFFFFFFE)
-    /*
+    if(m_mailid>=0xFFFFFFFE)
     {
         sLog.outError("Mail ids overflow!! Can't continue, shutting down server. ");
         World::StopNow(ERROR_EXIT_CODE);
     }
-    */
     return m_mailid++;
 }
 
 uint32 ObjectMgr::GenerateItemTextID()
 {
-    ASSERT(m_ItemTextId<0xFFFFFFFE);
-    /*
+    if(m_ItemTextId>=0xFFFFFFFE)
     {
         sLog.outError("Item text ids overflow!! Can't continue, shutting down server. ");
         World::StopNow(ERROR_EXIT_CODE);
     }
-    */
     return m_ItemTextId++;
 }
 
@@ -5852,59 +5728,40 @@ uint32 ObjectMgr::GenerateLowGuid(HighGuid guidhigh)
     switch(guidhigh)
     {
         case HIGHGUID_ITEM:
-            ASSERT(m_hiItemGuid<0xFFFFFFFE);
-            /*
+            if(m_hiItemGuid>=0xFFFFFFFE)
             {
                 sLog.outError("Item guid overflow!! Can't continue, shutting down server. ");
                 World::StopNow(ERROR_EXIT_CODE);
             }
-            */
             return m_hiItemGuid++;
         case HIGHGUID_UNIT:
-            ASSERT(m_hiCreatureGuid<0x00FFFFFE);
-            /*
+            if(m_hiCreatureGuid>=0x00FFFFFE)
             {
                 sLog.outError("Creature guid overflow!! Can't continue, shutting down server. ");
                 World::StopNow(ERROR_EXIT_CODE);
             }
-            */
             return m_hiCreatureGuid++;
         case HIGHGUID_PLAYER:
-            ASSERT(m_hiCharGuid<0xFFFFFFFE);
-            /*
+            if(m_hiCharGuid>=0xFFFFFFFE)
             {
                 sLog.outError("Players guid overflow!! Can't continue, shutting down server. ");
                 World::StopNow(ERROR_EXIT_CODE);
             }
-            */
             return m_hiCharGuid++;
         case HIGHGUID_GAMEOBJECT:
-            ASSERT(m_hiGoGuid<0x00FFFFFE);
-            /*
+            if(m_hiGoGuid>=0x00FFFFFE)
             {
                 sLog.outError("Gameobject guid overflow!! Can't continue, shutting down server. ");
                 World::StopNow(ERROR_EXIT_CODE);
             }
-            */
             return m_hiGoGuid++;
         case HIGHGUID_CORPSE:
-            ASSERT(m_hiCorpseGuid<0xFFFFFFFE);
-            /*
+            if(m_hiCorpseGuid>=0xFFFFFFFE)
             {
                 sLog.outError("Corpse guid overflow!! Can't continue, shutting down server. ");
                 World::StopNow(ERROR_EXIT_CODE);
             }
-            */
             return m_hiCorpseGuid++;
-        case HIGHGUID_VEHICLE:
-            ASSERT(m_hiVehicleGuid<0xFFFFFFFE);
-            /*
-            {
-                sLog.outError("Vehicle guid overflow!! Can't continue, shutting down server. ");
-                World::StopNow(ERROR_EXIT_CODE);
-            }
-            */
-            return m_hiVehicleGuid++;
         default:
             ASSERT(0);
     }
@@ -5999,7 +5856,7 @@ inline void CheckGOLockId(GameObjectInfo const* goInfo,uint32 dataN,uint32 N)
         return;
 
     sLog.outErrorDb("Gameobject (Entry: %u GoType: %u) have data%d=%u but lock (Id: %u) not found.",
-        goInfo->id,goInfo->type,N,goInfo->door.lockId,goInfo->door.lockId);
+        goInfo->id,goInfo->type,N,dataN,dataN);
 }
 
 inline void CheckGOLinkedTrapId(GameObjectInfo const* goInfo,uint32 dataN,uint32 N)
@@ -6256,12 +6113,13 @@ void ObjectMgr::LoadExplorationBaseXP()
     sLog.outString( ">> Loaded %u BaseXP definitions", count );
 }
 
-uint32 ObjectMgr::GetBaseXP(uint32 level)
+uint32 ObjectMgr::GetBaseXP(uint32 level) const
 {
-    return mBaseXPTable[level] ? mBaseXPTable[level] : 0;
+    BaseXPMap::const_iterator itr = mBaseXPTable.find(level);
+    return itr != mBaseXPTable.end() ? itr->second : 0;
 }
 
-uint32 ObjectMgr::GetXPForLevel(uint32 level)
+uint32 ObjectMgr::GetXPForLevel(uint32 level) const
 {
     if (level < mPlayerXPperLevel.size())
         return mPlayerXPperLevel[level];
@@ -6519,6 +6377,68 @@ void ObjectMgr::LoadPointsOfInterest()
 
     sLog.outString();
     sLog.outString(">> Loaded %u Points of Interest definitions", count);
+}
+
+void ObjectMgr::LoadQuestPOI()
+{
+    uint32 count = 0;
+
+    //                                                0        1         2      3     4     5     6
+    QueryResult *result = WorldDatabase.Query("SELECT questId, objIndex, mapId, unk1, unk2, unk3, unk4 FROM quest_poi");
+
+    if(!result)
+    {
+        barGoLink bar(1);
+
+        bar.step();
+
+        sLog.outString();
+        sLog.outErrorDb(">> Loaded 0 quest POI definitions. DB table `quest_poi` is empty.");
+        return;
+    }
+
+    barGoLink bar(result->GetRowCount());
+
+    do
+    {
+        Field *fields = result->Fetch();
+        bar.step();
+
+        uint32 questId  = fields[0].GetUInt32();
+        int32 objIndex  = fields[1].GetInt32();
+        uint32 mapId    = fields[2].GetUInt32();
+        uint32 unk1     = fields[3].GetUInt32();
+        uint32 unk2     = fields[4].GetUInt32();
+        uint32 unk3     = fields[5].GetUInt32();
+        uint32 unk4     = fields[6].GetUInt32();
+
+        QuestPOI POI(objIndex, mapId, unk1, unk2, unk3, unk4);
+
+        QueryResult *points = WorldDatabase.PQuery("SELECT x, y FROM quest_poi_points WHERE questId='%u' AND objIndex='%i'", questId, objIndex);
+
+        if(points)
+        {
+            do 
+            {
+                Field *pointFields = points->Fetch();
+                int32 x = pointFields[0].GetInt32();
+                int32 y = pointFields[1].GetInt32();
+                QuestPOIPoint point(x, y);
+                POI.points.push_back(point);
+            } while (points->NextRow());
+
+            delete points;
+        }
+
+        mQuestPOIMap[questId].push_back(POI);
+
+        ++count;
+    } while (result->NextRow());
+
+    delete result;
+
+    sLog.outString();
+    sLog.outString(">> Loaded %u quest POI definitions", count);
 }
 
 void ObjectMgr::LoadNPCSpellClickSpells()
@@ -7266,46 +7186,6 @@ const char *ObjectMgr::GetMangosString(int32 entry, int locale_idx) const
     return "<error>";
 }
 
-void ObjectMgr::LoadSpellDisabledEntrys()
-{
-    m_spell_disabled.clear();                                // need for reload case
-    QueryResult *result = WorldDatabase.Query("SELECT entry, ischeat_spell FROM spell_disabled where active=1");
-
-    uint32 total_count = 0;
-    uint32 cheat_spell_count=0;
-
-    if( !result )
-    {
-        barGoLink bar( 1 );
-        bar.step();
-
-        sLog.outString();
-        sLog.outString( ">> Loaded %u disabled spells", total_count );
-        return;
-    }
-
-    barGoLink bar( result->GetRowCount() );
-
-    Field* fields;
-    do
-    {
-        bar.step();
-        fields = result->Fetch();
-        uint32 spellid = fields[0].GetUInt32();
-        bool ischeater = fields[1].GetBool();
-        m_spell_disabled[spellid] = ischeater;
-        ++total_count;
-        if(ischeater)
-        ++cheat_spell_count;
-
-   } while ( result->NextRow() );
-
-    delete result;
-
-    sLog.outString();
-    sLog.outString( ">> Loaded %u disabled spells ( %u - is cheaters spells)", total_count, cheat_spell_count);
-}
-
 void ObjectMgr::LoadFishingBaseSkillLevel()
 {
     mFishingBaseForArea.clear();                            // for reload case
@@ -7455,6 +7335,16 @@ bool PlayerCondition::Meets(Player const * player) const
             if ((!value1 || (player->getRaceMask() & value1)) && (!value2 || (player->getClassMask() & value2)))
                 return true;
             return false;
+        case CONDITION_LEVEL:
+        {
+            switch(value2)
+            {
+                case 0: return player->getLevel() == value1;
+                case 1: return player->getLevel() >= value1;
+                case 2: return player->getLevel() <= value1;
+            }
+            return false;
+        }
         default:
             return false;
     }
@@ -7627,6 +7517,22 @@ bool PlayerCondition::IsValid(ConditionType condition, uint32 value1, uint32 val
                 sLog.outErrorDb("Race_class condition has invalid race mask %u, skipped", value2);
                 return false;
             }
+            break;
+        }
+        case CONDITION_LEVEL:
+        {
+            if (!value1 || value1 > sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
+            {
+                sLog.outErrorDb("Level condition has invalid level %u, skipped", value1);
+                return false;
+            }
+
+            if (value2 > 2)
+            {
+                sLog.outErrorDb("Level condition has invalid argument %u (must be 0..2), skipped", value2);
+                return false;
+            }
+
             break;
         }
         case CONDITION_NONE:
@@ -7907,7 +7813,7 @@ void ObjectMgr::LoadTrainerSpell()
 
         if(!(cInfo->npcflag & UNIT_NPC_FLAG_TRAINER))
         {
-            if(skip_trainers.count(entry) == 0)
+            if (skip_trainers.find(entry) == skip_trainers.end())
             {
                 sLog.outErrorDb("Table `npc_trainer` have data for not creature template (Entry: %u) without trainer flag, ignore", entry);
                 skip_trainers.insert(entry);
@@ -7930,7 +7836,7 @@ void ObjectMgr::LoadTrainerSpell()
 
         if(GetTalentSpellCost(spell))
         {
-            if(talentIds.count(spell)==0)
+            if (talentIds.find(spell) == talentIds.end())
             {
                 sLog.outErrorDb("Table `npc_trainer` has talent as learning spell %u, ignore", spell);
                 talentIds.insert(spell);
@@ -8458,7 +8364,7 @@ void ObjectMgr::CheckScripts(ScriptMapMap const& scripts,std::set<int32>& ids)
                     if(!GetMangosStringLocale (itrM->second.dataint))
                         sLog.outErrorDb( "Table `db_script_string` is missing string id %u, used in database script id %u.", itrM->second.dataint, itrMM->first);
 
-                    if(ids.count(itrM->second.dataint))
+                    if (ids.find(itrM->second.dataint) != ids.end())
                         ids.erase(itrM->second.dataint);
                 }
             }
@@ -8487,6 +8393,36 @@ void ObjectMgr::LoadDbScriptStrings()
 
     for(std::set<int32>::const_iterator itr = ids.begin(); itr != ids.end(); ++itr)
         sLog.outErrorDb( "Table `db_script_string` has unused string id  %u", *itr);
+}
+
+void ObjectMgr::AddGuild( Guild* guild )
+{
+    mGuildMap[guild->GetId()] = guild ;
+}
+
+void ObjectMgr::RemoveGuild( uint32 Id )
+{
+    mGuildMap.erase(Id);
+}
+
+void ObjectMgr::AddGroup( Group* group )
+{
+    mGroupMap[GUID_LOPART(group->GetLeaderGUID())] = group ;
+}
+
+void ObjectMgr::RemoveGroup( Group* group )
+{
+    mGroupMap.erase(GUID_LOPART(group->GetLeaderGUID()));
+}
+
+void ObjectMgr::AddArenaTeam( ArenaTeam* arenaTeam )
+{
+    mArenaTeamMap[arenaTeam->GetId()] = arenaTeam;
+}
+
+void ObjectMgr::RemoveArenaTeam( uint32 Id )
+{
+    mArenaTeamMap.erase(Id);
 }
 
 // Functions for scripting access
@@ -8521,126 +8457,6 @@ ObjectMgr::ScriptNameMap & GetScriptNames()
 CreatureInfo const* GetCreatureTemplateStore(uint32 entry)
 {
     return sCreatureStorage.LookupEntry<CreatureInfo>(entry);
-}
-
-void ObjectMgr::LoadVehicleData()
-{
-    mVehicleData.clear();
-
-    QueryResult *result = WorldDatabase.Query("SELECT entry, flags, Spell1, Spell2, Spell3, Spell4, Spell5, Spell6, Spell7, Spell8, Spell9, Spell10, req_aura FROM vehicle_data");
-    if(!result)
-    {
-        barGoLink bar( 1 );
-        bar.step();
-
-        sLog.outString();
-        sLog.outString( ">> Loaded 0 vehicle data" );
-        sLog.outErrorDb("`vehicle_data` table is empty!");
-        return;
-    }
-
-    uint32 count = 0;
-
-    barGoLink bar( result->GetRowCount() );
-    do
-    {
-        bar.step();
-
-        Field* fields = result->Fetch();
-
-        VehicleDataStructure VDS;
-        // NOTE : we can use spellid or creature id
-        uint32 v_entry      = fields[0].GetUInt32();
-        VDS.v_flags         = fields[1].GetUInt32();
-        for(uint8 j = 0; j < MAX_VEHICLE_SPELLS; j++)
-        {
-            VDS.v_spells[j] = fields[j+2].GetUInt32();
-        }
-        VDS.req_aura        = fields[12].GetUInt32();
-
-        VehicleEntry const *vehicleInfo = sVehicleStore.LookupEntry(v_entry);
-        if(!vehicleInfo)
-        {
-            sLog.outErrorDb("Vehicle id %u listed in `vehicle_data` does not exist",v_entry);
-            continue;
-        }
-        for(uint8 j = 0; j < MAX_VEHICLE_SPELLS; j++)
-        {
-            if(VDS.v_spells[j])
-            {
-                SpellEntry const* j_spell = sSpellStore.LookupEntry(VDS.v_spells[j]);
-                if(!j_spell)
-                {
-                    sLog.outErrorDb("Spell %u listed in `vehicle_data` does not exist, skipped",VDS.v_spells[j]);
-                    VDS.v_spells[j] = 0;
-                }
-            }
-        }
-        if(VDS.req_aura)
-        {
-            SpellEntry const* i_spell = sSpellStore.LookupEntry(VDS.req_aura);
-            if(!i_spell)
-            {
-                sLog.outErrorDb("Spell %u listed in `vehicle_data` does not exist, skipped",VDS.req_aura);
-                VDS.req_aura = 0;
-            }
-        }
-
-        mVehicleData[v_entry] = VDS;
-        ++count;
-    }
-    while (result->NextRow());
-
-    delete result;
-
-    sLog.outString();
-    sLog.outString( ">> Loaded %u vehicle data", count );
-}
-
-void ObjectMgr::LoadVehicleSeatData()
-{
-    mVehicleSeatData.clear();
-
-    QueryResult *result = WorldDatabase.Query("SELECT seat,flags FROM vehicle_seat_data");
-
-    if( !result )
-    {
-        barGoLink bar( 1 );
-
-        bar.step();
-
-        sLog.outString();
-        sLog.outString( ">> Loaded 0 vehicle seat data" );
-        sLog.outErrorDb("`vehicle_seat_data` table is empty!");
-        return;
-    }
-    uint32 count = 0;
-
-    barGoLink bar( result->GetRowCount() );
-    do
-    {
-        bar.step();
-
-        Field *fields = result->Fetch();
-        uint32 entry  = fields[0].GetUInt32();
-        uint32 flag   = fields[1].GetUInt32();
-
-        VehicleSeatEntry const *vsInfo = sVehicleSeatStore.LookupEntry(entry);
-        if(!vsInfo)
-        {
-            sLog.outErrorDb("Vehicle seat %u listed in `vehicle_seat_data` does not exist",entry);
-            continue;
-        }
-
-        mVehicleSeatData[entry] = flag;
-        ++count;
-    }
-    while (result->NextRow());
-
-    delete result;
-
-    sLog.outString();
-    sLog.outString( ">> Loaded %u vehicle seat data", count );
 }
 
 Quest const* GetQuestTemplateStore(uint32 entry)

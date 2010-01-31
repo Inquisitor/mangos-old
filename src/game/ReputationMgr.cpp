@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -228,9 +228,8 @@ void ReputationMgr::Initilize()
 
 bool ReputationMgr::SetReputation(FactionEntry const* factionEntry, int32 standing, bool incremental)
 {
-    uint32 faction_id = factionEntry->ID;
-    SimpleFactionsList const* flist = GetFactionTeamList(faction_id);
-    if (flist && faction_id != 1037 && faction_id != 1052)
+    SimpleFactionsList const* flist = GetFactionTeamList(factionEntry->ID);
+    if (flist)
     {
         bool res = false;
         for (SimpleFactionsList::const_iterator itr = flist->begin();itr != flist->end();++itr)
@@ -242,13 +241,7 @@ bool ReputationMgr::SetReputation(FactionEntry const* factionEntry, int32 standi
         return res;
     }
     else
-    {
-        FactionEntry const *team_factionEntry = sFactionStore.LookupEntry(factionEntry->team);
-        if(team_factionEntry && (team_factionEntry->ID == 1037 || team_factionEntry->ID == 1052))
-            SetOneFactionReputation(team_factionEntry, standing, incremental);
-
         return SetOneFactionReputation(factionEntry, standing, incremental);
-    }
 }
 
 bool ReputationMgr::SetOneFactionReputation(FactionEntry const* factionEntry, int32 standing, bool incremental)

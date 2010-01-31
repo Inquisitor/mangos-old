@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -212,7 +212,7 @@ BattleGround::BattleGround()
     m_Status            = STATUS_NONE;
     m_ClientInstanceID  = 0;
     m_EndTime           = 0;
-    m_QueueId           = QUEUE_ID_MAX_LEVEL_19;
+    m_BracketId         = BG_BRACKET_ID_FIRST;
     m_InvitedAlliance   = 0;
     m_InvitedHorde      = 0;
     m_ArenaType         = 0;
@@ -455,47 +455,10 @@ void BattleGround::Update(uint32 diff)
             if (isArena())
             {
                 //TODO : add arena sound PlaySoundToAll(SOUND_ARENA_START);
-                
-                Group *first_team = NULL;
+
                 for(BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
-                {
                     if (Player *plr = sObjectMgr.GetPlayer(itr->first))
-                    {
                         plr->RemoveAurasDueToSpell(SPELL_ARENA_PREPARATION);
-
-                        // set PLAYER_DUEL_TEAM based on arena party
-                        if(plr->GetGroup())
-                        {
-                            if(!first_team)
-                            {
-                                first_team = plr->GetGroup();
-                                plr->SetUInt32Value(PLAYER_DUEL_TEAM, 1);
-                            }
-                            else if(plr->GetGroup() == first_team)
-                                plr->SetUInt32Value(PLAYER_DUEL_TEAM, 1);
-                            else
-                                plr->SetUInt32Value(PLAYER_DUEL_TEAM, 2);
-                        }
-
-                        // remove all positive auras with duration under 30 sec
-                        Unit::AuraMap& Auras = plr->GetAuras();
-                        for(Unit::AuraMap::iterator aura_iter = Auras.begin(), next; aura_iter != Auras.end(); aura_iter = next)
-                        {
-                            next = aura_iter;
-                            ++next;
-                            Aura *aur = aura_iter->second;
-                            if (!aur->IsPassive() && aur->IsPositive() && !aur->IsPermanent()
-                                && aur->GetAuraDuration() > 0 && aur->GetAuraDuration() < 30000 && aur->GetId() != 32612)
-                            {
-                                plr->RemoveAurasDueToSpell(aur->GetId());
-                                if(Auras.empty())
-                                    break;
-                                else
-                                    next = Auras.begin();
-                            }
-                        }
-                    }
-                }
 
                 CheckArenaWinConditions();
             }
@@ -757,28 +720,6 @@ void BattleGround::EndBattleGround(uint32 winner)
             int32 winner_change = winner_arena_team->WonAgainst(loser_rating);
             int32 loser_change = loser_arena_team->LostAgainst(winner_rating);
             sLog.outDebug("--- Winner rating: %u, Loser rating: %u, Winner change: %u, Losser change: %u ---", winner_rating, loser_rating, winner_change, loser_change);
-
-            std::string winner_ids = "";
-            std::string loser_ids = "";
-            for(BattleGroundPlayerMap::iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
-            {
-                Player *plr = sObjectMgr.GetPlayer(itr->first);
-                if (plr == NULL)
-                    continue;
-
-                char _buf[32];
-                sprintf(_buf, ":%d", plr->GetGUIDLow());
-
-                if (itr->second.Team == winner)
-                    winner_ids += _buf;
-                else
-                    loser_ids += _buf;
-            }
-
-            CharacterDatabase.PExecute("INSERT INTO `arena_logs` (`team1`,`team1_members`,`team1_rating_change`,`team2`,`team2_members`,`team2_rating_change`,`winner`,`timestamp`) VALUES ('%u','%s','%u','%u','%s','%u','%u','%u')",
-                                        winner_arena_team->GetId(), winner_ids.c_str(), winner_change,
-                                        loser_arena_team->GetId(), loser_ids.c_str(), loser_change,
-                                        winner_arena_team->GetId(), time(NULL) );
             SetArenaTeamRatingChangeForTeam(winner, winner_change);
             SetArenaTeamRatingChangeForTeam(GetOtherTeam(winner), loser_change);
         }
@@ -1091,12 +1032,6 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
         plr->SpawnCorpseBones();
     }
 
-    if (plr)
-    {
-        plr->Unmount();
-        plr->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
-    }
-
     RemovePlayer(plr, guid);                                // BG subclass specific code
 
     if(participant) // if the player was a match participant, remove auras, calc rating, update queue
@@ -1166,7 +1101,7 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
         {
             // a player has left the battleground, so there are free slots -> add to queue
             AddToBGFreeSlotQueue();
-            sBattleGroundMgr.ScheduleQueueUpdate(0, 0, bgQueueTypeId, bgTypeId, GetQueueId());
+            sBattleGroundMgr.ScheduleQueueUpdate(0, 0, bgQueueTypeId, bgTypeId, GetBracketId());
         }
 
         // Let others know
@@ -1194,7 +1129,6 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
 // this method is called when no players remains in battleground
 void BattleGround::Reset()
 {
-    SetQueueId(QUEUE_ID_MAX_LEVEL_19);
     SetWinner(WINNER_NONE);
     SetStatus(STATUS_WAIT_QUEUE);
     SetStartTime(0);
@@ -1303,9 +1237,6 @@ void BattleGround::AddPlayer(Player *plr)
 
     plr->GetAchievementMgr().ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HEALING_DONE, ACHIEVEMENT_CRITERIA_CONDITION_MAP, GetMapId());
     plr->GetAchievementMgr().ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_DAMAGE_DONE, ACHIEVEMENT_CRITERIA_CONDITION_MAP, GetMapId());
-
-    plr->Unmount();
-    plr->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
 
     // setup BG group membership
     PlayerAddedToBGCheckIfBGIsRunning(plr);
@@ -1902,4 +1833,10 @@ bool BattleGround::IsTeamScoreInRange(uint32 team, uint32 minScore, uint32 maxSc
     BattleGroundTeamId team_idx = GetTeamIndexByTeamId(team);
     uint32 score = (m_TeamScores[team_idx] < 0) ? 0 : uint32(m_TeamScores[team_idx]);
     return score >= minScore && score <= maxScore;
+}
+
+void BattleGround::SetBracket( PvPDifficultyEntry const* bracketEntry )
+{
+    m_BracketId  = bracketEntry->GetBracketId();
+    SetLevelRange(bracketEntry->minLevel,bracketEntry->maxLevel);
 }

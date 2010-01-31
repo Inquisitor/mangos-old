@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,8 +74,30 @@ void WaypointMovementGenerator<Creature>::ClearWaypoints()
     i_path = NULL;
 }
 
-void WaypointMovementGenerator<Creature>::Initialize()
+void WaypointMovementGenerator<Creature>::Initialize( Creature &u )
 {
+    i_nextMoveTime.Reset(0);                        // TODO: check the lower bound (0 is probably too small)
+    u.StopMoving();
+    LoadPath(u);
+    u.addUnitState(UNIT_STAT_ROAMING|UNIT_STAT_ROAMING_MOVE);
+}
+
+void WaypointMovementGenerator<Creature>::Finalize( Creature &u )
+{
+    u.clearUnitState(UNIT_STAT_ROAMING|UNIT_STAT_ROAMING_MOVE);
+}
+
+void WaypointMovementGenerator<Creature>::Interrupt( Creature &u )
+{
+    u.addUnitState(UNIT_STAT_ROAMING|UNIT_STAT_ROAMING_MOVE);
+}
+
+void WaypointMovementGenerator<Creature>::Reset( Creature &u )
+{
+    ReloadPath(u);
+    b_StoppedByPlayer = false;
+    i_nextMoveTime.Reset(0);
+    u.addUnitState(UNIT_STAT_ROAMING|UNIT_STAT_ROAMING_MOVE);
 }
 
 bool WaypointMovementGenerator<Creature>::Update(Creature &creature, const uint32 &diff)
@@ -85,12 +107,18 @@ bool WaypointMovementGenerator<Creature>::Update(Creature &creature, const uint3
 
     // Waypoint movement can be switched on/off
     // This is quite handy for escort quests and other stuff
-    if(creature.hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DISTRACTED | UNIT_STAT_DIED | UNIT_STAT_ON_VEHICLE))
+    if (creature.hasUnitState(UNIT_STAT_NOT_MOVE))
+    {
+        creature.clearUnitState(UNIT_STAT_ROAMING_MOVE);
         return true;
+    }
 
     // prevent a crash at empty waypoint path.
     if (!i_path || i_path->empty())
+    {
+        creature.clearUnitState(UNIT_STAT_ROAMING_MOVE);
         return true;
+    }
 
     // i_path was modified by chat commands for example
     if (i_path->size() != i_hasDone.size())
@@ -112,7 +140,7 @@ bool WaypointMovementGenerator<Creature>::Update(Creature &creature, const uint3
         {
             SetStoppedByPlayer(false);
 
-            creature.addUnitState(UNIT_STAT_ROAMING);
+            creature.addUnitState(UNIT_STAT_ROAMING_MOVE);
 
             if (creature.canFly())
                 creature.AddMonsterMoveFlag(MONSTER_MOVE_FLY);
@@ -187,7 +215,7 @@ bool WaypointMovementGenerator<Creature>::Update(Creature &creature, const uint3
         // If stopped then begin a new move segment
         if (creature.IsStopped())
         {
-            creature.addUnitState(UNIT_STAT_ROAMING);
+            creature.addUnitState(UNIT_STAT_ROAMING_MOVE);
 
             if (creature.canFly())
                 creature.AddMonsterMoveFlag(MONSTER_MOVE_FLY);
@@ -256,9 +284,6 @@ uint32 FlightPathMovementGenerator::GetPathAtMapEnd() const
 
 void FlightPathMovementGenerator::Initialize(Player &player)
 {
-    if( player.m_taxi.GetTaxiDestination() == 158 || player.m_taxi.GetTaxiDestination() == 243 )
-        player.SetDisplayId(16587);
-
     player.getHostileRefManager().setOnlineOfflineState(false);
     player.addUnitState(UNIT_STAT_IN_FLIGHT);
     player.SetFlag(UNIT_FIELD_FLAGS,UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_TAXI_FLIGHT);
@@ -272,35 +297,12 @@ void FlightPathMovementGenerator::Initialize(Player &player)
 
 void FlightPathMovementGenerator::Finalize(Player & player)
 {
-    switch( i_pathId )
-    {
-        case 632:
-        {
-            if( player.GetQuestStatus(10525) == QUEST_STATUS_INCOMPLETE )
-                player.CompleteQuest(10525);
-
-            player.SetDisplayId(player.GetNativeDisplayId());
-            break;    
-        }
-        case 811:
-        {
-            if( player.GetQuestStatus(12028) == QUEST_STATUS_INCOMPLETE )
-                player.CompleteQuest(12028);
-
-            player.SetDisplayId(player.GetNativeDisplayId());
-            break;
-        }
-    }
-
     // remove flag to prevent send object build movement packets for flight state and crash (movement generator already not at top of stack)
     player.clearUnitState(UNIT_STAT_IN_FLIGHT);
 
     float x, y, z;
     i_destinationHolder.GetLocationNow(player.GetBaseMap(), x, y, z);
     player.SetPosition(x, y, z, player.GetOrientation());
-
-    if( i_pathId == 632 )
-        player.TeleportTo( player.GetMapId(), i_path.GetNodes(0)->x, i_path.GetNodes(0)->y, i_path.GetNodes(0)->z, player.GetOrientation() );
 
     player.Unmount();
     player.RemoveFlag(UNIT_FIELD_FLAGS,UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_TAXI_FLIGHT);

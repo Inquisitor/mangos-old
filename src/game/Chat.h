@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ class ChatHandler
         explicit ChatHandler(Player* player) : m_session(player->GetSession()) {}
         ~ChatHandler() {}
 
-        static void FillMessageData( WorldPacket *data, WorldSession* session, uint8 type, uint32 language, const char *channelName, uint64 target_guid, const char *message, Unit *speaker, bool forceGMIcon = false);
+        static void FillMessageData( WorldPacket *data, WorldSession* session, uint8 type, uint32 language, const char *channelName, uint64 target_guid, const char *message, Unit *speaker);
 
         void FillMessageData( WorldPacket *data, uint8 type, uint32 language, uint64 target_guid, const char* message)
         {
@@ -67,7 +67,6 @@ class ChatHandler
         void SendSysMessage(          int32     entry);
         void PSendSysMessage(         const char *format, ...) ATTR_PRINTF(2,3);
         void PSendSysMessage(         int32     entry, ...  );
-        void StrReplaceStr(std::string &str, const std::string &find_what, const std::string &replace_with);
 
         int ParseCommands(const char* text);
 
@@ -104,6 +103,7 @@ class ChatHandler
         bool HandleAccountPasswordCommand(const char* args);
         bool HandleAccountSetAddonCommand(const char* args);
         bool HandleAccountSetGmLevelCommand(const char* args);
+        bool HandleAccountSetPasswordCommand(const char* args);
 
         bool HandleBanAccountCommand(const char* args);
         bool HandleBanCharacterCommand(const char* args);
@@ -123,7 +123,6 @@ class ChatHandler
 
         bool HandleCharacterCustomizeCommand(const char * args);
         bool HandleCharacterDeleteCommand(const char* args);
-        bool HandleCharacterWhisperCommand(const char* args);
         bool HandleCharacterLevelCommand(const char* args);
         bool HandleCharacterRenameCommand(const char * args);
         bool HandleCharacterReputationCommand(const char* args);
@@ -338,6 +337,7 @@ class ChatHandler
         bool HandleReloadGameTeleCommand(const char* args);
         bool HandleReloadGossipMenuCommand(const char* args);
         bool HandleReloadGossipMenuOptionCommand(const char* args);
+        bool HandleReloadGossipScriptsCommand(const char* args);
         bool HandleReloadGOQuestRelationsCommand(const char* args);
         bool HandleReloadGOQuestInvRelationsCommand(const char* args);
         bool HandleReloadItemEnchantementsCommand(const char* args);
@@ -345,6 +345,7 @@ class ChatHandler
         bool HandleReloadLocalesAchievementRewardCommand(const char* args);
         bool HandleReloadLocalesCreatureCommand(const char* args);
         bool HandleReloadLocalesGameobjectCommand(const char* args);
+        bool HandleReloadLocalesGossipMenuOptionCommand(const char* args);
         bool HandleReloadLocalesItemCommand(const char* args);
         bool HandleReloadLocalesNpcTextCommand(const char* args);
         bool HandleReloadLocalesPageTextCommand(const char* args);
@@ -390,11 +391,9 @@ class ChatHandler
         bool HandleReloadSpellTargetPositionCommand(const char* args);
         bool HandleReloadSpellThreatsCommand(const char* args);
         bool HandleReloadSpellPetAurasCommand(const char* args);
-        bool HandleReloadSpellDisabledCommand(const char* args);
-        bool HandleReloadVehicleDataCommand(const char* args);
-        bool HandleReloadVehicleSeatDataCommand(const char* args);
 
         bool HandleResetAchievementsCommand(const char * args);
+        bool HandleResetAllCommand(const char * args);
         bool HandleResetHonorCommand(const char * args);
         bool HandleResetLevelCommand(const char * args);
         bool HandleResetSpellsCommand(const char * args);
@@ -405,8 +404,6 @@ class ChatHandler
         bool HandleSendMailCommand(const char* args);
         bool HandleSendMessageCommand(const char * args);
         bool HandleSendMoneyCommand(const char* args);
-        bool HandleSendChannelMsgCommand(const char* args);
-        bool HandleSendSysMsgCommand(const char * args);
 
         bool HandleServerCorpsesCommand(const char* args);
         bool HandleServerExitCommand(const char* args);
@@ -554,7 +551,7 @@ class CliHandler : public ChatHandler
 {
     public:
         typedef void Print(char const*);
-        explicit CliHandler(Print* zprint, uint32 _guid) : m_print(zprint), guid(_guid) {}
+        explicit CliHandler(Print* zprint) : m_print(zprint) {}
 
         // overwrite functions
         const char *GetMangosString(int32 entry) const;
@@ -567,7 +564,6 @@ class CliHandler : public ChatHandler
 
     private:
         Print* m_print;
-        uint32 guid;
 };
 
 char const *fmtstring( char const *format, ... );
