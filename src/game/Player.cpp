@@ -4154,10 +4154,18 @@ void Player::BuildPlayerRepop()
     // there we must send 888 opcode
 
     // the player cannot have a corpse already, only bones which are not returned by GetCorpse
-    if(GetCorpse())
+    if(Corpse *old_corpse = GetCorpse())
     {
-        sLog.outError("BuildPlayerRepop: player %s(%d) already has a corpse", GetName(), GetGUIDLow());
-        assert(false);
+        sObjectAccessor.RemoveCorpse(old_corpse);
+
+        Map *map = sMapMgr.FindMap(old_corpse->GetMapId(), old_corpse->GetInstanceId());
+        if(map)
+            map->Remove(old_corpse, false);
+
+        old_corpse->DeleteFromDB();
+        delete old_corpse;
+
+         sLog.outError("BuildPlayerRepop: player %s(%d) already has a corpse", GetName(), GetGUIDLow());
     }
 
     // create a corpse and place it at the player's location
