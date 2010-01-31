@@ -157,6 +157,9 @@ Unit::Unit()
     // remove aurastates allowing special moves
     for(int i=0; i < MAX_REACTIVE; ++i)
         m_reactiveTimer[i] = 0;
+
+    m_ThreatRedirectionPercent = 0;
+    m_misdirectionTargetGUID = 0;
 }
 
 Unit::~Unit()
