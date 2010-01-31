@@ -1075,6 +1075,12 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
         plr->SpawnCorpseBones();
     }
 
+    if (plr)
+    {
+        plr->Unmount();
+        plr->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
+    }
+
     RemovePlayer(plr, guid);                                // BG subclass specific code
 
     if(participant) // if the player was a match participant, remove auras, calc rating, update queue
@@ -1280,6 +1286,9 @@ void BattleGround::AddPlayer(Player *plr)
 
     plr->GetAchievementMgr().ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HEALING_DONE, ACHIEVEMENT_CRITERIA_CONDITION_MAP, GetMapId());
     plr->GetAchievementMgr().ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_DAMAGE_DONE, ACHIEVEMENT_CRITERIA_CONDITION_MAP, GetMapId());
+
+    plr->Unmount();
+    plr->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
 
     // setup BG group membership
     PlayerAddedToBGCheckIfBGIsRunning(plr);
