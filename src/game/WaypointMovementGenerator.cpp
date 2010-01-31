@@ -284,6 +284,10 @@ uint32 FlightPathMovementGenerator::GetPathAtMapEnd() const
 
 void FlightPathMovementGenerator::Initialize(Player &player)
 {
+    // Random handlers used for quests etc. - best would be to add FlightPathMovementGenerator::Initialize to sub-script class (Feanor)
+    if( player.m_taxi.GetTaxiDestination() == 158 || player.m_taxi.GetTaxiDestination() == 243 )
+        player.SetDisplayId(16587);
+
     player.getHostileRefManager().setOnlineOfflineState(false);
     player.addUnitState(UNIT_STAT_IN_FLIGHT);
     player.SetFlag(UNIT_FIELD_FLAGS,UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_TAXI_FLIGHT);
@@ -297,12 +301,37 @@ void FlightPathMovementGenerator::Initialize(Player &player)
 
 void FlightPathMovementGenerator::Finalize(Player & player)
 {
+    // Random handlers when path is finished - best would be to add FlightPathMovementGenerator::Finalize to sub-script class (Feanor)
+    switch( i_pathId )
+    {
+        case 632:
+        {
+            if( player.GetQuestStatus(10525) == QUEST_STATUS_INCOMPLETE )
+                player.CompleteQuest(10525);
+
+            player.SetDisplayId(player.GetNativeDisplayId());
+            break;    
+        }
+        case 811:
+        {
+            if( player.GetQuestStatus(12028) == QUEST_STATUS_INCOMPLETE )
+                player.CompleteQuest(12028);
+
+            player.SetDisplayId(player.GetNativeDisplayId());
+            break;
+        }
+    }
+
     // remove flag to prevent send object build movement packets for flight state and crash (movement generator already not at top of stack)
     player.clearUnitState(UNIT_STAT_IN_FLIGHT);
 
     float x, y, z;
     i_destinationHolder.GetLocationNow(player.GetBaseMap(), x, y, z);
     player.SetPosition(x, y, z, player.GetOrientation());
+
+    // Quest path (teleport player back to start)
+    if( i_pathId == 632 )
+        player.TeleportTo( player.GetMapId(), i_path.GetNodes(0)->x, i_path.GetNodes(0)->y, i_path.GetNodes(0)->z, player.GetOrientation() );
 
     player.Unmount();
     player.RemoveFlag(UNIT_FIELD_FLAGS,UNIT_FLAG_DISABLE_MOVE | UNIT_FLAG_TAXI_FLIGHT);
