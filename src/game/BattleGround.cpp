@@ -458,7 +458,27 @@ void BattleGround::Update(uint32 diff)
 
                 for(BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
                     if (Player *plr = sObjectMgr.GetPlayer(itr->first))
+                    {
                         plr->RemoveAurasDueToSpell(SPELL_ARENA_PREPARATION);
+
+                        // remove all positive auras with duration under 30 sec
+                        Unit::AuraMap& Auras = plr->GetAuras();
+                        for(Unit::AuraMap::iterator aura_iter = Auras.begin(), next; aura_iter != Auras.end(); aura_iter = next)
+                        {
+                            next = aura_iter;
+                            ++next;
+                            Aura *aur = aura_iter->second;
+                            if (!aur->IsPassive() && aur->IsPositive() && !aur->IsPermanent()
+                                && aur->GetAuraDuration() > 0 && aur->GetAuraDuration() < 30000 && aur->GetId() != 32612)
+                            {
+                                plr->RemoveAurasDueToSpell(aur->GetId());
+                                if(Auras.empty())
+                                    break;
+                                else
+                                    next = Auras.begin();
+                            }
+                        }
+                    }
 
                 CheckArenaWinConditions();
             }
