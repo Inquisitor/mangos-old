@@ -2813,7 +2813,35 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             }
             break;
         case SPELLFAMILY_SHAMAN:
+        {
+            if (!Real)
+                break;
+            Unit * caster = GetCaster();
+            if (!caster)
+                return;
+
+            // Sentry Totem
+            if (GetId() == 6495 && caster->GetTypeId() == TYPEID_PLAYER)
+            {
+                if (apply)
+                {
+                    uint64 guid = caster->m_TotemSlot[3];
+                    if (guid)
+                    {
+                        Creature *totem = caster->GetMap()->GetCreature(guid);
+                        if (totem && totem->isTotem())
+                            ((Player*)caster)->CastSpell(totem, 6277, true);
+                    }
+                }
+                else
+                {
+                    // Remove Bind Sight
+                    caster->RemoveAurasDueToSpell(6277);              
+                }
+                return;
+            }
             break;
+        }
     }
 
     // pet auras
