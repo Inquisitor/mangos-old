@@ -5776,61 +5776,37 @@ void ObjectMgr::SetHighestGuids()
 
 uint32 ObjectMgr::GenerateArenaTeamId()
 {
-    if(m_arenaTeamId>=0xFFFFFFFE)
-    {
-        sLog.outError("Arena team ids overflow!! Can't continue, shutting down server. ");
-        World::StopNow(ERROR_EXIT_CODE);
-    }
+    ASSERT(m_arenaTeamId<0xFFFFFFFE);
     return m_arenaTeamId++;
 }
 
 uint32 ObjectMgr::GenerateAuctionID()
 {
-    if(m_auctionid>=0xFFFFFFFE)
-    {
-        sLog.outError("Auctions ids overflow!! Can't continue, shutting down server. ");
-        World::StopNow(ERROR_EXIT_CODE);
-    }
+    ASSERT(m_auctionid<0xFFFFFFFE);
     return m_auctionid++;
 }
 
 uint64 ObjectMgr::GenerateEquipmentSetGuid()
 {
-    if(m_equipmentSetGuid>=0xFFFFFFFFFFFFFFFEll)
-    {
-        sLog.outError("EquipmentSet guid overflow!! Can't continue, shutting down server. ");
-        World::StopNow(ERROR_EXIT_CODE);
-    }
+    ASSERT(m_equipmentSetGuid<0xFFFFFFFFFFFFFFFEll);
     return m_equipmentSetGuid++;
 }
 
 uint32 ObjectMgr::GenerateGuildId()
 {
-    if(m_guildId>=0xFFFFFFFE)
-    {
-        sLog.outError("Guild ids overflow!! Can't continue, shutting down server. ");
-        World::StopNow(ERROR_EXIT_CODE);
-    }
+    ASSERT(m_guildId<0xFFFFFFFE);
     return m_guildId++;
 }
 
 uint32 ObjectMgr::GenerateMailID()
 {
-    if(m_mailid>=0xFFFFFFFE)
-    {
-        sLog.outError("Mail ids overflow!! Can't continue, shutting down server. ");
-        World::StopNow(ERROR_EXIT_CODE);
-    }
+    ASSERT(m_mailid<0xFFFFFFFE)
     return m_mailid++;
 }
 
 uint32 ObjectMgr::GenerateItemTextID()
 {
-    if(m_ItemTextId>=0xFFFFFFFE)
-    {
-        sLog.outError("Item text ids overflow!! Can't continue, shutting down server. ");
-        World::StopNow(ERROR_EXIT_CODE);
-    }
+    ASSERT(m_ItemTextId<0xFFFFFFFE);
     return m_ItemTextId++;
 }
 
@@ -5853,45 +5829,22 @@ uint32 ObjectMgr::GenerateLowGuid(HighGuid guidhigh)
     switch(guidhigh)
     {
         case HIGHGUID_ITEM:
-            if(m_hiItemGuid>=0xFFFFFFFE)
-            {
-                sLog.outError("Item guid overflow!! Can't continue, shutting down server. ");
-                World::StopNow(ERROR_EXIT_CODE);
-            }
+            ASSERT(m_hiItemGuid<0xFFFFFFFE);
             return m_hiItemGuid++;
         case HIGHGUID_UNIT:
-            if(m_hiCreatureGuid>=0x00FFFFFE)
-            {
-                sLog.outError("Creature guid overflow!! Can't continue, shutting down server. ");
-                World::StopNow(ERROR_EXIT_CODE);
-            }
+            ASSERT(m_hiCreatureGuid<0x00FFFFFE);
             return m_hiCreatureGuid++;
         case HIGHGUID_PLAYER:
-            if(m_hiCharGuid>=0xFFFFFFFE)
-            {
-                sLog.outError("Players guid overflow!! Can't continue, shutting down server. ");
-                World::StopNow(ERROR_EXIT_CODE);
-            }
+            ASSERT(m_hiCharGuid<0xFFFFFFFE);
             return m_hiCharGuid++;
         case HIGHGUID_GAMEOBJECT:
-            if(m_hiGoGuid>=0x00FFFFFE)
-            {
-                sLog.outError("Gameobject guid overflow!! Can't continue, shutting down server. ");
-                World::StopNow(ERROR_EXIT_CODE);
-            }
+            ASSERT(m_hiGoGuid<0x00FFFFFE);
             return m_hiGoGuid++;
         case HIGHGUID_CORPSE:
-            if(m_hiCorpseGuid>=0xFFFFFFFE)
-            {
-                sLog.outError("Corpse guid overflow!! Can't continue, shutting down server. ");
-                World::StopNow(ERROR_EXIT_CODE);
-            }
+            ASSERT(m_hiCorpseGuid<0xFFFFFFFE);
             return m_hiCorpseGuid++;
         case HIGHGUID_VEHICLE:
-            {
-                sLog.outError("Vehicle guid overflow!! Can't continue, shutting down server. ");
-                World::StopNow(ERROR_EXIT_CODE);
-            }
+            ASSERT(m_hiVehicleGuid<0xFFFFFFFE);
             return m_hiVehicleGuid++;
         default:
             ASSERT(0);

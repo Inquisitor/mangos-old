@@ -3649,25 +3649,13 @@ uint32 Map::GenerateLocalLowGuid(HighGuid guidhigh)
     switch(guidhigh)
     {
         case HIGHGUID_DYNAMICOBJECT:
-            if (m_hiDynObjectGuid >= 0xFFFFFFFE)
-            {
-                sLog.outError("DynamicObject guid overflow!! Can't continue, shutting down server. ");
-                World::StopNow(ERROR_EXIT_CODE);
-            }
+            ASSERT (m_hiDynObjectGuid<0xFFFFFFFE);
             return m_hiDynObjectGuid++;
         case HIGHGUID_PET:
-            if(m_hiPetGuid>=0x00FFFFFE)
-            {
-                sLog.outError("Pet guid overflow!! Can't continue, shutting down server. ");
-                World::StopNow(ERROR_EXIT_CODE);
-            }
+            ASSERT(m_hiPetGuid<0x00FFFFFE);
             return m_hiPetGuid++;
         case HIGHGUID_VEHICLE:
-            if(m_hiVehicleGuid>=0x00FFFFFF)
-            {
-                sLog.outError("Vehicle guid overflow!! Can't continue, shutting down server. ");
-                World::StopNow(ERROR_EXIT_CODE);
-            }
+            ASSERT(m_hiVehicleGuid<0x00FFFFFF);
             return m_hiVehicleGuid++;
         default:
             ASSERT(0);
