@@ -8153,8 +8153,8 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
                 bg->FillInitialWorldStates(data);
             else
             {
-                data << uint32(0xa0f) << uint32(0x0);           // 7
-                data << uint32(0xa10) << uint32(0x0);           // 8
+                data << uint32(0xe11) << uint32(0x0);           // 7 gold
+                data << uint32(0xe10) << uint32(0x0);           // 8 green
                 data << uint32(0xa11) << uint32(0x0);           // 9 show
             }
             break;
@@ -8163,8 +8163,8 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
                 bg->FillInitialWorldStates(data);
             else
             {
-                data << uint32(0x9f0) << uint32(0x0);           // 7 gold
-                data << uint32(0x9f1) << uint32(0x0);           // 8 green
+                data << uint32(0xe11) << uint32(0x0);           // 7 gold
+                data << uint32(0xe10) << uint32(0x0);           // 8 green
                 data << uint32(0x9f3) << uint32(0x0);           // 9 show
             }
             break;
@@ -8173,9 +8173,29 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
                 bg->FillInitialWorldStates(data);
             else
             {
-                data << uint32(0xbb8) << uint32(0x0);           // 7 gold
-                data << uint32(0xbb9) << uint32(0x0);           // 8 green
+                data << uint32(0xe11) << uint32(0x0);           // 7 gold
+                data << uint32(0xe10) << uint32(0x0);           // 8 green
                 data << uint32(0xbba) << uint32(0x0);           // 9 show
+            }
+            break;
+        case 4378:                                          // Dalaran Sewers arena
+            if (bg && bg->GetTypeID() == BATTLEGROUND_DS)
+                bg->FillInitialWorldStates(data);
+            else
+            {
+                data << uint32(0xe11) << uint32(0x0);           // 7 gold
+                data << uint32(0xe10) << uint32(0x0);           // 8 green
+                data << uint32(0xe1a) << uint32(0x0);           // 9 show
+            }
+            break;
+        case 4406:                                          // Ring of Valor arena
+            if (bg && bg->GetTypeID() == BATTLEGROUND_RV)
+                bg->FillInitialWorldStates(data);
+            else
+            {
+                data << uint32(0xe10) << uint32(0x0);           // 7 gold
+                data << uint32(0xe11) << uint32(0x0);           // 8 green
+                data << uint32(0xe1a) << uint32(0x0);           // 9 show
             }
             break;
         case 3703:                                          // Shattrath City

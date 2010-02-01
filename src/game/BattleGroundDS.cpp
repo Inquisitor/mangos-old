@@ -16,10 +16,13 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "Object.h"
 #include "Player.h"
 #include "BattleGround.h"
 #include "BattleGroundDS.h"
+#include "ObjectMgr.h"
 #include "Language.h"
+#include "WorldPacket.h"
 
 BattleGroundDS::BattleGroundDS()
 {
@@ -51,6 +54,7 @@ void BattleGroundDS::StartingEventCloseDoors()
 
 void BattleGroundDS::StartingEventOpenDoors()
 {
+    OpenDoorEvent(BG_EVENT_DOOR);
 }
 
 void BattleGroundDS::AddPlayer(Player *plr)
@@ -60,19 +64,75 @@ void BattleGroundDS::AddPlayer(Player *plr)
     BattleGroundDSScore* sc = new BattleGroundDSScore;
 
     m_PlayerScores[plr->GetGUID()] = sc;
+
+    UpdateWorldState(0xe11, GetAlivePlayersCountByTeam(ALLIANCE));
+    UpdateWorldState(0xe10, GetAlivePlayersCountByTeam(HORDE));
 }
 
-void BattleGroundDS::RemovePlayer(Player * /*plr*/, uint64 /*guid*/)
+void BattleGroundDS::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
 {
+    if (GetStatus() == STATUS_WAIT_LEAVE)
+        return;
+
+    UpdateWorldState(0xe11, GetAlivePlayersCountByTeam(ALLIANCE));
+    UpdateWorldState(0xe10, GetAlivePlayersCountByTeam(HORDE));
+
+    CheckArenaWinConditions();
 }
 
-void BattleGroundDS::HandleKillPlayer(Player* player, Player* killer)
+void BattleGroundDS::HandleKillPlayer(Player *player, Player *killer)
 {
-    BattleGround::HandleKillPlayer(player, killer);
+    if (GetStatus() != STATUS_IN_PROGRESS)
+        return;
+
+    if (!killer)
+    {
+        sLog.outError("Killer player not found");
+        return;
+    }
+
+    BattleGround::HandleKillPlayer(player,killer);
+
+    UpdateWorldState(0xe11, GetAlivePlayersCountByTeam(ALLIANCE));
+    UpdateWorldState(0xe10, GetAlivePlayersCountByTeam(HORDE));
+
+    CheckArenaWinConditions();
+}
+ 
+bool BattleGroundDS::HandlePlayerUnderMap(Player *player)
+{
+    player->TeleportTo(GetMapId(),1299.046, 784.825, 9.338, player->GetOrientation(),false);
+    return true;
+}
+ 
+void BattleGroundDS::HandleAreaTrigger(Player *Source, uint32 Trigger)
+{
+    // this is wrong way to implement these things. On official it done by gameobject spell cast.
+    if (GetStatus() != STATUS_IN_PROGRESS)
+        return;
+
+    switch(Trigger)
+    {
+        case 5347:
+        case 5348:
+            break;
+        default:
+            sLog.outError("WARNING: Unhandled AreaTrigger in Battleground: %u", Trigger);
+            Source->GetSession()->SendAreaTriggerMessage("Warning: Unhandled AreaTrigger in Battleground: %u", Trigger);
+            break;
+    }
+}
+ 
+void BattleGroundDS::FillInitialWorldStates(WorldPacket &data)
+{
+    data << uint32(0xe11) << uint32(GetAlivePlayersCountByTeam(ALLIANCE));           // 7
+    data << uint32(0xe10) << uint32(GetAlivePlayersCountByTeam(HORDE));           // 8
+    data << uint32(0xe1a) << uint32(1);           // 9
 }
 
-void BattleGroundDS::HandleAreaTrigger(Player * /*Source*/, uint32 /*Trigger*/)
+void BattleGroundDS::Reset()
 {
+    BattleGround::Reset();
 }
 
 bool BattleGroundDS::SetupBattleGround()
