@@ -371,6 +371,15 @@ void WorldSession::LogoutPlayer(bool Save)
             {
                 _player->RemoveBattleGroundQueueId(bgQueueTypeId);
                 sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(_player->GetGUID(), true);
+                if( bgQueueTypeId == BATTLEGROUND_QUEUE_2v2 || bgQueueTypeId == BATTLEGROUND_QUEUE_3v3 || bgQueueTypeId == BATTLEGROUND_QUEUE_5v5 )
+                    if (Group* group = ((Player*)_player)->GetGroup())
+                        for(GroupReference *itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
+                            if (Player* member = itr->getSource())
+                                if(BattleGroundQueueTypeId bgQueueTypeId = member->GetBattleGroundQueueTypeId(i))
+                                {
+                                    member->RemoveBattleGroundQueueId(bgQueueTypeId);
+                                    sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(member->GetGUID(), true);
+                                }
             }
         }
 
