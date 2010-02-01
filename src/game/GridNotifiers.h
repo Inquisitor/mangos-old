@@ -1043,6 +1043,55 @@ namespace MaNGOS
         float i_range;
     };
 
+    class AnyGameObjectInPointRangeCheck
+    {
+        public:
+            AnyGameObjectInPointRangeCheck(float posX, float posY, float posZ, float range) : x(posX), y(posY), z(posZ), i_range(range) {}
+            bool operator()(GameObject* g)
+            {
+                if(g && g->GetDistance(x, y, z) < i_range)
+                    return true;
+
+                return false;
+            }
+        private:
+            float x, y, z;
+            float i_range;
+    };
+
+    class AnyWithAuraInRange
+    {
+        public:
+            AnyWithAuraInRange(Unit const* obj, float range, uint32 spellid) : i_obj(obj), i_range(range), i_spell(spellid) {}
+            bool operator()(Unit* u)
+            {
+                if(u->isAlive() && i_obj->IsWithinDistInMap(u, i_range) && u->HasAura(i_spell))
+                    return true;
+
+                return false;
+            }
+        private:
+            Unit const* i_obj;
+            float i_range;
+            uint32 i_spell;
+    };
+
+    class AnyUnitInPointRangeCheck
+    {
+        public:
+            AnyUnitInPointRangeCheck(float posX, float posY, float posZ, float range) : x(posX), y(posY), z(posZ), i_range(range) {}
+            bool operator()(Unit* u)
+            {
+                if(u->isAlive() && u->GetDistance(x, y, z) < i_range)
+                    return true;
+
+                return false;
+            }
+        private:
+            float x, y, z;
+            float i_range;
+    };
+
     // Player checks and do
 
     // Prepare using Builder localized packets with caching and send to player

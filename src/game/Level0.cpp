@@ -179,6 +179,7 @@ bool ChatHandler::HandleGMListIngameCommand(const char* /*args*/)
 
 bool ChatHandler::HandleAccountPasswordCommand(const char* args)
 {
+    /*
     if(!*args)
         return false;
 
@@ -224,7 +225,10 @@ bool ChatHandler::HandleAccountPasswordCommand(const char* args)
             SetSentErrorMessage(true);
             return false;
     }
+    */
 
+    PSendSysMessage("Due to security reasons you can only change your password through the forum. Please visit http://gamingconsortium.org/ for more informations.");
+    SetSentErrorMessage(true);
     return true;
 }
 

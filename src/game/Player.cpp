@@ -1968,6 +1968,9 @@ void Player::RewardRage( uint32 damage, uint32 weaponSpeedHitFactor, bool attack
 
 void Player::RegenerateAll(uint32 diff)
 {
+    if (!isAlive())
+        return;
+
     // Not in combat or they have regeneration
     if (!isInCombat() || HasAuraType(SPELL_AURA_MOD_REGEN_DURING_COMBAT) ||
         HasAuraType(SPELL_AURA_MOD_HEALTH_REGEN_IN_COMBAT) || IsPolymorphed() )
@@ -4153,10 +4156,18 @@ void Player::BuildPlayerRepop()
     // there we must send 888 opcode
 
     // the player cannot have a corpse already, only bones which are not returned by GetCorpse
-    if(GetCorpse())
+    if(Corpse *old_corpse = GetCorpse())
     {
-        sLog.outError("BuildPlayerRepop: player %s(%d) already has a corpse", GetName(), GetGUIDLow());
-        assert(false);
+        sObjectAccessor.RemoveCorpse(old_corpse);
+
+        Map *map = sMapMgr.FindMap(old_corpse->GetMapId(), old_corpse->GetInstanceId());
+        if(map)
+            map->Remove(old_corpse, false);
+
+        old_corpse->DeleteFromDB();
+        delete old_corpse;
+
+         sLog.outError("BuildPlayerRepop: player %s(%d) already has a corpse", GetName(), GetGUIDLow());
     }
 
     // create a corpse and place it at the player's location
@@ -5770,6 +5781,13 @@ bool Player::SetPosition(float x, float y, float z, float orientation, bool tele
         x = GetPositionX();
         y = GetPositionY();
         z = GetPositionZ();
+
+        if(!m_movementInfo.HasMovementFlag(MovementFlags(MOVEMENTFLAG_FALLING | MOVEMENTFLAG_JUMPING)))
+        {
+            m_safeposition.x = x;
+            m_safeposition.y = y;
+            m_safeposition.z = z;
+        }
 
         // group update
         if(GetGroup() && (old_x != x || old_y != y))

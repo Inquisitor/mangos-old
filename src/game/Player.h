@@ -848,6 +848,13 @@ struct MovementInfo
     void SetMovementFlags(MovementFlags f) { flags = f; }
 };
 
+//here stored last safe player's position
+struct SafePosition
+{
+    float x, y, z;
+    SafePosition():x(0.0f),y(0.0f),z(0.0f){}
+};
+
 // flags that use in movement check for example at spell casting
 MovementFlags const movementFlagsMask = MovementFlags(
     MOVEMENTFLAG_FORWARD |MOVEMENTFLAG_BACKWARD  |MOVEMENTFLAG_STRAFE_LEFT |MOVEMENTFLAG_STRAFE_RIGHT|
@@ -1104,6 +1111,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint8 chatTag() const;
         std::string afkMsg;
         std::string dndMsg;
+        // used to whisper from cli to ingame characters
+        std::string rcGmName;
 
         uint32 GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 newfacialhair);
 
@@ -2155,6 +2164,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         /***                 VARIOUS SYSTEMS                   ***/
         /*********************************************************/
         MovementInfo m_movementInfo;
+        SafePosition m_safeposition;
         bool HasMovementFlag(MovementFlags f) const;        // for script access to m_movementInfo.HasMovementFlag
         void UpdateFallInformationIfNeed(MovementInfo const& minfo,uint16 opcode);
         Unit *m_mover;

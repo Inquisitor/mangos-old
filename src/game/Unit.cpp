@@ -6292,13 +6292,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                         CastSpell(target,53739,true,NULL,triggeredByAura);
                     break;
                 }
-                // Glyph of Flash of Light
-                case 54936:
-                    {
-                        triggered_spell_id = 54957;
-                        basepoints0 = triggerAmount*damage/100;
-                        break;
-                    }
                     // Glyph of Holy Light
                 case 54937:
                     {
@@ -7987,6 +7980,9 @@ bool Unit::IsHostileTo(Unit const* unit) const
 
 bool Unit::IsFriendlyTo(Unit const* unit) const
 {
+    if(unit == NULL)
+        return false;
+
     // always friendly to self
     if(unit==this)
         return true;
@@ -8405,8 +8401,9 @@ Pet* Unit::GetPet() const
 {
     if(uint64 pet_guid = GetPetGUID())
     {
-        if(Pet* pet = GetMap()->GetPet(pet_guid))
-            return pet;
+        if(IsInWorld())
+            if(Pet* pet = GetMap()->GetPet(pet_guid))
+                return pet;
 
         sLog.outError("Unit::GetPet: Pet %u not exist.",GUID_LOPART(pet_guid));
         const_cast<Unit*>(this)->SetPet(0);

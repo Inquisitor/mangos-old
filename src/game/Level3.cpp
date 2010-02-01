@@ -980,6 +980,7 @@ bool ChatHandler::HandleAccountSetGmLevelCommand(const char* args)
 }
 
 /// Set password for account
+/*
 bool ChatHandler::HandleAccountSetPasswordCommand(const char* args)
 {
     if(!*args)
@@ -1044,6 +1045,7 @@ bool ChatHandler::HandleAccountSetPasswordCommand(const char* args)
 
     return true;
 }
+*/
 
 bool ChatHandler::HandleMaxSkillCommand(const char* /*args*/)
 {
@@ -4540,6 +4542,7 @@ bool ChatHandler::HandleResetTalentsCommand(const char * args)
     return false;
 }
 
+/*
 bool ChatHandler::HandleResetAllCommand(const char * args)
 {
     if(!*args)
@@ -4578,6 +4581,7 @@ bool ChatHandler::HandleResetAllCommand(const char * args)
 
     return true;
 }
+*/
 
 bool ChatHandler::HandleServerShutDownCancelCommand(const char* /*args*/)
 {
