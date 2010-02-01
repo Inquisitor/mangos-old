@@ -380,19 +380,6 @@ bool Unit::HasAuraType(AuraType auraType) const
     return (!m_modAuras[auraType].empty());
 }
 
-/* Called by DealDamage for auras that have a chance to be dispelled on damage taken. */
-void Unit::RemoveSpellbyDamageTaken(AuraType auraType, uint32 damage)
-{
-    if(!HasAuraType(auraType))
-        return;
-
-    // The chance to dispel an aura depends on the damage taken with respect to the casters level.
-    uint32 max_dmg = getLevel() > 8 ? 25 * getLevel() - 150 : 50;
-    float chance = float(damage) / max_dmg * 100.0f;
-    if (roll_chance_f(chance))
-        RemoveSpellsCausingAura(auraType);
-}
-
 void Unit::DealDamageMods(Unit *pVictim, uint32 &damage, uint32* absorb)
 {
     if (!pVictim->isAlive() || pVictim->isInFlight() || pVictim->GetTypeId() == TYPEID_UNIT && ((Creature*)pVictim)->IsInEvadeMode())
