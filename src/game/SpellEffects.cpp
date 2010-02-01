@@ -55,6 +55,9 @@
 #include "SkillDiscovery.h"
 #include "Formulas.h"
 #include "Vehicle.h"
+#include "CellImpl.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
 
 pEffect SpellEffects[TOTAL_SPELL_EFFECTS]=
 {
@@ -727,7 +730,118 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
 void Spell::EffectDummy(uint32 i)
 {
     if (!unitTarget && !gameObjTarget && !itemTarget)
+    {
+        // Spells that hit 'ground' and trigger scripted things without requirement of target
+        switch(m_spellInfo->SpellFamilyName)
+        {
+            case SPELLFAMILY_GENERIC:
+            {
+                switch( m_spellInfo->Id )
+                {
+                    case 55647: // Aberrations
+                    {
+                        if( GetCaster()->GetTypeId() != TYPEID_PLAYER )
+                            return;
+
+                        if( ((Player*)GetCaster())->GetQuestStatus(12925) == QUEST_STATUS_COMPLETE && 
+                            ((Player*)GetCaster())->GetQuestStatus(13425) == QUEST_STATUS_COMPLETE )
+                            return;
+
+                        Player * user = static_cast<Player*>(GetCaster());
+
+                        // Iterate for all creatures around cast place
+                        CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+                        Cell cell(pair);
+                        cell.data.Part.reserved = ALL_DISTRICT;
+                        cell.SetNoCreate();
+
+                        std::list<GameObject*> gobList;
+
+                        MaNGOS::AnyGameObjectInPointRangeCheck gobject_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10.0f); // 10 yards check
+                        MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck> searcher(GetCaster(), gobList, gobject_check);
+
+                        TypeContainerVisitor<MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck>, GridTypeMapContainer> go_visit(searcher);
+
+                        // Get Creatures
+                        cell.Visit(pair, go_visit, *(GetCaster()->GetMap()), *GetCaster(), 10.0f);
+
+                        if (!gobList.empty())
+                        {
+                            uint32 m_counted = 0;
+                            for(std::list<GameObject*>::iterator itr = gobList.begin(); itr != gobList.end(); ++itr)
+                            {
+                                if( (*itr)->GetEntry() == 191840 )
+                                {
+                                    (*itr)->SetLootState(GO_JUST_DEACTIVATED);
+                                    ++m_counted; // Increment if found
+                                }
+                            }
+                            if( m_counted )// Complete quest if both were found (2 npcs)
+                            {
+                                uint16 log_slot;
+                                log_slot = user->FindQuestSlot( 12925 );
+                                if( log_slot >= MAX_QUEST_LOG_SIZE )
+                                    log_slot = user->FindQuestSlot( 13425 );
+                                    if( log_slot >= MAX_QUEST_LOG_SIZE )
+                                        break;
+
+                                uint32 QuestID = user->GetQuestSlotQuestId(log_slot);
+
+                                Quest const* pQuest = sObjectMgr.GetQuestTemplate(QuestID);
+                                if( !pQuest )
+                                    break;
+
+                                QuestStatusData& q_status = user->getQuestStatusMap()[QuestID];
+                                uint32 oldCount = q_status.m_creatureOrGOcount[0];
+                                if( oldCount+ m_counted > pQuest->ReqCreatureOrGOCount[0] && oldCount == pQuest->ReqCreatureOrGOCount[0] ) // We shouldnt go above required count
+                                    break;
+
+                                if( oldCount+ m_counted >= pQuest->ReqCreatureOrGOCount[0] && oldCount != pQuest->ReqCreatureOrGOCount[0] ) // We shouldnt go above required count
+                                    q_status.m_creatureOrGOcount[0] = pQuest->ReqCreatureOrGOCount[0];
+                                else 
+                                    q_status.m_creatureOrGOcount[0] = oldCount + m_counted;
+
+                                if (q_status.uState != QUEST_NEW) q_status.uState = QUEST_CHANGED;
+
+                                user->SendQuestUpdateAddCreatureOrGo( pQuest, 0, 0, oldCount, m_counted );
+                                if( user->CanCompleteQuest(QuestID) )
+                                    user->CompleteQuest( QuestID );
+                            }
+                        }
+                        return;
+                    }
+                    case 50547: // Q: Atop the Woodlands (H/A)
+                    {
+                        if( m_caster->GetTypeId() == TYPEID_PLAYER )
+                        {
+                            if( ((Player*)m_caster)->GetQuestStatus(12084) == QUEST_STATUS_INCOMPLETE || ((Player*)m_caster)->GetQuestStatus(12083) == QUEST_STATUS_INCOMPLETE )
+                                ((Player*)m_caster)->KilledMonsterCredit(26831, 0);
+                        }
+                        return;
+                    }
+                    case 50546: // Q: The Focus on the Beach (H/A)
+                    {
+                        if( m_caster->GetTypeId() == TYPEID_PLAYER )
+                        {
+                            if( ((Player*)m_caster)->GetQuestStatus(12065) == QUEST_STATUS_INCOMPLETE || ((Player*)m_caster)->GetQuestStatus(12066) == QUEST_STATUS_INCOMPLETE )
+                                ((Player*)m_caster)->KilledMonsterCredit(26773, 0);
+                        }
+                        return;
+                    }
+                    case 43385: // Q: Field Test
+                    {
+                        if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                            return;
+
+                        ((Player*)m_caster)->KilledMonsterCredit(24281, 0);
+                    }
+                }
+                break;
+            }
+            break;
+        }
         return;
+    }
 
     // selection by spell family
     switch(m_spellInfo->SpellFamilyName)
