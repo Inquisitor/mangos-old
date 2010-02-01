@@ -1435,6 +1435,108 @@ void Spell::EffectDummy(uint32 i)
                 case 58418:                                 // Portal to Orgrimmar
                 case 58420:                                 // Portal to Stormwind
                     return;                                 // implemented in EffectScript[0]
+                case 45109: // Q: Disrupt the Greengill Coast
+                {
+                    if( !unitTarget || unitTarget->GetEntry() != 25084 && GetCaster()->GetTypeId() != TYPEID_PLAYER )
+                        return;
+
+                    // Iterate for all slave masters
+                    CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+                    Cell cell(pair);
+                    cell.data.Part.reserved = ALL_DISTRICT;
+                    cell.SetNoCreate();
+
+                    std::list<Creature*> creatureList;
+                    std::vector<Creature*> creatureVector;
+
+                    MaNGOS::AnyUnitInObjectRangeCheck go_check(unitTarget, 25); // 25 yards check
+                    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(unitTarget, creatureList, go_check);
+                    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+                    // Get Creatures
+                    cell.Visit(pair, go_visit, *(unitTarget->GetMap()), *unitTarget, 25);
+
+                    if (!creatureList.empty())
+                    {
+                        for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+                        {
+                            if( (*itr)->GetEntry() == 25060 ) // Add to vector only if its Myrmidon creature
+                                creatureVector.push_back(*itr);
+                        }
+                    }
+                    if( !creatureVector.empty() )
+                    {    // Attack slave's master
+                        Creature * Myrmidon = creatureVector[ rand()%creatureVector.size()]; // Get random one from all possible
+                        for( std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr )
+                        {
+                            if( (*itr)->GetEntry() == 25084 && (*itr)->GetDistance2d( m_targets.m_destX, m_targets.m_destY) < 10 )
+                            {
+                                (*itr)->SetEntry(25085); // Change creature to Freed Murloc
+                                (*itr)->AddThreat( Myrmidon, 10.0f );
+                                (*itr)->SetInCombatWith( Myrmidon );
+                                (*itr)->GetMotionMaster()->MoveChase( Myrmidon );
+                                (*itr)->Attack( Myrmidon, true );
+                                ((Player*)GetCaster())->KilledMonsterCredit( 25086, 0 ); // Increment quest count
+                            }
+                        }
+                    }
+                    return;
+                }
+                case 38173: // Q: On Spirit's Wings
+                {
+                    if( !unitTarget || GetCaster()->GetTypeId() != TYPEID_PLAYER || ((Player*)GetCaster())->GetQuestStatus(10714) == QUEST_STATUS_COMPLETE )
+                        return;
+
+                    // Iterate for all creatures around cast place
+                    CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+                    Cell cell(pair);
+                    cell.data.Part.reserved = ALL_DISTRICT;
+                    cell.SetNoCreate();
+
+                    std::list<Creature*> creatureList;
+
+                    MaNGOS::AnyUnitInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10); // 10 yards check
+                    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
+                    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+                    // Get Creatures
+                    cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+
+                    if (!creatureList.empty())
+                    {
+                        uint32 m_counted = 0;
+                        for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+                        {
+                            if( (*itr)->GetEntry() == 22384 || (*itr)->GetEntry() == 22160 ) // Check if its Soothsayer or Taskmaster
+                                ++m_counted; // Increment if found
+                        }
+                        if( m_counted == 2 )// Complete quest if both were found (2 npcs)
+                        {
+                            GetCaster()->SummonCreature( 22492, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ+5, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000 );
+                            ((Player*)GetCaster())->CompleteQuest(10714); // Complete quest
+                        }
+                    }
+                    return;
+                }
+                case 33655: // Q: Mission: Gateways Murketh and Shaadraz
+                {
+                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                        return;
+                    if( !m_caster->isInFlight() )
+                        return;
+
+                    if( m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -145.554, 1511.28, 34.3641) < 25 )
+                        ((Player*)m_caster)->KilledMonsterCredit( 19291, 0 );
+                    if( m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -304.408, 1524.45, 37.9685 ) < 25 )
+                        ((Player*)m_caster)->KilledMonsterCredit( 19292, 0 );
+                    return;
+                }
+                case 21332: // Q: Poisoned Water
+                {
+                    if(unitTarget->GetTypeId() == TYPEID_UNIT && unitTarget->GetEntry() == 8521 || unitTarget->GetEntry() == 8519 || unitTarget->GetEntry() == 8522 || unitTarget->GetEntry() == 8520 )
+                        ((Creature*)unitTarget)->UpdateEntry(13279);
+                    return;
+                }
                 case 59640:                                 // Underbelly Elixir
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
