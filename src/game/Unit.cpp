@@ -11932,7 +11932,9 @@ bool InitTriggerAuraData()
     isTriggerAura[SPELL_AURA_MOD_DAMAGE_DONE] = true;
     isTriggerAura[SPELL_AURA_MOD_DAMAGE_TAKEN] = true;
     isTriggerAura[SPELL_AURA_MOD_RESISTANCE] = true;
+    isTriggerAura[SPELL_AURA_MOD_FEAR] = true; // Aura not have charges but need remove him on trigger
     isTriggerAura[SPELL_AURA_MOD_ROOT] = true;
+    isTriggerAura[SPELL_AURA_TRANSFORM] = true;
     isTriggerAura[SPELL_AURA_REFLECT_SPELLS] = true;
     isTriggerAura[SPELL_AURA_DAMAGE_IMMUNITY] = true;
     isTriggerAura[SPELL_AURA_PROC_TRIGGER_SPELL] = true;
@@ -12254,6 +12256,26 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
                 RemoveSpellsCausingAura(SPELL_AURA_MAELSTROM_WEAPON);
                 triggeredByAura->SetInUse(false);           // this safe, aura locked
                 continue;                                   // avoid re-remove attempts
+                // CC Auras which use their modifier amount amount to drop
+            case SPELL_AURA_MOD_CONFUSE:
+            case SPELL_AURA_MOD_FEAR:
+            case SPELL_AURA_MOD_STUN:
+            case SPELL_AURA_MOD_ROOT:
+            case SPELL_AURA_TRANSFORM:
+                if (isVictim && damage)
+                {
+                    // Damage is dealt after proc system - lets ignore auras which wasn't updated yet
+                    // to make spell not remove its own aura
+                    if (triggeredByAura->GetAuraDuration() == triggeredByAura->GetAuraMaxDuration())
+                        break;
+                    int32 damageLeft = triggeredByAura->GetModifier()->m_amount;
+                    // No damage left
+                    if (damageLeft < damage )
+                        RemoveSpellsCausingAura(triggeredByAura->GetModifier()->m_auraname);
+                    else
+                        triggeredByAura->GetModifier()->m_amount = (damageLeft-damage);
+                }
+                break;
             default:
                 // nothing do, just charges counter
                 break;
