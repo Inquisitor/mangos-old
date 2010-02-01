@@ -819,6 +819,16 @@ class ObjectMgr
 
         static bool CheckDeclinedNames(std::wstring mainpart, DeclinedName const& names);
 
+        void LoadSpellDisabledEntrys();
+        bool IsSpellDisabled(uint32 spellid)
+        {
+            SpellDisabled::const_iterator itr = m_spell_disabled.find(spellid);
+            if(itr != m_spell_disabled.end())
+                return true;
+
+            return false;
+        }
+
         int GetIndexForLocale(LocaleConstant loc);
         LocaleConstant GetLocaleForIndex(int i);
 
@@ -970,6 +980,9 @@ class ObjectMgr
         //character reserved names
         typedef std::set<std::wstring> ReservedNamesMap;
         ReservedNamesMap    m_ReservedNames;
+
+        typedef std::set<uint32> SpellDisabled;
+        SpellDisabled  m_spell_disabled;
 
         GraveYardMap        mGraveYardMap;
 
