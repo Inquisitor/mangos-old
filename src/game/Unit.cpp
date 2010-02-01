@@ -5913,6 +5913,18 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 32747;
                     break;
                 }
+                // Glyph of Starfire
+                case 54845:
+                {
+                    triggered_spell_id = 54846;
+                    break;
+                }
+                // Glyph of Shred
+                case 54815:
+                {
+                    triggered_spell_id = 63974;
+                    break;
+                }
                 // Glyph of Rejuvenation
                 case 54754:
                 {
@@ -5967,6 +5979,12 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
         {
             switch(dummySpell->Id)
             {
+                // Glyph of Backstab
+                case 56800:
+                {
+                    triggered_spell_id = 63975;
+                    break;
+                }
                 // Deadly Throw Interrupt
                 case 32748:
                 {
