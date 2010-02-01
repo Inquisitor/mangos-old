@@ -550,6 +550,7 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                     if(uint32 combo = ((Player*)m_caster)->GetComboPoints())
                     {
                         Aura *poison = 0;
+                        bool hasTalentPassed = false;
                         // Lookup for Deadly poison (only attacker applied)
                         Unit::AuraList const& auras = unitTarget->GetAurasByType(SPELL_AURA_PERIODIC_DAMAGE);
                         for(Unit::AuraList::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
@@ -567,8 +568,19 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                             uint32 doses = poison->GetStackAmount();
                             if (doses > combo)
                                 doses = combo;
-                            for (int i=0; i< doses; i++)
-                                unitTarget->RemoveSingleSpellAurasFromStack(spellId);
+                            // Check if player has Master Poisoner talent, if yes, do not remove Deadly poison
+                            Unit::AuraList const& casterAuras = m_caster->GetAurasByType(SPELL_AURA_PROC_TRIGGER_SPELL_WITH_VALUE);
+                            for(Unit::AuraList::const_iterator itr = casterAuras.begin(); itr!=casterAuras.end(); ++itr)
+                            {
+                                if( (*itr)->GetSpellProto()->SpellIconID == 1960 && (*itr)->GetSpellProto()->SpellFamilyName == 8 )
+                                    if( urand(0, 100) < (*itr)->GetSpellProto()->EffectBasePoints[2] )
+                                        hasTalentPassed = true;
+                            }
+
+                            if( !hasTalentPassed ) // Is Master Poisoner not found or not procced remove Deadly Poison
+                                for (int i=0; i< doses; i++)
+                                    unitTarget->RemoveSingleSpellAurasFromStack(spellId);
+
                             damage *= doses;
                             damage += int32(((Player*)m_caster)->GetTotalAttackPowerValue(BASE_ATTACK) * 0.09f * doses);
                         }
