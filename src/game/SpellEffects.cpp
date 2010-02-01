@@ -265,6 +265,10 @@ void Spell::EffectInstaKill(uint32 /*i*/)
     if( !unitTarget || !unitTarget->isAlive() )
         return;
 
+                                                                                     // Videre Elixir  and  Divine Intervention
+    if ((m_caster->GetTypeId() == TYPEID_PLAYER) && (m_caster == unitTarget) && m_spellInfo->Id != 14050 && m_spellInfo->Id != 19752)
+        return;
+
     // Demonic Sacrifice
     if(m_spellInfo->Id==18788 && unitTarget->GetTypeId()==TYPEID_UNIT)
     {
