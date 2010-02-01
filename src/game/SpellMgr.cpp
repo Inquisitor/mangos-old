@@ -1379,6 +1379,41 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                         (spellInfo_2->Id == 8326 && spellInfo_1->Id == 20584) )
                          return false;
 
+                    // Kindred Spirits
+                    if( spellInfo_1->SpellIconID == 3559 && spellInfo_2->SpellIconID == 3559)
+                        return false;
+
+                    // Stoneform
+                    if ((spellInfo_1->Id == 20594 && spellInfo_2->Id == 65116) ||
+                        (spellInfo_2->Id == 20594 && spellInfo_1->Id == 65116))
+                        return false;
+
+                    // Unstable Sphere Passive and Detonation Timer
+                    if ((spellInfo_1->Id == 50756 && spellInfo_2->Id == 50758) ||
+                        (spellInfo_2->Id == 50756 && spellInfo_1->Id == 50758))
+                        return false;
+
+                    // Positive / Negative charges of Thaddius and Chrono
+                    // Positive Thaddius
+                    if ((spellInfo_1->Id == 28059 && spellInfo_2->Id == 29659) ||
+                        (spellInfo_2->Id == 28059 && spellInfo_1->Id == 29659))
+                        return false;
+
+                    // Positive Chrono
+                    if ((spellInfo_1->Id == 39088 && spellInfo_2->Id == 39089) ||
+                        (spellInfo_2->Id == 39088 && spellInfo_1->Id == 39089))
+                        return false;
+
+                    // Negative Thaddius
+                    if ((spellInfo_1->Id == 28084 && spellInfo_2->Id == 29660) ||
+                        (spellInfo_2->Id == 28084 && spellInfo_1->Id == 29660))
+                        return false;
+
+                    // Negative Chrono
+                    if ((spellInfo_1->Id == 39091 && spellInfo_2->Id == 39092) ||
+                        (spellInfo_2->Id == 39091 && spellInfo_1->Id == 39092))
+                        return false;
+
                     break;
                 }
                 case SPELLFAMILY_MAGE:
