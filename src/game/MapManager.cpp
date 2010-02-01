@@ -222,13 +222,6 @@ bool MapManager::CanPlayerEnter(uint32 mapid, Player* player)
             }
         }
 
-        // TODO: move this to a map dependent location
-        /*if(i_data && i_data->IsEncounterInProgress())
-        {
-            sLog.outDebug("MAP: Player '%s' can't enter instance '%s' while an encounter is in progress.", player->GetName(), GetMapName());
-            player->SendTransferAborted(GetId(), TRANSFER_ABORT_ZONE_IN_COMBAT);
-            return(false);
-        }*/
         return true;
     }
     else
