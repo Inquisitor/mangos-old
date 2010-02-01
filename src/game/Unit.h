@@ -300,6 +300,7 @@ class Pet;
 class Path;
 class PetAura;
 class Totem;
+class Vehicle;
 
 struct SpellImmune
 {
@@ -433,20 +434,21 @@ enum UnitState
     UNIT_STAT_FOLLOW_MOVE     = 0x00008000,
     UNIT_STAT_FLEEING         = 0x00010000,                     // FleeMovementGenerator/TimedFleeingMovementGenerator active/onstack
     UNIT_STAT_FLEEING_MOVE    = 0x00020000,
+    UNIT_STAT_ON_VEHICLE      = 0x00040000,
 
     // masks (only for check)
 
     // can't move currently
-    UNIT_STAT_CAN_NOT_MOVE    = UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DIED,
+    UNIT_STAT_CAN_NOT_MOVE    = UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DIED | UNIT_STAT_ON_VEHICLE,
 
     // stay by different reasons
     UNIT_STAT_NOT_MOVE        = UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DIED |
-                                UNIT_STAT_DISTRACTED,
+                                UNIT_STAT_DISTRACTED | UNIT_STAT_ON_VEHICLE,
 
     // stay or scripted movement for effect( = in player case you can't move by client command)
     UNIT_STAT_NO_FREE_MOVE    = UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DIED |
                                 UNIT_STAT_IN_FLIGHT |
-                                UNIT_STAT_CONFUSED | UNIT_STAT_FLEEING,
+                                UNIT_STAT_CONFUSED | UNIT_STAT_FLEEING | UNIT_STAT_ON_VEHICLE,
 
     // not react at move in sight or other
     UNIT_STAT_CAN_NOT_REACT   = UNIT_STAT_STUNNED | UNIT_STAT_DIED |
@@ -907,6 +909,24 @@ typedef std::set<uint64> GuardianPetList;
 #define REGEN_TIME_PRECISE  500                             // Used in Spell::CheckPower for precise regeneration in spell cast time
 
 struct SpellProcEventEntry;                                 // used only privately
+
+// vehicle system
+struct SeatData
+{
+    SeatData() : OffsetX(0.0f), OffsetY(0.0f),  OffsetZ(0.0f), Orientation(0.0f),
+                c_time(0), dbc_seat(0), seat(0), s_flags(0), v_flags(0) {}
+
+    float OffsetX;
+    float OffsetY;
+    float OffsetZ;
+    float Orientation;
+    uint32 c_time;
+    uint32 dbc_seat;
+    uint8 seat;
+    //custom, used as speedup
+    uint32 s_flags;
+    uint32 v_flags;
+};
 
 class MANGOS_DLL_SPEC Unit : public WorldObject
 {
@@ -1626,6 +1646,15 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         uint32 GetThreatRedirectionPercent() { return m_ThreatRedirectionPercent; }
         Unit *GetMisdirectionTarget() { return m_misdirectionTargetGUID ? GetUnit(*this, m_misdirectionTargetGUID) : NULL; }
 
+        // vehicle system
+        void EnterVehicle(Vehicle *vehicle, int8 seat_id, bool force = false);
+        void ExitVehicle();
+        uint64 GetVehicleGUID() { return m_vehicleGUID; }
+        void SetVehicleGUID(uint64 guid) { m_vehicleGUID = guid; }
+        // using extra variables to favoid problems with transports
+        SeatData m_SeatData;
+        void BuildVehicleInfo(Unit *target = NULL);
+
     protected:
         explicit Unit ();
 
@@ -1675,6 +1704,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         uint32 m_reactiveTimer[MAX_REACTIVE];
         uint32 m_regenTimer;
         uint32 m_lastManaUseTimer;
+        uint64 m_vehicleGUID;
 
     private:
         void CleanupDeletedAuras();
@@ -1711,6 +1741,9 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         ComboPointHolderSet m_ComboPointHolders;
 
         GuardianPetList m_guardianPets;
+
+        uint32 m_ThreatRedirectionPercent;
+        uint64 m_misdirectionTargetGUID;
 };
 
 template<typename Func>

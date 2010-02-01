@@ -95,6 +95,7 @@ class GameObject;
 class Map;
 class UpdateMask;
 class InstanceData;
+class Vehicle;
 
 typedef UNORDERED_MAP<Player*, UpdateData> UpdateDataMapType;
 
@@ -510,6 +511,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 
         Creature* SummonCreature(uint32 id, float x, float y, float z, float ang,TempSummonType spwtype,uint32 despwtime);
         GameObject* SummonGameObject(uint32 id, float x, float y, float z, float ang, uint32 despwtime);
+        Vehicle* SummonVehicle(uint32 id, float x, float y, float z, float ang, uint32 vehicleId = NULL);
 
         Creature* GetClosestCreatureWithEntry(WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange);
         GameObject* GetClosestGameObjectWithEntry(WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange);
