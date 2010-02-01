@@ -2145,6 +2145,9 @@ void Spell::EffectDummy(uint32 i)
         Script->EffectDummyCreature(m_caster, m_spellInfo->Id, i, (Creature*)unitTarget);
     else if (itemTarget)
         Script->EffectDummyItem(m_caster, m_spellInfo->Id, i, itemTarget);
+
+    sLog.outDebug("Spell ScriptStart spellid %u in EffectDummy ", m_spellInfo->Id);
+    m_caster->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, m_caster, unitTarget);
 }
 
 void Spell::EffectTriggerSpellWithValue(uint32 i)
