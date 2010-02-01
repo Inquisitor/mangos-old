@@ -1211,6 +1211,15 @@ float WorldObject::GetDistance(const WorldObject* obj) const
     return ( dist > 0 ? dist : 0);
 }
 
+float WorldObject::GetDistance(const float x, const float y, const float z, const float sx, const float sy, const float sz) const
+{
+    float dx =  x - sx;
+    float dy =  y - sy;
+    float dz =  z - sz;
+    float dist = sqrt((dx*dx) + (dy*dy) + (dz*dz));
+    return ( dist > 0 ? dist : 0);
+}
+
 float WorldObject::GetDistance2d(float x, float y) const
 {
     float dx = GetPositionX() - x;
