@@ -2042,9 +2042,8 @@ void Spell::EffectDummy(uint32 i)
             {
                 if(!unitTarget)
                     return;
-
-                // dummy cast itself ignored by client in logs
-                m_caster->CastCustomSpell(unitTarget,50782,&damage,NULL,NULL,true);
+                m_damage+=m_caster->CalculateDamage(m_attackType, false);
+                m_damage+=damage;
                 return;
             }
             // Concussion Blow
