@@ -1327,6 +1327,15 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
     if ((spellInfo_1->Attributes & SPELL_ATTR_PASSIVE)!=(spellInfo_2->Attributes & SPELL_ATTR_PASSIVE))
         return false;
 
+    // Dispersion - stacks with everything
+     if ((spellInfo_1->Id == 47585 && spellInfo_2->Id == 60069) ||
+          (spellInfo_2->Id == 47585 && spellInfo_1->Id == 60069))
+          return false;
+
+    // Mistletoe debuff stack with everything
+     if (spellInfo_1->Id == 26218 || spellInfo_2->Id == 26218)
+         return false;
+
     // Specific spell family spells
     switch(spellInfo_1->SpellFamilyName)
     {
@@ -1458,6 +1467,15 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
 
                     break;
                 }
+                case SPELLFAMILY_WARLOCK:
+                {
+                    // Shadowflame and Glyph of Shadowflame
+                    if( (spellInfo_1->Id == 63311 && spellInfo_2->SpellIconID == 3317) ||
+                        (spellInfo_2->Id == 63311 && spellInfo_1->SpellIconID == 3317) )
+                        return false;
+
+                    break;
+                }
                 case SPELLFAMILY_HUNTER:
                 {
                     // Concussive Shot and Imp. Concussive Shot (multi-family check)
@@ -1570,6 +1588,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 if( (spellInfo_1->SpellIconID == 456 && spellInfo_2->SpellIconID == 2006) ||
                     (spellInfo_2->SpellIconID == 456 && spellInfo_1->SpellIconID == 2006) )
                     return false;
+
+                // Taste of Blood and Sudden Death
+                if( (spellInfo_1->Id == 52437 && spellInfo_2->Id == 60503) ||
+                    (spellInfo_2->Id == 52437 && spellInfo_1->Id == 60503) )
+                    return false;
             }
 
             // Hamstring -> Improved Hamstring (multi-family check)
@@ -1597,10 +1620,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 if ((spellInfo_1->SpellFamilyFlags & UI64LIT(0x200000)) && (spellInfo_2->SpellFamilyFlags & UI64LIT(0x8000)) ||
                     (spellInfo_2->SpellFamilyFlags & UI64LIT(0x200000)) && (spellInfo_1->SpellFamilyFlags & UI64LIT(0x8000)))
                     return false;
-                // Dispersion
-                if ((spellInfo_1->Id == 47585 && spellInfo_2->Id == 60069) ||
-                    (spellInfo_2->Id == 47585 && spellInfo_1->Id == 60069))
-                    return false;
+
+                // Shadowform
+                if ((spellInfo_1->Id == 15473 && spellInfo_2->Id == 49868) ||
+                    (spellInfo_2->Id == 15473 && spellInfo_1->Id == 49868))
             }
             break;
         case SPELLFAMILY_DRUID:
@@ -1614,6 +1637,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 //  Tree of Life (Shapeshift) and 34123 Tree of Life (Passive)
                 if ((spellId_1 == 33891 && spellId_2 == 34123) ||
                     (spellId_2 == 33891 && spellId_1 == 34123))
+                    return false;
+
+                //  Moonfire and Lacarate
+                if ((spellInfo_1->SpellIconID == 225 && spellInfo_2->SpellIconID == 2246) ||
+                    (spellInfo_2->SpellIconID == 225 && spellInfo_1->SpellIconID == 2246))
                     return false;
 
                 // Lifebloom and Wild Growth
@@ -1647,6 +1675,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
 
                 // Frenzied Regeneration and Savage Defense
                 if( spellInfo_1->Id == 22842 && spellInfo_2->Id == 62606 || spellInfo_2->Id == 22842 && spellInfo_1->Id == 62606 )
+                    return false;
+
+                // Nourish and Lifebloom
+                if( spellInfo_1->SpellIconID == 2864  && spellInfo_2->SpellIconID == 2101 || spellInfo_2->SpellIconID == 2864 && spellInfo_1->SpellIconID == 2101 )
                     return false;
             }
 
@@ -1712,10 +1744,23 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 return false;
             break;
         case SPELLFAMILY_PALADIN:
+            // Consecration removing Inner Fire
+            if(spellInfo_2->SpellFamilyName == SPELLFAMILY_PRIEST)
+                if(spellInfo_1->SpellIconID == 51 && spellInfo_2->SpellIconID == 51)
+                return false;
+
             if( spellInfo_2->SpellFamilyName == SPELLFAMILY_PALADIN )
             {
                 // Paladin Seals
                 if (IsSealSpell(spellInfo_1) && IsSealSpell(spellInfo_2))
+                    return true;
+
+                // Concentration aura and Aura Mastery.
+                if (spellInfo_2->Id == 19746 && spellInfo_1->Id == 64364)
+                    return false;
+
+                // Other auras remove Aura Mastery immunity effect.
+                if (spellInfo_1->Id == 64364 && spellInfo_2->SpellFamilyFlags2 == UI64LIT(0x20))
                     return true;
 
                 // Swift Retribution / Improved Devotion Aura (talents) and Paladin Auras
@@ -1726,6 +1771,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 // Beacon of Light and Light's Beacon
                 if ((spellInfo_1->SpellIconID == 3032) && (spellInfo_2->SpellIconID == 3032))
                     return false;
+
+                // Concentration Aura & Improved Concentration Aura
+               if((spellId_1 == 19746 && spellId_2 == 63510) || (spellId_1 == 63510 && spellId_2 == 19746))
+                   return false;
 
                 // Concentration Aura and Improved Concentration Aura and Aura Mastery
                 if ((spellInfo_1->SpellIconID == 1487) && (spellInfo_2->SpellIconID == 1487))
@@ -1773,6 +1822,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 return false;
             break;
         case SPELLFAMILY_DEATHKNIGHT:
+
+            // Presences and triggered effects
+            if( spellInfo_1->Category == 47 || spellInfo_2->Category == 47 )
+                return false;
+
             if (spellInfo_2->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT)
             {
                 // Lichborne  and Lichborne (triggered)
@@ -1785,6 +1839,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
 
                 // Unholy Presence and Unholy Presence (triggered)
                 if( spellInfo_1->SpellIconID == 2633 && spellInfo_2->SpellIconID == 2633 )
+                    return false;
+
+                // Desecration (speed reduction aura) and Desecration (owner's damage bonus aura)
+                if (spellInfo_1->SpellIconID==2296 && spellInfo_2->SpellIconID==2296 &&
+                    spellInfo_1->SpellFamilyFlags == spellInfo_2->SpellFamilyFlags)
                     return false;
             }
             break;
