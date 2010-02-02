@@ -4516,6 +4516,16 @@ void Aura::HandleModMechanicImmunity(bool apply, bool /*Real*/)
 
     m_target->ApplySpellImmune(GetId(),IMMUNITY_MECHANIC,misc,apply);
 
+    // Demonic Circle
+    if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_WARLOCK && GetSpellProto()->SpellIconID == 3221)
+    {
+        if (m_target->GetTypeId() != TYPEID_PLAYER)
+            return;
+        if (apply)
+            if( GameObject* obj = m_target->GetGameObject(48018) )
+                ((Player*)m_target)->TeleportTo(obj->GetMapId(),obj->GetPositionX(),obj->GetPositionY(),obj->GetPositionZ(),obj->GetOrientation());
+    }
+
     // Bestial Wrath
     if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_HUNTER && GetSpellProto()->SpellIconID == 1680)
     {
@@ -4784,6 +4794,22 @@ void Aura::HandleAuraPeriodicDummy(bool apply, bool Real)
             if (apply && !loading && caster)
                 m_modifier.m_amount += int32(caster->GetTotalAttackPowerValue(RANGED_ATTACK) * 14 / 100);
             break;
+        }
+        case SPELLFAMILY_WARLOCK:
+        {
+            switch (spell->Id)
+            {
+                // Demonic Circle
+                case 48018:
+                {
+                    if( !apply )
+                        m_target->RemoveGameObject(spell->Id, true);
+
+                    SendFakeAuraUpdate(62388,apply, m_target);
+                    break;
+                }
+                break;
+            }
         }
     }
 
@@ -7597,6 +7623,24 @@ void Aura::PeriodicDummyTick()
             }
             break;
         }
+        case SPELLFAMILY_WARLOCK:
+            switch (spell->Id)
+            {
+                // Demonic Circle
+                case 48018:
+                {
+                    GameObject* obj = m_target->GetGameObject(spell->Id);
+                    if (!obj) return;
+                    // We must take a range of teleport spell, not summon.
+                    const SpellEntry* goToCircleSpell = sSpellStore.LookupEntry(48020);
+                    if (m_target->IsWithinDist(obj,GetSpellMaxRange(sSpellRangeStore.LookupEntry(goToCircleSpell->rangeIndex))))
+                        SendFakeAuraUpdate(62388, true, m_target);
+                    else
+                        SendFakeAuraUpdate(62388, false, m_target);
+                    break;
+                }
+            }
+            break;
         case SPELLFAMILY_ROGUE:
         {
             switch (spell->Id)
@@ -8155,10 +8199,10 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
     }
 }
 
-void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply, Player * pPlayer )
+void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply, Unit * pPlayer )
 {
     WorldPacket data(SMSG_AURA_UPDATE);
-    data.append(m_target->GetPackGUID());
+    data.append(pPlayer ? pPlayer->GetPackGUID() : m_target->GetPackGUID());
     data << uint8(255);
     data << uint32(apply ? auraId : 0);
 
@@ -8174,7 +8218,7 @@ void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply, Player * pPlayer )
     uint8 auraFlags = GetAuraFlags();
     data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 19 : auraFlags );
     data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 1 : GetAuraLevel() );
-    data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 0 : (m_procCharges ? m_procCharges : m_stackAmount) );
+    data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 0 : (m_procCharges ? m_procCharges*m_stackAmount : m_stackAmount) );
 
     if(!(auraFlags & AFLAG_NOT_CASTER))
         data << uint8(0);                                   // pguid

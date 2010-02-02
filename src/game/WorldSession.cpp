@@ -352,6 +352,10 @@ void WorldSession::LogoutPlayer(bool Save)
         if(BattleGround *bg = _player->GetBattleGround())
             bg->EventPlayerLoggedOut(_player);
 
+        //remove Demonic Circle aura
+        if( _player->HasAura(48018, 0) )
+            _player->RemoveAura(48018, 0);
+
         ///- Teleport to home if the player is in an invalid instance
         if(!_player->m_InstanceValid && !_player->isGameMaster())
         {
