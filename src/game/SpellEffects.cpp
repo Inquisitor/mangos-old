@@ -5592,7 +5592,38 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                 case 24590:
                     unitTarget->RemoveSingleSpellAurasFromStack(24575);
                     return;
-                    // PX-238 Winter Wondervolt TRAP
+                // Lightwell
+                case 60123: 
+                {
+                   if (m_caster->GetTypeId() != TYPEID_UNIT)
+                       return;
+
+                    uint32 spellID;
+                    uint32 entry  = m_caster->GetEntry();
+
+                    switch(entry)
+                    {
+                        case 31897: spellID = 7001; break;   // Lightwell Renew    Rank 1
+                        case 31896: spellID = 27873; break;  // Lightwell Renew    Rank 2
+                        case 31895: spellID = 27874; break;  // Lightwell Renew    Rank 3
+                        case 31894: spellID = 28276; break;  // Lightwell Renew    Rank 4
+                        case 31893: spellID = 48084; break;  // Lightwell Renew    Rank 5
+                        case 31883: spellID = 48085; break;  // Lightwell Renew    Rank 6
+                        default:
+                            sLog.outError("Unknown Lightwell spell caster %u", m_caster->GetEntry());
+                            return;
+                    }
+                    Aura* chargesaura = m_caster->GetAura(59907,0);
+                    if(chargesaura && chargesaura->GetAuraCharges() >= 1)
+                     {
+                       chargesaura->SetAuraCharges(chargesaura->GetAuraCharges() - 1);
+                       m_caster->CastSpell(unitTarget, spellID, false, NULL, NULL);
+                     }
+                    else
+                       ((TemporarySummon*)m_caster)->UnSummon();
+                    return;
+                }
+                // PX-238 Winter Wondervolt TRAP
                 case 26275:
                 {
                     uint32 spells[4] = { 26272, 26157, 26273, 26274 };
