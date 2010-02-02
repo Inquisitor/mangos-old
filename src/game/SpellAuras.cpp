@@ -2458,7 +2458,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             case 28169:                                     // Mutating Injection
             {
                 // Mutagen Explosion
-                m_target->CastSpell(m_target, 28206, true, NULL, this);
+                m_target->CastSpell(m_target, 28206, true, NULL, this, GetCasterGUID());
                 // Poison Cloud
                 m_target->CastSpell(m_target, 28240, true, NULL, this);
                 return;
