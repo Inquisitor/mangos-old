@@ -4805,7 +4805,7 @@ void Aura::HandleAuraPeriodicDummy(bool apply, bool Real)
                     if( !apply )
                         m_target->RemoveGameObject(spell->Id, true);
 
-                    SendFakeAuraUpdate(62388,apply, m_target);
+                    SendFakeAuraUpdate(62388,apply);
                     break;
                 }
                 break;
@@ -7634,9 +7634,9 @@ void Aura::PeriodicDummyTick()
                     // We must take a range of teleport spell, not summon.
                     const SpellEntry* goToCircleSpell = sSpellStore.LookupEntry(48020);
                     if (m_target->IsWithinDist(obj,GetSpellMaxRange(sSpellRangeStore.LookupEntry(goToCircleSpell->rangeIndex))))
-                        SendFakeAuraUpdate(62388, true, m_target);
+                        SendFakeAuraUpdate(62388, true);
                     else
-                        SendFakeAuraUpdate(62388, false, m_target);
+                        SendFakeAuraUpdate(62388, false);
                     break;
                 }
             }
@@ -8202,23 +8202,20 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
 void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply, Unit * pPlayer )
 {
     WorldPacket data(SMSG_AURA_UPDATE);
-    data.append(pPlayer ? pPlayer->GetPackGUID() : m_target->GetPackGUID());
+    data.append(m_target->GetPackGUID());
     data << uint8(255);
     data << uint32(apply ? auraId : 0);
 
     if(!apply)
     {
-        if( pPlayer )
-            pPlayer->SendMessageToSet(&data, true);
-        else
-            m_target->SendMessageToSet(&data, true);
+        (pPlayer? pPlayer : m_target)->SendMessageToSet(&data, true);
         return;
     }
 
     uint8 auraFlags = GetAuraFlags();
     data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 19 : auraFlags );
     data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 1 : GetAuraLevel() );
-    data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 0 : (m_procCharges ? m_procCharges*m_stackAmount : m_stackAmount) );
+    data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 0 : (m_procCharges ? m_procCharges : m_stackAmount) );
 
     if(!(auraFlags & AFLAG_NOT_CASTER))
         data << uint8(0);                                   // pguid
