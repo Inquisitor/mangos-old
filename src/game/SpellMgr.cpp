@@ -1624,6 +1624,7 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 // Shadowform
                 if ((spellInfo_1->Id == 15473 && spellInfo_2->Id == 49868) ||
                     (spellInfo_2->Id == 15473 && spellInfo_1->Id == 49868))
+                    return false;
             }
             break;
         case SPELLFAMILY_DRUID:
