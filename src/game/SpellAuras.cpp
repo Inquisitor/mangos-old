@@ -8146,3 +8146,39 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
         */
     }
 }
+
+void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply, Player * pPlayer )
+{
+    WorldPacket data(SMSG_AURA_UPDATE);
+    data.append(m_target->GetPackGUID());
+    data << uint8(255);
+    data << uint32(apply ? auraId : 0);
+
+    if(!apply)
+    {
+        if( pPlayer )
+            pPlayer->SendMessageToSet(&data, true);
+        else
+            m_target->SendMessageToSet(&data, true);
+        return;
+    }
+
+    uint8 auraFlags = GetAuraFlags();
+    data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 19 : auraFlags );
+    data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 1 : GetAuraLevel() );
+    data << uint8( (GetId() == 64976 || GetId() == 57499 ) ? 0 : (m_procCharges ? m_procCharges : m_stackAmount) );
+
+    if(!(auraFlags & AFLAG_NOT_CASTER))
+        data << uint8(0);                                   // pguid
+
+    if(auraFlags & AFLAG_DURATION)
+    {
+        data << uint32(GetAuraMaxDuration());
+        data << uint32(GetAuraDuration());
+    }
+
+    if( pPlayer )
+        pPlayer->SendMessageToSet(&data, true);
+    else
+        m_target->SendMessageToSet(&data, true);
+}
