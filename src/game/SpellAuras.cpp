@@ -2498,6 +2498,27 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 m_target->CastSpell(m_target, 47287, true, NULL, this);
                 return;
             }
+            case 34219: // Q: Recharging the Batteries
+            {
+                if (Unit* caster = GetCaster())
+                    if( GetTarget() &&GetTarget()->GetTypeId() == TYPEID_UNIT && GetTarget()->GetEntry() == 18879 && (GetTarget()->GetHealth() * 100 / GetTarget()->GetMaxHealth() < 30) )
+                        ((Creature*)GetTarget())->UpdateEntry(19595);
+                return;
+            }
+            case 31606: // Q: As the Crow Flies
+            {
+                if (Unit* caster = GetCaster())
+                    if( caster->GetTypeId() == TYPEID_PLAYER && ((Player*)caster)->GetQuestStatus(9718) == QUEST_STATUS_INCOMPLETE )
+                        ((Player*)caster)->CompleteQuest( 9718 );
+                return;
+            }
+            case 50141: // Q: Truce?
+            {
+                if (Unit* caster = GetCaster())
+                    if( caster->GetTypeId() == TYPEID_PLAYER && ((Player*)caster)->GetQuestStatus(11989) == QUEST_STATUS_INCOMPLETE )
+                        ((Player*)caster)->CastSpell( caster, 50001, true );
+                return;
+            }
             case 34477: //Misdirection
             case 57934: //Tricks of Trade
             {
