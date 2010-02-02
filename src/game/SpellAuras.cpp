@@ -1084,6 +1084,10 @@ void Aura::_AddAura()
             // Enrage aura state
             if(m_spellProto->Dispel == DISPEL_ENRAGE)
                 m_target->ModifyAuraState(AURA_STATE_ENRAGE, true);
+
+            // Bleeding aura state
+            if(GetEffectMechanic(m_spellProto, m_effIndex) == MECHANIC_BLEED)
+                m_target->ModifyAuraState(AURA_STATE_BLEEDING, true);
         }
     }
 }
@@ -1160,6 +1164,10 @@ bool Aura::_RemoveAura()
         // Enrage aura state
         if(m_spellProto->Dispel == DISPEL_ENRAGE)
             m_target->ModifyAuraState(AURA_STATE_ENRAGE, false);
+
+        // Bleeding aura state
+        if(GetEffectMechanic(m_spellProto, m_effIndex) == MECHANIC_BLEED)
+            m_target->ModifyAuraState(AURA_STATE_BLEEDING, false);
 
         uint32 removeState = 0;
         uint64 removeFamilyFlag = m_spellProto->SpellFamilyFlags;
