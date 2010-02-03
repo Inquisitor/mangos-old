@@ -6011,7 +6011,7 @@ bool Spell::CheckTarget( Unit* target, uint32 eff )
                 caster = m_caster->GetMap()->GetGameObject(m_originalCasterGUID);
             if (!caster)
                 caster = m_caster;
-            if(target != m_caster && !target->IsWithinLOSInMap(caster))
+            if(target != m_caster && !m_IsTriggeredSpell && VMAP::VMapFactory::checkSpellForLoS(m_spellInfo->Id) && !target->IsWithinLOSInMap(caster))
                 return false;
             break;
     }
