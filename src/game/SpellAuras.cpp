@@ -2531,6 +2531,13 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             return;
         }
 
+        if( GetId() == 43681 && m_target->GetTypeId() == TYPEID_PLAYER && m_removeMode == AURA_REMOVE_BY_DEFAULT && m_duration<=0 )
+        {
+            ((Player*)m_target)->InBattleGround();
+            ((Player*)m_target)->LeaveBattleground();
+            return;
+        }
+
         switch(GetId())
         {
             case 28059: // Positive Thaddius
