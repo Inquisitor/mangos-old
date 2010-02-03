@@ -2356,6 +2356,73 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             // Reindeer Transformation
                             m_target->CastSpell(m_target, 25860, true, NULL, this);
                         return;
+                    // Q: The Big Bone Worm
+                    case 39246:
+                    {
+                        if (Unit* caster = GetCaster())
+                        {
+                            int32 roll = rand()%100;
+                            if( roll > 20 )
+                            {
+                                for(uint32 x =0; x < (rand()%2 > 0 ? 2 : 3); ++x)
+                                    caster->SummonCreature(rand()%2 > 0 ? 22482 : 22483, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
+                            }
+                            else 
+                                caster->SummonCreature(22038, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
+                        }
+                        return;
+                    }
+                    // Q: Abduction
+                    case 45611:
+                    {
+                        if (Unit* caster = GetCaster())
+                        {
+                            if( caster->GetTypeId() == TYPEID_PLAYER && m_target->GetEntry() == 25316 && (m_target->GetHealth() * 100 < m_target->GetMaxHealth() * 35) )
+                            {
+                                m_target->SetVisibility(VISIBILITY_OFF);
+                                m_target->DealDamage(m_target, m_target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                                caster->CastSpell( caster, 45626, true );
+                            }
+                        }
+                    }
+                    case 59579:
+                    {                    
+                        CellPair pair(MaNGOS::ComputeCellPair( m_target->GetPositionX(), m_target->GetPositionY() ) );
+                        Cell cell(pair);
+                        cell.data.Part.reserved = ALL_DISTRICT;
+                        cell.SetNoCreate();
+
+                        std::list<Creature*> creatureList;
+                        std::vector<Creature*> creatureVector;
+
+                        MaNGOS::AnyUnitInObjectRangeCheck go_check(m_target, 15); // 15 yards check
+                        MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(m_target, creatureList, go_check);
+                        TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+                        // Get Creatures
+                        cell.Visit(pair, go_visit, *(m_target->GetMap()));
+
+                        if (!creatureList.empty())
+                        {
+                            for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+                            {
+                                if( (*itr)->isAlive() && (*itr)->GetTypeId() != TYPEID_PLAYER && ( (*itr)->GetEntry() == 31142 || (*itr)->GetEntry() == 31147 || (*itr)->GetEntry() == 31205 ) )
+                                {
+                                    m_target->CastSpell( (*itr), 59580, true );
+                                    if( m_target->GetOwner() )
+                                    {
+                                        switch( (*itr)->GetEntry() )
+                                        {
+                                            case 31142: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 59591, true); break;
+                                            case 31147: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 60042, true); break;
+                                            case 31205: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 60040, true); break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return;
+                    }
                 }
                 break;
             case SPELLFAMILY_WARRIOR:
