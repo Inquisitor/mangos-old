@@ -750,6 +750,10 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Scripts()
                             }
                         }
                         break;
+                        case ACTION_T_ADD_ITEM:
+                        if( action.add_item.id < 1 )
+                            sLog.outErrorDb("CreatureEventAI:  Event %u Action %u uses wrong item Id value %u.", i, j+1, action.add_item.id );
+                        break;
                     case ACTION_T_EVADE:                    //No Params
                     case ACTION_T_FLEE_FOR_ASSIST:          //No Params
                     case ACTION_T_DIE:                      //No Params
@@ -759,6 +763,7 @@ void CreatureEventAIMgr::LoadCreatureEventAI_Scripts()
                     case ACTION_T_COMBAT_MOVEMENT:          //AllowCombatMovement (0 = stop combat based movement, anything else continue attacking)
                     case ACTION_T_RANGED_MOVEMENT:          //Distance, Angle
                     case ACTION_T_CALL_FOR_HELP:            //Distance
+                    case ACTION_T_SUMMON_GOBJECT:            //Gameobject Entry
                         break;
 
                     case ACTION_T_RANDOM_SAY:

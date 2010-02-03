@@ -787,6 +787,41 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
                 InvinceabilityHpLevel = action.invincibility_hp_level.hp_level;
             break;
         }
+        case ACTION_T_SUMMON_GOBJECT:
+        {
+            if( !pActionInvoker )
+                return;
+
+            Unit* target = GetTargetByType(action.summon_gobject.target, pActionInvoker);
+            if( !target )
+                target = pActionInvoker;
+
+            GameObject* pGameObj = new GameObject;
+            if(!pGameObj->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), action.summon_gobject.id, target->GetMap(),
+            target->GetPhaseMask(), target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
+            {
+                delete pGameObj;
+                return;
+            }
+
+            pGameObj->SetRespawnTime(action.summon_gobject.duration > 0 ? action.summon_gobject.duration/IN_MILISECONDS : 0);
+            target->GetMap()->Add(pGameObj);
+            target->AddGameObject(pGameObj);
+
+            break;
+        }
+        case ACTION_T_ADD_ITEM:
+        {
+            if( !pActionInvoker || pActionInvoker->GetTypeId() != TYPEID_PLAYER )
+                return;
+
+            ItemPosCountVec dest;
+            uint8 msg = ((Player*)pActionInvoker)->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, action.add_item.id, 1);
+            if (msg == EQUIP_ERR_OK)
+                ((Player*)pActionInvoker)->StoreNewItem(dest, action.add_item.id, true);
+
+            break;
+        }
     }
 }
 
