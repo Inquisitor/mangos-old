@@ -5378,6 +5378,9 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 if(!procSpell)
                     return false;
 
+                if (effIndex!=1)
+                    return true;
+
                 // mana cost save
                 int32 cost = procSpell->manaCost + procSpell->ManaCostPercentage * GetCreateMana() / 100;
                 basepoints0 = cost * triggerAmount/100;
@@ -5745,7 +5748,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     if (!healingAura)
                         return false;
 
-                    int32 healingfromticks = SpellHealingBonus(pVictim, procSpell, (healingAura->GetModifier()->m_amount* GetSpellAuraMaxTicks(procSpell)), DOT);
+                    int32 healingfromticks = GetSpellAuraMaxTicks(procSpell)*SpellHealingBonus(pVictim, procSpell, healingAura->GetModifier()->m_amount, DOT);
                     basepoints0 = healingfromticks * triggerAmount / 100;
                     triggered_spell_id = 63544;
                     break;
@@ -5756,11 +5759,14 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     if (!procSpell)
                         return false;
 
+                    if (effIndex != 1)
+                        return true;
+
                     Aura* leachAura = pVictim->GetAura(procSpell->Id,0);
                     if (!leachAura)
                         return false;
 
-                    int32 damagefromticks = SpellDamageBonus(pVictim, procSpell, (leachAura->GetModifier()->m_amount* GetSpellAuraMaxTicks(procSpell)), DOT);
+                    int32 damagefromticks = GetSpellAuraMaxTicks(procSpell)*SpellDamageBonus(pVictim, procSpell, leachAura->GetModifier()->m_amount, DOT);
                     basepoints0 = damagefromticks * triggerAmount / 100;
                     triggered_spell_id = 63675;
                     break;
@@ -6588,6 +6594,9 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
             {
                 // Earthbind Totem summon only
                 if(procSpell->Id != 2484)
+                    return false;
+
+                if (effIndex != 1)
                     return false;
 
                 float chance = triggerAmount;
