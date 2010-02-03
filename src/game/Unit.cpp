@@ -7369,22 +7369,12 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
             break;
         case SPELLFAMILY_PALADIN:
         {
-            /*
-            // Blessed Life
-            if (auraSpellInfo->SpellIconID == 2137)
+            // Glyph of Seal of Command
+            if( auraSpellInfo->Id == 54925 )
             {
-                switch (auraSpellInfo->Id)
-                {
-                    case 31828:                         // Rank 1
-                    case 31829:                         // Rank 2
-                    case 31830:                         // Rank 3
-                        break;
-                    default:
-                        sLog.outError("Unit::HandleProcTriggerSpell: Spell %u miss posibly Blessed Life", auraSpellInfo->Id);
-                        return false;
-                }
-            }
-            */
+                basepoints[0] = GetCreateMana() * 8 / 100;
+                break;
+             }
             // Healing Discount
             if (auraSpellInfo->Id==37705)
             {
