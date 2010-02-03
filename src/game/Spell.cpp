@@ -3773,7 +3773,10 @@ SpellCastResult Spell::CheckOrTakeRunePower(bool take)
         if(plr->GetRuneCooldown(i) == 0)
         {
             if (take)
+            {
                 plr->SetRuneCooldown(i, RUNE_COOLDOWN); // 5*2=10 sec
+                plr->SetLastUsedRune(RuneType(rune));
+            }
 
             --runeCost[rune];
         }
@@ -3791,7 +3794,10 @@ SpellCastResult Spell::CheckOrTakeRunePower(bool take)
             if((plr->GetRuneCooldown(i) == 0) && (rune == RUNE_DEATH))
             {
                 if (take)
+                {
                     plr->SetRuneCooldown(i, RUNE_COOLDOWN); // 5*2=10 sec
+                    plr->SetLastUsedRune(RuneType(rune));
+                }
 
                 --runeCost[rune];
 

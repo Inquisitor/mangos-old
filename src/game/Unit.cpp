@@ -6942,6 +6942,48 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 triggered_spell_id = dummySpell->EffectTriggerSpell[effIndex];
                 break;
             }
+            // Reaping, Blood of the North, Death Rune Mastery
+            if (dummySpell->SpellIconID == 3041 || dummySpell->SpellIconID == 22 || dummySpell->SpellIconID == 2622)
+            {
+                if (GetTypeId() == TYPEID_PLAYER && ((Player*)this)->getClass() == CLASS_DEATH_KNIGHT )
+                {
+                    RuneType rune = ((Player*)this)->GetLastUsedRune();
+                    // can't proc from death rune use
+                    if (rune == RUNE_DEATH)
+                        return false;
+
+                    triggeredByAura->GetModifier()->periodictime = triggeredByAura->GetSpellProto()->EffectAmplitude[0]; // ok ?
+                    uint32 runesLeft;
+
+                    if (dummySpell->SpellIconID == 2622)
+                        runesLeft = 2;
+                    else
+                        runesLeft = 1;
+
+                    for (uint8 i=0;i<MAX_RUNES && runesLeft;++i)
+                    {
+                        if (dummySpell->SpellIconID == 2622)
+                        {
+                            if (((Player*)this)->GetCurrentRune(i) == RUNE_DEATH ||
+                                ((Player*)this)->GetBaseRune(i) == RUNE_BLOOD )
+                                continue;
+                        }
+                        else
+                        {
+                            if (((Player*)this)->GetCurrentRune(i) == RUNE_DEATH ||
+                                ((Player*)this)->GetBaseRune(i) != RUNE_BLOOD )
+                                continue;
+                        }
+                        if (((Player*)this)->GetRuneCooldown(i) != RUNE_COOLDOWN)
+                            continue;
+
+                        --runesLeft;
+                        // Mark aura as used
+                        triggeredByAura->GetModifier()->m_amount = triggeredByAura->GetModifier()->m_amount  | (1<<i);
+                        ((Player*)this)->ConvertRune(i,RUNE_DEATH);
+                    }
+                }
+            }
             break;
         }
         default:

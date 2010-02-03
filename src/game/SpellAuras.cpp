@@ -4892,6 +4892,15 @@ void Aura::HandleAuraPeriodicDummy(bool apply, bool Real)
                 m_modifier.m_amount += int32(caster->GetTotalAttackPowerValue(RANGED_ATTACK) * 14 / 100);
             break;
         }
+        case SPELLFAMILY_DEATHKNIGHT:
+        {
+            // Reaping
+            // Blood of the North
+            // Death Rune Mastery
+            if (spell->SpellIconID == 3041 || spell->SpellIconID == 22 || spell->SpellIconID == 2622)
+                m_modifier.m_amount = 0;
+            break;
+        }
         case SPELLFAMILY_WARLOCK:
         {
             switch (spell->Id)
@@ -7873,12 +7882,43 @@ void Aura::PeriodicDummyTick()
                 m_target->SendSpellNonMeleeDamageLog(m_target, spell->Id, dam, SPELL_SCHOOL_MASK_NORMAL, 0, 0, false, 0, false);
                 return;
             }
-            // Reaping
-//            if (spell->SpellIconID == 22)
-//                return;
             // Blood of the North
-//            if (spell->SpellIconID == 30412)
-//                return;
+            // Reaping
+            // Death Rune Mastery
+            if (spell->SpellIconID == 3041 || spell->SpellIconID == 22 || spell->SpellIconID == 2622)
+            {
+                if (m_target->GetTypeId() != TYPEID_PLAYER)
+                    return;
+                // Aura not used - prevent removing death runes from other effects
+                if (!m_modifier.m_amount)
+                    return;
+                if(((Player*)m_target)->getClass() != CLASS_DEATH_KNIGHT)
+                    return;
+
+                // Remove death rune added on proc
+                for (uint8 i=0;i<MAX_RUNES && m_modifier.m_amount;++i)
+                {
+                    if (m_spellProto->SpellIconID == 2622)
+                    {
+                        if (((Player*)m_target)->GetCurrentRune(i) != RUNE_DEATH ||
+                            ((Player*)m_target)->GetBaseRune(i) == RUNE_BLOOD )
+                            continue;
+                    }
+                    else
+                    {
+                        if (((Player*)m_target)->GetCurrentRune(i) != RUNE_DEATH ||
+                            ((Player*)m_target)->GetBaseRune(i) != RUNE_BLOOD )
+                            continue;
+                    }
+
+                    if (!(m_modifier.m_amount & (1<<i)))
+                        continue;
+
+                    ((Player*)m_target)->ConvertRune(i,((Player*)m_target)->GetBaseRune(i));
+                }
+                m_modifier.m_amount = 0;
+                return;
+            }
             break;
         }
         default:
