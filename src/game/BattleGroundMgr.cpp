@@ -1284,7 +1284,7 @@ void BattleGroundMgr::BuildBattleGroundStatusPacket(WorldPacket *data, BattleGro
             *data << uint32(bg->GetMapId());                // map id
             *data << uint32(Time1);                         // time to bg auto leave, 0 at bg start, 120000 after bg end, milliseconds
             *data << uint32(Time2);                         // time from bg start, milliseconds
-            *data << uint8(0x1);                            // unk sometimes 0x0!
+            *data << uint8(bg->isArena() ? 0 : 1);          // 0 - arena , 1 - bg
             break;
         default:
             sLog.outError("Unknown BG status!");
@@ -1304,9 +1304,11 @@ void BattleGroundMgr::BuildPvpLogDataPacket(WorldPacket *data, BattleGround *bg)
         // it seems this must be according to BG_WINNER_A/H and _NOT_ BG_TEAM_A/H
         for(int i = 1; i >= 0; --i)
         {
-            *data << uint32(bg->m_ArenaTeamRatingChanges[i]);
-            *data << uint32(3999);                          // huge thanks for TOM_RUS for this!
-            *data << uint32(0);                             // added again in 3.1
+            uint32 pointsLost = (bg->m_ArenaTeamRatingChanges[i] < 0) ? abs(bg->m_ArenaTeamRatingChanges[i]) : 0;
+            uint32 pointsGained = (bg->m_ArenaTeamRatingChanges[i] > 0) ? bg->m_ArenaTeamRatingChanges[i] : 0;
+            *data << uint32(pointsLost);                        // Rating Lost
+            *data << uint32(pointsGained);                      // Rating gained
+            *data << uint32(0);                                 // Matchmaking Value
             sLog.outDebug("rating change: %d", bg->m_ArenaTeamRatingChanges[i]);
         }
         for(int i = 1; i >= 0; --i)
