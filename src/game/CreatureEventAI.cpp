@@ -113,6 +113,42 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
     if (pHolder.Event.event_inverse_phase_mask & (1 << Phase))
         return false;
 
+    switch( pHolder.Event.event_requirement_type )
+    {
+        case REQUIREMENT_T_HP_PERCENT:
+            if( m_creature->GetHealth() * 100 / m_creature->GetMaxHealth() > pHolder.Event.event_requirement_value )
+                return false;
+            break;
+        case REQUIREMENT_T_MANA_PERCENT:
+            if( m_creature->GetPower(POWER_MANA) * 100 / m_creature->GetMaxPower(POWER_MANA) > pHolder.Event.event_requirement_value )
+                return false;
+            break;
+        case REQUIREMENT_T_AURA:
+            if( !m_creature->HasAura( pHolder.Event.event_requirement_value ) )
+                return false;
+            break;
+        case REQUIREMENT_T_INVOKER_AURA:
+            if( !pActionInvoker || !pActionInvoker->HasAura( pHolder.Event.event_requirement_value ) )
+                return false;
+            break;
+        case REQUIREMENT_T_ZONE:
+            if( m_creature->GetZoneId() != pHolder.Event.event_requirement_value )
+                return false;
+            break;
+        case REQUIREMENT_T_QUEST:
+            if( !pActionInvoker || pActionInvoker->GetTypeId() != TYPEID_PLAYER || ((Player*)pActionInvoker)->GetQuestStatus( pHolder.Event.event_requirement_value) != QUEST_STATUS_INCOMPLETE )
+                return false;
+            break;
+        case REQUIREMENT_T_HAS_NO_AURA:
+            if( m_creature->HasAura( pHolder.Event.event_requirement_value ) )
+                return false;
+            break;
+        case REQUIREMENT_T_INVOKER_HAS_NO_AURA:
+            if( !pActionInvoker || pActionInvoker->HasAura( pHolder.Event.event_requirement_value ) )
+                return false;
+            break;
+    }
+
     CreatureEventAI_Event const& event = pHolder.Event;
 
     //Check event conditions based on the event type, also reset events
