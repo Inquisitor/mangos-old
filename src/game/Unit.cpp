@@ -6246,7 +6246,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 // Seal of Vengeance (damage calc on apply aura)
                 case 31801:
                 {
-                    if(effIndex != 0)                       // effect 1,2 used by seal unleashing code
+                    if(effIndex != 0 || !(procFlag & PROC_FLAG_SUCCESSFUL_MELEE_HIT))                       // effect 1,2 used by seal unleashing code
                         return false;
 
                     // At melee attack or Hammer of the Righteous spell damage considered as melee attack
@@ -6348,7 +6348,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 // Seal of Corruption (damage calc on apply aura)
                 case 53736:
                 {
-                    if(effIndex != 0)                       // effect 1,2 used by seal unleashing code
+                    if(effIndex != 0 || !(procFlag & PROC_FLAG_SUCCESSFUL_MELEE_HIT))                       // effect 1,2 used by seal unleashing code
                         return false;
 
                     // At melee attack or Hammer of the Righteous spell damage considered as melee attack
