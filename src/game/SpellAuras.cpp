@@ -3702,6 +3702,10 @@ void Aura::HandleModPossess(bool apply, bool Real)
 
         if(m_target->GetTypeId() == TYPEID_UNIT)
         {
+            m_target->CombatStop();
+            m_target->getHostileRefManager().deleteReferences();
+            m_target->getThreatManager().addThreat(p_caster, 9999999.0f);
+
             ((Creature*)m_target)->AIM_Initialize();
 
             if (((Creature*)m_target)->AI())
