@@ -1889,7 +1889,7 @@ bool ChatHandler::HandleNpcSetDeathStateCommand(const char* args)
         return false;
     }
 
-    pCreature->SaveToDB();
+    //pCreature->SaveToDB();
     pCreature->Respawn();
 
     return true;
