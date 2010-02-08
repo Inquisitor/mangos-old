@@ -6188,7 +6188,7 @@ bool ChatHandler::HandleInstanceSetDataCommand(const char * args)
     int32 value = atoi (value_str);
 
     ((InstanceMap*)map)->GetInstanceData()->SetData(field, value);
-    PSendSysMessage("Instance data field %i is now set to %i.", field, val);
+    PSendSysMessage("Instance data field %i is now set to %i.", field, value);
     return true;
 }
 
