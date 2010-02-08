@@ -8731,8 +8731,8 @@ void ObjectMgr::LoadGCNews()
         Field* fields = result->Fetch();
 
         GCNewsData data;
-        data.parent = fields[1].GetUInt32();
-        data.type = fields[2].GetUInt32();
+        data.parent = fields[1].GetUInt16();
+        data.type = fields[2].GetUInt16();
         data.textstring = fields[3].GetCppString();
         mGCNewsMap.insert(GCNewsMap::value_type(fields[0].GetUInt32(), data));
 

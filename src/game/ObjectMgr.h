@@ -300,8 +300,8 @@ typedef std::multimap<uint32,GraveYardData> GraveYardMap;
 
 struct GCNewsData
 {
-    uint32 type;
-    uint32 parent;
+    uint16 type;
+    uint16 parent;
     std::string textstring;
 };
 
