@@ -8707,6 +8707,7 @@ void ObjectMgr::LoadVehicleSeatData()
 
 void ObjectMgr::LoadGCNews()
 {
+    mGCNewsMap.clear(); // For reloading possibility
 
     QueryResult* result = WorldDatabase.Query("SELECT id, parent, type, text FROM gc_news");
     if( !result )

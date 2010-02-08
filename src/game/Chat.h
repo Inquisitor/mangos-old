@@ -337,6 +337,7 @@ class ChatHandler
         bool HandleReloadGameGraveyardZoneCommand(const char* args);
         bool HandleReloadGameObjectScriptsCommand(const char* args);
         bool HandleReloadGameTeleCommand(const char* args);
+        bool HandleReloadGCNewsCommand(const char* args);
         bool HandleReloadGossipMenuCommand(const char* args);
         bool HandleReloadGossipMenuOptionCommand(const char* args);
         bool HandleReloadGossipScriptsCommand(const char* args);

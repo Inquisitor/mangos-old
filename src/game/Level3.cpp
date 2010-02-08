@@ -258,6 +258,14 @@ bool ChatHandler::HandleReloadCreatureQuestInvRelationsCommand(const char*)
     return true;
 }
 
+bool ChatHandler::HandleReloadGCNewsCommand(const char*)
+{
+    sLog.outString( "Re-Loading `gc_news` Table!" );
+    sObjectMgr.LoadGCNews();
+    SendGlobalSysMessage("DB table `gc_news` reloaded.");
+    return true;
+}
+
 bool ChatHandler::HandleReloadGossipMenuCommand(const char*)
 {
     sLog.outString( "Re-Loading `gossip_menu` Table!" );
