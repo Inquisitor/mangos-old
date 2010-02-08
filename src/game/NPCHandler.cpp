@@ -306,6 +306,48 @@ void WorldSession::HandleGossipSelectOptionOpcode( WorldPacket & recv_data )
 
     // TODO: determine if scriptCall is needed for GO and also if scriptCall can be same as current, with modified argument WorldObject*
 
+    if (IS_PLAYER_GUID(guid))
+    {
+        uint32 gossipOptionId = _player->PlayerTalkClass->GetGossipMenu().GetItem(gossipListId).m_gOptionId;
+        uint32 textId = 110001;
+        bool isSentToMain = false;
+        _player->PlayerTalkClass->ClearMenus();
+        sLog.outDetail("WORLD: HandleGossipSelectOptionOpcode - Sent from player (GC News handler) menuId %i gossip list %i and id is %i ", menuId, gossipListId, gossipOptionId);
+
+        if( gossipOptionId == 100 ) // Back to home menu
+        {
+            isSentToMain = true;
+
+            for( std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.begin(); itr != sObjectMgr.mGCNewsMap.end(); ++itr )
+                if((*itr).second.parent == 0)
+                    _player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_TALK,(*itr).second.textstring,1,(*itr).first,"",0);
+        }
+        else
+        {
+            for( std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.begin(); itr != sObjectMgr.mGCNewsMap.end(); ++itr )
+            {
+                GCNewsData const& news = (*itr).second;
+                if( news.parent == gossipOptionId )
+                {
+                    if (news.type == 2) // Add Menu Item
+                        _player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_CHAT,news.textstring,1,(*itr).first,"",0);
+                    else if (news.type == 0) // Set Text Id
+                        textId = atoi(news.textstring.c_str());
+                }
+            }
+        }
+
+        if (!isSentToMain)
+        {
+            std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.find(100);
+            if( itr != sObjectMgr.mGCNewsMap.end() )
+                _player->PlayerTalkClass->GetGossipMenu().AddMenuItem(0,(*itr).second.textstring,1,(*itr).first,"",0);
+        }
+
+        _player->PlayerTalkClass->SendTalking(textId);
+        _player->PlayerTalkClass->SendGossipMenu(textId, guid);
+    }
+
     // can vehicle have gossip? If so, need check for this also.
     if (IS_CREATURE_OR_PET_GUID(guid))
     {

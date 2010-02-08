@@ -8704,3 +8704,42 @@ void ObjectMgr::LoadVehicleSeatData()
     sLog.outString();
     sLog.outString( ">> Loaded %u vehicle seat data", count );
 }
+
+void ObjectMgr::LoadGCNews()
+{
+
+    QueryResult* result = WorldDatabase.Query("SELECT id, parent, type, text FROM gc_news");
+    if( !result )
+    {
+        barGoLink bar( 1 );
+
+        bar.step();
+
+        sLog.outString();
+        sLog.outErrorDb(">> Loaded `gc_news`, table is empty!");
+        return;
+    }
+
+    barGoLink bar( result->GetRowCount() );
+
+    uint32 count = 0;
+    do
+    {
+        bar.step();
+
+        Field* fields = result->Fetch();
+
+        GCNewsData data;
+        data.parent = fields[1].GetUInt32();
+        data.type = fields[2].GetUInt32();
+        data.textstring = fields[3].GetCppString();
+        mGCNewsMap.insert(GCNewsMap::value_type(fields[0].GetUInt32(), data));
+
+        ++count;
+
+    } while (result->NextRow());
+    delete result;
+
+    sLog.outString();
+    sLog.outString( ">> Loaded %d GC News Data ", count );
+}

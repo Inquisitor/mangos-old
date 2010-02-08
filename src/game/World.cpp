@@ -1425,6 +1425,9 @@ void World::SetInitialWorldSettings()
     sLog.outString( "Loading Trainers..." );
     sObjectMgr.LoadTrainerSpell();                              // must be after load CreatureTemplate
 
+    sLog.outString( "Loading GC News Data..." );
+    sObjectMgr.LoadGCNews();
+
     sLog.outString( "Loading Waypoints..." );
     sLog.outString();
     sWaypointMgr.Load();

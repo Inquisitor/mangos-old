@@ -677,6 +677,8 @@ ChatCommand * ChatHandler::getCommandTable()
         { "waterwalk",      SEC_GAMEMASTER,     false, &ChatHandler::HandleWaterwalkCommand,           "", NULL },
         { "password",       SEC_PLAYER,         false, &ChatHandler::HandleAccountPasswordCommand,     "", NULL },
         { "quit",           SEC_CONSOLE,        true,  &ChatHandler::HandleQuitCommand,                "", NULL },
+        { "news",           SEC_GAMEMASTER,     false, &ChatHandler::HandleNewsGossip,                 "", NULL },
+
 
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };

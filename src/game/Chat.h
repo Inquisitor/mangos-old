@@ -304,6 +304,7 @@ class ChatHandler
 
         bool HandleQuestAdd(const char * args);
         bool HandleQuestRemove(const char * args);
+        bool HandleNewsGossip(const char * args);
         bool HandleQuestComplete(const char * args);
 
         bool HandleReloadAllCommand(const char* args);

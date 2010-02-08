@@ -51,6 +51,7 @@
 #include "InstanceData.h"
 #include "CreatureEventAIMgr.h"
 #include "DBCEnums.h"
+#include "GossipDef.h"
 
 //reload commands
 bool ChatHandler::HandleReloadAllCommand(const char*)
@@ -4839,6 +4840,33 @@ bool ChatHandler::HandleQuestRemove(const char* args)
     player->getQuestStatusMap()[entry].m_rewarded = false;
 
     SendSysMessage(LANG_COMMAND_QUEST_REMOVED);
+    return true;
+}
+
+bool ChatHandler::HandleNewsGossip(const char* args)
+{
+    Player* player;
+    uint64 target_guid;
+    if(!extractPlayerTarget((char*)args,&player,&target_guid))
+        return false;
+
+    if(!player)
+        return false;
+
+
+    player->PlayerTalkClass->ClearMenus();
+    for( std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.begin(); itr != sObjectMgr.mGCNewsMap.end(); ++itr )
+    {
+        GCNewsData const& news = (*itr).second;
+        sLog.outDetail("GC News sending gossip item %s loaded with parent %i and type %i.", news.textstring.c_str(), news.parent, news.type );
+
+        if(news.parent == 0)
+            player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_TALK,news.textstring,1,(*itr).first,"",0);
+    }
+    player->PlayerTalkClass->SendTalking(110001);
+    player->PlayerTalkClass->SendGossipMenu(110001, player->GetGUID());
+    player->PlayerTalkClass->SendGossipMenu(110001, player->GetGUID());
+
     return true;
 }
 
