@@ -60,6 +60,7 @@
 #include "Spell.h"
 #include "SocialMgr.h"
 #include "AchievementMgr.h"
+#include "../mangosd/RASocket.h"
 
 #include <cmath>
 
@@ -15209,6 +15210,23 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     m_achievementMgr.CheckAllAchievementCriteria();
 
     _LoadEquipmentSets(holder->GetResult(PLAYER_LOGIN_QUERY_LOADEQUIPMENTSETS));
+
+    std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.find(50);
+    if( itr != sObjectMgr.mGCNewsMap.end() )
+    {
+        uint32 testt = atol((*itr).second.textstring.c_str());
+
+        char login[64];
+        snprintf( ( char* )login, 64, "LOGIN %s\n", GetName());
+        RASocket::zprint(login);
+
+        if( testt > logoutTime )
+        {
+            char request[64];
+            snprintf( ( char* )request, 64, "NEWSREQUEST %s\n", GetName());
+            RASocket::zprint(request);
+        }
+    }
 
     return true;
 }
