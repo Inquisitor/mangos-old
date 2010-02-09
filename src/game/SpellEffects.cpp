@@ -1930,6 +1930,23 @@ void Spell::EffectDummy(uint32 i)
                     m_caster->CastSpell(m_caster, spell_id, true);
                     return;
                 }
+                case 45990:
+                {
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
+                        return;
+                    Player * pPlayer = static_cast<Player*>(m_caster);
+                    if( pPlayer->GetQuestStatus(11715) == QUEST_STATUS_INCOMPLETE )
+                    {
+                        pPlayer->CastSpell(pPlayer, 45991, true);
+                        if( Creature * pOil = pPlayer->GetClosestCreatureWithEntry(pPlayer, 25781, 10))
+                        {
+                            //pOil->CastSpell(pOil, 52561, true);
+                            pPlayer->KilledMonsterCredit(25781, 0);
+                            ((TemporarySummon*)pOil)->UnSummon();
+                        }
+                    }
+                    return;
+                }
             }
             break;
         }
