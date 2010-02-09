@@ -2832,6 +2832,9 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
     if (pVictim->GetTypeId()==TYPEID_PLAYER)
         HitChance -= int32(((Player*)pVictim)->GetRatingBonusValue(CR_HIT_TAKEN_SPELL)*100.0f);
 
+    if( spell->Attributes & SPELL_ATTR_UNAFFECTED_BY_INVULNERABILITY )
+        HitChance = 10000; // Cannot resist SPELL_ATTR_UNAFFECTED_BY_INVULNERABILITY flagged spells.
+
     if (HitChance <  100) HitChance =  100;
     if (HitChance > 10000) HitChance = 10000;
 
