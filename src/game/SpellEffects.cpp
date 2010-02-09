@@ -1930,7 +1930,7 @@ void Spell::EffectDummy(uint32 i)
                     m_caster->CastSpell(m_caster, spell_id, true);
                     return;
                 }
-                case 45990:
+                case 45990: // Q: 
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
@@ -1947,6 +1947,12 @@ void Spell::EffectDummy(uint32 i)
                     }
                     return;
                 }
+                case 45923: // Q: Foolish Endeavors
+                    {
+                        if(unitTarget->HasAura(45924))
+                            unitTarget->CastSpell(unitTarget, 45922, true);
+                        return;
+                    }
             }
             break;
         }
@@ -5974,6 +5980,14 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                         case 23249 : transformTo = 23252; break;
                     }
                     m_caster->SetDisplayId(transformTo);
+                    return;
+                }
+                case 45923: // Q: Foolish Endeavors
+                {
+                    if (unitTarget->GetTypeId() == TYPEID_PLAYER)
+                        if (((Player*)unitTarget)->GetQuestStatus(11705) == QUEST_STATUS_INCOMPLETE)
+                            unitTarget->CastSpell(unitTarget, 45924, true);
+                    return;
                 }
             }
             break;
