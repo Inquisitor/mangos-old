@@ -4821,6 +4821,25 @@ void Aura::HandlePeriodicTriggerSpell(bool apply, bool /*Real*/)
                 if (m_removeMode == AURA_REMOVE_BY_DEFAULT && GetEffIndex() + 1 < 3)
                     m_target->CastSpell(m_target, m_spellProto->CalculateSimpleValue(GetEffIndex()+1), true);
                 return;
+            case 51912:
+            {
+                if( GetCaster() )
+                {
+                    if( GetCaster()->GetTypeId()== TYPEID_PLAYER )
+                    {
+                        uint32 selfspell[4] = {45682, 45674, 45675, 45678};
+                        uint32 targetspell[4] = {45672, 45673, 45677, 45681};
+                        Player * plr = static_cast<Player*>(GetCaster());
+                        plr->KilledMonsterCredit(25505, 0);
+
+                        if( urand(0,10)> 5 )
+                            plr->CastSpell(plr, selfspell[urand(0,3)], true);
+
+                        if( urand(0,10)> 5 ) // Repeated becouse we want it casted unrelated to, if it was casted by player
+                            m_target->CastSpell(m_target, targetspell[urand(0,3)], true);
+                    }
+                }
+            }
             default:
                 break;
         }

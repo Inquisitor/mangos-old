@@ -1930,6 +1930,29 @@ void Spell::EffectDummy(uint32 i)
                     m_caster->CastSpell(m_caster, spell_id, true);
                     return;
                 }
+                case 45990: // Q: 
+                {
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
+                        return;
+                    Player * pPlayer = static_cast<Player*>(m_caster);
+                    if( pPlayer->GetQuestStatus(11715) == QUEST_STATUS_INCOMPLETE )
+                    {
+                        pPlayer->CastSpell(pPlayer, 45991, true);
+                        if( Creature * pOil = pPlayer->GetClosestCreatureWithEntry(pPlayer, 25781, 10))
+                        {
+                            //pOil->CastSpell(pOil, 52561, true);
+                            pPlayer->KilledMonsterCredit(25781, 0);
+                            ((TemporarySummon*)pOil)->UnSummon();
+                        }
+                    }
+                    return;
+                }
+                case 45923: // Q: Foolish Endeavors
+                    {
+                        if(unitTarget->HasAura(45924))
+                            unitTarget->CastSpell(unitTarget, 45922, true);
+                        return;
+                    }
             }
             break;
         }
@@ -5941,6 +5964,29 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     // learn random explicit discovery recipe (if any)
                     if(uint32 discoveredSpell = GetExplicitDiscoverySpell(m_spellInfo->Id, (Player*)m_caster))
                         ((Player*)m_caster)->learnSpell(discoveredSpell, false);
+                    return;
+                }
+                case 45713:
+                {
+                    uint32 transformTo = m_caster->GetDisplayId();
+                    switch(m_caster->GetDisplayId())
+                    {
+                        case 23124 : transformTo = 23253; break;
+                        case 23125 : transformTo = 23254; break;
+                        case 23126 : transformTo = 23255; break;
+                        case 23246 : transformTo = 23245; break;
+                        case 23247 : transformTo = 23250; break;
+                        case 23248 : transformTo = 23251; break;
+                        case 23249 : transformTo = 23252; break;
+                    }
+                    m_caster->SetDisplayId(transformTo);
+                    return;
+                }
+                case 45923: // Q: Foolish Endeavors
+                {
+                    if (unitTarget->GetTypeId() == TYPEID_PLAYER)
+                        if (((Player*)unitTarget)->GetQuestStatus(11705) == QUEST_STATUS_INCOMPLETE)
+                            unitTarget->CastSpell(unitTarget, 45924, true);
                     return;
                 }
             }
