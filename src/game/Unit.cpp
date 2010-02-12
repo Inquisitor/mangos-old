@@ -8770,6 +8770,16 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
     if(!spellProto || !pVictim || damagetype==DIRECT_DAMAGE )
         return pdamage;
 
+    // prevent any additional bonuses in case of negative value
+    SpellBonusEntry const* bonus = sSpellMgr.GetSpellBonusData(spellProto->Id);
+    if (bonus)
+    {
+        if (damagetype == DOT && bonus->dot_damage < 0)
+            return pdamage;
+        else if(bonus->direct_damage < 0)
+            return pdamage;
+    }
+
     // For totems get damage bonus from owner (statue isn't totem in fact)
     if( GetTypeId()==TYPEID_UNIT && ((Creature*)this)->isTotem() && ((Totem*)this)->GetTotemType()!=TOTEM_STATUE)
     {
@@ -9069,7 +9079,7 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
     SpellModSpellDamage /= 100.0f;
 
     // Check for table values
-    if (SpellBonusEntry const* bonus = sSpellMgr.GetSpellBonusData(spellProto->Id))
+    if (bonus)
     {
         float coeff;
         if (damagetype == DOT)
@@ -9430,6 +9440,16 @@ uint32 Unit::SpellHealingBonus(Unit *pVictim, SpellEntry const *spellProto, uint
     if (spellProto->DmgClass == SPELL_DAMAGE_CLASS_NONE)
         return healamount;
 
+    // prevent any additional bonuses in case of negative value
+    SpellBonusEntry const* bonus = sSpellMgr.GetSpellBonusData(spellProto->Id);
+    if (bonus)
+    {
+        if (damagetype == DOT && bonus->dot_damage < 0)
+            return healamount;
+        else if(bonus->direct_damage < 0)
+            return healamount;
+    }
+
     // For totems get healing bonus from owner (statue isn't totem in fact)
     if( GetTypeId()==TYPEID_UNIT && ((Creature*)this)->isTotem() && ((Totem*)this)->GetTotemType()!=TOTEM_STATUE)
         if(Unit* owner = GetOwner())
@@ -9520,7 +9540,6 @@ uint32 Unit::SpellHealingBonus(Unit *pVictim, SpellEntry const *spellProto, uint
     SpellModSpellDamage /= 100.0f;
 
     // Check for table values
-    SpellBonusEntry const* bonus = sSpellMgr.GetSpellBonusData(spellProto->Id);
     if (bonus)
     {
         float coeff;
