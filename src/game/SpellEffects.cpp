@@ -693,11 +693,18 @@ void Spell::EffectSchoolDMG(uint32 effect_idx)
                 {
                     int32 base = irand((int32)m_caster->GetWeaponDamageRange(RANGED_ATTACK, MINDAMAGE),(int32)m_caster->GetWeaponDamageRange(RANGED_ATTACK, MAXDAMAGE));
                     damage += int32(float(base)/m_caster->GetAttackTime(RANGED_ATTACK)*2800 + m_caster->GetTotalAttackPowerValue(RANGED_ATTACK)*0.1f);
+                    if(m_caster->GetTypeId()==TYPEID_PLAYER)
+                        base += ((Player*)m_caster)->GetAmmoDPS();
                 }
                 // Explosive Trap Effect
                 else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x00000004))
                 {
                     damage += int32(m_caster->GetTotalAttackPowerValue(RANGED_ATTACK)*0.1f);
+                }
+                // Volley
+                else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x2000))
+                {
+                    damage += int32(m_caster->GetTotalAttackPowerValue(RANGED_ATTACK)*0.01395f);
                 }
                 break;
             }
