@@ -5372,6 +5372,11 @@ void Aura::HandleModTotalPercentStat(bool apply, bool /*Real*/)
 
     for (int32 i = STAT_STRENGTH; i < MAX_STATS; i++)
     {
+        //Vindication - do not remove stamina/int
+        if (m_spellProto->SpellFamilyName == SPELLFAMILY_PALADIN && (m_spellProto->SpellFamilyFlags & UI64LIT(0x400000000000))
+            && (i == STAT_STAMINA || i == STAT_INTELLECT))
+            continue;
+
         if(m_modifier.m_miscvalue == i || m_modifier.m_miscvalue == -1)
         {
             m_target->HandleStatModifier(UnitMods(UNIT_MOD_STAT_START + i), TOTAL_PCT, float(m_modifier.m_amount), apply);
