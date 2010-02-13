@@ -21,7 +21,7 @@
 
 DROP TABLE IF EXISTS `character_db_version`;
 CREATE TABLE `character_db_version` (
-  `required_9250_01_characters_character` bit(1) default NULL
+  `required_9359_01_characters_characters` bit(1) default NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Last applied sql update to DB';
 
 --
@@ -250,6 +250,8 @@ CREATE TABLE `characters` (
   `power5` int(10) UNSIGNED NOT NULL default '0',
   `power6` int(10) UNSIGNED NOT NULL default '0',
   `power7` int(10) UNSIGNED NOT NULL default '0',
+  `specCount` tinyint(3) UNSIGNED NOT NULL default '1',
+  `activeSpec` tinyint(3) UNSIGNED NOT NULL default '0',
   PRIMARY KEY  (`guid`),
   KEY `idx_account` (`account`),
   KEY `idx_online` (`online`),
@@ -337,10 +339,11 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `character_action`;
 CREATE TABLE `character_action` (
   `guid` int(11) unsigned NOT NULL default '0' COMMENT 'Global Unique Identifier',
+  `spec` tinyint(3) unsigned NOT NULL default '0',
   `button` tinyint(3) unsigned NOT NULL default '0',
   `action` int(11) unsigned NOT NULL default '0',
   `type` tinyint(3) unsigned NOT NULL default '0',
-  PRIMARY KEY  (`guid`,`button`)
+  PRIMARY KEY  (`guid`,`spec`,`button`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='Player System';
 
 --
@@ -891,6 +894,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `groups`;
 CREATE TABLE `groups` (
+  `groupId` int(11) unsigned NOT NULL,
   `leaderGuid` int(11) unsigned NOT NULL,
   `mainTank` int(11) unsigned NOT NULL,
   `mainAssistant` int(11) unsigned NOT NULL,
@@ -908,7 +912,8 @@ CREATE TABLE `groups` (
   `isRaid` tinyint(1) unsigned NOT NULL,
   `difficulty` tinyint(3) unsigned NOT NULL default '0',
   `raiddifficulty` int(11) UNSIGNED NOT NULL default '0',
-  PRIMARY KEY  (`leaderGuid`)
+  PRIMARY KEY  (`groupId`),
+  UNIQUE KEY  (`leaderGuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Groups';
 
 --
@@ -947,11 +952,11 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `group_member`;
 CREATE TABLE `group_member` (
-  `leaderGuid` int(11) unsigned NOT NULL,
+  `groupId` int(11) unsigned NOT NULL,
   `memberGuid` int(11) unsigned NOT NULL,
   `assistant` tinyint(1) unsigned NOT NULL,
   `subgroup` smallint(6) unsigned NOT NULL,
-  PRIMARY KEY  (`leaderGuid`,`memberGuid`)
+  PRIMARY KEY  (`groupId`,`memberGuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED COMMENT='Groups';
 
 --

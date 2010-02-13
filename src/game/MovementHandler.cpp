@@ -239,63 +239,28 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     if(!recv_data.readPackGUID(guid))
         return;
 
-    MovementInfo movementInfo;
-    movementInfo.guid = guid;
-    ReadMovementInfo(recv_data, &movementInfo);
+    MovementInfo movementInfo(recv_data);
     /*----------------*/
 
-    if(!(movementInfo.flags & MOVEMENTFLAG_ONTRANSPORT) && _player->GetVehicleGUID())
-    {
-        if(mover->GetGUID() == _player->GetGUID())
-        {
-            return;
-        }
-    }
-    // we sent a movement packet with MOVEMENTFLAG_ONTRANSPORT and we are on vehicle
-    // this can be moving on vehicle or entering another transport (eg. boat)
-    if((movementInfo.flags & MOVEMENTFLAG_ONTRANSPORT) && _player->GetVehicleGUID())
-    {
-        // we are controlling that vehicle
-        if(mover->GetGUID() == _player->GetVehicleGUID())
-        {
-            // we sent movement packet, related to movement ON vehicle,
-            // but not WITH vehicle, so mover = player
-            if(_player->GetVehicleGUID() == movementInfo.t_guid)
-            {
-                // this is required to avoid client crash, otherwise it will result
-                // in moving with vehicle on the same vehicle and that = crash
-                mover = _player;
-                plMover = _player;
-            }
-        }
-        if(_player->GetVehicleGUID() == movementInfo.t_guid)
-        {
-            _player->m_SeatData.OffsetX = movementInfo.t_x;
-            _player->m_SeatData.OffsetY = movementInfo.t_y;
-            _player->m_SeatData.OffsetZ = movementInfo.t_z;
-            _player->m_SeatData.Orientation = movementInfo.t_o;
-        }
-    }
-
-    if (!MaNGOS::IsValidMapCoord(movementInfo.x, movementInfo.y, movementInfo.z, movementInfo.o))
+    if (!MaNGOS::IsValidMapCoord(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z, movementInfo.GetPos()->o))
     {
         recv_data.rpos(recv_data.wpos());                   // prevent warnings spam
         return;
     }
 
     /* handle special cases */
-    if (movementInfo.HasMovementFlag(MOVEMENTFLAG_ONTRANSPORT) && !mover->GetVehicleGUID())
+    if (movementInfo.HasMovementFlag(MOVEFLAG_ONTRANSPORT))
     {
         // transports size limited
         // (also received at zeppelin/lift leave by some reason with t_* as absolute in continent coordinates, can be safely skipped)
-        if( movementInfo.t_x > 50 || movementInfo.t_y > 50 || movementInfo.t_z > 100 )
+        if( movementInfo.GetTransportPos()->x > 50 || movementInfo.GetTransportPos()->y > 50 || movementInfo.GetTransportPos()->z > 100 )
         {
             recv_data.rpos(recv_data.wpos());                   // prevent warnings spam
             return;
         }
 
-        if( !MaNGOS::IsValidMapCoord(movementInfo.x+movementInfo.t_x, movementInfo.y + movementInfo.t_y,
-            movementInfo.z + movementInfo.t_z, movementInfo.o + movementInfo.t_o) )
+        if( !MaNGOS::IsValidMapCoord(movementInfo.GetPos()->x + movementInfo.GetTransportPos()->x, movementInfo.GetPos()->y + movementInfo.GetTransportPos()->y,
+            movementInfo.GetPos()->z + movementInfo.GetTransportPos()->z, movementInfo.GetPos()->o + movementInfo.GetTransportPos()->o) )
         {
             recv_data.rpos(recv_data.wpos());                   // prevent warnings spam
             return;
@@ -304,10 +269,10 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
         // if we boarded a transport, add us to it
         if (plMover && !plMover->m_transport)
         {
-            // elevators also cause the client to send MOVEMENTFLAG_ONTRANSPORT - just unmount if the guid can be found in the transport list
+            // elevators also cause the client to send MOVEFLAG_ONTRANSPORT - just unmount if the guid can be found in the transport list
             for (MapManager::TransportSet::const_iterator iter = sMapMgr.m_Transports.begin(); iter != sMapMgr.m_Transports.end(); ++iter)
             {
-                if ((*iter)->GetGUID() == movementInfo.t_guid)
+                if ((*iter)->GetGUID() == movementInfo.GetTransportGuid())
                 {
                     plMover->m_transport = (*iter);
                     (*iter)->AddPassenger(plMover);
@@ -320,58 +285,43 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     {
         plMover->m_transport->RemovePassenger(plMover);
         plMover->m_transport = NULL;
-        movementInfo.t_x = 0.0f;
-        movementInfo.t_y = 0.0f;
-        movementInfo.t_z = 0.0f;
-        movementInfo.t_o = 0.0f;
-        movementInfo.t_time = 0;
-        movementInfo.t_seat = -1;
+        movementInfo.SetTransportData(0, 0.0f, 0.0f, 0.0f, 0.0f, 0, -1);
     }
 
     // fall damage generation (ignore in flight case that can be triggered also at lags in moment teleportation to another map).
     if (opcode == MSG_MOVE_FALL_LAND && plMover && !plMover->isInFlight())
         plMover->HandleFall(movementInfo);
 
-    if (plMover && (movementInfo.HasMovementFlag(MOVEMENTFLAG_SWIMMING) != plMover->IsInWater()))
+    if (plMover && (movementInfo.HasMovementFlag(MOVEFLAG_SWIMMING) != plMover->IsInWater()))
     {
         // now client not include swimming flag in case jumping under water
-        plMover->SetInWater( !plMover->IsInWater() || plMover->GetBaseMap()->IsUnderWater(movementInfo.x, movementInfo.y, movementInfo.z) );
-    }
-    if (movementInfo.HasMovementFlag(MOVEMENTFLAG_SWIMMING))
-    {
-        if(mover->GetTypeId() == TYPEID_UNIT)
-        {
-            if(((Creature*)mover)->isVehicle() && !((Creature*)mover)->canSwim())
-            {
-                // NOTE : we should enter evade mode here, but...
-                ((Vehicle*)mover)->SetSpawnDuration(1);
-            }
-        }
+        plMover->SetInWater( !plMover->IsInWater() || plMover->GetBaseMap()->IsUnderWater(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z) );
     }
 
     /*----------------------*/
 
     /* process position-change */
+    movementInfo.UpdateTime(getMSTime());
+
     WorldPacket data(opcode, recv_data.size());
-    movementInfo.time = getMSTime();
-    movementInfo.guid = mover->GetGUID();
-    WriteMovementInfo(&data, &movementInfo);
+    data.appendPackGUID(mover->GetGUID());                  // write guid
+    movementInfo.Write(data);                               // write data
     GetPlayer()->SendMessageToSet(&data, false);
 
     if(plMover)                                             // nothing is charmed, or player charmed
     {
-        plMover->SetPosition(movementInfo.x, movementInfo.y, movementInfo.z, movementInfo.o);
+        plMover->SetPosition(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z, movementInfo.GetPos()->o);
         plMover->m_movementInfo = movementInfo;
         plMover->UpdateFallInformationIfNeed(movementInfo, opcode);
 
         // after move info set
         if ((opcode == MSG_MOVE_SET_WALK_MODE || opcode == MSG_MOVE_SET_RUN_MODE))
-            plMover->UpdateWalkMode(plMover,false);
+            plMover->UpdateWalkMode(plMover, false);
 
         if(plMover->isMovingOrTurning())
             plMover->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
-        if(movementInfo.z < -500.0f)
+        if(movementInfo.GetPos()->z < -500.0f)
         {
             if(plMover->InBattleGround()
                 && plMover->GetBattleGround()
@@ -406,7 +356,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     {
         if(mover->IsInWorld())
         {
-             mover->GetMap()->CreatureRelocation((Creature*)mover, movementInfo.x, movementInfo.y, movementInfo.z, movementInfo.o);
+            mover->GetMap()->CreatureRelocation((Creature*)mover, movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z, movementInfo.GetPos()->o);
             if(((Creature*)mover)->isVehicle())
                 ((Vehicle*)mover)->RellocatePassengers(mover->GetMap());
         }
@@ -435,9 +385,7 @@ void WorldSession::HandleForceSpeedChangeAck(WorldPacket &recv_data)
     // continue parse packet
     recv_data >> unk1;                                      // counter or moveEvent
 
-    MovementInfo movementInfo;
-    movementInfo.guid = guid;
-    ReadMovementInfo(recv_data, &movementInfo);
+    MovementInfo movementInfo(recv_data);
 
     recv_data >> newspeed;
     /*----------------*/
@@ -529,9 +477,7 @@ void WorldSession::HandleMoveNotActiveMover(WorldPacket &recv_data)
         return;
     }
 
-    MovementInfo mi;
-    mi.guid = old_mover_guid;
-    ReadMovementInfo(recv_data, &mi);
+    MovementInfo mi(recv_data);
 
     _player->m_movementInfo = mi;
 }
@@ -554,9 +500,7 @@ void WorldSession::HandleDismissControlledVehicle(WorldPacket &recv_data)
     if(!recv_data.readPackGUID(guid))
         return;
 
-    MovementInfo mi;
-    mi.guid = guid;
-    ReadMovementInfo(recv_data, &mi);
+    MovementInfo mi(recv_data);
 
     _player->m_movementInfo = mi;
 
@@ -685,8 +629,7 @@ void WorldSession::HandleChangeSeatsOnControlledVehicle(WorldPacket &recv_data)
 
     if(Vehicle *vehicle = _player->GetMap()->GetVehicle(vehicleGUID))
     {
-        MovementInfo mi;
-        ReadMovementInfo(recv_data, &mi);
+        MovementInfo mi(recv_data);
         //_player->m_movementInfo = mi;
 
         uint64 guid = 0;
@@ -742,8 +685,7 @@ void WorldSession::HandleMoveKnockBackAck( WorldPacket & recv_data )
 
     recv_data.read_skip<uint32>();                          // unk
 
-    MovementInfo movementInfo;
-    ReadMovementInfo(recv_data, &movementInfo);
+    MovementInfo movementInfo(recv_data);
 }
 
 void WorldSession::HandleMoveHoverAck( WorldPacket& recv_data )
@@ -756,8 +698,7 @@ void WorldSession::HandleMoveHoverAck( WorldPacket& recv_data )
 
     recv_data.read_skip<uint32>();                          // unk
 
-    MovementInfo movementInfo;
-    ReadMovementInfo(recv_data, &movementInfo);
+    MovementInfo movementInfo(recv_data);
 
     recv_data.read_skip<uint32>();                          // unk2
 }
@@ -772,8 +713,7 @@ void WorldSession::HandleMoveWaterWalkAck(WorldPacket& recv_data)
 
     recv_data.read_skip<uint32>();                          // unk
 
-    MovementInfo movementInfo;
-    ReadMovementInfo(recv_data, &movementInfo);
+    MovementInfo movementInfo(recv_data);
 
     recv_data.read_skip<uint32>();                          // unk2
 }

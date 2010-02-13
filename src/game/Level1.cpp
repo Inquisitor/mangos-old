@@ -2518,25 +2518,13 @@ bool ChatHandler::HandleSendSysMsgCommand(const char* args)
         return false;
     }
 
-    va_list ap;
-    char str [2048];
-    va_start(ap, msg_str);
-    vsnprintf(str,2048,msg_str, ap );
-    va_end(ap);
-
     WorldPacket data;
 
-    // need copy to prevent corruption by strtok call in LineFromMessage original string
-    char* buf = mangos_strdup(str);
-    char* pos = buf;
-
-    while(char* line = LineFromMessage(pos))
+    while(char* line = LineFromMessage(msg_str))
     {
         FillSystemMessageData(&data, line);
         rPlayer->GetSession()->SendPacket(&data);
     }
-
-    delete [] buf;
 
     return true;
 }

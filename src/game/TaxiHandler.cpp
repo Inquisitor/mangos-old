@@ -190,8 +190,7 @@ void WorldSession::HandleMoveSplineDoneOpcode(WorldPacket& recv_data)
     if(!recv_data.readPackGUID(guid))
         return;
 
-    MovementInfo movementInfo;                              // used only for proper packet read
-    ReadMovementInfo(recv_data, &movementInfo);
+    MovementInfo movementInfo(recv_data);                   // used only for proper packet read
 
     recv_data.read_skip<uint32>();                          // unk
 

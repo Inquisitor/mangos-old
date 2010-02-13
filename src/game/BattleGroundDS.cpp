@@ -101,7 +101,7 @@ void BattleGroundDS::HandleKillPlayer(Player *player, Player *killer)
  
 bool BattleGroundDS::HandlePlayerUnderMap(Player *player)
 {
-    player->TeleportTo(GetMapId(),1299.046, 784.825, 9.338, player->GetOrientation(),false);
+    player->TeleportTo(GetMapId(),1299.046f, 784.825f, 9.338f, player->GetOrientation(),false);
     return true;
 }
  
