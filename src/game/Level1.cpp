@@ -2520,7 +2520,10 @@ bool ChatHandler::HandleSendSysMsgCommand(const char* args)
 
     WorldPacket data;
 
-    while(char* line = LineFromMessage(msg_str))
+    char* buf = mangos_strdup(msg_str);
+    char* pos = buf;
+
+    while(char* line = LineFromMessage(pos))
     {
         FillSystemMessageData(&data, line);
         rPlayer->GetSession()->SendPacket(&data);
