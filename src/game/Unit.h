@@ -746,6 +746,12 @@ struct Position
     float x, y, z, o;
 };
 
+struct SafePosition
+{
+    float x, y, z;
+    SafePosition() : x(0.0f), y(0.0f), z(0.0f) {}
+};
+
 class MovementInfo
 {
     public:
@@ -1829,6 +1835,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         // Movement info
         MovementInfo m_movementInfo;
+        SafePosition m_safeposition;
 
     protected:
         explicit Unit ();
