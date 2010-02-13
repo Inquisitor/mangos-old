@@ -76,6 +76,8 @@ struct ScriptInfo
 {
     uint32 id;
     uint32 delay;
+    uint32 reqtype;
+    uint32 reqvalue;
     uint32 command;
     uint32 datalong;
     uint32 datalong2;
@@ -293,7 +295,17 @@ struct GraveYardData
     uint32 safeLocId;
     uint32 team;
 };
+
 typedef std::multimap<uint32,GraveYardData> GraveYardMap;
+
+struct GCNewsData
+{
+    uint16 type;
+    uint16 parent;
+    std::string textstring;
+};
+
+typedef std::multimap<uint32, GCNewsData> GCNewsMap;
 
 enum ConditionType
 {                                                           // value1       value2  for the Condition enumed
@@ -652,6 +664,8 @@ class ObjectMgr
         void LoadVehicleData();
         void LoadVehicleSeatData();
 
+        void LoadGCNews();
+
         std::string GeneratePetName(uint32 entry);
         uint32 GetBaseXP(uint32 level) const;
         uint32 GetXPForLevel(uint32 level) const;
@@ -891,6 +905,8 @@ class ObjectMgr
 
         VehicleDataMap mVehicleData;
         VehicleSeatDataMap mVehicleSeatData;
+
+        GCNewsMap mGCNewsMap;
 
         uint32 GetSeatFlags(uint32 seatid)
         {

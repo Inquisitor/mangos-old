@@ -64,6 +64,21 @@ enum EventAI_Type
     EVENT_T_END,
 };
 
+enum EventAI_Requirement
+{
+    REQUIREMENT_T_NONE                  = 0,
+    REQUIREMENT_T_HP_PERCENT            = 1,
+    REQUIREMENT_T_MANA_PERCENT          = 2,
+    REQUIREMENT_T_AURA                  = 3,
+    REQUIREMENT_T_INVOKER_AURA          = 4,
+    REQUIREMENT_T_ZONE                  = 5,
+    REQUIREMENT_T_QUEST                 = 6,
+    REQUIREMENT_T_ENTRY                 = 7, // not for creature_ai_scripts usage (all other *_scripts)
+    REQUIREMENT_T_HAS_NO_AURA           = 8,
+    REQUIREMENT_T_INVOKER_HAS_NO_AURA   = 9,
+    REQUIREMENT_T_END,
+};
+
 enum EventAI_ActionType
 {
     ACTION_T_NONE                       = 0,                // No action
@@ -109,6 +124,8 @@ enum EventAI_ActionType
     ACTION_T_SET_SHEATH                 = 40,               // Sheath (0-passive,1-melee,2-ranged)
     ACTION_T_FORCE_DESPAWN              = 41,               // No Params
     ACTION_T_SET_INVINCIBILITY_HP_LEVEL = 42,               // MinHpValue, format(0-flat,1-percent from max health)
+    ACTION_T_SUMMON_GOBJECT             = 43,               // Object ID, Target, Duration in ms
+    ACTION_T_ADD_ITEM                   = 44,               // Item Id
     ACTION_T_END,
 };
 
@@ -377,6 +394,18 @@ struct CreatureEventAI_Action
             uint32 hp_level;
             uint32 is_percent;
         } invincibility_hp_level;
+        // ACTION_T_SUMMON_GOBJECT                          = 43
+        struct
+        {
+            uint32 id;
+            uint32 target;
+            uint32 duration;
+        } summon_gobject;
+        // ACTION_T_ADD_ITEM                                = 44
+        struct
+        {
+            uint32 id;
+        } add_item;
         // RAW
         struct
         {
@@ -398,6 +427,9 @@ struct CreatureEventAI_Event
     EventAI_Type event_type : 16;
     uint8 event_chance : 8;
     uint8 event_flags  : 8;
+    
+    uint8 event_requirement_type;
+    uint32 event_requirement_value;
 
     union
     {

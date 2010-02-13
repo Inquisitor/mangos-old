@@ -113,6 +113,42 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
     if (pHolder.Event.event_inverse_phase_mask & (1 << Phase))
         return false;
 
+    switch( pHolder.Event.event_requirement_type )
+    {
+        case REQUIREMENT_T_HP_PERCENT:
+            if( m_creature->GetHealth() * 100 / m_creature->GetMaxHealth() > pHolder.Event.event_requirement_value )
+                return false;
+            break;
+        case REQUIREMENT_T_MANA_PERCENT:
+            if( m_creature->GetPower(POWER_MANA) * 100 / m_creature->GetMaxPower(POWER_MANA) > pHolder.Event.event_requirement_value )
+                return false;
+            break;
+        case REQUIREMENT_T_AURA:
+            if( !m_creature->HasAura( pHolder.Event.event_requirement_value ) )
+                return false;
+            break;
+        case REQUIREMENT_T_INVOKER_AURA:
+            if( !pActionInvoker || !pActionInvoker->HasAura( pHolder.Event.event_requirement_value ) )
+                return false;
+            break;
+        case REQUIREMENT_T_ZONE:
+            if( m_creature->GetZoneId() != pHolder.Event.event_requirement_value )
+                return false;
+            break;
+        case REQUIREMENT_T_QUEST:
+            if( !pActionInvoker || pActionInvoker->GetTypeId() != TYPEID_PLAYER || ((Player*)pActionInvoker)->GetQuestStatus( pHolder.Event.event_requirement_value) != QUEST_STATUS_INCOMPLETE )
+                return false;
+            break;
+        case REQUIREMENT_T_HAS_NO_AURA:
+            if( m_creature->HasAura( pHolder.Event.event_requirement_value ) )
+                return false;
+            break;
+        case REQUIREMENT_T_INVOKER_HAS_NO_AURA:
+            if( !pActionInvoker || pActionInvoker->HasAura( pHolder.Event.event_requirement_value ) )
+                return false;
+            break;
+    }
+
     CreatureEventAI_Event const& event = pHolder.Event;
 
     //Check event conditions based on the event type, also reset events
@@ -787,6 +823,41 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
                 InvinceabilityHpLevel = action.invincibility_hp_level.hp_level;
             break;
         }
+        case ACTION_T_SUMMON_GOBJECT:
+        {
+            if( !pActionInvoker )
+                return;
+
+            Unit* target = GetTargetByType(action.summon_gobject.target, pActionInvoker);
+            if( !target )
+                target = pActionInvoker;
+
+            GameObject* pGameObj = new GameObject;
+            if(!pGameObj->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), action.summon_gobject.id, target->GetMap(),
+            target->GetPhaseMask(), target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
+            {
+                delete pGameObj;
+                return;
+            }
+
+            pGameObj->SetRespawnTime(action.summon_gobject.duration > 0 ? action.summon_gobject.duration/IN_MILISECONDS : 0);
+            target->GetMap()->Add(pGameObj);
+            target->AddGameObject(pGameObj);
+
+            break;
+        }
+        case ACTION_T_ADD_ITEM:
+        {
+            if( !pActionInvoker || pActionInvoker->GetTypeId() != TYPEID_PLAYER )
+                return;
+
+            ItemPosCountVec dest;
+            uint8 msg = ((Player*)pActionInvoker)->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, action.add_item.id, 1);
+            if (msg == EQUIP_ERR_OK)
+                ((Player*)pActionInvoker)->StoreNewItem(dest, action.add_item.id, true);
+
+            break;
+        }
     }
 }
 
@@ -1034,7 +1105,6 @@ void CreatureEventAI::MoveInLineOfSight(Unit *who)
             if (!m_creature->getVictim())
             {
                 AttackStart(who);
-                who->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
             }
             else if (m_creature->GetMap()->IsDungeon())
             {

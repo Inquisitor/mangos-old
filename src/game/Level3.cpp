@@ -51,6 +51,7 @@
 #include "InstanceData.h"
 #include "CreatureEventAIMgr.h"
 #include "DBCEnums.h"
+#include "GossipDef.h"
 
 //reload commands
 bool ChatHandler::HandleReloadAllCommand(const char*)
@@ -254,6 +255,14 @@ bool ChatHandler::HandleReloadCreatureQuestInvRelationsCommand(const char*)
     sLog.outString( "Loading Quests Relations... (`creature_involvedrelation`)" );
     sObjectMgr.LoadCreatureInvolvedRelations();
     SendGlobalSysMessage("DB table `creature_involvedrelation` (creature quest takers) reloaded.");
+    return true;
+}
+
+bool ChatHandler::HandleReloadGCNewsCommand(const char*)
+{
+    sLog.outString( "Re-Loading `gc_news` Table!" );
+    sObjectMgr.LoadGCNews();
+    SendGlobalSysMessage("DB table `gc_news` reloaded.");
     return true;
 }
 
@@ -4842,6 +4851,33 @@ bool ChatHandler::HandleQuestRemove(const char* args)
     return true;
 }
 
+bool ChatHandler::HandleNewsGossip(const char* args)
+{
+    Player* player;
+    uint64 target_guid;
+    if(!extractPlayerTarget((char*)args,&player,&target_guid))
+        return false;
+
+    if(!player)
+        return false;
+
+
+    player->PlayerTalkClass->ClearMenus();
+    for( std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.begin(); itr != sObjectMgr.mGCNewsMap.end(); ++itr )
+    {
+        GCNewsData const& news = (*itr).second;
+        sLog.outDetail("GC News sending gossip item %s loaded with parent %i and type %i.", news.textstring.c_str(), news.parent, news.type );
+
+        if(news.parent == 0)
+            player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_TALK,news.textstring,1,(*itr).first,"",0);
+    }
+    player->PlayerTalkClass->SendTalking(110001);
+    player->PlayerTalkClass->SendGossipMenu(110001, player->GetGUID());
+    player->PlayerTalkClass->SendGossipMenu(110001, player->GetGUID());
+
+    return true;
+}
+
 bool ChatHandler::HandleQuestComplete(const char* args)
 {
     Player* player = getSelectedPlayer();
@@ -6121,6 +6157,68 @@ bool ChatHandler::HandleInstanceSaveDataCommand(const char * /*args*/)
     ((InstanceMap*)map)->GetInstanceData()->SaveToDB();
     return true;
 }
+
+bool ChatHandler::HandleInstanceSetDataCommand(const char * args)
+{
+    Player* pl = m_session->GetPlayer();
+
+
+    Map* map = pl->GetMap();
+    if (!map->IsDungeon())
+    {
+        PSendSysMessage("Map is not a dungeon.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (!((InstanceMap*)map)->GetInstanceData())
+    {
+        PSendSysMessage("Map has no instance data.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    char* field_str = strtok ((char*) args, " ");
+    char* value_str = strtok (NULL, "");
+
+    if (!field_str || !value_str)
+        return false;
+
+    int32 field = atoi (field_str);
+    int32 value = atoi (value_str);
+
+    ((InstanceMap*)map)->GetInstanceData()->SetData(field, value);
+    PSendSysMessage("Instance data field %i is now set to %i.", field, value);
+    return true;
+}
+
+bool ChatHandler::HandleInstanceGetDataCommand(const char * args)
+{
+    Player* pl = m_session->GetPlayer();
+
+
+    Map* map = pl->GetMap();
+    if (!map->IsDungeon())
+    {
+        PSendSysMessage("Map is not a dungeon.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (!((InstanceMap*)map)->GetInstanceData())
+    {
+        PSendSysMessage("Map has no instance data.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    int32 field = atoi (args);
+
+    int32 val = ((InstanceMap*)map)->GetInstanceData()->GetData(field);
+    PSendSysMessage("Instance data for field %i is %i.", field, val);
+    return true;
+}
+
 
 /// Display the list of GMs
 bool ChatHandler::HandleGMListFullCommand(const char* /*args*/)

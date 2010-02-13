@@ -705,6 +705,8 @@ void WorldSession::HandleBattlemasterJoinArena( WorldPacket & recv_data )
             arenaRating = avg_pers_rating;
     }
 
+    bg->SetRated(isRated);
+
     BattleGroundQueue &bgQueue = sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId];
     if (asGroup)
     {

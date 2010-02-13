@@ -4167,7 +4167,7 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
 
     scripts.clear();                                        // need for reload support
 
-    QueryResult *result = WorldDatabase.PQuery( "SELECT id,delay,command,datalong,datalong2,dataint, x, y, z, o FROM %s", tablename );
+    QueryResult *result = WorldDatabase.PQuery( "SELECT id,delay,requirement_type,requirement_value,command,datalong,datalong2,dataint, x, y, z, o FROM %s", tablename );
 
     uint32 count = 0;
 
@@ -4191,14 +4191,16 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
         ScriptInfo tmp;
         tmp.id        = fields[0].GetUInt32();
         tmp.delay     = fields[1].GetUInt32();
-        tmp.command   = fields[2].GetUInt32();
-        tmp.datalong  = fields[3].GetUInt32();
-        tmp.datalong2 = fields[4].GetUInt32();
-        tmp.dataint   = fields[5].GetInt32();
-        tmp.x         = fields[6].GetFloat();
-        tmp.y         = fields[7].GetFloat();
-        tmp.z         = fields[8].GetFloat();
-        tmp.o         = fields[9].GetFloat();
+        tmp.reqtype   = fields[2].GetUInt32();
+        tmp.reqvalue  = fields[3].GetUInt32();
+        tmp.command   = fields[4].GetUInt32();
+        tmp.datalong  = fields[5].GetUInt32();
+        tmp.datalong2 = fields[6].GetUInt32();
+        tmp.dataint   = fields[7].GetInt32();
+        tmp.x         = fields[8].GetFloat();
+        tmp.y         = fields[9].GetFloat();
+        tmp.z         = fields[10].GetFloat();
+        tmp.o         = fields[11].GetFloat();
 
         // generic command args check
         switch(tmp.command)
@@ -4516,7 +4518,7 @@ void ObjectMgr::LoadSpellScripts()
             if( !spellInfo->Effect[i] )
                 continue;
 
-            if( spellInfo->Effect[i] == SPELL_EFFECT_SCRIPT_EFFECT )
+            if( spellInfo->Effect[i] == SPELL_EFFECT_SCRIPT_EFFECT || spellInfo->Effect[i] == SPELL_EFFECT_SEND_EVENT || spellInfo->Effect[i] == SPELL_EFFECT_DUMMY )
             {
                 found =  true;
                 break;
@@ -8701,4 +8703,44 @@ void ObjectMgr::LoadVehicleSeatData()
 
     sLog.outString();
     sLog.outString( ">> Loaded %u vehicle seat data", count );
+}
+
+void ObjectMgr::LoadGCNews()
+{
+    mGCNewsMap.clear(); // For reloading possibility
+
+    QueryResult* result = WorldDatabase.Query("SELECT id, parent, type, text FROM gc_news");
+    if( !result )
+    {
+        barGoLink bar( 1 );
+
+        bar.step();
+
+        sLog.outString();
+        sLog.outErrorDb(">> Loaded `gc_news`, table is empty!");
+        return;
+    }
+
+    barGoLink bar( result->GetRowCount() );
+
+    uint32 count = 0;
+    do
+    {
+        bar.step();
+
+        Field* fields = result->Fetch();
+
+        GCNewsData data;
+        data.parent = fields[1].GetUInt16();
+        data.type = fields[2].GetUInt16();
+        data.textstring = fields[3].GetCppString();
+        mGCNewsMap.insert(GCNewsMap::value_type(fields[0].GetUInt32(), data));
+
+        ++count;
+
+    } while (result->NextRow());
+    delete result;
+
+    sLog.outString();
+    sLog.outString( ">> Loaded %d GC News Data ", count );
 }

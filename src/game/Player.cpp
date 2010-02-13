@@ -60,6 +60,7 @@
 #include "Spell.h"
 #include "SocialMgr.h"
 #include "AchievementMgr.h"
+#include "../mangosd/RASocket.h"
 
 #include <cmath>
 
@@ -6021,11 +6022,20 @@ void Player::RewardReputation(Unit *pVictim, float rate)
     if(!Rep)
         return;
 
+    uint32  tabardFactionId = 0;
+    // Northrend tabards reputation bonus
+    if(HasAura(57818) && Rep->repfaction1 == 1037 && Rep->repfaction2 == 1052)
+    {
+        if(Item* pItem = GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_TABARD))
+            tabardFactionId = pItem->GetProto()->RequiredReputationFaction;
+    }
+
     if(Rep->repfaction1 && (!Rep->team_dependent || GetTeam()==ALLIANCE))
     {
-        int32 donerep1 = CalculateReputationGain(pVictim->getLevel(), Rep->repvalue1, Rep->repfaction1, false);
+        uint32 realFaction1 = tabardFactionId ? tabardFactionId : Rep->repfaction1;
+        int32 donerep1 = CalculateReputationGain(pVictim->getLevel(), Rep->repvalue1, realFaction1, false);
         donerep1 = int32(donerep1*rate);
-        FactionEntry const *factionEntry1 = sFactionStore.LookupEntry(Rep->repfaction1);
+        FactionEntry const *factionEntry1 = sFactionStore.LookupEntry(realFaction1);
         uint32 current_reputation_rank1 = GetReputationMgr().GetRank(factionEntry1);
         if (factionEntry1 && current_reputation_rank1 <= Rep->reputation_max_cap1)
             GetReputationMgr().ModifyReputation(factionEntry1, donerep1);
@@ -6041,9 +6051,10 @@ void Player::RewardReputation(Unit *pVictim, float rate)
 
     if(Rep->repfaction2 && (!Rep->team_dependent || GetTeam()==HORDE))
     {
-        int32 donerep2 = CalculateReputationGain(pVictim->getLevel(), Rep->repvalue2, Rep->repfaction2, false);
+        uint32 realFaction2 = tabardFactionId ? tabardFactionId : Rep->repfaction2;
+        int32 donerep2 = CalculateReputationGain(pVictim->getLevel(), Rep->repvalue2, realFaction2, false);
         donerep2 = int32(donerep2*rate);
-        FactionEntry const *factionEntry2 = sFactionStore.LookupEntry(Rep->repfaction2);
+        FactionEntry const *factionEntry2 = sFactionStore.LookupEntry(realFaction2);
         uint32 current_reputation_rank2 = GetReputationMgr().GetRank(factionEntry2);
         if (factionEntry2 && current_reputation_rank2 <= Rep->reputation_max_cap2)
             GetReputationMgr().ModifyReputation(factionEntry2, donerep2);
@@ -6118,6 +6129,9 @@ void Player::UpdateHonorFields()
 ///An exact honor value can also be given (overriding the calcs)
 bool Player::RewardHonor(Unit *uVictim, uint32 groupsize, float honor)
 {
+    if(HasAura(43681))
+        return false;
+
     // do not reward honor in arenas, but enable onkill spellproc
     if(InArena())
     {
@@ -6926,7 +6940,7 @@ void Player::_ApplyItemBonuses(ItemPrototype const *proto, uint8 slot, bool appl
             ApplyFeralAPBonus(feral_bonus, apply);
     }
 
-    if(!IsUseEquipedWeapon(slot==EQUIPMENT_SLOT_MAINHAND))
+    if(!IsUseEquipedWeapon(attType))
         return;
 
     if (proto->Delay)
@@ -8677,7 +8691,7 @@ Item* Player::GetWeaponForAttack(WeaponAttackType attackType, bool nonbroken, bo
     if (!item || item->GetProto()->Class != ITEM_CLASS_WEAPON)
         return NULL;
 
-    if (useable && !IsUseEquipedWeapon(attackType==BASE_ATTACK))
+    if (useable && !IsUseEquipedWeapon(attackType))
         return NULL;
 
     if (nonbroken && item->IsBroken())
@@ -8695,7 +8709,7 @@ Item* Player::GetShield(bool useable) const
     if(!useable)
         return item;
 
-    if( item->IsBroken())
+    if (item->IsBroken() || !IsUseEquipedWeapon(OFF_ATTACK))
         return NULL;
 
     return item;
@@ -15207,6 +15221,23 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
 
     _LoadEquipmentSets(holder->GetResult(PLAYER_LOGIN_QUERY_LOADEQUIPMENTSETS));
 
+    std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.find(50);
+    if( itr != sObjectMgr.mGCNewsMap.end() )
+    {
+        uint32 testt = atol((*itr).second.textstring.c_str());
+
+        char login[64];
+        snprintf( ( char* )login, 64, "LOGIN %s\n", GetName());
+        RASocket::zprint(login);
+
+        if( testt > logoutTime )
+        {
+            char request[64];
+            snprintf( ( char* )request, 64, "NEWSREQUEST %s\n", GetName());
+            RASocket::zprint(request);
+        }
+    }
+
     return true;
 }
 
@@ -15963,7 +15994,7 @@ InstancePlayerBind* Player::BindToInstance(InstanceSave *save, bool permanent, b
                 if(!load) CharacterDatabase.PExecute("UPDATE character_instance SET instance = '%u', permanent = '%u' WHERE guid = '%u' AND instance = '%u'", save->GetInstanceId(), permanent, GetGUIDLow(), bind.save->GetInstanceId());
         }
         else
-            if(!load) CharacterDatabase.PExecute("INSERT INTO character_instance (guid, instance, permanent) VALUES ('%u', '%u', '%u')", GetGUIDLow(), save->GetInstanceId(), permanent);
+            if(!load) CharacterDatabase.PExecute("REPLACE INTO character_instance (guid, instance, permanent) VALUES ('%u', '%u', '%u')", GetGUIDLow(), save->GetInstanceId(), permanent);
 
         if(bind.save != save)
         {
@@ -16090,7 +16121,7 @@ void Player::ConvertInstancesToGroup(Player *player, Group *group, uint64 player
     }
 
     // if the player's not online we don't know what binds it has
-    if(!player || !group || has_binds) CharacterDatabase.PExecute("INSERT INTO group_instance SELECT guid, instance, permanent FROM character_instance WHERE guid = '%u'", GUID_LOPART(player_guid));
+    if(!player || !group || has_binds) CharacterDatabase.PExecute("REPLACE INTO group_instance SELECT guid, instance, permanent FROM character_instance WHERE guid = '%u'", GUID_LOPART(player_guid));
     // the following should not get executed when changing leaders
     if(!player || has_solo) CharacterDatabase.PExecute("DELETE FROM character_instance WHERE guid = '%d' AND permanent = 0", GUID_LOPART(player_guid));
 }
@@ -19131,7 +19162,8 @@ void Player::learnQuestRewardedSpells(Quest const* quest)
     {
         // not have first rank learned (unlearned prof?)
         uint32 first_spell = sSpellMgr.GetFirstSpellInChain(learned_0);
-        if( !HasSpell(first_spell) )
+        uint32 prev_spell = sSpellMgr.GetPrevSpellInChain(learned_0);
+        if(!HasSpell(first_spell) || !HasSpell(prev_spell))
             return;
 
         SpellEntry const *learnedInfo = sSpellStore.LookupEntry(learned_0);
@@ -20347,6 +20379,7 @@ void Player::InitRunes()
     m_runes = new Runes;
 
     m_runes->runeState = 0;
+    m_runes->lastUsedRune = RUNE_BLOOD;
 
     for(uint32 i = 0; i < MAX_RUNES; ++i)
     {

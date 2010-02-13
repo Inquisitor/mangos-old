@@ -172,6 +172,7 @@ class ChatHandler
         bool HandleGameObjectMoveCommand(const char* args);
         bool HandleGameObjectNearCommand(const char* args);
         bool HandleGameObjectPhaseCommand(const char* args);
+        bool HandleGameObjectStateCommand(const char* args);
         bool HandleGameObjectTargetCommand(const char* args);
         bool HandleGameObjectTurnCommand(const char* args);
 
@@ -207,6 +208,9 @@ class ChatHandler
         bool HandleInstanceUnbindCommand(const char* args);
         bool HandleInstanceStatsCommand(const char* args);
         bool HandleInstanceSaveDataCommand(const char * args);
+        bool HandleInstanceSetDataCommand(const char * args);
+        bool HandleInstanceGetDataCommand(const char * args);
+        
 
         bool HandleLearnCommand(const char* args);
         bool HandleLearnAllCommand(const char* args);
@@ -304,6 +308,7 @@ class ChatHandler
 
         bool HandleQuestAdd(const char * args);
         bool HandleQuestRemove(const char * args);
+        bool HandleNewsGossip(const char * args);
         bool HandleQuestComplete(const char * args);
 
         bool HandleReloadAllCommand(const char* args);
@@ -336,6 +341,7 @@ class ChatHandler
         bool HandleReloadGameGraveyardZoneCommand(const char* args);
         bool HandleReloadGameObjectScriptsCommand(const char* args);
         bool HandleReloadGameTeleCommand(const char* args);
+        bool HandleReloadGCNewsCommand(const char* args);
         bool HandleReloadGossipMenuCommand(const char* args);
         bool HandleReloadGossipMenuOptionCommand(const char* args);
         bool HandleReloadGossipScriptsCommand(const char* args);

@@ -140,7 +140,7 @@ void WorldSession::QueuePacket(WorldPacket* new_packet)
 /// Logging helper for unexpected opcodes
 void WorldSession::LogUnexpectedOpcode(WorldPacket* packet, const char *reason)
 {
-    sLog.outError( "SESSION: received unexpected opcode %s (0x%.4X) %s",
+    sLog.outDebug( "SESSION: received unexpected opcode %s (0x%.4X) %s",
         LookupOpcodeName(packet->GetOpcode()),
         packet->GetOpcode(),
         reason);
@@ -149,7 +149,7 @@ void WorldSession::LogUnexpectedOpcode(WorldPacket* packet, const char *reason)
 /// Logging helper for unexpected opcodes
 void WorldSession::LogUnprocessedTail(WorldPacket *packet)
 {
-    sLog.outError( "SESSION: opcode %s (0x%.4X) have unprocessed tail data (read stop at " SIZEFMTD " from " SIZEFMTD ")",
+    sLog.outDebug( "SESSION: opcode %s (0x%.4X) have unprocessed tail data (read stop at " SIZEFMTD " from " SIZEFMTD ")",
         LookupOpcodeName(packet->GetOpcode()),
         packet->GetOpcode(),
         packet->rpos(),packet->wpos());
@@ -232,7 +232,7 @@ bool WorldSession::Update(uint32 /*diff*/)
                         LogUnprocessedTail(packet);
                     break;
                 case STATUS_NEVER:
-                    sLog.outError( "SESSION: received not allowed opcode %s (0x%.4X)",
+                    sLog.outDebug( "SESSION: received not allowed opcode %s (0x%.4X)",
                         LookupOpcodeName(packet->GetOpcode()),
                         packet->GetOpcode());
                     break;
@@ -242,7 +242,7 @@ bool WorldSession::Update(uint32 /*diff*/)
                         packet->GetOpcode());
                     break;
                 default:
-                    sLog.outError("SESSION: received wrong-status-req opcode %s (0x%.4X)",
+                    sLog.outDebug("SESSION: received wrong-status-req opcode %s (0x%.4X)",
                         LookupOpcodeName(packet->GetOpcode()),
                         packet->GetOpcode());
                     break;
