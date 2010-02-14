@@ -1964,11 +1964,17 @@ void Spell::EffectDummy(uint32 i)
                     return;
                 }
                 case 45923: // Q: Foolish Endeavors
-                    {
-                        if(unitTarget->HasAura(45924))
-                            unitTarget->CastSpell(unitTarget, 45922, true);
-                        return;
-                    }
+                {
+                    if(unitTarget->HasAura(45924))
+                        unitTarget->CastSpell(unitTarget, 45922, true);
+                    return;
+                }
+                case 45607: // Q: Kaganishu
+                {
+                    if(m_caster->GetTypeId() == TYPEID_PLAYER)
+                        ((Player*)m_caster)->KilledMonsterCredit(25425, 0);
+                    return;
+                }
             }
             break;
         }
