@@ -2529,6 +2529,8 @@ bool ChatHandler::HandleSendSysMsgCommand(const char* args)
         rPlayer->GetSession()->SendPacket(&data);
     }
 
+    delete [] buf;
+
     return true;
 }
 
