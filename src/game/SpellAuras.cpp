@@ -2367,8 +2367,8 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             int32 roll = rand()%100;
                             if( roll > 20 )
                             {
-                                for(uint32 x =0; x < (rand()%2 > 0 ? 2 : 3); ++x)
-                                    caster->SummonCreature(rand()%2 > 0 ? 22482 : 22483, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
+                                for(uint32 x =0; x < urand(0,1) ? 2:3; ++x)
+                                    caster->SummonCreature(urand(0,1) ? 22482 : 22483, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
                             }
                             else 
                                 caster->SummonCreature(22038, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
