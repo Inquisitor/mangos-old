@@ -2953,9 +2953,9 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             return;
 
                     // final heal
-                    if(m_target->IsInWorld() && m_stackAmount > 0)
+                    if(m_target->IsInWorld() && (m_stackAmount > 0 || m_removeMode == AURA_REMOVE_BY_DISPEL))
                     {
-                        int32 amount = m_modifier.m_amount / m_stackAmount;
+                        int32 amount = m_modifier.m_amount;
                         m_target->CastCustomSpell(m_target, 33778, &amount, NULL, NULL, true, NULL, this, GetCasterGUID());
 
                         if (Unit* caster = GetCaster())
