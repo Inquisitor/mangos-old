@@ -9730,6 +9730,15 @@ uint32 Unit::SpellHealingBonus(Unit *pVictim, SpellEntry const *spellProto, uint
         DoneTotal  += int32(DoneAdvertisedBenefit * coeff * SpellModSpellDamage);
         TakenTotal += int32(TakenAdvertisedBenefit * coeff);
     }
+    // Gift of the Naaru
+    else if (spellProto->SpellFamilyFlags2 & UI64LIT(0x00080000000) && spellProto->SpellIconID == 329)
+    {
+        int32 apBonus = std::max(GetTotalAttackPowerValue(BASE_ATTACK), GetTotalAttackPowerValue(RANGED_ATTACK));
+        if (apBonus > DoneAdvertisedBenefit)
+            DoneTotal += int32(apBonus * 0.22f);
+        else
+            DoneTotal += int32(DoneAdvertisedBenefit * 0.377f * SpellModSpellDamage);
+    }
     // Default calculation
     else if (DoneAdvertisedBenefit || TakenAdvertisedBenefit)
     {
