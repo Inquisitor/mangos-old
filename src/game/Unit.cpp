@@ -11344,7 +11344,13 @@ bool Unit::SelectHostileTarget()
 
 int32 Unit::CalculateSpellDamage(SpellEntry const* spellProto, uint8 effect_index, int32 effBasePoints, Unit const* target)
 {
-    Player* unitPlayer = (GetTypeId() == TYPEID_PLAYER) ? (Player*)this : NULL;
+    Player* unitPlayer;
+    if(GetTypeId() == TYPEID_PLAYER)
+        unitPlayer = (Player*)this;
+    else if(((Creature*)this)->isVehicle())
+        unitPlayer = (Player*)GetCharmer();
+    else
+        unitPlayer = NULL;
 
     uint8 comboPoints = unitPlayer ? unitPlayer->GetComboPoints() : 0;
 
@@ -11404,7 +11410,13 @@ int32 Unit::CalculateSpellDamage(SpellEntry const* spellProto, uint8 effect_inde
 
 int32 Unit::CalculateSpellDuration(SpellEntry const* spellProto, uint8 effect_index, Unit const* target)
 {
-    Player* unitPlayer = (GetTypeId() == TYPEID_PLAYER) ? (Player*)this : NULL;
+    Player* unitPlayer;
+    if(GetTypeId() == TYPEID_PLAYER)
+        unitPlayer = (Player*)this;
+    else if(((Creature*)this)->isVehicle())
+        unitPlayer = (Player*)GetCharmer();
+    else
+        unitPlayer = NULL;
 
     uint8 comboPoints = unitPlayer ? unitPlayer->GetComboPoints() : 0;
 
