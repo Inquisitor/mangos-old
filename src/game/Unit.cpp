@@ -7960,6 +7960,11 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
     if( cooldown && GetTypeId()==TYPEID_PLAYER )
         ((Player*)this)->AddSpellCooldown(trigger_spell_id,0,time(NULL) + cooldown);
 
+    // Fingers of Frost
+    if (trigger_spell_id == 44544)
+        if (target->HasAura(44544))
+            target->GetAura(44544, 0)->SetAuraCharges(2);
+
     return true;
 }
 

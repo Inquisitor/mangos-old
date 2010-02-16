@@ -19193,6 +19193,10 @@ void Player::SendInitialPacketsAfterAddToMap()
     SendAurasForTarget(this);
     SendEnchantmentDurations();                             // must be after add to map
     SendItemDurations();                                    // must be after add to map
+
+    // Juggernaut / Warbringer
+    if( Aura * pAura = GetAura((HasSpell(64976) ? 64976 : 57499), 0) )
+        pAura->SendFakeAuraUpdate( pAura->GetId(), true, this);
 }
 
 void Player::SendUpdateToOutOfRangeGroupMembers()

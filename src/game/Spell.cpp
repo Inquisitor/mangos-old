@@ -1174,6 +1174,14 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
             }
         }
     }
+
+    if( m_caster->HasAura(44544, 0) && !m_IsTriggeredSpell && !m_CastItem ) // Fingers of Frost removing (after 2 spells)
+    {
+        Aura * FoF = m_caster->GetAura(44544, 0);
+        FoF->DropAuraCharge();
+        if( FoF->GetAuraCharges() == 0 )
+            m_caster->RemoveAura(44544, 0);
+    }
 }
 
 void Spell::DoAllEffectOnTarget(GOTargetInfo *target)
@@ -4075,8 +4083,22 @@ SpellCastResult Spell::CheckCast(bool strict)
         if(non_caster_target)
         {
             // target state requirements (apply to non-self only), to allow cast affects to self like Dirty Deeds
-            if(m_spellInfo->TargetAuraState && !target->HasAuraStateForCaster(AuraState(m_spellInfo->TargetAuraState),m_caster->GetGUID()))
-                return SPELL_FAILED_TARGET_AURASTATE;
+            if(m_spellInfo->TargetAuraState)
+            {
+                bool CheckState = true;
+                Unit::AuraList const& ignoreReqAuras = m_caster->GetAurasByType(SPELL_AURA_IGNORE_TARGET_AURA_STATE);
+                for(Unit::AuraList::const_iterator i = ignoreReqAuras.begin(); i != ignoreReqAuras.end(); ++i)
+                {
+                    if ((*i)->isAffectedOnSpell(m_spellInfo))
+                    {
+                        CheckState = false;
+                        break;
+                    }
+                }
+
+                if ( CheckState && !target->HasAuraStateForCaster(AuraState(m_spellInfo->TargetAuraState),m_caster->GetGUID()))
+                    return SPELL_FAILED_TARGET_AURASTATE;
+            }
 
             // Not allow casting on flying player
             if (target->isInFlight())

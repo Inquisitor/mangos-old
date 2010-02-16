@@ -312,7 +312,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleNoImmediateEffect,                         //259 corrupt healing over time spell
     &Aura::HandleNoImmediateEffect,                         //260 SPELL_AURA_SCREEN_EFFECT (miscvalue = id in ScreenEffect.dbc) not required any code
     &Aura::HandlePhase,                                     //261 SPELL_AURA_PHASE undetectable invisibility?     implemented in Unit::isVisibleForOrDetect
-    &Aura::HandleNULL,                                      //262 ignore combat/aura state?
+    &Aura::HandleIgnoreAuraState,                           //262 SPELL_AURA_IGNORE_TARGET_AURA_STATE implemented in Spell::CheckCast()
     &Aura::HandleAllowOnlyAbility,                          //263 SPELL_AURA_ALLOW_ONLY_ABILITY player can use only abilities set in SpellClassMask
     &Aura::HandleUnused,                                    //264 unused (3.0.8a-3.2.2a)
     &Aura::HandleUnused,                                    //265 unused (3.0.8a-3.2.2a)
@@ -8418,6 +8418,12 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
             delete tmpAI;
         */
     }
+}
+
+void Aura::HandleIgnoreAuraState(bool apply, bool Real)
+{
+    if (GetId() == 64976 || GetId() == 57499 )
+        SendFakeAuraUpdate(GetId(), apply);
 }
 
 void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply, Unit * pPlayer )
