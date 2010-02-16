@@ -120,6 +120,41 @@ bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, u
     if (map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
         ((InstanceMap*)map)->GetInstanceData()->OnCreatureCreate(this);
 
+    if(m_vehicleInfo->m_powerType == POWER_TYPE_STEAM)
+    {
+        setPowerType(POWER_ENERGY);
+        SetMaxPower(POWER_ENERGY, 100);
+        SetPower(POWER_ENERGY, 100);
+    }
+    else if(m_vehicleInfo->m_powerType == POWER_TYPE_PYRITE)
+    {
+        setPowerType(POWER_ENERGY);
+        SetMaxPower(POWER_ENERGY, 50);
+        SetPower(POWER_ENERGY, 50);
+    }
+    else
+    {
+        for (uint32 i = 0; i < MAX_VEHICLE_SPELLS; ++i)
+        {
+            if(!GetVehicleData()->v_spells[i])
+                continue;
+            SpellEntry const *spellInfo = sSpellStore.LookupEntry(GetVehicleData()->v_spells[i]);
+            if(!spellInfo)
+                continue;
+
+            if(spellInfo->powerType == POWER_MANA)
+                break;
+
+            if(spellInfo->powerType == POWER_ENERGY)
+            {
+                setPowerType(POWER_ENERGY);
+                SetMaxPower(POWER_ENERGY, 100);
+                SetPower(POWER_ENERGY, 100);
+                break;
+            }
+        }
+    }
+
     return true;
 }
 

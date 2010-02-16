@@ -41,6 +41,12 @@ enum VehicleSeatFlags
     SEAT_VEHICLE_FULL   = 0x08                              // seat occupied by vehicle and that vehicle is full too
 };
 
+enum PowerType
+{
+    POWER_TYPE_PYRITE = 41,
+    POWER_TYPE_STEAM  = 61
+};
+
 #define MAX_SEAT 8
 
 typedef std::map<int8, VehicleSeat> SeatMap;
