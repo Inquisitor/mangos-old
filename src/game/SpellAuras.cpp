@@ -5019,6 +5019,43 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
                 }
                 break;
             }
+            case SPELLFAMILY_WARLOCK:
+            {                
+                if( m_spellProto->Id == 17962 )
+                {
+                    Aura const* aura = NULL;                // found req. aura for damage calculation
+
+                    Unit::AuraList const &mPeriodic = m_target->GetAurasByType(SPELL_AURA_PERIODIC_DAMAGE);
+                    for(Unit::AuraList::const_iterator i = mPeriodic.begin(); i != mPeriodic.end(); ++i)
+                    {
+                        // for caster applied auras only
+                        if ((*i)->GetSpellProto()->SpellFamilyName != SPELLFAMILY_WARLOCK ||
+                            (*i)->GetCasterGUID()!=caster->GetGUID())
+                            continue;
+
+                        // Immolate
+                        if ((*i)->GetSpellProto()->SpellFamilyFlags & UI64LIT(0x0000000000000004))
+                        {
+                            aura = *i;                      // it selected always if exist
+                            break;
+                        }
+
+                        // Shadowflame
+                        if ((*i)->GetSpellProto()->SpellFamilyFlags2 & 0x00000002)
+                            aura = *i;                      // remember but wait possible Immolate as primary priority
+                    }
+
+                    // found Immolate or Shadowflame
+                    if (aura)
+                    {
+                        // DoT not have applied spell bonuses in m_amount
+                        int32 damagetick = caster->SpellDamageBonus(m_target, aura->GetSpellProto(), aura->GetModifier()->m_amount, DOT);
+                        m_modifier.m_amount += (damagetick * 4 * m_spellProto->CalculateSimpleValue(1) * 0.01 / 3);
+                    }
+                    return;
+                }
+                break;
+            }
             case SPELLFAMILY_WARRIOR:
             {
                 // Rend
