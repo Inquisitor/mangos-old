@@ -253,7 +253,7 @@ void Spell::EffectResurrectNew(uint32 i)
         return;
 
     uint32 health = damage;
-    if( m_caster->HasAura(54733, 0) ) // Glyph of Rebirth
+    if (m_caster->HasAura(54733, 0)) // Glyph of Rebirth
         health = pTarget->GetMaxHealth();
     uint32 mana = m_spellInfo->EffectMiscValue[i];
     pTarget->setResurrectRequestData(m_caster->GetGUID(), m_caster->GetMapId(), m_caster->GetPositionX(), m_caster->GetPositionY(), m_caster->GetPositionZ(), health, mana);

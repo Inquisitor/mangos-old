@@ -4881,10 +4881,17 @@ void Aura::HandlePeriodicTriggerSpell(bool apply, bool /*Real*/)
                     m_target->CastSpell(m_target, 32612, true, NULL, this);
 
                 return;
-            case 42783:                                     //Wrath of the Astrom...
+            case 42783:                                     //Wrath of the Astromancer
                 if (m_removeMode == AURA_REMOVE_BY_DEFAULT && GetEffIndex() + 1 < 3)
                     m_target->CastSpell(m_target, m_spellProto->CalculateSimpleValue(GetEffIndex()+1), true);
                 return;
+            case 27819:                                     //Detonate Mana
+            {
+                int32 damage = m_target->GetMaxPower(POWER_MANA);
+                m_target->ModifyPower(POWER_MANA, -(damage/4));
+                m_target->CastCustomSpell(m_target, 27820, &damage , 0, 0, true );
+                return;
+            }
             case 51912:
             {
                 if( GetCaster() )
