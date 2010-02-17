@@ -4702,7 +4702,8 @@ void Aura::HandleModMechanicImmunity(bool apply, bool /*Real*/)
             return;
         if (apply)
             if( GameObject* obj = m_target->GetGameObject(48018) )
-                ((Player*)m_target)->TeleportTo(obj->GetMapId(),obj->GetPositionX(),obj->GetPositionY(),obj->GetPositionZ(),obj->GetOrientation());
+                if (m_target->IsWithinDist(obj,GetSpellMaxRange(sSpellRangeStore.LookupEntry(GetSpellProto()->rangeIndex))))
+                    ((Player*)m_target)->TeleportTo(obj->GetMapId(),obj->GetPositionX(),obj->GetPositionY(),obj->GetPositionZ(),obj->GetOrientation());
     }
 
     // Bestial Wrath
