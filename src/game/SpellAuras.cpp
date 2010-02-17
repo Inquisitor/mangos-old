@@ -5072,7 +5072,7 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
             }
             case SPELLFAMILY_WARLOCK:
             {                
-                if( m_spellProto->Id == 17962 )
+                if (m_spellProto->TargetAuraState == AURA_STATE_CONFLAGRATE)
                 {
                     Aura const* aura = NULL;                // found req. aura for damage calculation
 
@@ -5099,11 +5099,13 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
                     // found Immolate or Shadowflame
                     if (aura)
                     {
-                        // DoT not have applied spell bonuses in m_amount
                         int32 damagetick = caster->SpellDamageBonus(m_target, aura->GetSpellProto(), aura->GetModifier()->m_amount, DOT);
-                        m_modifier.m_amount += (damagetick * 4 * m_spellProto->CalculateSimpleValue(1) * 0.01 / 3);
+                        m_modifier.m_amount += damagetick * 0.3f;
+
+                        // Glyph of Conflagrate
+                        if (!caster->HasAura(56235))
+                            m_target->RemoveAurasByCasterSpell(aura->GetId(), caster->GetGUID());
                     }
-                    return;
                 }
                 break;
             }
