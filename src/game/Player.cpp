@@ -21642,13 +21642,6 @@ void Player::ActivateSpec(uint8 specNum)
 
     SetActiveSpec(specNum);
 
-    // recheck action buttons (not checked at loading/spec copy)
-    ActionButtonList const& currentActionButtonList = m_actionButtons[m_activeSpec];
-    for(ActionButtonList::const_iterator itr = currentActionButtonList.begin(); itr != currentActionButtonList.end(); ++itr)
-        if (itr->second.uState != ACTIONBUTTON_DELETED)
-           if (!IsActionButtonDataValid(itr->first,itr->second.GetAction(),itr->second.GetType(), this))
-               removeActionButton(m_activeSpec,itr->first);
-
     uint32 spentTalents = 0;
     bool haveLearnedMaxRank=false;
 
@@ -21685,6 +21678,13 @@ void Player::ActivateSpec(uint8 specNum)
             }
         }
     }
+
+    // recheck action buttons (not checked at loading/spec copy)
+    ActionButtonList const& currentActionButtonList = m_actionButtons[m_activeSpec];
+    for(ActionButtonList::const_iterator itr = currentActionButtonList.begin(); itr != currentActionButtonList.end(); ++itr)
+        if (itr->second.uState != ACTIONBUTTON_DELETED)
+           if (!IsActionButtonDataValid(itr->first,itr->second.GetAction(),itr->second.GetType(), this))
+               removeActionButton(m_activeSpec,itr->first);
 
     ApplyGlyphs(true);
 
