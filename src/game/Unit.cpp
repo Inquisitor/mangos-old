@@ -6235,6 +6235,14 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 if(!procSpell)
                     return false;
 
+                // Allow to proc from first effect only
+                if (effIndex!=0)
+                    return false;
+
+                // Prevent from self-proccing
+                if (this == pVictim)
+                    return false;
+
                 // energy cost save
                 basepoints0 = procSpell->manaCost * triggerAmount/100;
                 if (basepoints0 <= 0)
