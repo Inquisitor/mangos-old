@@ -4960,6 +4960,10 @@ void Aura::HandlePeriodicEnergize(bool apply, bool Real)
             case 61782:                                     // Infinite Replenishment
                 m_modifier.m_amount = m_target->GetMaxPower(POWER_MANA) * 2 / 1000;
                 break;
+            case 5229:                                      // Druid Bear Enrage
+                if (m_target->HasAura(51185))               // King of the Jungle self Enrage bonus with infinite duration
+                    m_target->RemoveAurasDueToSpell(51185);
+                break;
             default:
                 break;
         }
