@@ -7290,13 +7290,21 @@ void Spell::EffectReputation(uint32 i)
 
 void Spell::EffectQuestComplete(uint32 i)
 {
-    if(m_caster->GetTypeId() != TYPEID_PLAYER)
-        return;
-
-    Player *_player = (Player*)m_caster;
+    Unit * caster = m_caster;
+    if(caster->GetTypeId() != TYPEID_PLAYER)
+    {
+        if(GetAffectiveCaster())
+        {
+            caster = GetAffectiveCaster(); 
+            if( caster->GetTypeId() != TYPEID_PLAYER )
+                return;
+        }
+        else return;
+    }
+ 
 
     uint32 quest_id = m_spellInfo->EffectMiscValue[i];
-    _player->AreaExploredOrEventHappens(quest_id);
+    ((Player*)caster)->AreaExploredOrEventHappens(quest_id);
 }
 
 void Spell::EffectSelfResurrect(uint32 i)
