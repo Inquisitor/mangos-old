@@ -8022,6 +8022,11 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
             basepoints[0] = int32(GetTotalAttackPowerValue(BASE_ATTACK) * triggerAmount / 100);
             break;
         }
+        case 63734: // Serendipity loop hack-fix
+        {
+            if(auraSpellInfo->EffectTriggerSpell[0] == 63734)
+                return false;
+        }
     }
 
     if( cooldown && GetTypeId()==TYPEID_PLAYER && ((Player*)this)->HasSpellCooldown(trigger_spell_id))
