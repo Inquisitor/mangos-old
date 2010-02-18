@@ -6063,6 +6063,12 @@ void Aura::HandleModDamagePercentDone(bool apply, bool Real)
                 ((Player*)m_target)->_ApplyWeaponDependentAuraDamageMod(pItem, WeaponAttackType(i), this, apply);
     }
 
+    // Hack for Elemental Oath: In addition, while Clearcasting from Elemental Focus is active, you deal i% more spell damage.
+    if (GetId() == 16246) // Clearcasting
+        if (m_target->HasAura(51470) || m_target->HasAura(51466)) // Elemental Oath
+            if (Aura * pOath = m_target->GetAura((m_target->HasAura(51470) ? 51470 : 51466), 0))
+                m_modifier.m_amount = pOath->GetSpellProto()->EffectBasePoints[1]+1;
+
     // m_modifier.m_miscvalue is bitmask of spell schools
     // 1 ( 0-bit ) - normal school damage (SPELL_SCHOOL_MASK_NORMAL)
     // 126 - full bitmask all magic damages (SPELL_SCHOOL_MASK_MAGIC) including wand
