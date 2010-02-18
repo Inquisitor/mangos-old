@@ -5711,6 +5711,40 @@ void Spell::EffectScriptEffect(uint32 effIndex)
                     unitTarget->HandleEmoteCommand(EMOTE_STATE_DANCE);
                     return;
                 }
+                // Stoneclaw Totem absorb 
+                case 55278:
+                case 55328:
+                case 55329:
+                case 55330:
+                case 55332:
+                case 55333:
+                case 55335:
+                case 58589:
+                case 58590:
+                case 58591:
+                {
+                    if(!unitTarget)
+                        return;
+
+                    for(int slot = 0;  slot < MAX_TOTEM; ++slot)
+                    {
+                        if(!unitTarget->m_TotemSlot[slot])
+                            continue;
+
+                        Creature* totem = unitTarget->GetMap()->GetCreature(unitTarget->m_TotemSlot[slot]);
+                        if(totem && totem->isTotem())
+                            totem->CastCustomSpell(totem, 55277, &damage, NULL, NULL, true);
+                    }
+                    
+                    // Glyph of Stoneclaw Totem
+                    if (Aura *aur = unitTarget->GetAura(63298, 0))
+                    {
+                        int32 totalAbsorb = aur->GetModifier()->m_amount * damage;
+                        if (totalAbsorb)
+                            unitTarget->CastCustomSpell(unitTarget, 55277, &totalAbsorb, NULL, NULL, true);
+                    }
+                    return;
+                }
                 // Glyph of Starfire
                 case 54846:
                 {
