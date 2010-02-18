@@ -2546,6 +2546,8 @@ void Spell::EffectDummy(uint32 i)
                 {
                     if (Unit *owner = m_caster->GetOwner())
                     {
+                        damage += m_caster->GetOwner()->SpellDamageBonus(unitTarget, m_spellInfo, damage, HEAL );
+
                         // Restorative Totems
                         Unit::AuraList const& mDummyAuras = owner->GetAurasByType(SPELL_AURA_DUMMY);
                         for(Unit::AuraList::const_iterator i = mDummyAuras.begin(); i != mDummyAuras.end(); ++i)
