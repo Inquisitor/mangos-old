@@ -46,7 +46,10 @@ void Bag::AddToWorld()
 
     for(uint32 i = 0;  i < GetBagSize(); ++i)
         if(m_bagslot[i])
-            m_bagslot[i]->AddToWorld();
+            if(m_bagslot[i] != this )
+                m_bagslot[i]->AddToWorld();
+            else
+                sLog.outString("Detector: WPE cheat - bug in bug");
 }
 
 void Bag::RemoveFromWorld()
@@ -166,7 +169,10 @@ void Bag::BuildCreateUpdateBlockForPlayer( UpdateData *data, Player *target ) co
 
     for (uint32 i = 0; i < GetBagSize(); ++i)
         if(m_bagslot[i])
-            m_bagslot[i]->BuildCreateUpdateBlockForPlayer( data, target );
+            if (!m_bagslot[i]->IsBag())
+                m_bagslot[i]->BuildCreateUpdateBlockForPlayer( data, target );
+            else
+                sLog.outString("Detector: WPE cheat - bug in bug");
 }
 
 // If the bag is empty returns true
