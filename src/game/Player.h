@@ -1080,7 +1080,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         // used to whisper from cli to ingame characters
         std::string rcGmName;
 
-        uint32 GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 newfacialhair);
+        uint32 GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 newfacialhair, BarberShopStyleEntry const* newSkin=NULL);
 
         PlayerSocial *GetSocial() { return m_social; }
 
