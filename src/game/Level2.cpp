@@ -789,20 +789,20 @@ bool ChatHandler::HandleGameObjectPhaseCommand(const char* args)
         return false;
     }
 
-    char* stateStr = strtok (NULL, " ");
-    uint32 state = stateStr? atoi(stateStr) : 0;
-    if ( state > 2 )
+    char* phaseStr = strtok (NULL, " ");
+    uint32 phasemask = phaseStr? atoi(phaseStr) : 0;
+    if ( phasemask == 0 )
     {
         SendSysMessage(LANG_BAD_VALUE);
         SetSentErrorMessage(true);
         return false;
     }
 
-    obj->SetGoState((GOState)state);
+    obj->SetPhaseMask(phasemask,true);
+    obj->SaveToDB();
     return true;
 }
 
-//set state for selected object
 bool ChatHandler::HandleGameObjectStateCommand(const char* args)
 {
     // number or [name] Shift-click form |color|Hgameobject:go_id|h[name]|h|r
@@ -827,17 +827,16 @@ bool ChatHandler::HandleGameObjectStateCommand(const char* args)
         return false;
     }
 
-    char* phaseStr = strtok (NULL, " ");
-    uint32 phasemask = phaseStr? atoi(phaseStr) : 0;
-    if ( phasemask == 0 )
+    char* stateStr = strtok (NULL, " ");
+    uint32 state = stateStr? atoi(stateStr) : 0;
+    if ( state > 2 )
     {
         SendSysMessage(LANG_BAD_VALUE);
         SetSentErrorMessage(true);
         return false;
     }
 
-    obj->SetPhaseMask(phasemask,true);
-    obj->SaveToDB();
+    obj->SetGoState((GOState)state);
     return true;
 }
 
