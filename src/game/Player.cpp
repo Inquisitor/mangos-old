@@ -6224,6 +6224,75 @@ void Player::UpdateHonorFields()
     }
 
     m_lastHonorUpdateTime = now;
+
+    uint32 HonorKills = GetUInt32Value(PLAYER_FIELD_LIFETIME_HONORBALE_KILLS);
+    uint32 victim_rank = 0;
+
+    if (HonorKills < 10)
+        return;
+
+    if (HonorKills >= 10 && HonorKills < 100)
+        victim_rank = 1;
+    else if (HonorKills >= 100 && HonorKills < 250)
+        victim_rank = 2;
+    else if (HonorKills >= 250 && HonorKills < 500)
+        victim_rank = 3;
+    else if (HonorKills >= 500 && HonorKills < 1500)
+        victim_rank = 4;
+    else if (HonorKills >= 1500 && HonorKills < 5000)
+        victim_rank = 5;
+    else if (HonorKills >= 5000 && HonorKills < 7500)
+        victim_rank = 6;
+    else if (HonorKills >= 7500 && HonorKills < 10000)
+       victim_rank = 7;
+    else if (HonorKills >= 10000 && HonorKills < 12500)
+        victim_rank = 8;
+    else if (HonorKills >= 12500 && HonorKills < 15000)
+        victim_rank = 9;
+    else if (HonorKills >= 15000 && HonorKills < 17500)
+        victim_rank = 10;
+    else if (HonorKills >= 17500 && HonorKills < 20000)
+        victim_rank = 11;
+    else if (HonorKills >= 20000 && HonorKills < 25000)
+        victim_rank = 12;
+    else if (HonorKills >= 25000 && HonorKills < 50000)
+        victim_rank = 13;
+    else if (HonorKills >= 50000)
+        victim_rank = 14;
+
+    if (victim_rank == 0)
+        return;
+
+    if (GetTeam() == HORDE && victim_rank != 0)
+        victim_rank += 14;
+
+    CharTitlesEntry const* titleEntry = sCharTitlesStore.LookupEntry(victim_rank);
+    if (!HasTitle(titleEntry))
+        SetTitle(titleEntry);
+    else
+        return;
+
+    SetUInt32Value(PLAYER_CHOSEN_TITLE,victim_rank);
+
+    uint32 startid = 1;
+    if (GetTeam() == HORDE)
+        startid = 15;
+
+    for(uint32 i = startid; i < victim_rank; ++i)
+    {
+        if (i == victim_rank)
+            break;
+        else
+        {
+            if (!HasTitle(titleEntry))
+                continue;
+            else
+            {
+                CharTitlesEntry const* titleEntry = sCharTitlesStore.LookupEntry(i);
+                SetTitle(titleEntry,true);
+            }
+        }
+    }
 }
 
 ///Calculate the amount of honor gained based on the victim
@@ -8492,7 +8561,7 @@ uint8 Player::FindEquipSlot( ItemPrototype const* proto, uint32 slot, bool swap 
             break;
         case INVTYPE_2HWEAPON:
             slots[0] = EQUIPMENT_SLOT_MAINHAND;
-            if (CanDualWield() && CanTitanGrip())
+            if (CanDualWield() && CanTitanGrip() && proto && proto->SubClass != ITEM_SUBCLASS_WEAPON_POLEARM && proto->SubClass != ITEM_SUBCLASS_WEAPON_STAFF)
                 slots[1] = EQUIPMENT_SLOT_OFFHAND;
             break;
         case INVTYPE_TABARD:
@@ -20390,7 +20459,7 @@ bool Player::CanCaptureTowerPoint()
            );
 }
 
-uint32 Player::GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 newfacialhair)
+uint32 Player::GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 newfacialhair, BarberShopStyleEntry const* newSkin )
 {
     uint32 level = getLevel();
 
@@ -20400,6 +20469,7 @@ uint32 Player::GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 n
     uint8 hairstyle = GetByteValue(PLAYER_BYTES, 2);
     uint8 haircolor = GetByteValue(PLAYER_BYTES, 3);
     uint8 facialhair = GetByteValue(PLAYER_BYTES_2, 0);
+    uint8 skincolor = GetByteValue(PLAYER_BYTES, 0);
 
     if((hairstyle == newhairstyle) && (haircolor == newhaircolor) && (facialhair == newfacialhair))
         return 0;
@@ -20419,6 +20489,9 @@ uint32 Player::GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 n
 
     if(facialhair != newfacialhair)
         cost += bsc->cost * 0.75f;                          // +3/4 of price
+
+    if(newSkin && skincolor != newSkin->hair_id)
+        cost += bsc->cost * 0.75f;                          // ??
 
     return uint32(cost);
 }
@@ -21642,13 +21715,6 @@ void Player::ActivateSpec(uint8 specNum)
 
     SetActiveSpec(specNum);
 
-    // recheck action buttons (not checked at loading/spec copy)
-    ActionButtonList const& currentActionButtonList = m_actionButtons[m_activeSpec];
-    for(ActionButtonList::const_iterator itr = currentActionButtonList.begin(); itr != currentActionButtonList.end(); ++itr)
-        if (itr->second.uState != ACTIONBUTTON_DELETED)
-           if (!IsActionButtonDataValid(itr->first,itr->second.GetAction(),itr->second.GetType(), this))
-               removeActionButton(m_activeSpec,itr->first);
-
     uint32 spentTalents = 0;
     bool haveLearnedMaxRank=false;
 
@@ -21685,6 +21751,13 @@ void Player::ActivateSpec(uint8 specNum)
             }
         }
     }
+
+    // recheck action buttons (not checked at loading/spec copy)
+    ActionButtonList const& currentActionButtonList = m_actionButtons[m_activeSpec];
+    for(ActionButtonList::const_iterator itr = currentActionButtonList.begin(); itr != currentActionButtonList.end(); ++itr)
+        if (itr->second.uState != ACTIONBUTTON_DELETED)
+           if (!IsActionButtonDataValid(itr->first,itr->second.GetAction(),itr->second.GetType(), this))
+               removeActionButton(m_activeSpec,itr->first);
 
     ApplyGlyphs(true);
 

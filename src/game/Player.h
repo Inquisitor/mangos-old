@@ -1080,7 +1080,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         // used to whisper from cli to ingame characters
         std::string rcGmName;
 
-        uint32 GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 newfacialhair);
+        uint32 GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 newfacialhair, BarberShopStyleEntry const* newSkin=NULL);
 
         PlayerSocial *GetSocial() { return m_social; }
 
@@ -1952,7 +1952,15 @@ class MANGOS_DLL_SPEC Player : public Unit
         void SetCanBlock(bool value);
         bool CanDualWield() const { return m_canDualWield; }
         void SetCanDualWield(bool value) { m_canDualWield = value; }
-        bool CanTitanGrip() const { return m_canTitanGrip; }
+        bool CanTitanGrip() const
+        {
+            Item *mainItem = GetItemByPos( INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND );
+            
+            if (mainItem && ( mainItem->GetProto()->SubClass == ITEM_SUBCLASS_WEAPON_POLEARM || mainItem->GetProto()->SubClass == ITEM_SUBCLASS_WEAPON_STAFF ))
+                return false;
+
+            return m_canTitanGrip ; 
+        }
         void SetCanTitanGrip(bool value) { m_canTitanGrip = value; }
         bool CanTameExoticPets() const { return isGameMaster() || HasAuraType(SPELL_AURA_ALLOW_TAME_PET_TYPE); }
 

@@ -877,8 +877,20 @@ bool Pet::UpdateStats(Stats stat)
                     scale_coeff = 0.4493f;
                     break;
                 case CLASS_WARLOCK:
-                    scale_coeff = 0.7f;
+                {
+                    CreatureInfo const *cinfo = GetCreatureInfo();
+                    CreatureFamily petFamily = (CreatureFamily) cinfo->family;
+                    switch (petFamily)
+                    {
+                        case CREATURE_FAMILY_FELHUNTER:  value += float(owner->GetStat(stat)) * 0.7125f; break;
+                        case CREATURE_FAMILY_VOIDWALKER: value += float(owner->GetStat(stat)) * 0.825f; break;
+                        case CREATURE_FAMILY_FELGUARD:   value += float(owner->GetStat(stat)) * 0.825f; break;
+                        case CREATURE_FAMILY_SUCCUBUS:   value += float(owner->GetStat(stat)) * 0.6825f; break;
+                        case CREATURE_FAMILY_IMP:        value += float(owner->GetStat(stat)) * 0.63f; break;
+                        default: value += float(owner->GetStat(stat)) * 0.3f; break;
+                    }
                     break;
+                }
                 case CLASS_DEATH_KNIGHT:
                     scale_coeff = 0.3928f;
                     break;

@@ -3235,7 +3235,8 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
         if (m_target->GetTypeId() != TYPEID_PLAYER)
             modelid = ssEntry->modelID_A;
         else
-        {
+            modelid = m_target->GetModelForForm(form);
+        /*{
             // players are a bit difficult since the dbc has seldomly an horde modelid
             // so we add hacks here to set the right model
             if (Player::TeamForRace(m_target->getRace()) == ALLIANCE)
@@ -3269,7 +3270,7 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
                         break;
                 }
             }
-        }
+        }*/
     }
 
     // now only powertype must be set
@@ -6063,12 +6064,6 @@ void Aura::HandleModDamagePercentDone(bool apply, bool Real)
                 ((Player*)m_target)->_ApplyWeaponDependentAuraDamageMod(pItem, WeaponAttackType(i), this, apply);
     }
 
-    // Hack for Elemental Oath: In addition, while Clearcasting from Elemental Focus is active, you deal i% more spell damage.
-    if (GetId() == 16246) // Clearcasting
-        if (m_target->HasAura(51470) || m_target->HasAura(51466)) // Elemental Oath
-            if (Aura * pOath = m_target->GetAura((m_target->HasAura(51470) ? 51470 : 51466), 0))
-                m_modifier.m_amount = pOath->GetSpellProto()->EffectBasePoints[1]+1;
-
     // m_modifier.m_miscvalue is bitmask of spell schools
     // 1 ( 0-bit ) - normal school damage (SPELL_SCHOOL_MASK_NORMAL)
     // 126 - full bitmask all magic damages (SPELL_SCHOOL_MASK_MAGIC) including wand
@@ -6114,6 +6109,19 @@ void Aura::HandleModDamagePercentDone(bool apply, bool Real)
     if(m_target->GetTypeId() == TYPEID_PLAYER)
         for(int i = SPELL_SCHOOL_HOLY; i < MAX_SPELL_SCHOOL; ++i)
             m_target->ApplyModSignedFloatValue(PLAYER_FIELD_MOD_DAMAGE_DONE_PCT + i, m_modifier.m_amount/100.0f, apply);
+
+    // Elemental Oath - Damage increase on Clearcasting
+    if (apply && GetId() == 16246)
+    {
+        Unit::AuraList const& auras = m_target->GetAurasByType(SPELL_AURA_PROC_TRIGGER_SPELL);
+        for (Unit::AuraList::const_iterator i = auras.begin(); i != auras.end(); ++i)
+            if ((*i)->GetId() == 51466 ||   //Elemental Oath rank 1
+                (*i)->GetId() == 51470)     //Elemental Oath rank 2
+            {
+                m_modifier.m_amount += (*i)->GetSpellProto()->CalculateSimpleValue(1);
+                break;
+            }
+    }
 }
 
 void Aura::HandleModOffhandDamagePercent(bool apply, bool Real)
