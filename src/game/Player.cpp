@@ -6803,14 +6803,19 @@ void Player::_ApplyItemMods(Item *item, uint8 slot,bool apply)
     if(slot >= INVENTORY_SLOT_BAG_END || !item)
         return;
 
-    // not apply/remove mods for broken item
-    if(item->IsBroken())
-        return;
-
     ItemPrototype const *proto = item->GetProto();
 
     if(!proto)
         return;
+
+    
+    // not apply/remove mods for broken item
+    if(item->IsBroken())
+    {
+        if(proto->Socket[0].Color)
+            CorrectMetaGemEnchants(slot, apply);
+        return;
+    }
 
     sLog.outDetail("applying mods for item %u ",item->GetGUIDLow());
 
@@ -18633,7 +18638,7 @@ bool Player::EnchantmentFitsRequirements(uint32 enchantmentcondition, int8 slot)
         if(i == slot)
             continue;
         Item *pItem2 = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
-        if(pItem2 && pItem2->GetProto()->Socket[0].Color)
+        if(pItem2 && !pItem2->IsBroken() && pItem2->GetProto()->Socket[0].Color)
         {
             for(uint32 enchant_slot = SOCK_ENCHANTMENT_SLOT; enchant_slot < SOCK_ENCHANTMENT_SLOT+3; ++enchant_slot)
             {
