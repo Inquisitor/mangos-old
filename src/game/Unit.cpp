@@ -6269,6 +6269,9 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 if (this == pVictim)
                     return false;
 
+                if(!NeedsComboPoints(procSpell))
+                    return false;
+
                 // energy cost save
                 basepoints0 = procSpell->manaCost * triggerAmount/100;
                 if (basepoints0 <= 0)
