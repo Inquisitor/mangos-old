@@ -652,6 +652,23 @@ bool ChatHandler::HandleDebugSpawnVehicle(const char* args)
     return true;
 }
 
+bool ChatHandler::HandleDebugEnterVehicle(const char* args)
+{
+    Creature* target = getSelectedCreature();
+    if (!target)
+        return false;
+
+    if(!target->isVehicle())
+    {
+        PSendSysMessage("Selected creature is not vehicle-type");
+        return false;
+    }
+
+    m_session->GetPlayer()->EnterVehicle((Vehicle*)target, -1);
+
+    return true;
+}
+
 bool ChatHandler::HandleDebugSpellCheckCommand(const char* /*args*/)
 {
     sLog.outString( "Check expected in code spell properties base at table 'spell_check' content...");
