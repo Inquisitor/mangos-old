@@ -7215,6 +7215,16 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 triggered_spell_id = dummySpell->EffectTriggerSpell[effIndex];
                 break;
             }
+            // Sudden Doom
+            if (dummySpell->SpellIconID == 1939 && GetTypeId() == TYPEID_PLAYER)
+            {
+                // get highest rank of the Death Coil
+                uint32 spell = 49895; // rank 5
+                while( spell && !((Player*)this)->HasActiveSpell(spell) )
+                    spell = sSpellMgr.GetPrevSpellInChain(spell);
+
+                triggered_spell_id = spell;
+            }
             // Reaping, Blood of the North, Death Rune Mastery
             if (dummySpell->SpellIconID == 3041 || dummySpell->SpellIconID == 22 || dummySpell->SpellIconID == 2622)
             {
