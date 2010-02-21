@@ -470,8 +470,29 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
     if (!spellproto)
         return false;
 
+    switch(spellId)
+    {
+        case 28441:                                         // not positive dummy spell
+        case 37675:                                         // Chaos Blast
+            return false;
+        case 36032:                                         // Arcane Blast
+        case 47540:                                         // Penance start dummy aura - Rank 1
+        case 53005:                                         // Penance start dummy aura - Rank 2
+        case 53006:                                         // Penance start dummy aura - Rank 3
+        case 53007:                                         // Penance start dummy aura - Rank 4
+        case 47757:                                         // Penance heal effect trigger - Rank 1
+        case 52986:                                         // Penance heal effect trigger - Rank 2
+        case 52987:                                         // Penance heal effect trigger - Rank 3
+        case 52988:                                         // Penance heal effect trigger - Rank 4
+        case 642:                                           // Divine Shield
+            return true;
+    }
+
     switch(spellproto->Effect[effIndex])
     {
+        // consider dispel as always negative effect (explicit check will be performed later)
+        case SPELL_EFFECT_DISPEL:
+            return false;
         case SPELL_EFFECT_DUMMY:
             // some explicitly required dummy effect sets
             switch(spellId)
@@ -489,7 +510,8 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
         case SPELL_EFFECT_HEAL_PCT:
         case SPELL_EFFECT_ENERGIZE_PCT:
             return true;
-
+        case SPELL_EFFECT_CHARGE:
+            return true;
             // non-positive aura use
         case SPELL_EFFECT_APPLY_AURA:
         case SPELL_EFFECT_APPLY_AREA_AURA_FRIEND:
@@ -560,6 +582,12 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
                                     return false;
                             }
                         }
+                    }
+                    break;
+                case SPELL_AURA_PERIODIC_TRIGGER_SPELL_WITH_VALUE:
+                    {
+                        if(spellproto->SpellFamilyName == SPELLFAMILY_PRIEST && spellproto->SpellIconID == 548)
+                            return false;
                     }
                     break;
                 case SPELL_AURA_PROC_TRIGGER_SPELL:
