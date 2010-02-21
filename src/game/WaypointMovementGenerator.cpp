@@ -244,6 +244,11 @@ bool WaypointMovementGenerator<Creature>::Update(Creature &creature, const uint3
             // If not stopped then stop it and set the reset of TimeTracker to waittime
             creature.StopMoving();
             SetStoppedByPlayer(false);
+            if(!i_path)
+            {
+                sLog.outDebug("Crash stopped path is null!\n");
+                return true;
+            }
 
             i_nextMoveTime.Reset(i_path->at(i_currentNode).delay);
             ++i_currentNode;

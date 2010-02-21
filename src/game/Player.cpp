@@ -3726,7 +3726,7 @@ bool Player::resetTalents(bool no_cost)
         if( (getClassMask() & talentTabInfo->ClassMask) == 0 )
             continue;
 
-        for (int rank = 0; rank < MAX_TALENT_RANK; ++rank)
+        for (int8 rank = MAX_TALENT_RANK-1; rank >= 0; --rank)
         {
             // skip non-existant talent ranks
             if (talentInfo->RankID[rank] == 0)
