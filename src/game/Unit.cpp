@@ -6199,6 +6199,16 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 32747;
                     break;
                 }
+                // Glyph of Rake
+                case 54821:
+                {
+                    if (target->GetTypeId() == TYPEID_UNIT && procSpell->SpellVisual[0] == 750 && procSpell->EffectApplyAuraName[1] == 3)
+                    {
+                        triggered_spell_id = 54820;
+                        break;
+                    }
+                    return false;
+                }
                 // Glyph of Starfire
                 case 54845:
                 {
