@@ -1033,7 +1033,7 @@ void Aura::_AddAura()
         if(slot < MAX_AURAS)                        // slot found send data to client
         {
             SetAura(false);
-            SetAuraFlags((1 << GetEffIndex()) | AFLAG_NOT_CASTER | ((GetAuraMaxDuration() > 0) ? AFLAG_DURATION : AFLAG_NONE) | (IsPositive() ? AFLAG_POSITIVE : AFLAG_NEGATIVE));
+            SetAuraFlags((1 << GetEffIndex()) | AFLAG_NOT_CASTER | ((GetAuraMaxDuration() > 0) ? AFLAG_DURATION : AFLAG_NONE) | ((IsPositive() || (IsDispelSpell(GetSpellProto()) && caster->IsFriendlyTo(m_target))) ? AFLAG_POSITIVE : AFLAG_NEGATIVE));
             SetAuraLevel(caster ? caster->getLevel() : sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL));
             SendAuraUpdate(false);
         }
@@ -6478,6 +6478,13 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
                 cast_at_remove = true;
                 spellId1 = 60242;                           // Darkmoon Card: Illusion
             }
+            // Deathbloom of Loatheb
+            else if( (GetId() == 29865 || GetId() == 55053) && !apply )
+            {
+                cast_at_remove = true;
+                // normal | heroic
+                spellId1 = ((GetId() == 29865) ? 55594 : 55601 );
+            }
             else
                 return;
             break;
@@ -7075,6 +7082,17 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
 
             m_modifier.m_amount += (int32)DoneActualBenefit;
         }
+
+        // Glyph of Power Word: Shield
+        if( m_spellProto->SpellFamilyName == SPELLFAMILY_PRIEST && m_spellProto->Mechanic == MECHANIC_SHIELD &&
+            (m_spellProto->SpellFamilyFlags & UI64LIT(0x0000000000000001)) )
+        {
+            if (Aura *aura = caster->GetDummyAura(55672))
+            {
+                int32 basePoints0 = m_modifier.m_amount * aura->GetModifier()->m_amount / 100;
+                caster->CastCustomSpell(m_target, 56160, &basePoints0, 0, 0, true);
+            }
+        }
     }
     else
     {
@@ -7160,7 +7178,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune (not use charges)
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+            if(m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             // some auras remove at specific health level or more
@@ -7298,7 +7316,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+            if(m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             uint32 absorb=0;
@@ -7372,6 +7390,9 @@ void Aura::PeriodicTick()
 
             Unit *pCaster = GetCaster();
             if(!pCaster)
+                return;
+
+            if (GetSpellProto()->SpellFamilyName != SPELLFAMILY_GENERIC && m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             // heal for caster damage (must be alive)
@@ -7482,7 +7503,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune (not use charges)
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+            if(m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             // ignore non positive values (can be result apply spellmods to aura damage
@@ -7598,7 +7619,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune (not use charges)
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+            if(m_target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             int32 pdamage = m_modifier.m_amount > 0 ? m_modifier.m_amount : 0;
@@ -7761,6 +7782,14 @@ void Aura::PeriodicDummyTick()
                     // 7050 Forsaken Skill: Frost
                     // 7051 Forsaken Skill: Holy
                     // 7053 Forsaken Skill: Shadow
+                    return;
+                }
+                // Steal Flesh
+                case 52708:
+                {
+                    if (Unit *caster = GetCaster())
+                        caster->CastSpell(caster, 52712, true );
+                    m_target->CastSpell(m_target, 52711, true);
                     return;
                 }
                 case 7057:                                  // Haunting Spirits

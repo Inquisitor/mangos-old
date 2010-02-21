@@ -1057,9 +1057,7 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
     Unit* realCaster = GetAffectiveCaster();
 
     // Recheck immune (only for delayed spells)
-    if (m_spellInfo->speed && (
-        unit->IsImmunedToDamage(GetSpellSchoolMask(m_spellInfo)) ||
-        unit->IsImmunedToSpell(m_spellInfo)))
+    if( m_spellInfo->speed && unit->IsImmunedToSpell(m_spellInfo))
     {
         if (realCaster)
             realCaster->SendSpellMiss(unit, m_spellInfo->Id, SPELL_MISS_IMMUNE);
@@ -2480,6 +2478,7 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
     {
         m_caster->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
         m_caster->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
+        m_caster->RemoveAurasDueToSpell(32612);
     }
 
     // add non-triggered (with cast time and without)
@@ -4310,9 +4309,17 @@ SpellCastResult Spell::CheckCast(bool strict)
             }
         }
 
-        if(IsPositiveSpell(m_spellInfo->Id))
-            if(target->IsImmunedToSpell(m_spellInfo))
-                return SPELL_FAILED_TARGET_AURASTATE;
+        // Dispel spells are considered negative, so let's do explicit check
+        if(IsPositiveSpell(m_spellInfo->Id) || (IsDispelSpell(m_spellInfo) && m_caster->IsFriendlyTo(target)))
+             if(target->IsImmunedToSpell(m_spellInfo))
+            {
+                // Divine Shield - very ugly hack to allow (some) positive effects being casted while under effect
+                if (!target->HasAura(642))
+                    return SPELL_FAILED_TARGET_AURASTATE;
+                else // Avenging Wrath, Divine Shield, Divine Protection or Hand of Protection
+                    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_PALADIN && m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000200000400080))
+                        return SPELL_FAILED_TARGET_AURASTATE;
+            }
 
         //Must be behind the target.
         if( m_spellInfo->AttributesEx2 == 0x100000 && (m_spellInfo->AttributesEx & 0x200) == 0x200 && target->HasInArc(M_PI_F, m_caster) )

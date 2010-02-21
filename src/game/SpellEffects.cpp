@@ -2316,9 +2316,9 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 }
 
                 if (m_caster->IsFriendlyTo(unitTarget))
-                    m_caster->CastSpell(unitTarget, heal, true);
+                    m_caster->CastSpell(unitTarget, heal, false);
                 else
-                    m_caster->CastSpell(unitTarget, hurt, true);
+                    m_caster->CastSpell(unitTarget, hurt, false);
 
                 return;
             }
@@ -4479,11 +4479,26 @@ void Spell::EffectDispel(SpellEffectIndex eff_idx)
         // Dispell N = damage buffs (or while exist buffs for dispel)
         for (int32 count=0; count < damage && !dispel_list.empty(); ++count)
         {
-            // Random select buff for dispel
-            std::vector<Aura*>::iterator dispel_itr = dispel_list.begin();
-            std::advance(dispel_itr,urand(0, dispel_list.size()-1));
+            Aura *aur = NULL;
+             std::vector<Aura*>::iterator dispel_itr = dispel_list.begin();
 
-            Aura *aur = *dispel_itr;
+            // Effects granting full immunity have highest priority during dispel
+            for ( ; dispel_itr != dispel_list.end(); ++dispel_itr)
+            {
+                if (GetAllSpellImmunityMask((*dispel_itr)->GetSpellProto()) == SPELL_SCHOOL_MASK_ALL)
+                {
+                    aur = *dispel_itr;
+                    break;
+                }
+            }
+
+            if(!aur)
+            {
+                // Random select buff for dispel
+                dispel_itr = dispel_list.begin();
+                std::advance(dispel_itr,urand(0, dispel_list.size()-1));
+                aur = *dispel_itr;
+            }
 
             // remove entry from dispel_list
             dispel_list.erase(dispel_itr);
@@ -6197,6 +6212,49 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     // triggered spell is stored in m_spellInfo->EffectBasePoints[0]
                     unitTarget->CastSpell(unitTarget, damage, false);
                     break;
+                }
+                // Q: The Denouncement
+                case 48724:
+                case 48726:
+                case 48728:
+                case 48730:
+                {
+                    if(!unitTarget)
+                        return;
+                    // triggered spell is stored in m_spellInfo->EffectBasePoints[0]
+                    unitTarget->CastSpell(unitTarget, damage, true);
+                    return;
+                }
+                // Q: In Service of Blood/Unholy/Frost
+                case 50252:
+                case 47724:
+                case 47703:
+                {
+                    Unit *caster = GetCaster();
+                    if( !caster || caster->GetTypeId() != TYPEID_PLAYER )
+                    {
+                        if(Unit *o_caster = GetAffectiveCaster())
+                        {
+                            caster = o_caster;
+                            if(caster->GetTypeId() != TYPEID_PLAYER )
+                                return;
+                        }
+                        else return;
+                    }
+
+                    // triggered spell is stored in m_spellInfo->EffectBasePoints[0]
+                    caster->CastSpell(caster, damage, true);
+                    return;
+                }
+                case 32580:
+                {
+                    uint32 toSummon = 0;
+                    if( unitTarget->GetClosestCreatureWithEntry(unitTarget, 21351, 10) )
+                        toSummon = 21446;
+                    else if( unitTarget->GetClosestCreatureWithEntry(unitTarget, 21456, 10) )
+                        toSummon = 21452;
+                    unitTarget->SummonCreature(toSummon, unitTarget->GetPositionX(), unitTarget->GetPositionY(), unitTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 300000 );
+                    return;
                 }
                 case 54729:                                 // Winged Steed of the Ebon Blade
                 {
