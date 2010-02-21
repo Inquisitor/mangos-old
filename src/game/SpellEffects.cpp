@@ -6214,6 +6214,49 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, damage, false);
                     break;
                 }
+                // Q: The Denouncement
+                case 48724:
+                case 48726:
+                case 48728:
+                case 48730:
+                {
+                    if(!unitTarget)
+                        return;
+                    // triggered spell is stored in m_spellInfo->EffectBasePoints[0]
+                    unitTarget->CastSpell(unitTarget, damage, true);
+                    return;
+                }
+                // Q: In Service of Blood/Unholy/Frost
+                case 50252:
+                case 47724:
+                case 47703:
+                {
+                    Unit *caster = GetCaster();
+                    if( !caster || caster->GetTypeId() != TYPEID_PLAYER )
+                    {
+                        if(Unit *o_caster = GetAffectiveCaster())
+                        {
+                            caster = o_caster;
+                            if(caster->GetTypeId() != TYPEID_PLAYER )
+                                return;
+                        }
+                        else return;
+                    }
+
+                    // triggered spell is stored in m_spellInfo->EffectBasePoints[0]
+                    caster->CastSpell(caster, damage, true);
+                    return;
+                }
+                case 32580:
+                {
+                    uint32 toSummon = 0;
+                    if( unitTarget->GetClosestCreatureWithEntry(unitTarget, 21351, 10) )
+                        toSummon = 21446;
+                    else if( unitTarget->GetClosestCreatureWithEntry(unitTarget, 21456, 10) )
+                        toSummon = 21452;
+                    unitTarget->SummonCreature(toSummon, unitTarget->GetPositionX(), unitTarget->GetPositionY(), unitTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 300000 );
+                    return;
+                }
                 case 54729:                                 // Winged Steed of the Ebon Blade
                 {
                     if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
