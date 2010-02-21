@@ -6455,6 +6455,13 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
                 cast_at_remove = true;
                 spellId1 = 60242;                           // Darkmoon Card: Illusion
             }
+            // Deathbloom of Loatheb
+            else if( (GetId() == 29865 || GetId() == 55053) && !apply )
+            {
+                cast_at_remove = true;
+                // normal | heroic
+                spellId1 = ((GetId() == 29865) ? 55594 : 55601 );
+            }
             else
                 return;
             break;
@@ -7752,6 +7759,14 @@ void Aura::PeriodicDummyTick()
                     // 7050 Forsaken Skill: Frost
                     // 7051 Forsaken Skill: Holy
                     // 7053 Forsaken Skill: Shadow
+                    return;
+                }
+                // Steal Flesh
+                case 52708:
+                {
+                    if (Unit *caster = GetCaster())
+                        caster->CastSpell(caster, 52712, true );
+                    m_target->CastSpell(m_target, 52711, true);
                     return;
                 }
                 case 7057:                                  // Haunting Spirits
