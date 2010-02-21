@@ -3525,7 +3525,7 @@ DiminishingGroup GetDiminishingReturnsGroupForSpell(SpellEntry const* spellproto
         case SPELLFAMILY_PRIEST:
         {
             // Shackle Undead
-            else if (spellproto->SpellIconID == 27)
+            if (spellproto->SpellIconID == 27)
                 return DIMINISHING_DISORIENT;
             break;
         }

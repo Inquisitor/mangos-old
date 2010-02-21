@@ -9172,8 +9172,12 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
     AuraList const& mOverrideClassScript= owner->GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
     for(AuraList::const_iterator i = mOverrideClassScript.begin(); i != mOverrideClassScript.end(); ++i)
     {
-        if (!(*i)->isAffectedOnSpell(spellProto))
+        if (!(*i)->isAffectedOnSpell(spellProto)       
+            // this is very ugly hack for Twisted Faith not affecting Mind Flay
+            && !( (*i)->GetModifier()->m_miscvalue == 7377 && spellProto->SpellFamilyName == SPELLFAMILY_PRIEST &&
+                (spellProto->SpellFamilyFlags & UI64LIT(0x800000))) )
             continue;
+
         switch((*i)->GetModifier()->m_miscvalue)
         {
             case 4920: // Molten Fury
