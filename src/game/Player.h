@@ -108,7 +108,7 @@ struct SpellModifier
         : op(_op), type(_type), charges(_charges), value(_value), mask(_mask), mask2(_mask2), spellId(_spellId), lastAffected(NULL)
     {}
 
-    SpellModifier(SpellModOp _op, SpellModType _type, int32 _value, SpellEntry const* spellEntry, uint8 eff, int16 _charges = 0);
+    SpellModifier(SpellModOp _op, SpellModType _type, int32 _value, SpellEntry const* spellEntry, SpellEffectIndex eff, int16 _charges = 0);
 
     SpellModifier(SpellModOp _op, SpellModType _type, int32 _value, Aura const* aura, int16 _charges = 0);
 
@@ -479,6 +479,7 @@ enum DrunkenState
 
 enum PlayerFlags
 {
+    PLAYER_FLAGS_NONE              = 0x00000000,
     PLAYER_FLAGS_GROUP_LEADER      = 0x00000001,
     PLAYER_FLAGS_AFK               = 0x00000002,
     PLAYER_FLAGS_DND               = 0x00000004,
@@ -888,23 +889,21 @@ enum PlayerLoginQueryIndex
     PLAYER_LOGIN_QUERY_LOADREPUTATION           = 7,
     PLAYER_LOGIN_QUERY_LOADINVENTORY            = 8,
     PLAYER_LOGIN_QUERY_LOADACTIONS              = 9,
-    PLAYER_LOGIN_QUERY_LOADMAILCOUNT            = 10,
-    PLAYER_LOGIN_QUERY_LOADMAILDATE             = 11,
-    PLAYER_LOGIN_QUERY_LOADSOCIALLIST           = 12,
-    PLAYER_LOGIN_QUERY_LOADHOMEBIND             = 13,
-    PLAYER_LOGIN_QUERY_LOADSPELLCOOLDOWNS       = 14,
-    PLAYER_LOGIN_QUERY_LOADDECLINEDNAMES        = 15,
-    PLAYER_LOGIN_QUERY_LOADGUILD                = 16,
-    PLAYER_LOGIN_QUERY_LOADARENAINFO            = 17,
-    PLAYER_LOGIN_QUERY_LOADACHIEVEMENTS         = 18,
-    PLAYER_LOGIN_QUERY_LOADCRITERIAPROGRESS     = 19,
-    PLAYER_LOGIN_QUERY_LOADEQUIPMENTSETS        = 20,
-    PLAYER_LOGIN_QUERY_LOADBGDATA               = 21,
-    PLAYER_LOGIN_QUERY_LOADACCOUNTDATA          = 22,
-    PLAYER_LOGIN_QUERY_LOADSKILLS               = 23,
-    PLAYER_LOGIN_QUERY_LOADGLYPHS               = 24,
-    PLAYER_LOGIN_QUERY_LOADTALENTS              = 25,
-    MAX_PLAYER_LOGIN_QUERY                      = 26
+    PLAYER_LOGIN_QUERY_LOADSOCIALLIST           = 10,
+    PLAYER_LOGIN_QUERY_LOADHOMEBIND             = 11,
+    PLAYER_LOGIN_QUERY_LOADSPELLCOOLDOWNS       = 12,
+    PLAYER_LOGIN_QUERY_LOADDECLINEDNAMES        = 13,
+    PLAYER_LOGIN_QUERY_LOADGUILD                = 14,
+    PLAYER_LOGIN_QUERY_LOADARENAINFO            = 15,
+    PLAYER_LOGIN_QUERY_LOADACHIEVEMENTS         = 16,
+    PLAYER_LOGIN_QUERY_LOADCRITERIAPROGRESS     = 17,
+    PLAYER_LOGIN_QUERY_LOADEQUIPMENTSETS        = 18,
+    PLAYER_LOGIN_QUERY_LOADBGDATA               = 19,
+    PLAYER_LOGIN_QUERY_LOADACCOUNTDATA          = 20,
+    PLAYER_LOGIN_QUERY_LOADSKILLS               = 21,
+    PLAYER_LOGIN_QUERY_LOADGLYPHS               = 22,
+    PLAYER_LOGIN_QUERY_LOADTALENTS              = 23,
+    MAX_PLAYER_LOGIN_QUERY                      = 24
 };
 
 enum PlayerDelayedOperations
@@ -1118,7 +1117,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         void setDeathState(DeathState s);                   // overwrite Unit::setDeathState
 
-        void InnEnter (int time, uint32 mapid, float x, float y, float z)
+        void InnEnter (time_t time, uint32 mapid, float x, float y, float z)
         {
             inn_pos_mapid = mapid;
             inn_pos_x = x;
@@ -1138,8 +1137,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         float GetInnPosY() const { return inn_pos_y; }
         float GetInnPosZ() const { return inn_pos_z; }
 
-        int GetTimeInnEnter() const { return time_inn_enter; }
-        void UpdateInnerTime (int time) { time_inn_enter = time; }
+        time_t GetTimeInnEnter() const { return time_inn_enter; }
+        void UpdateInnerTime (time_t time) { time_inn_enter = time; }
 
         void RemovePet(Pet* pet, PetSaveMode mode, bool returnreagent = false);
         void RemoveMiniPet();
@@ -1560,7 +1559,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         TrainerSpellState GetTrainerSpellState(TrainerSpell const* trainer_spell) const;
         bool IsSpellFitByClassAndRace( uint32 spell_id ) const;
         bool IsNeedCastPassiveSpellAtLearn(SpellEntry const* spellInfo) const;
-        bool IsImmunedToSpellEffect(SpellEntry const* spellInfo, uint32 index) const;
+        bool IsImmunedToSpellEffect(SpellEntry const* spellInfo, SpellEffectIndex index) const;
 
         void SendProficiency(uint8 pr1, uint32 pr2);
         void SendInitialSpells();
@@ -1626,7 +1625,7 @@ class MANGOS_DLL_SPEC Player : public Unit
             SpellCooldowns::const_iterator itr = m_spellCooldowns.find(spell_id);
             return itr != m_spellCooldowns.end() && itr->second.end > time(NULL);
         }
-        uint32 GetSpellCooldownDelay(uint32 spell_id) const
+        time_t GetSpellCooldownDelay(uint32 spell_id) const
         {
             SpellCooldowns::const_iterator itr = m_spellCooldowns.find(spell_id);
             time_t t = time(NULL);
@@ -1671,7 +1670,7 @@ class MANGOS_DLL_SPEC Player : public Unit
             m_cinematic = cine;
         }
 
-        static bool IsActionButtonDataValid(uint8 button, uint32 action, uint8 type, Player* player);
+        static bool IsActionButtonDataValid(uint8 button, uint32 action, uint8 type, Player* player, bool msg = true);
         ActionButton* addActionButton(uint8 spec, uint8 button, uint32 action, uint8 type);
         void removeActionButton(uint8 spec, uint8 button);
         void SendInitialActionButtons() const;
@@ -2353,7 +2352,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         void _LoadAuras(QueryResult *result, uint32 timediff);
         void _LoadBoundInstances(QueryResult *result);
         void _LoadInventory(QueryResult *result, uint32 timediff);
-        void _LoadMailInit(QueryResult *resultUnread, QueryResult *resultDelivery);
         void _LoadMail();
         void _LoadMailedItems(Mail *mail);
         void _LoadQuestStatus(QueryResult *result);
@@ -2503,7 +2501,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         float m_ammoDPS;
 
         ////////////////////Rest System/////////////////////
-        int time_inn_enter;
+        time_t time_inn_enter;
         uint32 inn_pos_mapid;
         float  inn_pos_x;
         float  inn_pos_y;

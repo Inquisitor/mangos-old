@@ -25,6 +25,7 @@ pkgdatadir = $(datadir)/mangos/sql/updates
 ## Files to be installed
 #  Install basic SQL files to datadir
 pkgdata_DATA = \
+	9010_01_realmd_realmlist.sql \
 	9136_01_characters_account_data.sql \
 	9136_02_mangos_quest_poi.sql \
 	9136_03_characters_character_ticket.sql \
@@ -70,11 +71,16 @@ pkgdata_DATA = \
 	9366_02_mangos_spell_proc_event.sql \
 	9374_01_characters_character_glyphs.sql \
 	9375_01_characters_character_glyphs.sql \
+	9379_01_mangos_spell_proc_event.sql \
+	9380_01_mangos_command.sql \
+	9382_01_mangos_command.sql \
+	9385_01_mangos_command.sql \
 	README
 
 ## Additional files to include when running 'make dist'
 #  SQL update files, to upgrade database schema from older revisions
 EXTRA_DIST = \
+	9010_01_realmd_realmlist.sql \
 	9136_01_characters_account_data.sql \
 	9136_02_mangos_quest_poi.sql \
 	9136_03_characters_character_ticket.sql \
@@ -120,4 +126,8 @@ EXTRA_DIST = \
 	9366_02_mangos_spell_proc_event.sql \
 	9374_01_characters_character_glyphs.sql \
 	9375_01_characters_character_glyphs.sql \
+	9379_01_mangos_spell_proc_event.sql \
+	9380_01_mangos_command.sql \
+	9382_01_mangos_command.sql \
+	9385_01_mangos_command.sql \
 	README
