@@ -6094,6 +6094,13 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 56131;
                     break;
                 }
+                // Glyph of Prayer of Healing
+                case 55680:
+                {
+                    basepoints0 = int32(damage * 0.4f);
+                    triggered_spell_id = 56161;
+                    break;
+                }
             }
             break;
         }
