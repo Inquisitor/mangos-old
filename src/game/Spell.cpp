@@ -2700,6 +2700,8 @@ void Spell::cast(bool skipCheck)
                 if (m_targets.getUnitTarget() && m_targets.getUnitTarget() == m_caster)
                     AddPrecastSpell(25771);                 // Forbearance
             }
+            else if (m_spellInfo->Id == 19746 && m_caster->HasAura(31821))
+               AddTriggeredSpell(64364);                    // Aura Mastery
             break;
         }
         case SPELLFAMILY_SHAMAN:
