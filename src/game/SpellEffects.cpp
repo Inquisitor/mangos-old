@@ -2094,6 +2094,7 @@ void Spell::EffectDummy(uint32 i)
                             break;
                         }
                     }
+                    m_caster->RemoveAura(52437, 0); // Remove Sudden Death after calculations
                 }
 
                 m_caster->SetPower(POWER_RAGE,m_caster->GetPower(POWER_RAGE)-rage);
