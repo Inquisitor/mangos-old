@@ -7516,6 +7516,13 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                     if (GetStat(STAT_AGILITY)  > stat) { trigger_spell_id = 67772;                               }
                     break;
                 }
+                // Unyielding Knights
+                case 38164:
+                {
+                    // Do not summont our knights if we arent fighting specific enemy
+                    if( GetTypeId() != TYPEID_PLAYER || pVictim->GetEntry() != 19457)
+                        return false;
+                }
             }
             break;
         case SPELLFAMILY_MAGE:
