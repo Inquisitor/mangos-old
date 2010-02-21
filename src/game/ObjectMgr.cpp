@@ -276,7 +276,7 @@ void ObjectMgr::LoadCreatureLocales()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -344,7 +344,7 @@ void ObjectMgr::LoadGossipMenuItemsLocales()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -408,7 +408,7 @@ void ObjectMgr::LoadPointOfInterestLocales()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -791,9 +791,9 @@ void ObjectMgr::ConvertCreatureAddonAuras(CreatureDataAddon* addon, char const* 
     for(uint32 j = 0; j < val.size()/2; ++j)
     {
         CreatureDataAddonAura& cAura = const_cast<CreatureDataAddonAura&>(addon->auras[i]);
-        cAura.spell_id = (uint32)val[2*j+0];
-        cAura.effect_idx  = (uint32)val[2*j+1];
-        if ( cAura.effect_idx > 2 )
+        cAura.spell_id = uint32(val[2*j+0]);
+        cAura.effect_idx  = SpellEffectIndex(val[2*j+1]);
+        if (cAura.effect_idx >= MAX_EFFECT_INDEX)
         {
             sLog.outErrorDb("Creature (%s: %u) has wrong effect %u for spell %u in `auras` field in `%s`.",guidEntryStr,addon->guidOrEntry,cAura.effect_idx,cAura.spell_id,table);
             continue;
@@ -817,7 +817,7 @@ void ObjectMgr::ConvertCreatureAddonAuras(CreatureDataAddon* addon, char const* 
     // fill terminator element (after last added)
     CreatureDataAddonAura& endAura = const_cast<CreatureDataAddonAura&>(addon->auras[i]);
     endAura.spell_id   = 0;
-    endAura.effect_idx = 0;
+    endAura.effect_idx = EFFECT_INDEX_0;
 }
 
 void ObjectMgr::ConvertCreatureAddonPassengers(CreatureDataAddon* addon, char const* table, char const* guidEntryStr)
@@ -972,36 +972,36 @@ void ObjectMgr::LoadEquipmentTemplates()
 {
     sEquipmentStorage.Load();
 
-    for(uint32 i=0; i< sEquipmentStorage.MaxEntry; ++i)
+    for(uint32 i=0; i < sEquipmentStorage.MaxEntry; ++i)
     {
         EquipmentInfo const* eqInfo = sEquipmentStorage.LookupEntry<EquipmentInfo>(i);
 
-        if(!eqInfo)
+        if (!eqInfo)
             continue;
 
-        for(uint8 j=0; j<3; j++)
+        for(uint8 j = 0; j < 3; ++j)
         {
-            if(!eqInfo->equipentry[j])
+            if (!eqInfo->equipentry[j])
                continue;
 
             ItemEntry const *dbcitem = sItemStore.LookupEntry(eqInfo->equipentry[j]);
 
-            if(!dbcitem)
+            if (!dbcitem)
             {
                 sLog.outErrorDb("Unknown item (entry=%u) in creature_equip_template.equipentry%u for entry = %u, forced to 0.", eqInfo->equipentry[j], j+1, i);
                 const_cast<EquipmentInfo*>(eqInfo)->equipentry[j] = 0;
                 continue;
             }
 
-            if(dbcitem->InventoryType != INVTYPE_WEAPON &&
-                    dbcitem->InventoryType != INVTYPE_SHIELD &&
-                    dbcitem->InventoryType != INVTYPE_RANGED &&
-                    dbcitem->InventoryType != INVTYPE_2HWEAPON &&
-                    dbcitem->InventoryType != INVTYPE_WEAPONMAINHAND &&
-                    dbcitem->InventoryType != INVTYPE_WEAPONOFFHAND &&
-                    dbcitem->InventoryType != INVTYPE_HOLDABLE &&
-                    dbcitem->InventoryType != INVTYPE_THROWN &&
-                    dbcitem->InventoryType != INVTYPE_RANGEDRIGHT)
+            if (dbcitem->InventoryType != INVTYPE_WEAPON &&
+                dbcitem->InventoryType != INVTYPE_SHIELD &&
+                dbcitem->InventoryType != INVTYPE_RANGED &&
+                dbcitem->InventoryType != INVTYPE_2HWEAPON &&
+                dbcitem->InventoryType != INVTYPE_WEAPONMAINHAND &&
+                dbcitem->InventoryType != INVTYPE_WEAPONOFFHAND &&
+                dbcitem->InventoryType != INVTYPE_HOLDABLE &&
+                dbcitem->InventoryType != INVTYPE_THROWN &&
+                dbcitem->InventoryType != INVTYPE_RANGEDRIGHT)
             {
                 sLog.outErrorDb("Item (entry=%u) in creature_equip_template.equipentry%u for entry = %u is not equipable in a hand, forced to 0.", eqInfo->equipentry[j], j+1, i);
                 const_cast<EquipmentInfo*>(eqInfo)->equipentry[j] = 0;
@@ -1143,7 +1143,7 @@ void ObjectMgr::LoadCreatures()
                 if (GetMapDifficultyData(i,Difficulty(k)))
                     spawnMasks[i] |= (1 << k);
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -1335,7 +1335,7 @@ void ObjectMgr::LoadGameobjects()
                 if (GetMapDifficultyData(i,Difficulty(k)))
                     spawnMasks[i] |= (1 << k);
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -1503,7 +1503,7 @@ void ObjectMgr::LoadCreatureRespawnTimes()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -1545,7 +1545,7 @@ void ObjectMgr::LoadGameobjectRespawnTimes()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -1676,7 +1676,7 @@ void ObjectMgr::LoadItemLocales()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -2195,7 +2195,7 @@ void ObjectMgr::LoadItemRequiredTarget()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -2227,7 +2227,7 @@ void ObjectMgr::LoadItemRequiredTarget()
                     if (bounds.first != bounds.second)
                         break;
 
-                    for (int j = 0; j < 3; ++j)
+                    for (int j = 0; j < MAX_EFFECT_INDEX; ++j)
                     {
                         if (pSpellInfo->EffectImplicitTargetA[j] == TARGET_CHAIN_DAMAGE ||
                             pSpellInfo->EffectImplicitTargetB[j] == TARGET_CHAIN_DAMAGE ||
@@ -2299,7 +2299,7 @@ void ObjectMgr::LoadPetLevelInfo()
             return;
         }
 
-        barGoLink bar( result->GetRowCount() );
+        barGoLink bar( (int)result->GetRowCount() );
 
         do
         {
@@ -2313,7 +2313,7 @@ void ObjectMgr::LoadPetLevelInfo()
             }
 
             uint32 current_level = fields[1].GetUInt32();
-            if(current_level > sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
+            if(current_level > sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
             {
                 if(current_level > STRONG_MAX_LEVEL)        // hardcoded level maximum
                     sLog.outErrorDb("Wrong (> %u) level %u in `pet_levelstats` table, ignoring.",STRONG_MAX_LEVEL,current_level);
@@ -2333,7 +2333,7 @@ void ObjectMgr::LoadPetLevelInfo()
             PetLevelInfo*& pInfoMapEntry = petInfo[creature_id];
 
             if(pInfoMapEntry==NULL)
-                pInfoMapEntry =  new PetLevelInfo[sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL)];
+                pInfoMapEntry =  new PetLevelInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)];
 
             // data for level 1 stored in [0] array element, ...
             PetLevelInfo* pLevelInfo = &pInfoMapEntry[current_level-1];
@@ -2371,7 +2371,7 @@ void ObjectMgr::LoadPetLevelInfo()
         }
 
         // fill level gaps
-        for (uint32 level = 1; level < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL); ++level)
+        for (uint32 level = 1; level < sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL); ++level)
         {
             if(pInfo[level].health == 0)
             {
@@ -2384,8 +2384,8 @@ void ObjectMgr::LoadPetLevelInfo()
 
 PetLevelInfo const* ObjectMgr::GetPetLevelInfo(uint32 creature_id, uint32 level) const
 {
-    if(level > sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
-        level = sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL);
+    if(level > sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
+        level = sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL);
 
     PetLevelInfoMap::const_iterator itr = petInfo.find(creature_id);
     if(itr == petInfo.end())
@@ -2413,7 +2413,7 @@ void ObjectMgr::LoadPlayerInfo()
             exit(1);
         }
 
-        barGoLink bar( result->GetRowCount() );
+        barGoLink bar( (int)result->GetRowCount() );
 
         do
         {
@@ -2505,7 +2505,7 @@ void ObjectMgr::LoadPlayerInfo()
         }
         else
         {
-            barGoLink bar( result->GetRowCount() );
+            barGoLink bar( (int)result->GetRowCount() );
 
             do
             {
@@ -2574,7 +2574,7 @@ void ObjectMgr::LoadPlayerInfo()
         }
         else
         {
-            barGoLink bar( result->GetRowCount() );
+            barGoLink bar( (int)result->GetRowCount() );
 
             do
             {
@@ -2633,7 +2633,7 @@ void ObjectMgr::LoadPlayerInfo()
         }
         else
         {
-            barGoLink bar( result->GetRowCount() );
+            barGoLink bar( (int)result->GetRowCount() );
 
             do
             {
@@ -2692,7 +2692,7 @@ void ObjectMgr::LoadPlayerInfo()
             exit(1);
         }
 
-        barGoLink bar( result->GetRowCount() );
+        barGoLink bar( (int)result->GetRowCount() );
 
         do
         {
@@ -2711,7 +2711,7 @@ void ObjectMgr::LoadPlayerInfo()
                 sLog.outErrorDb("Wrong level %u in `player_classlevelstats` table, ignoring.",current_level);
                 continue;
             }
-            else if(current_level > sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
+            else if(current_level > sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
             {
                 if(current_level > STRONG_MAX_LEVEL)        // hardcoded level maximum
                     sLog.outErrorDb("Wrong (> %u) level %u in `player_classlevelstats` table, ignoring.",STRONG_MAX_LEVEL,current_level);
@@ -2726,7 +2726,7 @@ void ObjectMgr::LoadPlayerInfo()
             PlayerClassInfo* pClassInfo = &playerClassInfo[current_class];
 
             if(!pClassInfo->levelInfo)
-                pClassInfo->levelInfo = new PlayerClassLevelInfo[sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL)];
+                pClassInfo->levelInfo = new PlayerClassLevelInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)];
 
             PlayerClassLevelInfo* pClassLevelInfo = &pClassInfo->levelInfo[current_level-1];
 
@@ -2761,7 +2761,7 @@ void ObjectMgr::LoadPlayerInfo()
         }
 
         // fill level gaps
-        for (uint32 level = 1; level < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL); ++level)
+        for (uint32 level = 1; level < sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL); ++level)
         {
             if(pClassInfo->levelInfo[level].basehealth == 0)
             {
@@ -2788,7 +2788,7 @@ void ObjectMgr::LoadPlayerInfo()
             exit(1);
         }
 
-        barGoLink bar( result->GetRowCount() );
+        barGoLink bar( (int)result->GetRowCount() );
 
         do
         {
@@ -2809,7 +2809,7 @@ void ObjectMgr::LoadPlayerInfo()
             }
 
             uint32 current_level = fields[2].GetUInt32();
-            if(current_level > sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
+            if(current_level > sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
             {
                 if(current_level > STRONG_MAX_LEVEL)        // hardcoded level maximum
                     sLog.outErrorDb("Wrong (> %u) level %u in `player_levelstats` table, ignoring.",STRONG_MAX_LEVEL,current_level);
@@ -2824,7 +2824,7 @@ void ObjectMgr::LoadPlayerInfo()
             PlayerInfo* pInfo = &playerInfo[current_race][current_class];
 
             if(!pInfo->levelInfo)
-                pInfo->levelInfo = new PlayerLevelInfo[sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL)];
+                pInfo->levelInfo = new PlayerLevelInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)];
 
             PlayerLevelInfo* pLevelInfo = &pInfo->levelInfo[current_level-1];
 
@@ -2864,11 +2864,11 @@ void ObjectMgr::LoadPlayerInfo()
                 continue;
 
             // skip expansion races if not playing with expansion
-            if (sWorld.getConfig(CONFIG_EXPANSION) < 1 && (race == RACE_BLOODELF || race == RACE_DRAENEI))
+            if (sWorld.getConfig(CONFIG_UINT32_EXPANSION) < 1 && (race == RACE_BLOODELF || race == RACE_DRAENEI))
                 continue;
 
             // skip expansion classes if not playing with expansion
-            if (sWorld.getConfig(CONFIG_EXPANSION) < 2 && class_ == CLASS_DEATH_KNIGHT)
+            if (sWorld.getConfig(CONFIG_UINT32_EXPANSION) < 2 && class_ == CLASS_DEATH_KNIGHT)
                 continue;
 
             // fatal error if no level 1 data
@@ -2879,7 +2879,7 @@ void ObjectMgr::LoadPlayerInfo()
             }
 
             // fill level gaps
-            for (uint32 level = 1; level < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL); ++level)
+            for (uint32 level = 1; level < sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL); ++level)
             {
                 if(pInfo->levelInfo[level].stats[0] == 0)
                 {
@@ -2892,8 +2892,8 @@ void ObjectMgr::LoadPlayerInfo()
 
     // Loading xp per level data
     {
-        mPlayerXPperLevel.resize(sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL));
-        for (uint32 level = 0; level < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL); ++level)
+        mPlayerXPperLevel.resize(sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL));
+        for (uint32 level = 0; level < sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL); ++level)
             mPlayerXPperLevel[level] = 0;
 
         //                                                 0    1
@@ -2911,7 +2911,7 @@ void ObjectMgr::LoadPlayerInfo()
             exit(1);
         }
 
-        barGoLink bar( result->GetRowCount() );
+        barGoLink bar( (int)result->GetRowCount() );
 
         do
         {
@@ -2920,7 +2920,7 @@ void ObjectMgr::LoadPlayerInfo()
             uint32 current_level = fields[0].GetUInt32();
             uint32 current_xp    = fields[1].GetUInt32();
 
-            if(current_level >= sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
+            if(current_level >= sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
             {
                 if(current_level > STRONG_MAX_LEVEL)        // hardcoded level maximum
                     sLog.outErrorDb("Wrong (> %u) level %u in `player_xp_for_level` table, ignoring.", STRONG_MAX_LEVEL,current_level);
@@ -2945,7 +2945,7 @@ void ObjectMgr::LoadPlayerInfo()
     }
 
     // fill level gaps
-    for (uint32 level = 1; level < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL); ++level)
+    for (uint32 level = 1; level < sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL); ++level)
     {
         if( mPlayerXPperLevel[level] == 0)
         {
@@ -2962,8 +2962,8 @@ void ObjectMgr::GetPlayerClassLevelInfo(uint32 class_, uint32 level, PlayerClass
 
     PlayerClassInfo const* pInfo = &playerClassInfo[class_];
 
-    if(level > sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
-        level = sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL);
+    if(level > sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
+        level = sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL);
 
     *info = pInfo->levelInfo[level-1];
 }
@@ -2977,7 +2977,7 @@ void ObjectMgr::GetPlayerLevelInfo(uint32 race, uint32 class_, uint32 level, Pla
     if(pInfo->displayId_m==0 || pInfo->displayId_f==0)
         return;
 
-    if(level <= sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
+    if(level <= sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
         *info = pInfo->levelInfo[level-1];
     else
         BuildPlayerLevelInfo(race,class_,level,info);
@@ -2986,9 +2986,9 @@ void ObjectMgr::GetPlayerLevelInfo(uint32 race, uint32 class_, uint32 level, Pla
 void ObjectMgr::BuildPlayerLevelInfo(uint8 race, uint8 _class, uint8 level, PlayerLevelInfo* info) const
 {
     // base data (last known level)
-    *info = playerInfo[race][_class].levelInfo[sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL)-1];
+    *info = playerInfo[race][_class].levelInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1];
 
-    for(int lvl = sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL)-1; lvl < level; ++lvl)
+    for(int lvl = sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1; lvl < level; ++lvl)
     {
         switch(_class)
         {
@@ -3100,7 +3100,7 @@ void ObjectMgr::LoadGuilds()
     //                                                                      0       1     2   3       4
     QueryResult *guildBankTabRightsResult = CharacterDatabase.Query("SELECT guildid,TabId,rid,gbright,SlotPerDay FROM guild_bank_right ORDER BY guildid ASC, TabId ASC");
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -3133,9 +3133,9 @@ void ObjectMgr::LoadGuilds()
     delete guildBankTabRightsResult;
 
     //delete unused LogGuid records in guild_eventlog and guild_bank_eventlog table
-    //you can comment these lines if you don't plan to change CONFIG_GUILD_EVENT_LOG_COUNT and CONFIG_GUILD_BANK_EVENT_LOG_COUNT
-    CharacterDatabase.PQuery("DELETE FROM guild_eventlog WHERE LogGuid > '%u'", sWorld.getConfig(CONFIG_GUILD_EVENT_LOG_COUNT));
-    CharacterDatabase.PQuery("DELETE FROM guild_bank_eventlog WHERE LogGuid > '%u'", sWorld.getConfig(CONFIG_GUILD_BANK_EVENT_LOG_COUNT));
+    //you can comment these lines if you don't plan to change CONFIG_UINT32_GUILD_EVENT_LOG_COUNT and CONFIG_UINT32_GUILD_BANK_EVENT_LOG_COUNT
+    CharacterDatabase.PQuery("DELETE FROM guild_eventlog WHERE LogGuid > '%u'", sWorld.getConfig(CONFIG_UINT32_GUILD_EVENT_LOG_COUNT));
+    CharacterDatabase.PQuery("DELETE FROM guild_bank_eventlog WHERE LogGuid > '%u'", sWorld.getConfig(CONFIG_UINT32_GUILD_BANK_EVENT_LOG_COUNT));
 
     sLog.outString();
     sLog.outString( ">> Loaded %u guild definitions", count );
@@ -3169,7 +3169,7 @@ void ObjectMgr::LoadArenaTeams()
         "SELECT arenateamid,member.guid,played_week,wons_week,played_season,wons_season,personal_rating,name,class "
         "FROM arena_team_member member LEFT JOIN characters chars on member.guid = chars.guid ORDER BY member.arenateamid ASC");
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -3213,7 +3213,7 @@ void ObjectMgr::LoadGroups()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -3248,7 +3248,7 @@ void ObjectMgr::LoadGroups()
     {
         Group* group = NULL;                                // used as cached pointer for avoid relookup group for each member
 
-        barGoLink bar2( result->GetRowCount() );
+        barGoLink bar2( (int)result->GetRowCount() );
         do
         {
             bar2.step();
@@ -3314,7 +3314,7 @@ void ObjectMgr::LoadGroups()
     {
         Group* group = NULL;                                // used as cached pointer for avoid relookup group for each member
 
-        barGoLink bar2( result->GetRowCount() );
+        barGoLink bar2( (int)result->GetRowCount() );
         do
         {
             bar2.step();
@@ -3429,7 +3429,7 @@ void ObjectMgr::LoadQuests()
     // create multimap previous quest for each existed quest
     // some quests can have many previous maps set by NextQuestId in previous quest
     // for example set of race quests can lead to single not race specific quest
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar((int) result->GetRowCount() );
     do
     {
         bar.step();
@@ -3737,7 +3737,7 @@ void ObjectMgr::LoadQuests()
                 if(!qinfo->ReqCreatureOrGOId[j])
                 {
                     bool found = false;
-                    for(int k = 0; k < 3; ++k)
+                    for(int k = 0; k < MAX_EFFECT_INDEX; ++k)
                     {
                         if ((spellInfo->Effect[k] == SPELL_EFFECT_QUEST_COMPLETE && uint32(spellInfo->EffectMiscValue[k]) == qinfo->QuestId) ||
                             spellInfo->Effect[k] == SPELL_EFFECT_SEND_EVENT)
@@ -4003,7 +4003,7 @@ void ObjectMgr::LoadQuests()
         if(!spellInfo)
             continue;
 
-        for(int j = 0; j < 3; ++j)
+        for(int j = 0; j < MAX_EFFECT_INDEX; ++j)
         {
             if(spellInfo->Effect[j] != SPELL_EFFECT_QUEST_COMPLETE)
                 continue;
@@ -4057,7 +4057,7 @@ void ObjectMgr::LoadQuestLocales()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -4201,7 +4201,7 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -4532,20 +4532,20 @@ void ObjectMgr::LoadSpellScripts()
 
         //check for correct spellEffect
         bool found = false;
-        for(int i=0; i<3; ++i)
+        for(int i = 0; i < MAX_EFFECT_INDEX; ++i)
         {
             // skip empty effects
-            if( !spellInfo->Effect[i] )
+            if (!spellInfo->Effect[i])
                 continue;
 
-            if( spellInfo->Effect[i] == SPELL_EFFECT_SCRIPT_EFFECT || spellInfo->Effect[i] == SPELL_EFFECT_SEND_EVENT || spellInfo->Effect[i] == SPELL_EFFECT_DUMMY )
+            if (spellInfo->Effect[i] == SPELL_EFFECT_SCRIPT_EFFECT || spellInfo->Effect[i] == SPELL_EFFECT_SEND_EVENT || spellInfo->Effect[i] == SPELL_EFFECT_DUMMY)
             {
                 found =  true;
                 break;
             }
         }
 
-        if(!found)
+        if (!found)
             sLog.outErrorDb("Table `spell_scripts` has unsupported spell (Id: %u) without SPELL_EFFECT_SCRIPT_EFFECT (%u) spell effect",itr->first,SPELL_EFFECT_SCRIPT_EFFECT);
     }
 }
@@ -4585,7 +4585,7 @@ void ObjectMgr::LoadEventScripts()
         SpellEntry const * spell = sSpellStore.LookupEntry(i);
         if (spell)
         {
-            for(int j=0; j<3; ++j)
+            for(int j = 0; j < MAX_EFFECT_INDEX; ++j)
             {
                 if( spell->Effect[j] == SPELL_EFFECT_SEND_EVENT )
                 {
@@ -4628,7 +4628,7 @@ void ObjectMgr::LoadItemTexts()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     Field* fields;
     do
@@ -4710,7 +4710,7 @@ void ObjectMgr::LoadPageTextLocales()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -4804,7 +4804,7 @@ void ObjectMgr::LoadGossipText()
 
     int cic;
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -4871,7 +4871,7 @@ void ObjectMgr::LoadNpcTextLocales()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -4944,7 +4944,7 @@ void ObjectMgr::ReturnOrDeleteOldMails(bool serverUp)
     //delitems << "DELETE FROM item_instance WHERE guid IN ( ";
     //delmails << "DELETE FROM mail WHERE id IN ( "
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
     uint32 count = 0;
     Field *fields;
 
@@ -5043,7 +5043,7 @@ void ObjectMgr::LoadQuestAreaTriggers()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar((int) result->GetRowCount() );
 
     do
     {
@@ -5108,7 +5108,7 @@ void ObjectMgr::LoadTavernAreaTriggers()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -5152,7 +5152,7 @@ void ObjectMgr::LoadAreaTriggerScripts()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -5338,7 +5338,7 @@ void ObjectMgr::LoadGraveyardZones()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -5556,7 +5556,7 @@ void ObjectMgr::LoadAreaTriggerTeleports()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -5969,7 +5969,7 @@ void ObjectMgr::LoadGameObjectLocales()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -6274,7 +6274,7 @@ void ObjectMgr::LoadExplorationBaseXP()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -6323,7 +6323,7 @@ void ObjectMgr::LoadPetNames()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -6402,7 +6402,7 @@ void ObjectMgr::LoadCorpses()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -6451,7 +6451,7 @@ void ObjectMgr::LoadReputationOnKill()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -6528,7 +6528,7 @@ void ObjectMgr::LoadPointsOfInterest()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -6582,7 +6582,7 @@ void ObjectMgr::LoadQuestPOI()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -6645,7 +6645,7 @@ void ObjectMgr::LoadNPCSpellClickSpells()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -6734,7 +6734,7 @@ void ObjectMgr::LoadWeatherZoneChances()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -6874,7 +6874,7 @@ void ObjectMgr::LoadQuestRelationsHelper(QuestRelations& map,char const* table)
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -6975,7 +6975,7 @@ void ObjectMgr::LoadReservedPlayersNames()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar((int) result->GetRowCount() );
 
     Field* fields;
     do
@@ -7025,7 +7025,7 @@ enum LanguageType
 
 static LanguageType GetRealmLanguageType(bool create)
 {
-    switch(sWorld.getConfig(CONFIG_REALM_ZONE))
+    switch(sWorld.getConfig(CONFIG_UINT32_REALM_ZONE))
     {
         case REALM_ZONE_UNKNOWN:                            // any language
         case REALM_ZONE_DEVELOPMENT:
@@ -7096,11 +7096,11 @@ uint8 ObjectMgr::CheckPlayerName( const std::string& name, bool create )
     if(wname.size() > MAX_PLAYER_NAME)
         return CHAR_NAME_TOO_LONG;
 
-    uint32 minName = sWorld.getConfig(CONFIG_MIN_PLAYER_NAME);
+    uint32 minName = sWorld.getConfig(CONFIG_UINT32_MIN_PLAYER_NAME);
     if(wname.size() < minName)
         return CHAR_NAME_TOO_SHORT;
 
-    uint32 strictMask = sWorld.getConfig(CONFIG_STRICT_PLAYER_NAMES);
+    uint32 strictMask = sWorld.getConfig(CONFIG_UINT32_STRICT_PLAYER_NAMES);
     if(!isValidString(wname,strictMask,false,create))
         return CHAR_NAME_MIXED_LANGUAGES;
 
@@ -7116,11 +7116,11 @@ bool ObjectMgr::IsValidCharterName( const std::string& name )
     if(wname.size() > MAX_CHARTER_NAME)
         return false;
 
-    uint32 minName = sWorld.getConfig(CONFIG_MIN_CHARTER_NAME);
+    uint32 minName = sWorld.getConfig(CONFIG_UINT32_MIN_CHARTER_NAME);
     if(wname.size() < minName)
         return false;
 
-    uint32 strictMask = sWorld.getConfig(CONFIG_STRICT_CHARTER_NAMES);
+    uint32 strictMask = sWorld.getConfig(CONFIG_UINT32_STRICT_CHARTER_NAMES);
 
     return isValidString(wname,strictMask,true);
 }
@@ -7134,11 +7134,11 @@ PetNameInvalidReason ObjectMgr::CheckPetName( const std::string& name )
     if(wname.size() > MAX_PET_NAME)
         return PET_NAME_TOO_LONG;
 
-    uint32 minName = sWorld.getConfig(CONFIG_MIN_PET_NAME);
+    uint32 minName = sWorld.getConfig(CONFIG_UINT32_MIN_PET_NAME);
     if(wname.size() < minName)
         return PET_NAME_TOO_SHORT;
 
-    uint32 strictMask = sWorld.getConfig(CONFIG_STRICT_PET_NAMES);
+    uint32 strictMask = sWorld.getConfig(CONFIG_UINT32_STRICT_PET_NAMES);
     if(!isValidString(wname,strictMask,false))
         return PET_NAME_MIXED_LANGUAGES;
 
@@ -7289,7 +7289,7 @@ bool ObjectMgr::LoadMangosStrings(DatabaseType& db, char const* table, int32 min
 
     uint32 count = 0;
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     do
     {
@@ -7424,7 +7424,7 @@ void ObjectMgr::LoadFishingBaseSkillLevel()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar((int) result->GetRowCount() );
 
     do
     {
@@ -7507,7 +7507,7 @@ bool PlayerCondition::Meets(Player const * player) const
         case CONDITION_NONE:
             return true;                                    // empty condition, always met
         case CONDITION_AURA:
-            return player->HasAura(value1, value2);
+            return player->HasAura(value1, SpellEffectIndex(value2));
         case CONDITION_ITEM:
             return player->HasItemCount(value1, value2);
         case CONDITION_ITEM_EQUIPPED:
@@ -7539,7 +7539,7 @@ bool PlayerCondition::Meets(Player const * player) const
             return false;
         }
         case CONDITION_NO_AURA:
-            return !player->HasAura(value1, value2);
+            return !player->HasAura(value1, SpellEffectIndex(value2));
         case CONDITION_ACTIVE_EVENT:
             return sGameEventMgr.IsActiveEvent(value1);
         case CONDITION_AREA_FLAG:
@@ -7588,9 +7588,9 @@ bool PlayerCondition::IsValid(ConditionType condition, uint32 value1, uint32 val
                 sLog.outErrorDb("Aura condition requires to have non existing spell (Id: %d), skipped", value1);
                 return false;
             }
-            if(value2 > 2)
+            if(value2 >= MAX_EFFECT_INDEX)
             {
-                sLog.outErrorDb("Aura condition requires to have non existing effect index (%u) (must be 0..2), skipped", value2);
+                sLog.outErrorDb("Aura condition requires to have non existing effect index (%u) (must be 0..%u), skipped", value2, MAX_EFFECT_INDEX-1);
                 return false;
             }
             break;
@@ -7692,9 +7692,9 @@ bool PlayerCondition::IsValid(ConditionType condition, uint32 value1, uint32 val
                 sLog.outErrorDb("Aura condition requires to have non existing spell (Id: %d), skipped", value1);
                 return false;
             }
-            if(value2 > 2)
+            if(value2 > MAX_EFFECT_INDEX)
             {
-                sLog.outErrorDb("Aura condition requires to have non existing effect index (%u) (must be 0..2), skipped", value2);
+                sLog.outErrorDb("Aura condition requires to have non existing effect index (%u) (must be 0..%u), skipped", value2, MAX_EFFECT_INDEX-1);
                 return false;
             }
             break;
@@ -7741,7 +7741,7 @@ bool PlayerCondition::IsValid(ConditionType condition, uint32 value1, uint32 val
         }
         case CONDITION_LEVEL:
         {
-            if (!value1 || value1 > sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL))
+            if (!value1 || value1 > sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
             {
                 sLog.outErrorDb("Level condition has invalid level %u, skipped", value1);
                 return false;
@@ -7811,7 +7811,7 @@ void ObjectMgr::LoadGameTele()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -7939,7 +7939,7 @@ void ObjectMgr::LoadMailLevelRewards()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar((int) result->GetRowCount() );
 
     do
     {
@@ -8009,7 +8009,7 @@ void ObjectMgr::LoadTrainerSpell()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     std::set<uint32> talentIds;
 
@@ -8078,11 +8078,11 @@ void ObjectMgr::LoadTrainerSpell()
 
         // calculate learned spell for profession case when stored cast-spell
         trainerSpell.learnedSpell = spell;
-        for(int i = 0; i <3; ++i)
+        for(int i = 0; i < MAX_EFFECT_INDEX; ++i)
         {
-            if(spellinfo->Effect[i] != SPELL_EFFECT_LEARN_SPELL)
+            if (spellinfo->Effect[i] != SPELL_EFFECT_LEARN_SPELL)
                 continue;
-            if(SpellMgr::IsProfessionOrRidingSpell(spellinfo->EffectTriggerSpell[i]))
+            if (SpellMgr::IsProfessionOrRidingSpell(spellinfo->EffectTriggerSpell[i]))
             {
                 trainerSpell.learnedSpell = spellinfo->EffectTriggerSpell[i];
                 break;
@@ -8122,7 +8122,7 @@ void ObjectMgr::LoadVendors()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     uint32 count = 0;
     do
@@ -8168,7 +8168,7 @@ void ObjectMgr::LoadNpcTextId()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar((int) result->GetRowCount() );
 
     uint32 count = 0;
     uint32 guid,textid;
@@ -8220,7 +8220,7 @@ void ObjectMgr::LoadGossipMenu()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
 
     uint32 count = 0;
 
@@ -8298,7 +8298,7 @@ void ObjectMgr::LoadGossipMenuItems()
         return;
     }
 
-    barGoLink bar(result->GetRowCount());
+    barGoLink bar((int)result->GetRowCount());
 
     uint32 count = 0;
 
@@ -8544,7 +8544,7 @@ void ObjectMgr::LoadScriptNames()
         return;
     }
 
-    barGoLink bar( result->GetRowCount() );
+    barGoLink bar( (int)result->GetRowCount() );
     uint32 count = 0;
 
     do
@@ -8568,7 +8568,7 @@ uint32 ObjectMgr::GetScriptId(const char *name)
     ScriptNameMap::const_iterator itr =
         std::lower_bound(m_scriptNames.begin(), m_scriptNames.end(), name);
     if(itr == m_scriptNames.end() || *itr != name) return 0;
-    return itr - m_scriptNames.begin();
+    return uint32(itr - m_scriptNames.begin());
 }
 
 void ObjectMgr::CheckScripts(ScriptMapMap const& scripts,std::set<int32>& ids)

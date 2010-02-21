@@ -50,6 +50,7 @@ void GuardAI::MoveInLineOfSight(Unit *u)
         {
             //Need add code to let guard support player
             AttackStart(u);
+            u->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
         }
     }
 }
@@ -124,7 +125,7 @@ void GuardAI::UpdateAI(const uint32 /*diff*/)
 
 bool GuardAI::IsVisible(Unit *pl) const
 {
-    return m_creature->IsWithinDist(pl,sWorld.getConfig(CONFIG_SIGHT_GUARDER))
+    return m_creature->IsWithinDist(pl,sWorld.getConfig(CONFIG_FLOAT_SIGHT_GUARDER))
         && pl->isVisibleForOrDetect(m_creature,m_creature,true);
 }
 

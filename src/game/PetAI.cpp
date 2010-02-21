@@ -62,6 +62,7 @@ void PetAI::MoveInLineOfSight(Unit *u)
             if(m_creature->IsWithinLOSInMap(u))
             {
                 AttackStart(u);
+                u->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
             }
         }
     }
@@ -310,7 +311,7 @@ void PetAI::UpdateAI(const uint32 diff)
 
 bool PetAI::_isVisible(Unit *u) const
 {
-    return m_creature->IsWithinDist(u,sWorld.getConfig(CONFIG_SIGHT_GUARDER))
+    return m_creature->IsWithinDist(u,sWorld.getConfig(CONFIG_FLOAT_SIGHT_GUARDER))
         && u->isVisibleForOrDetect(m_creature,m_creature,true);
 }
 
