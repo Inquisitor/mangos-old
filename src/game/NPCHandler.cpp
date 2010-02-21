@@ -305,7 +305,7 @@ void WorldSession::HandleGossipSelectOptionOpcode( WorldPacket & recv_data )
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
 
     // TODO: determine if scriptCall is needed for GO and also if scriptCall can be same as current, with modified argument WorldObject*
-
+    // This is a special news GossipWindow.
     if (IS_PLAYER_GUID(guid))
     {
         uint32 gossipOptionId = _player->PlayerTalkClass->GetGossipMenu().GetItem(gossipListId).m_gOptionId;
@@ -313,39 +313,46 @@ void WorldSession::HandleGossipSelectOptionOpcode( WorldPacket & recv_data )
         bool isSentToMain = false;
         _player->PlayerTalkClass->ClearMenus();
         sLog.outDetail("WORLD: HandleGossipSelectOptionOpcode - Sent from player (GC News handler) menuId %i gossip list %i and id is %i ", menuId, gossipListId, gossipOptionId);
-
-        if( gossipOptionId == 100 ) // Back to home menu
+        //we loop through list..
+        for( std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.begin(); itr != sObjectMgr.mGCNewsMap.end(); ++itr )
         {
-            isSentToMain = true;
-
-            for( std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.begin(); itr != sObjectMgr.mGCNewsMap.end(); ++itr )
-                if((*itr).second.parent == 0)
-                    _player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_TALK,(*itr).second.textstring,1,(*itr).first,"",0);
-        }
-        else
-        {
-            for( std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.begin(); itr != sObjectMgr.mGCNewsMap.end(); ++itr )
-            {
-                GCNewsData const& news = (*itr).second;
-                if( news.parent == gossipOptionId )
-                {
-                    if (news.type == 2) // Add Menu Item
-                        _player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_CHAT,news.textstring,1,(*itr).first,"",0);
-                    else if (news.type == 0) // Set Text Id
-                        textId = atoi(news.textstring.c_str());
-                }
-            }
-        }
-
-        if (!isSentToMain)
-        {
-            std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.find(100);
-            if( itr != sObjectMgr.mGCNewsMap.end() )
-                _player->PlayerTalkClass->GetGossipMenu().AddMenuItem(0,(*itr).second.textstring,1,(*itr).first,"",0);
-        }
-
-        _player->PlayerTalkClass->SendTalking(textId);
-        _player->PlayerTalkClass->SendGossipMenu(textId, guid);
+        	GCNewsData const& news = (*itr).second;
+            // is this the level we currently look at?
+			if( news.parent == gossipOptionId )
+			{
+				switch (news.type)
+				{
+							case 3:
+							{
+									// we add a level up item for that we need to know the parents parent.
+									std::multimap<uint32,GCNewsData>::iterator itr2 = sObjectMgr.mGCNewsMap.find(gossipOptionId);
+									// if there actually is a parent
+									if( itr2 != sObjectMgr.mGCNewsMap.end() )
+											_player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_BATTLE,news.textstring,1,(*itr2).second.parent,"",0);
+									break;
+							}
+							case 2:
+									// we add a icon that can be clicked
+											_player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_INTERACT_1,news.textstring,1,(*itr).first,"",0);
+									break;
+							case 1:
+									// we add normal text, on click it will lead to same menu.
+											_player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_DOT,news.textstring,1,gossipOptionId,"",0);
+									break;
+							case 0:
+									// we set the correct text
+									textId = atoi(news.textstring.c_str());
+									break;
+				}
+			}
+		}
+        if (_player->PlayerTalkClass->GetGossipMenu().Empty())
+		{
+			_player->PlayerTalkClass->CloseGossip();
+		} else {
+			_player->PlayerTalkClass->SendTalking(textId);
+			_player->PlayerTalkClass->SendGossipMenu(textId, guid);
+		}
     }
 
     // can vehicle have gossip? If so, need check for this also.

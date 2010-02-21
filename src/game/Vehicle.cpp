@@ -75,6 +75,34 @@ void Vehicle::Update(uint32 diff)
             Dismiss();
         despawn = false;
     }
+
+    if(m_regenTimer <= diff)
+    {
+        RegeneratePower(getPowerType());
+        m_regenTimer = 4000;
+    }
+    else
+        m_regenTimer -= diff;
+}
+
+void Vehicle::RegeneratePower(Powers power)
+{
+    uint32 curValue = GetPower(power);
+    uint32 maxValue = GetMaxPower(power);
+
+    if (curValue >= maxValue)
+        return;
+
+    float addvalue = 0.0f;
+
+    // hack: needs more research of power type from the dbc. 
+    // It must contains some info about vehicles like Salvaged Chopper.
+    if(m_vehicleInfo->m_powerType == POWER_TYPE_PYRITE)
+        return;
+
+    addvalue = 20.0f;
+
+    ModifyPower(power, (int32)addvalue);
 }
 
 bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, uint32 vehicleId, uint32 team, const CreatureData *data)
@@ -119,6 +147,41 @@ bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, u
     //Normally non-players do not teleport to other maps.
     if (map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
         ((InstanceMap*)map)->GetInstanceData()->OnCreatureCreate(this);
+
+    if(m_vehicleInfo->m_powerType == POWER_TYPE_STEAM)
+    {
+        setPowerType(POWER_ENERGY);
+        SetMaxPower(POWER_ENERGY, 100);
+        SetPower(POWER_ENERGY, 100);
+    }
+    else if(m_vehicleInfo->m_powerType == POWER_TYPE_PYRITE)
+    {
+        setPowerType(POWER_ENERGY);
+        SetMaxPower(POWER_ENERGY, 50);
+        SetPower(POWER_ENERGY, 50);
+    }
+    else
+    {
+        for (uint32 i = 0; i < MAX_VEHICLE_SPELLS; ++i)
+        {
+            if(!GetVehicleData()->v_spells[i])
+                continue;
+            SpellEntry const *spellInfo = sSpellStore.LookupEntry(GetVehicleData()->v_spells[i]);
+            if(!spellInfo)
+                continue;
+
+            if(spellInfo->powerType == POWER_MANA)
+                break;
+
+            if(spellInfo->powerType == POWER_ENERGY)
+            {
+                setPowerType(POWER_ENERGY);
+                SetMaxPower(POWER_ENERGY, 100);
+                SetPower(POWER_ENERGY, 100);
+                break;
+            }
+        }
+    }
 
     return true;
 }
@@ -399,6 +462,7 @@ void Vehicle::AddPassenger(Unit *unit, int8 seatId, bool force)
             }
             if (canFly() || HasAuraType(SPELL_AURA_FLY) || HasAuraType(SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED))
             {
+                printf("\n\n ! flying set to true ! \n\n ");
                 WorldPacket data3(SMSG_MOVE_SET_CAN_FLY, 12);
                 data3.append(GetPackGUID());
                 data3 << (uint32)(0);

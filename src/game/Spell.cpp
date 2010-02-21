@@ -1150,7 +1150,7 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
     m_diminishGroup = GetDiminishingReturnsGroupForSpell(m_spellInfo,m_triggeredByAuraSpell);
     m_diminishLevel = unit->GetDiminishing(m_diminishGroup);
     // Increase Diminishing on unit, current informations for actually casts will use values above
-    if ((GetDiminishingReturnsGroupType(m_diminishGroup) == DRTYPE_PLAYER && unit->GetTypeId() == TYPEID_PLAYER) ||
+    if ((GetDiminishingReturnsGroupType(m_diminishGroup) == DRTYPE_PLAYER && (unit->GetCharmerOrOwner() ? unit->GetCharmerOrOwner()->GetTypeId() : unit->GetTypeId()) == TYPEID_PLAYER) ||
         GetDiminishingReturnsGroupType(m_diminishGroup) == DRTYPE_ALL)
         unit->IncrDiminishing(m_diminishGroup);
 
@@ -1173,6 +1173,14 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
                 m_damageMultipliers[effectNumber] *= multiplier;
             }
         }
+    }
+
+    if( m_caster->HasAura(44544, 0) && !m_IsTriggeredSpell && !m_CastItem ) // Fingers of Frost removing (after 2 spells)
+    {
+        Aura * FoF = m_caster->GetAura(44544, 0);
+        FoF->DropAuraCharge();
+        if( FoF->GetAuraCharges() == 0 )
+            m_caster->RemoveAura(44544, 0);
     }
 }
 
@@ -1853,6 +1861,12 @@ void Spell::SetTargetMap(uint32 effIndex, uint32 targetMode, UnitList& targetUni
             break;
         case TARGET_DUELVSPLAYER:
         {
+            if (m_spellInfo->SpellFamilyName == SPELLFAMILY_SHAMAN && m_spellInfo->SpellIconID == 276) // Stoneclaw Totem absorb has wrong target
+            {
+                targetUnitMap.push_back(m_caster);
+                break;
+            }
+
             Unit *target = m_targets.getUnitTarget();
             if(target)
             {
@@ -2576,6 +2590,21 @@ void Spell::cast(bool skipCheck)
                 AddPrecastSpell(11196);                     // Recently Bandaged
             else if(m_spellInfo->Id == 20594)               // Stoneskin
                 AddTriggeredSpell(65116);                   // Stoneskin - armor 10% for 8 sec
+
+            switch(m_spellInfo->Id)
+            {
+                case 5728: AddTriggeredSpell(55328); break;// Stoneclaw Totem, rank 1
+                case 6397: AddTriggeredSpell(55329); break;// Stoneclaw Totem, rank 2
+                case 6398: AddTriggeredSpell(55330); break;// Stoneclaw Totem, rank 3
+                case 6399: AddTriggeredSpell(55332); break;// Stoneclaw Totem, rank 4
+                case 10425: AddTriggeredSpell(55333); break;// Stoneclaw Totem, rank 5
+                case 10426: AddTriggeredSpell(55335); break;// Stoneclaw Totem, rank 6
+                case 25513: AddTriggeredSpell(55278); break;// Stoneclaw Totem, rank 7
+                case 58583: AddTriggeredSpell(58589); break;// Stoneclaw Totem, rank 8
+                case 58584: AddTriggeredSpell(58590); break;// Stoneclaw Totem, rank 9
+                case 58585: AddTriggeredSpell(58591); break;// Stoneclaw Totem, rank 10
+                default:break;
+            }
             break;
         }
         case SPELLFAMILY_MAGE:
@@ -2583,6 +2612,12 @@ void Spell::cast(bool skipCheck)
             // Ice Block
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000008000000000))
                 AddPrecastSpell(41425);                     // Hypothermia
+            break;
+        }
+        case SPELLFAMILY_WARRIOR:
+        {
+            if(m_spellInfo->Id == 64382)                    // Shattering Throw
+                AddPrecastSpell(64380);
             break;
         }
         case SPELLFAMILY_PRIEST:
@@ -2641,6 +2676,12 @@ void Spell::cast(bool skipCheck)
             }
             else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x200000000000))
                 AddPrecastSpell(61987);                     // Avenging Wrath Marker
+            // Lay on Hands
+            else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x000000008000))
+            {
+                if (m_targets.getUnitTarget() && m_targets.getUnitTarget() == m_caster)
+                    AddPrecastSpell(25771);                 // Forbearance
+            }
             break;
         }
         case SPELLFAMILY_SHAMAN:
@@ -3047,7 +3088,7 @@ void Spell::finish(bool ok)
         m_caster->resetAttackTimer(RANGED_ATTACK);*/
 
     // Clear combo at finish state
-    if(m_caster->GetTypeId() == TYPEID_PLAYER && NeedsComboPoints(m_spellInfo))
+    if((m_caster->GetTypeId() == TYPEID_PLAYER || ((Creature*)m_caster)->isVehicle()) && NeedsComboPoints(m_spellInfo))
     {
         // Not drop combopoints if negative spell and if any miss on enemy exist
         bool needDrop = true;
@@ -3063,7 +3104,12 @@ void Spell::finish(bool ok)
             }
         }
         if (needDrop)
-            ((Player*)m_caster)->ClearComboPoints();
+        {
+            if(m_caster->GetTypeId() == TYPEID_PLAYER)
+                ((Player*)m_caster)->ClearComboPoints();
+            else
+                ((Player*)m_caster->GetCharmer())->ClearComboPoints();
+        }
     }
 
     // potions disabled by client, send event "not in combat" if need
@@ -3164,13 +3210,15 @@ void Spell::SendSpellStart()
     if(m_spellInfo->runeCostID)
         castFlags |= CAST_FLAG_UNKNOWN10;
 
+    Unit *caster = m_originalCaster ? m_originalCaster : m_caster;
+
     WorldPacket data(SMSG_SPELL_START, (8+8+4+4+2));
     if(m_CastItem)
         data.append(m_CastItem->GetPackGUID());
     else
-        data.append(m_caster->GetPackGUID());
+        data.append(caster->GetPackGUID());
 
-    data.append(m_caster->GetPackGUID());
+    data.append(caster->GetPackGUID());
     data << uint8(m_cast_count);                            // pending spell cast?
     data << uint32(m_spellInfo->Id);                        // spellId
     data << uint32(castFlags);                              // cast flags
@@ -3227,14 +3275,16 @@ void Spell::SendSpellGo()
         castFlags |= CAST_FLAG_UNKNOWN7;                    // rune cooldowns list
     }
 
+    Unit *caster = m_originalCaster ? m_originalCaster : m_caster;
+
     WorldPacket data(SMSG_SPELL_GO, 50);                    // guess size
 
     if(m_CastItem)
         data.append(m_CastItem->GetPackGUID());
     else
-        data.append(m_caster->GetPackGUID());
+        data.append(caster->GetPackGUID());
 
-    data.append(m_caster->GetPackGUID());
+    data.append(caster->GetPackGUID());
     data << uint8(m_cast_count);                            // pending spell cast?
     data << uint32(m_spellInfo->Id);                        // spellId
     data << uint32(castFlags);                              // cast flags
@@ -4064,14 +4114,30 @@ SpellCastResult Spell::CheckCast(bool strict)
             else if (target->HasAura(m_spellInfo->excludeTargetAuraSpell))
                 return SPELL_FAILED_CASTER_AURASTATE;
         }
+        else if((m_spellInfo->SpellFamilyFlags & UI64LIT(0x000000008000)) && target->HasAura(25771))
+            return SPELL_FAILED_CASTER_AURASTATE;
 
         bool non_caster_target = target != m_caster && !IsSpellWithCasterSourceTargetsOnly(m_spellInfo);
 
         if(non_caster_target)
         {
             // target state requirements (apply to non-self only), to allow cast affects to self like Dirty Deeds
-            if(m_spellInfo->TargetAuraState && !target->HasAuraStateForCaster(AuraState(m_spellInfo->TargetAuraState),m_caster->GetGUID()))
-                return SPELL_FAILED_TARGET_AURASTATE;
+            if(m_spellInfo->TargetAuraState)
+            {
+                bool CheckState = true;
+                Unit::AuraList const& ignoreReqAuras = m_caster->GetAurasByType(SPELL_AURA_IGNORE_TARGET_AURA_STATE);
+                for(Unit::AuraList::const_iterator i = ignoreReqAuras.begin(); i != ignoreReqAuras.end(); ++i)
+                {
+                    if ((*i)->isAffectedOnSpell(m_spellInfo))
+                    {
+                        CheckState = false;
+                        break;
+                    }
+                }
+
+                if ( CheckState && !target->HasAuraStateForCaster(AuraState(m_spellInfo->TargetAuraState),m_caster->GetGUID()))
+                    return SPELL_FAILED_TARGET_AURASTATE;
+            }
 
             // Not allow casting on flying player
             if (target->isInFlight())
