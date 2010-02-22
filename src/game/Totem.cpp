@@ -75,7 +75,8 @@ void Totem::Summon(Unit* owner)
     {
         case TOTEM_PASSIVE:
             for (int i = 0; i < MAX_CREATURE_SPELL_DATA_SLOT; ++i)
-                CastSpell(this, m_spells[i], true);
+                if(m_spells[i])
+                    CastSpell(this, m_spells[i], true);
             break;
         case TOTEM_STATUE:
             CastSpell(GetOwner(), GetSpell(), true);
