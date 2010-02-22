@@ -14049,9 +14049,8 @@ void Unit::KnockBackFrom(Unit* target, float horizontalSpeed, float verticalSpee
     }
     else
     {
-        float g = 19.23f;// seems that physic constant g(earth's gravity) in world of warcraft is about 2 times larger than real
-        float dh = verticalSpeed*verticalSpeed / (2*g); // maximum parabola height
-        float time = sqrtf(dh/(0.124976 * verticalSpeed));  //full move time in seconds     // should be  time = 2*Vert_speed/g, but..
+        float dh = verticalSpeed*verticalSpeed / (2*19.23f); // maximum parabola height
+        float time = (verticalSpeed) ? sqrtf(dh/(0.124976 * verticalSpeed)) : 0.0f;  //full move time in seconds
  
         float dis = time * horizontalSpeed;
 
