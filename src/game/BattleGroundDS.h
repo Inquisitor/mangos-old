@@ -49,5 +49,11 @@ class BattleGroundDS : public BattleGround
         bool SetupBattleGround();
         void HandleKillPlayer(Player* player, Player *killer);
         bool HandlePlayerUnderMap(Player * plr);
+
+        bool teleportCheck;
+        uint32 m_uiTeleport;
+
+        bool pushbackCheck;
+        uint32 m_uiKnockback;
 };
 #endif

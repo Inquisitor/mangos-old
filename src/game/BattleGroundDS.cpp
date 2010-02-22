@@ -26,7 +26,6 @@
 
 BattleGroundDS::BattleGroundDS()
 {
-
     m_StartDelayTimes[BG_STARTING_EVENT_FIRST]  = BG_START_DELAY_1M;
     m_StartDelayTimes[BG_STARTING_EVENT_SECOND] = BG_START_DELAY_30S;
     m_StartDelayTimes[BG_STARTING_EVENT_THIRD]  = BG_START_DELAY_15S;
@@ -46,6 +45,73 @@ BattleGroundDS::~BattleGroundDS()
 void BattleGroundDS::Update(uint32 diff)
 {
     BattleGround::Update(diff);
+
+    if (GetStatus() == STATUS_IN_PROGRESS)
+    {
+        // push people from the tubes
+        if(pushbackCheck)
+            if(m_uiKnockback < diff)
+            {
+                for(BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
+                {
+                    if(Player *plr = sObjectMgr.GetPlayer(itr->first))
+                    {
+                        if(plr->GetPositionZ() < 11.0f)
+                            continue;
+
+                        float angle = (plr->GetBGTeam() == ALLIANCE /* gold */) ? plr->GetAngle(1259.58f, 764.43f) : plr->GetAngle(1325.84f, 817.304f);
+
+                        WorldPacket data(SMSG_MOVE_KNOCK_BACK, 8+4+4+4+4+4);
+                        data.append(plr->GetPackGUID());
+                        data << uint32(0);                                  // Sequence
+                        data << float(cos(angle));                          // x direction
+                        data << float(sin(angle));                          // y direction
+                        data << float(55);                                  // Horizontal speed
+                        data << float(-7);                                  // Z Movement speed (vertical)
+                        plr->GetSession()->SendPacket(&data);
+                    }
+                }
+
+                pushbackCheck = false;
+            }
+            else
+                m_uiKnockback -= diff;
+
+        // in case pushback failed
+        if(teleportCheck)
+            if(m_uiTeleport < diff)
+            {
+                for(BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
+                {
+                    if(Player *plr = sObjectMgr.GetPlayer(itr->first))
+                    {
+                        if(plr->GetPositionZ() < 11.0f)
+                            continue;
+
+                        float x, y;
+                        if (plr->GetBGTeam() == ALLIANCE)
+                        {
+                            x = 1259.58f;
+                            y = 764.43f;
+                        }
+                        else
+                        {
+                            x = 1325.84f;
+                            y = 817.304f;
+                        }
+
+                        plr->TeleportTo(GetMapId(), x + urand(0,2), y + urand(0,2), 3.15f, plr->GetOrientation());
+                    }
+                }
+
+                teleportCheck = false;
+
+                // close the gate
+                OpenDoorEvent(BG_EVENT_DOOR);
+            }
+            else
+                m_uiTeleport -= diff;
+    }
 }
 
 void BattleGroundDS::StartingEventCloseDoors()
@@ -101,7 +167,7 @@ void BattleGroundDS::HandleKillPlayer(Player *player, Player *killer)
  
 bool BattleGroundDS::HandlePlayerUnderMap(Player *player)
 {
-    player->TeleportTo(GetMapId(),1299.046f, 784.825f, 9.338f, player->GetOrientation(),false);
+    player->TeleportTo(GetMapId(),1299.046f, 784.825f, 9.338f, player->GetOrientation());
     return true;
 }
  
@@ -133,6 +199,12 @@ void BattleGroundDS::FillInitialWorldStates(WorldPacket &data)
 void BattleGroundDS::Reset()
 {
     BattleGround::Reset();
+
+    m_uiTeleport = 20000;
+    teleportCheck = true;
+
+    m_uiKnockback = 15000;
+    pushbackCheck = true;
 }
 
 bool BattleGroundDS::SetupBattleGround()
