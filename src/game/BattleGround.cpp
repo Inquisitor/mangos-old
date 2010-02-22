@@ -1270,6 +1270,8 @@ void BattleGround::AddPlayer(Player *plr)
         plr->DestroyConjuredItems(true);
         plr->UnsummonPetTemporaryIfAny();
 
+        plr->CastSpell(plr, SPELL_ARENA_DAMPENING, true);
+
         if(GetStatus() == STATUS_WAIT_JOIN)                 // not started yet
         {
             plr->CastSpell(plr, SPELL_ARENA_PREPARATION, true);
@@ -1280,6 +1282,8 @@ void BattleGround::AddPlayer(Player *plr)
     }
     else
     {
+        plr->CastSpell(plr, SPELL_BG_DAMPENING, true);
+
         if(GetStatus() == STATUS_WAIT_JOIN)                 // not started yet
             plr->CastSpell(plr, SPELL_PREPARATION, true);   // reduces all mana cost of spells.
     }

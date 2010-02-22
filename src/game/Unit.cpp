@@ -9866,6 +9866,10 @@ int32 Unit::SpellHealingBonus(Unit *pVictim, SpellEntry const *spellProto, int32
     if (spellProto->DmgClass == SPELL_DAMAGE_CLASS_NONE)
     {
         healamount = int32(healamount * TakenTotalMod);
+
+        if(pVictim->GetDummyAura(SPELL_ARENA_DAMPENING) || pVictim->GetDummyAura(SPELL_BG_DAMPENING))
+            healamount = int32(healamount*0.9f);
+
         return healamount < 0 ? 0 : healamount;
     }
 
@@ -10049,6 +10053,10 @@ int32 Unit::SpellHealingBonus(Unit *pVictim, SpellEntry const *spellProto, int32
             TakenTotalMod *= ((*i)->GetModifier()->m_amount + 100.0f) / 100.0f;
 
     heal = (heal + TakenTotal) * TakenTotalMod;
+
+    // 10% healing reduction in arenas/BG
+    if(pVictim->GetDummyAura(SPELL_ARENA_DAMPENING) || pVictim->GetDummyAura(SPELL_BG_DAMPENING))
+        heal *= 0.9f;
 
     return heal < 0 ? 0 : uint32(heal);
 }
