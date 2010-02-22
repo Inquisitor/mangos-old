@@ -2924,7 +2924,7 @@ bool Player::AddTalent(uint32 spell_id, uint8 spec, bool learning)
         PlayerSpellState state = learning ? PLAYERSPELL_NEW : PLAYERSPELL_UNCHANGED;
         PlayerTalent *newtalent = new PlayerTalent();
 
-		newtalent->state = state;
+        newtalent->state = state;
         newtalent->spec = spec;
 
         (*m_talents[spec])[spell_id] = newtalent;
@@ -21718,7 +21718,7 @@ void Player::ActivateSpec(uint8 specNum)
             //if (plrTalent != m_talents[m_activeSpec]->end())
             //    plrTalent->second->state = PLAYERSPELL_REMOVED;
         }
-	}
+    }
 
     ApplyGlyphs(false);
 
