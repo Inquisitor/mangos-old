@@ -7260,6 +7260,13 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 triggered_spell_id = 50526;
                 break;
             }
+            // Unholy Blight
+            if (dummySpell->Id == 49194)
+            {
+                basepoints0 = triggerAmount * damage / 1000;
+                triggered_spell_id = 50536;
+                break;
+            }
             // Blood-Caked Blade
             if (dummySpell->SpellIconID == 138)
             {
@@ -7586,38 +7593,8 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
             break;
         case SPELLFAMILY_WARLOCK:
         {
-            // Pyroclasm
-            if (auraSpellInfo->SpellIconID == 1137)
-            {
-                if(!pVictim || !pVictim->isAlive() || pVictim == this || procSpell == NULL)
-                    return false;
-                // Calculate spell tick count for spells
-                uint32 tick = 1; // Default tick = 1
-
-                // Hellfire have 15 tick
-                if (procSpell->SpellFamilyFlags & UI64LIT(0x0000000000000040))
-                    tick = 15;
-                // Rain of Fire have 4 tick
-                else if (procSpell->SpellFamilyFlags & UI64LIT(0x0000000000000020))
-                    tick = 4;
-                else
-                    return false;
-
-                // Calculate chance = baseChance / tick
-                float chance = 0;
-                switch (auraSpellInfo->Id)
-                {
-                    case 18096: chance = 13.0f / tick; break;
-                    case 18073: chance = 26.0f / tick; break;
-                }
-                // Roll chance
-                if (!roll_chance_f(chance))
-                    return false;
-
-                trigger_spell_id = 18093;
-            }
             // Drain Soul
-            else if (auraSpellInfo->SpellFamilyFlags & UI64LIT(0x0000000000004000))
+            if (auraSpellInfo->SpellFamilyFlags & UI64LIT(0x0000000000004000))
             {
                 Unit::AuraList const& mAddFlatModifier = GetAurasByType(SPELL_AURA_ADD_FLAT_MODIFIER);
                 for(Unit::AuraList::const_iterator i = mAddFlatModifier.begin(); i != mAddFlatModifier.end(); ++i)
@@ -11704,8 +11681,9 @@ int32 Unit::CalculateSpellDuration(SpellEntry const* spellProto, SpellEffectInde
         int32 mechanic = GetEffectMechanic(spellProto, effect_index);
         // Find total mod value (negative bonus)
         int32 durationMod_always = target->GetTotalAuraModifierByMiscValue(SPELL_AURA_MECHANIC_DURATION_MOD, mechanic);
-        // Modify from SPELL_AURA_MOD_DURATION_OF_EFFECTS_BY_DISPEL aura (stack always ?)
-        durationMod_always+=target->GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_DURATION_OF_EFFECTS_BY_DISPEL, spellProto->Dispel);
+        // Modify from SPELL_AURA_MOD_DURATION_OF_EFFECTS_BY_DISPEL aura for negatve effects (stack always ?)
+        if (!IsPositiveEffect(spellProto->Id, effect_index))
+            durationMod_always+=target->GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_DURATION_OF_EFFECTS_BY_DISPEL, spellProto->Dispel);
         // Find max mod (negative bonus)
         int32 durationMod_not_stack = target->GetMaxNegativeAuraModifierByMiscValue(SPELL_AURA_MECHANIC_DURATION_MOD_NOT_STACK, mechanic);
 
@@ -14435,5 +14413,4 @@ bool Unit::CheckAndIncreaseCastCounter()
 
     ++m_castCounter;
     return true;
-
 }

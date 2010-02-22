@@ -139,6 +139,11 @@ bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, u
     m_creation_time = getMSTime();
 
     SetFloatValue(UNIT_FIELD_HOVERHEIGHT, 1.0f);
+    
+    CreatureInfo const *ci = GetCreatureInfo();
+    setFaction(team == ALLIANCE ? ci->faction_A : ci->faction_H);
+
+    SelectLevel(ci);
 
     //RemoveMonsterMoveFlag(MONSTER_MOVE_WALK);
 

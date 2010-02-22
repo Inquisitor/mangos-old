@@ -4137,7 +4137,7 @@ void Aura::HandleAuraModDisarm(bool apply, bool Real)
     if(!Real)
         return;
 
-    if(!apply && m_target->HasAuraType(SPELL_AURA_MOD_DISARM))
+    if(!apply && m_target->HasAuraType(GetModifier()->m_auraname))
         return;
 
     uint32 flags = 0;
@@ -4169,7 +4169,7 @@ void Aura::HandleAuraModDisarm(bool apply, bool Real)
 
     if(apply)
         m_target->SetFlag(field, flags);
-     else
+    else
         m_target->RemoveFlag(field, flags);
 
     // only at real add/remove aura

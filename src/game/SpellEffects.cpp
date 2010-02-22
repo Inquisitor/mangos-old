@@ -148,8 +148,8 @@ pEffect SpellEffects[TOTAL_SPELL_EFFECTS]=
     &Spell::EffectStuck,                                    // 84 SPELL_EFFECT_STUCK
     &Spell::EffectSummonPlayer,                             // 85 SPELL_EFFECT_SUMMON_PLAYER
     &Spell::EffectActivateObject,                           // 86 SPELL_EFFECT_ACTIVATE_OBJECT
-    &Spell::EffectUnused,                                   // 87 SPELL_EFFECT_WMO_DAMAGE
-    &Spell::EffectUnused,                                   // 88 SPELL_EFFECT_WMO_REPAIR
+    &Spell::EffectWMODamage,                                // 87 SPELL_EFFECT_WMO_DAMAGE
+    &Spell::EffectWMORepair,                                // 88 SPELL_EFFECT_WMO_REPAIR
     &Spell::EffectUnused,                                   // 89 SPELL_EFFECT_WMO_CHANGE
     &Spell::EffectKillCreditPersonal,                       // 90 SPELL_EFFECT_KILL_CREDIT              Kill credit but only for single person
     &Spell::EffectUnused,                                   // 91 SPELL_EFFECT_THREAT_ALL               one spell: zzOLDBrainwash
@@ -1290,32 +1290,6 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
 
                     m_caster->CastSpell(m_caster, spell_id, true, NULL);
-                    return;
-                }
-                case 34665:                                 //Administer Antidote
-                {
-                    if (!unitTarget || m_caster->GetTypeId() != TYPEID_PLAYER )
-                        return;
-
-                    // Spell has scriptable target but for sure.
-                    if (unitTarget->GetTypeId() != TYPEID_UNIT)
-                        return;
-
-                    uint32 health = unitTarget->GetHealth();
-                    float x, y, z, o;
-
-                    unitTarget->GetPosition(x, y, z);
-                    o = unitTarget->GetOrientation();
-                    ((Creature*)unitTarget)->ForcedDespawn();
-
-                    if (Creature* summon = m_caster->SummonCreature(16992, x, y, z, o,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,180000))
-                    {
-                        summon->SetHealth(health);
-                        ((Player*)m_caster)->RewardPlayerAndGroupAtEvent(16992, summon);
-
-                        if (summon->AI())
-                            summon->AI()->AttackStart(m_caster);
-                    }
                     return;
                 }
                 case 35745:                                 // Socrethar's Stone
@@ -8306,4 +8280,27 @@ void Spell::EffectActivateSpec(SpellEffectIndex /*eff_idx*/)
     uint32 spec = damage-1;
 
     ((Player*)unitTarget)->ActivateSpec(spec);
+}
+
+void Spell::EffectWMODamage(SpellEffectIndex /*eff_idx*/)
+{
+    if (gameObjTarget && gameObjTarget->GetGoType() == GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING)
+    {
+        Unit *caster = m_originalCaster;
+        if (!caster)
+            return;
+
+        FactionTemplateEntry const *casterft, *goft;
+        casterft = caster->getFactionTemplateEntry();
+        goft = sFactionTemplateStore.LookupEntry(gameObjTarget->GetUInt32Value(GAMEOBJECT_FACTION));
+        // Do not allow to damage GO's of friendly factions (ie: Wintergrasp Walls)
+        if (casterft && goft && !casterft->IsFriendlyTo(*goft))
+            gameObjTarget->TakenDamage((uint32)damage, caster);
+    }
+}
+
+void Spell::EffectWMORepair(SpellEffectIndex /*i*/)
+{
+    if (gameObjTarget && gameObjTarget->GetGoType() == GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING)
+        gameObjTarget->Rebuild();
 }
