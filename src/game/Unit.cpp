@@ -14063,6 +14063,7 @@ void Unit::KnockBackFrom(Unit* target, float horizontalSpeed, float verticalSpee
             fx = fx2;
             fy = fy2;
             fz = fz2;
+            UpdateGroundPositionZ(fx, fy, fz);
         }
 
         UpdateGroundPositionZ(fx, fy, fz);
