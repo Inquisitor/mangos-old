@@ -326,6 +326,8 @@ class Spell
         void EffectSpecCount(SpellEffectIndex eff_idx);
         void EffectActivateSpec(SpellEffectIndex eff_idx);
         void EffectRedirectThreat(SpellEffectIndex eff_idx);
+        void EffectWMODamage(SpellEffectIndex eff_idx);
+        void EffectWMORepair(SpellEffectIndex eff_idx);
 
         Spell( Unit* Caster, SpellEntry const *info, bool triggered, uint64 originalCasterGUID = 0, Spell** triggeringContainer = NULL );
         ~Spell();
