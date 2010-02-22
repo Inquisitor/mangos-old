@@ -67,6 +67,7 @@ void WaypointMovementGenerator<Creature>::LoadPath(Creature &c)
     // so when the routine is called the first time, wpSys gets the last waypoint
     // and this prevents the system from performing text/emote, etc
     i_hasDone[node_count - 1] = true;
+    i_currentNode = 0;
 }
 
 void WaypointMovementGenerator<Creature>::ClearWaypoints()
