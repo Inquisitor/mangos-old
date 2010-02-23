@@ -6813,6 +6813,12 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
                 case 49039: spellId1 = 50397; break;        // Lichborne
                 case 48263: spellId1 = 61261; break;        // Frost Presence
                 case 48265: spellId1 = 49772; break;        // Unholy Presence move speed
+                case 51209:                                    // Hungering Cold (Frost Fever apply)
+                {
+                    if (apply)
+                        spellId1 = 55095;
+                    break;
+                }
                 default: return;
             }
             break;
