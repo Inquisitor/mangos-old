@@ -705,7 +705,7 @@ void Spell::prepareDataForTriggerSystem()
                 break;
             case SPELLFAMILY_PRIEST:
                 // For Penance,Mind Sear,Mind Flay heal/damage triggers need do it
-                if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0001800000800000) || (m_spellInfo->SpellFamilyFlags2 & 0x00000040))
+                if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0019800000800000) || (m_spellInfo->SpellFamilyFlags2 & 0x000000440))
                     m_canTrigger = true;
                 break;
             case SPELLFAMILY_ROGUE:
@@ -4278,7 +4278,9 @@ SpellCastResult Spell::CheckCast(bool strict)
                         target_friendly = m_caster->IsFriendlyTo(target);
                     }
 
-                    if(target_friendly)
+                    // Penance negative target hack
+                    if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0001000000000000) && m_spellInfo->EffectImplicitTargetA[k] == TARGET_SINGLE_ENEMY){}
+                    else if (target_friendly)
                         return SPELL_FAILED_BAD_TARGETS;
 
                     explicit_target_mode = true;
