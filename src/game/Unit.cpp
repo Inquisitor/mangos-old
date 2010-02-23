@@ -14067,9 +14067,8 @@ void Unit::KnockBackFrom(Unit* target, float horizontalSpeed, float verticalSpee
             fx = fx2;
             fy = fy2;
             fz = fz2;
+            UpdateGroundPositionZ(fx, fy, fz);
         }
-
-        UpdateGroundPositionZ(fx, fy, fz);
 
         GetMap()->CreatureRelocation((Creature*)this, fx, fy, fz, GetOrientation());//it's a hack, need motion master support
         SendMonsterMoveJump(fx, fy, fz, verticalSpeed, SPLINEFLAG_WALKMODE, uint32(time * 1000.0f));
