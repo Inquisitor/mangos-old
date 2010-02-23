@@ -1257,8 +1257,8 @@ bool WorldObject::IsWithinLOS(float ox, float oy, float oz) const
 {
     float x,y,z;
     GetPosition(x,y,z);
-    z += 3.5f;
-    oz += 3.5f;
+    z += 2.5f;
+    oz += 2.5f;
 
     // check for line of sight because of terrain height differences
     Map const *map = GetBaseMap();
