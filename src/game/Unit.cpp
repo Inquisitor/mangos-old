@@ -7537,6 +7537,11 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                 target = pVictim;
                 trigger_spell_id = 26470;
             }
+            else if( auraSpellInfo->Id == 71761)
+            {
+                if (procSpell->Id != 44572) // Proc only from Deep Freeze immunity
+                    return false;
+            }
             break;
         case SPELLFAMILY_WARRIOR:
             // Deep Wounds (replace triggered spells to directly apply DoT), dot spell have finilyflags
