@@ -685,7 +685,11 @@ class MANGOS_DLL_SPEC WorldSession
         void HandleSocketOpcode(WorldPacket& recv_data);
 
         void HandleCancelTempEnchantmentOpcode(WorldPacket& recv_data);
+
+        // Refund 
         void HandleItemRefundInfoRequest(WorldPacket& recv_data);
+        void HandleItemRefundRequest(WorldPacket& recv_data);
+        void SendRefundInfo( uint64 GUID );
 
         void HandleChannelVoiceOnOpcode(WorldPacket & recv_data);
         void HandleVoiceSessionEnableOpcode(WorldPacket& recv_data);

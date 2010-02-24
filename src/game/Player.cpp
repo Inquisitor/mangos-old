@@ -18379,6 +18379,9 @@ bool Player::BuyItemFromVendor(uint64 vendorguid, uint32 item, uint8 count, uint
             data << uint32(count);
             GetSession()->SendPacket(&data);
 
+            if( it->IsEligibleForRefund() && crItem->ExtendedCost != NULL )
+                AddRefundable(it->GetGUID(), crItem->ExtendedCost);
+
             SendNewItem(it, pProto->BuyCount*count, true, false, false);
         }
     }
@@ -18423,6 +18426,9 @@ bool Player::BuyItemFromVendor(uint64 vendorguid, uint32 item, uint8 count, uint
             data << uint32(crItem->maxcount > 0 ? new_count : 0xFFFFFFFF);
             data << uint32(count);
             GetSession()->SendPacket(&data);
+
+            if( it->IsEligibleForRefund() && crItem->ExtendedCost != NULL )
+                AddRefundable(it->GetGUID(), crItem->ExtendedCost);
 
             SendNewItem(it, pProto->BuyCount*count, true, false, false);
 
@@ -21972,3 +21978,37 @@ void Player::CompletedAchievement(AchievementEntry const* entry)
     GetAchievementMgr().CompletedAchievement(entry);
 }
 
+void Player::AddRefundable( uint64 itemGUID,  uint32 extendedcost )
+{
+    std::pair< uint64, uint32 > insertpair;
+    
+    Item *item = GetItemByGuid(itemGUID);
+
+    if( item == NULL )
+        return;
+	
+    item->SetPlayedtimeField(GetTotalPlayedTime());
+
+    insertpair.first = itemGUID;
+    insertpair.second = extendedcost;
+
+    sObjectMgr.mItemRefundableMap.insert(insertpair);
+}
+
+void Player::RemoveRefundable(uint64 itemGUID)
+{
+    sObjectMgr.mItemRefundableMap.erase(itemGUID);
+}
+
+uint32 Player::LookupRefundable(uint64 itemGUID)
+{
+    ItemRefundableMap::iterator itr;
+    uint32 RefundableEntry = 0;
+
+    itr = sObjectMgr.mItemRefundableMap.find(itemGUID);
+
+    if (itr != sObjectMgr.mItemRefundableMap.end())
+        RefundableEntry = itr->second;
+
+    return RefundableEntry;
+}

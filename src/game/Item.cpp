@@ -431,6 +431,16 @@ bool Item::LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult *result)
         need_save = true;
     }
 
+    // Insert to Refundable map
+    if(GetPlayedtimeField())
+    {
+        std::pair< uint64, uint32 > insertpair;
+        insertpair.first = GetGUID();
+        insertpair.second = 0;
+
+        sObjectMgr.mItemRefundableMap.insert(insertpair);
+    }
+
     if(need_save)                                           // normal item changed state set not work at loading
     {
         std::ostringstream ss;
@@ -1082,4 +1092,30 @@ bool ItemRequiredTarget::IsFitToRequirements( Unit* pUnitTarget ) const
         default:
             return false;
     }
+}
+
+// "Stackable items (such as Frozen Orbs and gems) and 
+// charged items that can be purchased with an alternate currency are not eligible. "
+bool Item::IsEligibleForRefund()
+{
+    ItemPrototype const*proto = GetProto();
+
+    if( proto == NULL)
+        return false;
+
+    if( !(proto->Flags & ITEM_FLAGS_REFUNDABLE) )
+        return false;
+
+    if( proto->MaxCount > 1 )
+        return false;
+
+    for( int i = 0; i < 5; ++i )
+    {
+        _Spell spell = proto->Spells[i];
+
+        if( spell.SpellCharges != -1  && spell.SpellCharges != 0)
+            return false;
+    }
+
+    return true;
 }

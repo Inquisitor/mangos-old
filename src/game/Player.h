@@ -2314,6 +2314,15 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         bool isActiveObject() const { return true; }
         bool canSeeSpellClickOn(Creature const* creature) const;
+
+        /*********************************************************/
+        /***                ITEM REFUND SYSTEM                 ***/
+        /*********************************************************/
+
+        void AddRefundable( uint64 itemGUID,  uint32 extendedcost );
+        void RemoveRefundable( uint64 itemGUID );
+        uint32 LookupRefundable(uint64 itemGUID);
+
     protected:
 
         uint32 m_contestedPvPTimer;

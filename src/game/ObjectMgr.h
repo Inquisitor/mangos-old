@@ -307,6 +307,8 @@ struct GCNewsData
 
 typedef std::multimap<uint32, GCNewsData> GCNewsMap;
 
+typedef std::map<uint64, uint32> ItemRefundableMap;
+
 enum ConditionType
 {                                                           // value1       value2  for the Condition enumed
     CONDITION_NONE                  = 0,                    // 0            0
@@ -909,6 +911,7 @@ class ObjectMgr
         VehicleSeatDataMap mVehicleSeatData;
 
         GCNewsMap mGCNewsMap;
+        ItemRefundableMap mItemRefundableMap;
 
         uint32 GetSeatFlags(uint32 seatid)
         {
