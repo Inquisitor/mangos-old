@@ -1334,29 +1334,17 @@ void WorldSession::HandleCancelTempEnchantmentOpcode(WorldPacket& recv_data)
     item->ClearEnchantment(TEMP_ENCHANTMENT_SLOT);
 }
 
-void WorldSession::HandleItemRefundInfoRequest( WorldPacket& recvPacket ){
+void WorldSession::HandleItemRefundInfoRequest( WorldPacket& recvPacket )
+{
     if( !_player || !_player->IsInWorld() )
         return;
 
     sLog.outDebug("Recieved CMSG_ITEMREFUNDINFO.");
 
-    //////////////////////////////////////////////////////////////////////////////////////////
-    //  As of 3.2.0a the client sends this packet to request refund info on an item
-    //
-    //	{CLIENT} Packet: (0x04B3) UNKNOWN PacketSize = 8 TimeStamp = 265984125
-    //	E6 EE 09 18 02 00 00 42 
-    //
-    //  
-    //
-    //  Structure:
-    //  uint64 GUID
-    //////////////////////////////////////////////////////////////////////////////////////////
-
     uint64 itemGUID;
     recvPacket >> itemGUID;
 
-    this->SendRefundInfo(itemGUID);
-
+    SendRefundInfo(itemGUID);
 }
 
 void WorldSession::HandleItemRefundRequest( WorldPacket& recv_data )
@@ -1364,19 +1352,7 @@ void WorldSession::HandleItemRefundRequest( WorldPacket& recv_data )
     if( !_player || !_player->IsInWorld() )
         return;
 
-    sLog.outString("Recieved CMSG_ITEM_REFUND_INFO.");
-
-    //////////////////////////////////////////////////////////////////////////////////////////
-    //  As of 3.2.0a the client sends this packet to initiate refund of an item
-    //
-    //	{CLIENT} Packet: (0x04B4) UNKNOWN PacketSize = 8 TimeStamp = 266021296
-    //	E6 EE 09 18 02 00 00 42 
-    //
-    //  
-    //
-    //  Structure:
-    //  uint64 GUID
-    //////////////////////////////////////////////////////////////////////////////////////////
+    sLog.outDebug("Recieved CMSG_ITEM_REFUND_INFO.");
 
     uint64 GUID;
     uint32 error = 1;
@@ -1417,8 +1393,8 @@ void WorldSession::HandleItemRefundRequest( WorldPacket& recv_data )
                         _player->StoreNewItemInInventorySlot( ex->reqitem[i], ex->reqitemcount[i]);
                     }
 
-                    _player->StoreNewItemInInventorySlot( 43308, ex->reqhonorpoints);   // honor points
-                    _player->StoreNewItemInInventorySlot( 43307, ex->reqarenapoints);  // arena points
+                    _player->ModifyHonorPoints( ex->reqhonorpoints );
+                    _player->ModifyArenaPoints( ex->reqarenapoints );
                     //_player->c( proto->BuyPrice ); TODO CHANGE MONEY
 
                     uint32 count = 1;
@@ -1436,59 +1412,26 @@ void WorldSession::HandleItemRefundRequest( WorldPacket& recv_data )
         }
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //  As of 3.1.3 the client sends this packet to provide refunded cost info to the client
-    //
-    //	{SERVER} Packet: (0x04B5) UNKNOWN PacketSize = 64 TimeStamp = 266021531
-    //	E6 EE 09 18 02 00 00 42 00 00 00 00 00 00 00 00 4B 25 00 00 00 00 00 00 50 50 00 00 0A 00 00 00 00
-    //  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-    //
-    //
-    //  Structure (on success):
-    //  uint64 GUID
-    //  uint32 errorcode
-    //  
-    //
-    //  Structure (on failure):
-    //  uint64 GUID
-    //  uint32 price (in copper)
-    //  uint32 honor
-    //  uint32 arena
-    //  uint32 item1
-    //  uint32 item1cnt
-    //  uint32 item2
-    //  uint32 item2cnt
-    //  uint32 item3
-    //  uint32 item3cnt
-    //  uint32 item4
-    //  uint32 item4cnt
-    //  uint32 item5
-    //  uint32 item5cnt
-    //  
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    WorldPacket packet( SMSG_ITEM_REFUND_RESULT, 60 );
+    packet << uint64(GUID);
+    packet << uint32(error);
 
-
-        WorldPacket packet( SMSG_ITEM_REFUND_RESULT, 60 );
-        packet << uint64(GUID);
-        packet << uint32(error);
-
-        if( error == 0 )
-        {
-            packet << uint32(proto->BuyPrice);
-            packet << uint32(ex->reqhonorpoints);
-            packet << uint32(ex->reqarenapoints);
+    if( error == 0 )
+    {
+        packet << uint32(proto->BuyPrice);
+        packet << uint32(ex->reqhonorpoints);
+        packet << uint32(ex->reqarenapoints);
             
-            for( int i = 0; i < 5; ++i )
-            {
-                packet << uint32(ex->reqitem[i]);
-                packet << uint32(ex->reqitemcount[i]);
-            }
-
+        for( int i = 0; i < 5; ++i )
+        {
+            packet << uint32(ex->reqitem[i]);
+            packet << uint32(ex->reqitemcount[i]);
         }
+    }
 
-        this->SendPacket( &packet );
+    SendPacket( &packet );
 
-        sLog.outString("Sent SMSG_ITEM_REFUND_RESULT.");
+    sLog.outDebug("Sent SMSG_ITEM_REFUND_RESULT.");
 }
 
 void WorldSession::SendRefundInfo( uint64 itemGUID )
@@ -1517,47 +1460,14 @@ void WorldSession::SendRefundInfo( uint64 itemGUID )
         if( proto == NULL)
             return;
 
-        //////////////////////////////////////////////////////////////////////////////////////////
-        //  As of 3.2.0a the server sends this packet to provide refund info on an item
-        //
-        //  {SERVER} Packet: (0x04B2) UNKNOWN PacketSize = 68 TimeStamp = 265984265
-        //  E6 EE 09 18 02 00 00 42 00 00 00 00 4B 25 00 00 00 00 00 00 50 50 00 00 0A 00 00 00 00 
-        //  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-        //  00 00 00 00 00 00 D3 12 12 00 
-        //
-        //  Structure:
-        //  uint64 GUID
-        //  uint32 price (in copper)
-        //  uint32 honor
-        //  uint32 arena
-        //  uint32 item1
-        //  uint32 item1cnt
-        //  uint32 item2
-        //  uint32 item2cnt
-        //  uint32 item3
-        //  uint32 item3cnt
-        //  uint32 item4
-        //  uint32 item4cnt
-        //  uint32 item5
-        //  uint32 item5cnt
-        //  uint32 unknown  - always seems 0
-        //  uint32 buytime  - buytime in total playedtime seconds
-		//
-		//
-		// Remainingtime:
-        // Seems to be in playedtime format
-		//
-		//
-        //////////////////////////////////////////////////////////////////////////////////////////
-
-
         WorldPacket packet( SMSG_ITEM_REFUND_INFO_RESPONSE, 68 );
         packet << uint64( itemGUID );
         packet << uint32( proto->BuyPrice );
         packet << uint32( ex->reqhonorpoints );
         packet << uint32( ex->reqarenapoints );
 
-        for( int i = 0; i < 5; ++i ){
+        for( int i = 0; i < 5; ++i )
+        {
             packet << uint32( ex->reqitem[i] );
             packet << uint32( ex->reqitemcount[i] );
         }
@@ -1571,8 +1481,8 @@ void WorldSession::SendRefundInfo( uint64 itemGUID )
         else
             packet << uint32( pItem->GetPlayedtimeField() );
         
-        this->SendPacket( &packet );
+        SendPacket( &packet );
 
-        sLog.outString("Sent SMSG_ITEM_REFUND_INFO_RESPONSE.");
+        sLog.outDebug("Sent SMSG_ITEM_REFUND_INFO_RESPONSE.");
     }
 }
