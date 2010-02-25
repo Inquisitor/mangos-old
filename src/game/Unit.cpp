@@ -9266,6 +9266,24 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
     // Custom scripted damage
     switch(spellProto->SpellFamilyName)
     {
+        case SPELLFAMILY_DRUID:
+        {
+            // Brambles
+            if (spellProto->SpellFamilyFlags & UI64LIT(0x00000000100))
+            {
+                Unit::AuraList const& dummyAuras = GetAurasByType(SPELL_AURA_DUMMY);
+                for(Unit::AuraList::const_iterator i = dummyAuras.begin(); i != dummyAuras.end(); ++i)
+                {
+                    if ((*i)->isAffectedOnSpell(spellProto))
+                    {
+                        DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f) / 100.0f;
+                        break;
+                    }
+                }
+            }
+
+            break;
+        }
         case SPELLFAMILY_PRIEST:
         {
             // Glyph of Shadow Word: Pain
