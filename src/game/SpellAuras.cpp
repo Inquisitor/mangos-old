@@ -7265,7 +7265,8 @@ void Aura::PeriodicTick()
             {
                 switch(GetId())
                 {
-                    case 43093: case 31956: case 38801:
+                    case 43093: case 31956: case 38801: 
+                    case 59262: case 58517: case 48920:
                     case 35321: case 38363: case 39215:
                         if(m_target->GetHealth() == m_target->GetMaxHealth() )
                         {
