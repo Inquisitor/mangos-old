@@ -1796,7 +1796,7 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
             {
                 FillAreaTargets(targetUnitMap, m_targets.m_destX, m_targets.m_destY, radius, PUSH_DEST_CENTER, SPELL_TARGETS_FRIENDLY);
                 if( m_spellInfo->Id == 27820) // Exclude caster from targets
-                    TagUnitMap.remove(m_caster);
+                    targetUnitMap.remove(m_caster);
             }
             break;
         // TARGET_SINGLE_PARTY means that the spells can only be casted on a party member and not on the caster (some seals, fire shield from imp, etc..)
