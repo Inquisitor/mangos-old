@@ -5529,11 +5529,13 @@ SpellCastResult Spell::CheckItems()
     bool isScrollItem = false;
     bool isVellumTarget = false;
 
+    bool isNoReagentReqCast = m_CastItem ? m_CastItem->GetEntry() == m_spellInfo->EffectItemType[0] : false;
+
     // cast item checks
     if(m_CastItem)
     {
         uint32 itemid = m_CastItem->GetEntry();
-        if( !p_caster->HasItemCount(itemid, 1) )
+        if( !p_caster->HasItemCount(itemid, 1) && !isNoReagentReqCast )
             return SPELL_FAILED_ITEM_NOT_FOUND;
 
         ItemPrototype const *proto = m_CastItem->GetProto();
@@ -5611,7 +5613,7 @@ SpellCastResult Spell::CheckItems()
 
         isVellumTarget = m_targets.getItemTarget()->GetProto()->IsVellum();
 
-        if(!m_targets.getItemTarget()->IsFitToSpellRequirements(m_spellInfo))
+        if(!m_targets.getItemTarget()->IsFitToSpellRequirements(m_spellInfo) && !isNoReagentReqCast)
             return SPELL_FAILED_EQUIPPED_ITEM_CLASS;
 
         // Do not enchant vellum with scroll
@@ -5647,7 +5649,7 @@ SpellCastResult Spell::CheckItems()
     }
 
     // check reagents (ignore triggered spells with reagents processed by original spell) and special reagent ignore case.
-    if (!m_IsTriggeredSpell && !p_caster->CanNoReagentCast(m_spellInfo))
+    if (!m_IsTriggeredSpell && !p_caster->CanNoReagentCast(m_spellInfo) && !isNoReagentReqCast)
     {
         for(uint32 i = 0; i < 8; ++i)
         {
@@ -5711,7 +5713,7 @@ SpellCastResult Spell::CheckItems()
         else
             TotemCategory -= 1;
     }
-    if(TotemCategory != 0)
+    if(TotemCategory != 0 && !isNoReagentReqCast)
         return SPELL_FAILED_TOTEM_CATEGORY;                 //0x7B
 
     // special checks for spell effects
