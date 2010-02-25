@@ -3852,6 +3852,31 @@ bool Unit::AddAura(Aura *Aur)
                     {
                         // can be created with >1 stack by some spell mods
                         aur2->modStackAmount(Aur->GetStackAmount());
+
+                        switch(Aur->GetId())
+                        {
+                        case 28832: // Mark of Korth'azz
+                        case 28833: // Mark of Blaumeux
+                        case 28834: // Mark of Rivendare
+                        case 28835: // Mark of Zeliek
+                            if(Unit *caster = Aur->GetCaster()) // actually we can also use cast(this, originalcasterguid)
+                            {
+                                int32 damageToDeal;
+                                switch(i2->second->GetStackAmount())
+                                {
+                                    case 1: damageToDeal = 0;     break;
+                                    case 2: damageToDeal = 500;   break;
+                                    case 3: damageToDeal = 1000;  break;
+                                    case 4: damageToDeal = 1500;  break;
+                                    case 5: damageToDeal = 4000;  break;
+                                    case 6: damageToDeal = 12000; break;
+                                    default:damageToDeal = 20000 + 1000 * (i2->second->GetStackAmount() - 7); break;
+                                }
+                                if(damageToDeal)
+                                    caster->CastCustomSpell(this, 28836, &damageToDeal, NULL, NULL, true);
+                            }
+                            break;
+                        }
                         delete Aur;
                         return false;
                     }
