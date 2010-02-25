@@ -2050,6 +2050,14 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         ((Player*)m_caster)->KilledMonsterCredit(25425, 0);
                     return;
                 }
+                case 64385: // Unusual Compass
+                {
+                    m_caster->SetOrientation(float(urand(0,62832)) / 10000.0f);
+                    WorldPacket data;
+                    m_caster->BuildHeartBeatMsg(&data);
+                    m_caster->SendMessageToSet(&data,true);
+                    return;
+                }
             }
             break;
         }
