@@ -79,7 +79,7 @@ CanCastResult CreatureAI::CanCastSpell(Unit* pTarget, const SpellEntry *pSpell, 
 CanCastResult CreatureAI::DoCastSpellIfCan(Unit* pTarget, uint32 uiSpell, uint32 uiCastFlags, uint64 uiOriginalCasterGUID)
 {
     if(!pTarget)
-        return;
+        return CAST_FAIL_OTHER;
 
     Unit* pCaster = m_creature;
 
