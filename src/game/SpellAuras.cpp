@@ -8306,7 +8306,7 @@ void Aura::PeriodicDummyTick()
                 // Killing Spree
                 case 51690:
                 {
-                    if (m_target->hasUnitState(UNIT_STAT_STUNNED) || m_target->isFeared())
+                    if (m_target->hasUnitState(UNIT_STAT_STUNNED) || m_target->isFeared() || m_target->HasAuraType(SPELL_AURA_MOD_CONFUSE))
                         return;
 
                     std::list<Unit*> targets;
