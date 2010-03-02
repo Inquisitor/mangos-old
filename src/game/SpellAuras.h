@@ -222,6 +222,8 @@ class MANGOS_DLL_SPEC Aura
         void HandleAllowOnlyAbility(bool Apply, bool Real);
         void HandleCharmConvert(bool apply, bool Real);
         void HandleIgnoreAuraState(bool Apply, bool Real);
+        void HandleAuraInitializeImages(bool Apply, bool Real);
+        void HandleAuraCloneCaster(bool Apply, bool Real);
 
         virtual ~Aura();
 
