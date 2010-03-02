@@ -2625,6 +2625,15 @@ enum BattleGroundTypeId
 };
 #define MAX_BATTLEGROUND_TYPE_ID 33
 
+enum BattlegroundDailyEvent
+{
+    BG_DAILY_AV                = 50,
+    BG_DAILY_AB                = 51,
+    BG_DAILY_WSG               = 52,
+    BG_DAILY_EOTS              = 53,
+};
+#define MAX_BG_DAILY_EVENT       4
+
 enum MailResponseType
 {
     MAIL_SEND               = 0,
