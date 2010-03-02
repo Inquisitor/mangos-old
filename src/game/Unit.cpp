@@ -5898,6 +5898,12 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
                     return true;
                 }
+                // Glyph of Drain Soul - DBC has wrong spellfamily thats why its in SPELLFAMILY_MAGE 
+                case 58070:
+                {
+                    triggered_spell_id = 58068;
+                    break;
+                }
             }
             break;
         }
