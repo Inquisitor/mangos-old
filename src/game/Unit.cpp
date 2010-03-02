@@ -13141,10 +13141,11 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
                 }
                 break;
             case SPELL_AURA_MAELSTROM_WEAPON:
-                sLog.outDebug("ProcDamageAndSpell: casting spell id %u (triggered by %s maelstrom aura of spell %u)", spellInfo->Id,(isVictim?"a victim's":"an attacker's"), triggeredByAura->GetId());
+            case SPELL_AURA_ADD_CASTER_HIT_TRIGGER:
+                sLog.outDebug("ProcDamageAndSpell: casting spell id %u (triggered by %s maelstrom/intervene aura of spell %u)", spellInfo->Id,(isVictim?"a victim's":"an attacker's"), triggeredByAura->GetId());
 
                 // remove all stack;
-                RemoveSpellsCausingAura(SPELL_AURA_MAELSTROM_WEAPON);
+                RemoveSpellsCausingAura(auraModifier->m_auraname);
                 triggeredByAura->SetInUse(false);           // this safe, aura locked
                 continue;                                   // avoid re-remove attempts
                 // CC Auras which use their modifier amount amount to drop
