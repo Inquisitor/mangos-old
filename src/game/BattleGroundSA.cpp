@@ -245,3 +245,64 @@ void BattleGroundSA::ToggleTimer()
     TimerEnabled = !TimerEnabled;
     UpdateWorldState(BG_SA_ENABLE_TIMER, (TimerEnabled) ? 1 : 0);
 }
+
+void BattleGroundSA::EventPlayerClickedOnFlag(Player *Source, GameObject* target_obj)
+{
+    switch(target_obj->GetEntry())
+    {
+    case 191307:
+    case 191308:
+        CaptureGraveyard(BG_SA_LEFT_CAPTURABLE_GY);
+      break;
+    case 191305:
+    case 191306:
+        CaptureGraveyard(BG_SA_RIGHT_CAPTURABLE_GY);
+      break;
+    case 191310:
+    case 191309:
+        CaptureGraveyard(BG_SA_CENTRAL_CAPTURABLE_GY);
+      break;
+    default:
+        return;
+    };
+}
+
+void BattleGroundSA::CaptureGraveyard(BG_SA_Graveyards i)
+{
+    //DelCreature(BG_SA_MAXNPC + i);
+    GraveyardStatus[i] = (GraveyardStatus[i] == BG_TEAM_ALLIANCE? BG_TEAM_HORDE : BG_TEAM_ALLIANCE);
+    WorldSafeLocsEntry const *sg = NULL;
+    sg = sWorldSafeLocsStore.LookupEntry(BG_SA_GYEntries[i]);
+    //AddSpiritGuide(i + BG_SA_NPC_MAX, sg->x, sg->y, sg->z, BG_SA_GYOrientation[i], (GraveyardStatus[i] == BG_TEAM_ALLIANCE?  ALLIANCE : HORDE ));
+    uint32 npc = 0;
+
+    switch(i)
+    {
+    case BG_SA_LEFT_CAPTURABLE_GY:
+            SpawnBGObject(BG_SA_LEFT_FLAG,RESPAWN_ONE_DAY);
+            npc = BG_SA_NPC_RIGSPARK;
+            /*AddCreature(BG_SA_NpcEntries[npc], npc, attackers, 
+            BG_SA_NpcSpawnlocs[npc][0], BG_SA_NpcSpawnlocs[npc][1],
+            BG_SA_NpcSpawnlocs[npc][2], BG_SA_NpcSpawnlocs[npc][3]);*/
+            UpdateWorldState(BG_SA_LEFT_GY_ALLIANCE, (GraveyardStatus[i] == BG_TEAM_ALLIANCE? 1:0));
+            UpdateWorldState(BG_SA_LEFT_GY_HORDE, (GraveyardStatus[i] == BG_TEAM_ALLIANCE? 0:1));
+        break;
+    case BG_SA_RIGHT_CAPTURABLE_GY:
+            SpawnBGObject(BG_SA_RIGHT_FLAG, RESPAWN_ONE_DAY);
+            npc = BG_SA_NPC_SPARKLIGHT;
+            /*AddCreature(BG_SA_NpcEntries[npc], npc, attackers, 
+            BG_SA_NpcSpawnlocs[npc][0], BG_SA_NpcSpawnlocs[npc][1],
+            BG_SA_NpcSpawnlocs[npc][2], BG_SA_NpcSpawnlocs[npc][3]);*/
+            UpdateWorldState(BG_SA_RIGHT_GY_ALLIANCE, (GraveyardStatus[i] == BG_TEAM_ALLIANCE? 1:0));
+            UpdateWorldState(BG_SA_RIGHT_GY_HORDE, (GraveyardStatus[i] == BG_TEAM_ALLIANCE? 0:1));
+        break;
+    case BG_SA_CENTRAL_CAPTURABLE_GY:
+            SpawnBGObject(BG_SA_CENTRAL_FLAG, RESPAWN_ONE_DAY);
+            UpdateWorldState(BG_SA_CENTER_GY_ALLIANCE, (GraveyardStatus[i] == BG_TEAM_ALLIANCE? 1:0));
+            UpdateWorldState(BG_SA_CENTER_GY_HORDE, (GraveyardStatus[i] == BG_TEAM_ALLIANCE? 0:1));
+        break;
+    default:
+            ASSERT(0);
+        break;
+    };
+}

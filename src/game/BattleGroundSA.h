@@ -143,6 +143,30 @@ const uint32 BG_SA_NpcEntries[BG_SA_NPC_MAX] =
     29262,
 };
 
+const float BG_SA_NpcSpawnlocs[BG_SA_NPC_MAX][4] = 
+{
+    //   X           Y            Z          O
+    //Cannons
+    { 1436.429f,   110.05f,    41.407f,    5.4f  }, 
+    { 1404.9023f,  84.758f,    41.183f,    5.46f },
+    { 1068.693f,   -86.951f,   93.81f,     0.02f }, 
+    { 1068.83f,    -127.56f,   96.45f,     0.0912f },
+    { 1422.115f,   -196.433f,  42.1825f,   1.0222f }, 
+    { 1454.887f,   -220.454f,  41.956f,    0.9627f },
+    { 1232.345f,   -187.517f,  66.945f,    0.45f  }, 
+    { 1249.634f,   -224.189f,  66.72f,     0.635f },
+    { 1236.213f,   92.287f,    64.965f,    5.751f }, 
+    { 1215.11f,    57.772f,    64.739f,    5.78f  },
+    //Demolishers
+    { 1611.597656f, -117.270073f, 8.719355f, 2.513274f },
+    { 1575.562500f, -158.421875f, 5.024450f, 2.129302f },
+    { 1618.047729f, 61.424641f,   7.248210f, 3.979351f },
+    { 1575.103149f, 98.873344f,   2.830360f, 3.752458f },
+    //Npcs
+    { 1348.644165f, -298.786469f, 31.080130f, 1.710423f },
+    { 1358.191040f, 195.527786f,  31.018187f, 4.171337f },
+};
+
 enum BG_SA_Objects
 {
     BG_SA_GREEN_GATE = 0,
@@ -293,6 +317,9 @@ class BattleGroundSA : public BattleGround
         void RemovePlayer(Player *plr,uint64 guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
         void HandleKillUnit(Creature *creature, Player *killer);
+
+        virtual void EventPlayerClickedOnFlag(Player *Source, GameObject* target_obj);
+        //virtual void EventPlayerUsedGO(Player* Source, GameObject* object);
         //bool SetupBattleGround();
 
         /* Scorekeeping */
@@ -304,6 +331,7 @@ class BattleGroundSA : public BattleGround
     
     void ToggleTimer();
     void SendTime();
+    void CaptureGraveyard(BG_SA_Graveyards i);
 
     BattleGroundTeamId attackers;
     uint32 TotalTime;
