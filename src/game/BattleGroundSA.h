@@ -321,7 +321,7 @@ class BattleGroundSA : public BattleGround
 
         virtual void EventPlayerClickedOnFlag(Player *Source, GameObject* target_obj);
         virtual void EventPlayerDamagedGO(Player* plr, GameObject* go, uint32 event);
-        //virtual void EventPlayerUsedGO(Player* Source, GameObject* object);
+        virtual void EventPlayerUsedGO(Player* Source, GameObject* object);
         //bool SetupBattleGround();
 
         /* Scorekeeping */

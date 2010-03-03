@@ -358,6 +358,38 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *Source, GameObject* target
     };
 }
 
+void BattleGroundSA::EventPlayerUsedGO(Player* Source, GameObject* object)
+{
+    if(object->GetEntry() == BG_SA_ObjEntries[BG_SA_TITAN_RELIC])
+    {
+        if(Source->GetBGTeam() == attackers)
+        {
+            if(status == BG_SA_ROUND_ONE)
+            {
+                RoundScores[0].winner = attackers;
+                RoundScores[0].time = TotalTime;
+                attackers = (attackers == BG_TEAM_ALLIANCE) ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE;
+                status = BG_SA_SECOND_WARMUP;
+                TotalTime = 0;
+                ToggleTimer();
+                // TODO Reset objects properly
+                //ResetObjs();
+            }
+            else if(status == BG_SA_ROUND_TWO)
+            {
+                RoundScores[1].winner = attackers;
+                RoundScores[1].time = TotalTime;ToggleTimer();
+                if(RoundScores[0].time == RoundScores[1].time)
+                    EndBattleGround(NULL);
+                else if(RoundScores[0].time < RoundScores[1].time)
+                    EndBattleGround(RoundScores[0].winner == BG_TEAM_ALLIANCE ? ALLIANCE : HORDE);
+                else
+                    EndBattleGround(RoundScores[1].winner == BG_TEAM_ALLIANCE ? ALLIANCE : HORDE);
+	        }
+	    }
+    }
+}
+
 void BattleGroundSA::CaptureGraveyard(BG_SA_Graveyards i)
 {
     //DelCreature(BG_SA_MAXNPC + i);
