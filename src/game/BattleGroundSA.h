@@ -284,6 +284,8 @@ class BattleGroundSA : public BattleGround
         virtual void AddPlayer(Player *plr);
         virtual void StartingEventCloseDoors();
         virtual void StartingEventOpenDoors();
+        // Send Worldstates
+        virtual void FillInitialWorldStates(WorldPacket& data);
         virtual void Reset();
 
         void RemovePlayer(Player *plr,uint64 guid);
