@@ -20,6 +20,9 @@
 #include "BattleGround.h"
 #include "BattleGroundSA.h"
 #include "Language.h"
+#include "Player.h"
+#include "GameObject.h"
+#include "ObjectMgr.h"
 #include "WorldPacket.h"
 
 BattleGroundSA::BattleGroundSA()
@@ -51,7 +54,7 @@ void BattleGroundSA::Update(uint32 diff)
             status = (status == BG_SA_WARMUP) ? BG_SA_ROUND_ONE : BG_SA_ROUND_TWO;
         }
         if(TotalTime >= BG_SA_BOAT_START)
-            //StartShips();
+            StartShips();
             return;
     }
     else if(status == BG_SA_ROUND_ONE)
@@ -172,6 +175,34 @@ void BattleGroundSA::AddPlayer(Player *plr)
 void BattleGroundSA::RemovePlayer(Player* /*plr*/,uint64 /*guid*/)
 {
 
+}
+
+void BattleGroundSA::StartShips()
+{
+    if(ShipsStarted)
+        return;
+    /*DoorOpen(BG_SA_BOAT_ONE);
+    DoorOpen(BG_SA_BOAT_TWO);*/
+
+    for(int i = BG_SA_BOAT_ONE; i <= BG_SA_BOAT_TWO; i++)
+    {
+        for( BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end();itr++)
+        {
+            if(Player* p = sObjectMgr.GetPlayer(itr->first))
+            {
+                if(p->GetBGTeam() != attackers)
+                    continue;
+
+                /*UpdateData data;
+                WorldPacket pkt;
+                GetBGObject(i)->BuildValuesUpdateBlockForPlayer(&data, p);
+                data.BuildPacket(&pkt);
+                p->GetSession()->SendPacket(&pkt);*/
+            }
+        }
+    }
+  
+    ShipsStarted = true;
 }
 
 void BattleGroundSA::HandleAreaTrigger(Player * /*Source*/, uint32 /*Trigger*/)

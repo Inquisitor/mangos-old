@@ -332,6 +332,7 @@ class BattleGroundSA : public BattleGround
     
     void ToggleTimer();
     void SendTime();
+    void StartShips();
     void DestroyGate(uint32 i, Player* pl);
     void CaptureGraveyard(BG_SA_Graveyards i);
 
