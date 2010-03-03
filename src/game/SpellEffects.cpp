@@ -4218,7 +4218,7 @@ void Spell::EffectApplyAreaAura(SpellEffectIndex eff_idx)
         return;
 
     // reapply Flametongue Totem aura (prevent to stack at spec switch)
-    if (m_spellInfo->Effect[i] == SPELL_EFFECT_APPLY_AREA_AURA_RAID && m_spellInfo->SpellFamilyFlags & (0x0000000002000000))
+    if (m_spellInfo->Effect[eff_idx] == SPELL_EFFECT_APPLY_AREA_AURA_RAID && m_spellInfo->SpellFamilyFlags & (0x0000000002000000))
         if (unitTarget->HasAura(m_spellInfo->Id))
             unitTarget->RemoveAurasDueToSpell(m_spellInfo->Id);
 
