@@ -322,7 +322,7 @@ class BattleGroundSA : public BattleGround
         virtual void EventPlayerClickedOnFlag(Player *Source, GameObject* target_obj);
         virtual void EventPlayerDamagedGO(Player* plr, GameObject* go, uint32 event);
         virtual void EventPlayerUsedGO(Player* Source, GameObject* object);
-        //bool SetupBattleGround();
+        bool SetupBattleGround();
 
         /* Scorekeeping */
         void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
@@ -333,7 +333,9 @@ class BattleGroundSA : public BattleGround
     
     void ToggleTimer();
     void SendTime();
+    void TeleportPlayers();
     void StartShips();
+    bool ResetObjs();
     void DestroyGate(uint32 i, Player* pl);
     void CaptureGraveyard(BG_SA_Graveyards i);
 

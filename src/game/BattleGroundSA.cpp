@@ -40,6 +40,159 @@ BattleGroundSA::~BattleGroundSA()
 
 }
 
+bool BattleGroundSA::SetupBattleGround()
+{
+    return ResetObjs(); 
+}
+
+bool BattleGroundSA::ResetObjs()
+{
+
+    uint32 atF = BG_SA_Factions[attackers];
+    uint32 defF = BG_SA_Factions[attackers ? BG_TEAM_ALLIANCE : BG_TEAM_HORDE];
+
+/*
+    for(uint8 i = 0; i <BG_SA_NPC_MAX; i++)
+        DelObject(i);
+
+    for(uint8 i = 0; i < BG_SA_NPC_MAX; i++)
+        DelCreature(i);
+  
+    for(uint8 i = BG_SA_NPC_MAX; i < BG_SA_NPC_MAX + BG_SA_GY_MAX; i++)
+        DelCreature(i);
+
+    for(uint8 i = 0; i < 6; i++)
+        GateStatus[i] = BG_SA_GATE_OK;
+
+    for(uint8 i = 0; i < BG_SA_CENTRAL_FLAG; i++)
+    {
+        if(!AddObject(i,BG_SA_ObjEntries[i],
+		    BG_SA_ObjSpawnlocs[i][0],BG_SA_ObjSpawnlocs[i][1],
+		    BG_SA_ObjSpawnlocs[i][2],BG_SA_ObjSpawnlocs[i][3],
+		    0,0,0,0,RESPAWN_ONE_DAY))
+        return false;
+    }
+
+    GetBGObject(BG_SA_TITAN_RELIC)->SetUInt32Value(GAMEOBJECT_FACTION, defF);
+    GetBGObject(BG_SA_TITAN_RELIC)->Refresh();
+
+    //Cannons and demolishers - NPCs are spawned
+    //By capturing GYs.
+    for(uint8 i = 0; i < BG_SA_NPC_SPARKLIGHT; i++)
+    {
+        if(!AddCreature(BG_SA_NpcEntries[i], i, (attackers == BG_TEAM_ALLIANCE ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE),
+		      BG_SA_NpcSpawnlocs[i][0],BG_SA_NpcSpawnlocs[i][1],
+		      BG_SA_NpcSpawnlocs[i][2],BG_SA_NpcSpawnlocs[i][3]))
+        return false;
+    }
+
+    OverrideGunFaction();
+ 
+    for(uint8 i = 0; i <= BG_SA_TITAN_RELIC; i++)
+    {
+        SpawnBGObject(i, RESPAWN_IMMEDIATELY);
+        GetBGObject(i)->SetUInt32Value(GAMEOBJECT_FACTION, defF);
+    }
+
+    for(uint8 i = 0; i <= 5; i++)
+    {
+        GateStatus[i] = BG_SA_GATE_OK;
+    }
+
+    // MAD props for Kiper for discovering those values - 4 hours of his work.
+    GetBGObject(BG_SA_BOAT_ONE)->UpdateRotationFields(1.0f, 0.0002f);
+    GetBGObject(BG_SA_BOAT_TWO)->UpdateRotationFields(1.0f, 0.00001f);
+    SpawnBGObject(BG_SA_BOAT_ONE, RESPAWN_IMMEDIATELY);
+    SpawnBGObject(BG_SA_BOAT_TWO, RESPAWN_IMMEDIATELY);
+
+    TotalTime = 0;
+    ShipsStarted = false;
+
+    //Graveyards!
+    for(uint8 i = 0;i < BG_SA_GY_MAX; i++)
+    {
+        WorldSafeLocsEntry const *sg = NULL;
+        sg = sWorldSafeLocsStore.LookupEntry(BG_SA_GYEntries[i]);
+
+        if(!sg)
+        {
+            sLog.outError("SOTA: Can't find GY entry %u",BG_SA_GYEntries[i]);
+            return false;
+        }      
+
+        if(i == BG_SA_BEACH_GY)
+        {
+            GraveyardStatus[i] = attackers;
+            AddSpiritGuide(i + BG_SA_NPC_MAX, sg->x, sg->y, sg->z, BG_SA_GYOrientation[i], ((attackers == BG_TEAM_HORDE )? HORDE : ALLIANCE));
+        }
+        else
+        {
+            GraveyardStatus[i] = ((attackers == BG_TEAM_HORDE )? BG_TEAM_ALLIANCE : BG_TEAM_HORDE);
+            if(!AddSpiritGuide(i + BG_SA_NPC_MAX, sg->x, sg->y, sg->z, BG_SA_GYOrientation[i], ((attackers == BG_TEAM_HORDE )? ALLIANCE : HORDE)  ))
+            {
+                sLog.outError("SOTA: couldn't spawn GY: %u",i);
+            }
+        }
+    }
+
+    //GY capture points
+    for(uint8 i = BG_SA_CENTRAL_FLAG; i < BG_SA_MAXOBJ; i++)
+    {
+        AddObject(i, BG_SA_ObjEntries[i] - (attackers == BG_TEAM_ALLIANCE ? 1:0), 
+            BG_SA_ObjSpawnlocs[i][0], BG_SA_ObjSpawnlocs[i][1],
+            BG_SA_ObjSpawnlocs[i][2], BG_SA_ObjSpawnlocs[i][3],
+            0,0,0,0,RESPAWN_ONE_DAY);
+        GetBGObject(i)->SetUInt32Value(GAMEOBJECT_FACTION, atF);
+    }
+*/
+    //Player may enter BEFORE we set up bG - lets update his worldstates anyway...
+    UpdateWorldState(BG_SA_RIGHT_GY_HORDE , GraveyardStatus[BG_SA_RIGHT_CAPTURABLE_GY] == BG_TEAM_HORDE?1:0 );
+    UpdateWorldState(BG_SA_LEFT_GY_HORDE , GraveyardStatus[BG_SA_LEFT_CAPTURABLE_GY] == BG_TEAM_HORDE?1:0 );
+    UpdateWorldState(BG_SA_CENTER_GY_HORDE , GraveyardStatus[BG_SA_CENTRAL_CAPTURABLE_GY] == BG_TEAM_HORDE?1:0 );
+  
+    UpdateWorldState(BG_SA_RIGHT_GY_ALLIANCE , GraveyardStatus[BG_SA_RIGHT_CAPTURABLE_GY] == BG_TEAM_ALLIANCE?1:0 );
+    UpdateWorldState(BG_SA_LEFT_GY_ALLIANCE , GraveyardStatus[BG_SA_LEFT_CAPTURABLE_GY] == BG_TEAM_ALLIANCE?1:0 );
+    UpdateWorldState(BG_SA_CENTER_GY_ALLIANCE , GraveyardStatus[BG_SA_CENTRAL_CAPTURABLE_GY] == BG_TEAM_ALLIANCE?1:0 );
+  
+    if(attackers == BG_TEAM_ALLIANCE)
+    {
+        UpdateWorldState(BG_SA_ALLY_ATTACKS, 1);
+        UpdateWorldState(BG_SA_HORDE_ATTACKS, 0);
+      
+        UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_ALL, 1);
+        UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_ALL, 1);
+        UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_HRD, 0);
+        UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_HRD, 0);
+      
+        UpdateWorldState(BG_SA_HORDE_DEFENCE_TOKEN,1);
+        UpdateWorldState(BG_SA_ALLIANCE_DEFENCE_TOKEN,0);    
+    }
+    else
+    {
+        UpdateWorldState(BG_SA_HORDE_ATTACKS, 1);
+        UpdateWorldState(BG_SA_ALLY_ATTACKS, 0);
+
+        UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_ALL, 0);
+        UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_ALL, 0);
+        UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_HRD, 1);
+        UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_HRD, 1);
+
+        UpdateWorldState(BG_SA_HORDE_DEFENCE_TOKEN,0);
+        UpdateWorldState(BG_SA_ALLIANCE_DEFENCE_TOKEN,1);   
+    }
+
+    UpdateWorldState(BG_SA_PURPLE_GATEWS, 1);
+    UpdateWorldState(BG_SA_RED_GATEWS, 1);
+    UpdateWorldState(BG_SA_BLUE_GATEWS, 1);
+    UpdateWorldState(BG_SA_GREEN_GATEWS, 1);
+    UpdateWorldState(BG_SA_YELLOW_GATEWS, 1);
+    UpdateWorldState(BG_SA_ANCIENT_GATEWS, 1);
+  
+  TeleportPlayers();
+  
+  return true;
+}
+
 void BattleGroundSA::Update(uint32 diff)
 {
     BattleGround::Update(diff);
@@ -177,10 +330,34 @@ void BattleGroundSA::RemovePlayer(Player* /*plr*/,uint64 /*guid*/)
 
 }
 
+void BattleGroundSA::TeleportPlayers()
+{
+    for (BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
+    {
+        if(Player *plr = sObjectMgr.GetPlayer(itr->first))
+        {
+
+            if(plr->GetBGTeam() == attackers)
+            {
+                plr->CastSpell(plr,12438,true);//Without this player falls before boat loads...
+	      
+                if(urand(0,1))
+                    plr->TeleportTo(607, 2682.936f, -830.368f, 50.0f, 2.895f, 0);
+                else
+                    plr->TeleportTo(607, 2577.003f, 980.261f, 50.0f, 0.807f, 0);	      
+            }
+	        else
+	            plr->TeleportTo(607, 1209.7f, -65.16f, 70.1f, 0.0f, 0);
+        }
+    }
+}
+
 void BattleGroundSA::StartShips()
 {
     if(ShipsStarted)
         return;
+
+    OpenDoorEvent(100);
     /*DoorOpen(BG_SA_BOAT_ONE);
     DoorOpen(BG_SA_BOAT_TWO);*/
 
