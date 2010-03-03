@@ -190,6 +190,66 @@ void BattleGroundSA::HandleKillUnit(Creature* unit, Player* killer)
         UpdatePlayerScore(killer, SCORE_DESTROYED_DEMOLISHER, 1);
 }
 
+void BattleGroundSA::EventPlayerDamagedGO(Player* plr, GameObject* go, uint32 destroyedEvent)
+{
+    switch(destroyedEvent)
+    {
+    case 19046:  //Green gate destroyed
+        DestroyGate(BG_SA_GREEN_GATE,plr);  return;
+    case 19045: //blue gate
+        DestroyGate(BG_SA_BLUE_GATE,plr);   return;
+    case 19047: //red gate
+        DestroyGate(BG_SA_RED_GATE,plr);    return;
+    case 19048: //purple gate
+        DestroyGate(BG_SA_PURPLE_GATE,plr); return;
+    case 19049: //yellow gate
+        DestroyGate(BG_SA_YELLOW_GATE,plr); return;
+    case 19837: //ancient gate
+        DestroyGate(BG_SA_ANCIENT_GATE,plr);return;
+    default:
+      return;
+    }
+}
+
+void BattleGroundSA::DestroyGate(uint32 i, Player* pl)
+{
+    if(!GateStatus[i])
+        return;
+    /*
+    if(GameObject* g = GetBGObject(i))
+    {
+        if(g->GetGOValue()->building.health == 0)
+        {
+            GateStatus[i] = BG_SA_GATE_DESTROYED;
+            uint32 uws;
+            switch(i)
+            {
+                case 0:
+                    uws = BG_SA_GREEN_GATEWS;  break;
+                case 1:
+                    uws = BG_SA_YELLOW_GATEWS; break;
+                case 2:
+                    uws = BG_SA_BLUE_GATEWS;   break;
+                case 3:
+                    uws = BG_SA_RED_GATEWS;    break;
+                case 4:
+                    uws = BG_SA_PURPLE_GATEWS; break;
+                case 5:
+                    uws = BG_SA_ANCIENT_GATEWS;break;
+                default:
+                    ASSERT(false);
+                break;
+            }
+
+            // Delete Objects
+            //if(i < 5)
+            //    DelObject(i+9);
+            UpdateWorldState(uws, GateStatus[i]);
+            UpdatePlayerScore(pl,SCORE_DESTROYED_WALL, 1);
+        }
+    }*/
+}
+
 void BattleGroundSA::UpdatePlayerScore(Player* Source, uint32 type, uint32 value)
 {
 

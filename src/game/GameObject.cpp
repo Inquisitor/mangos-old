@@ -1474,8 +1474,8 @@ void GameObject::TakenDamage(uint32 damage, Unit *who)
             //EventInform(m_goInfo->destructibleBuilding.destroyedEvent);
 	        if(pwho)
             {
-                /*if(BattleGround* bg = pwho->GetBattleGround())
-                    bg->EventPlayerDamagedGO(pwho, this, m_goInfo->destructibleBuilding.destroyedEvent);*/
+                if(BattleGround* bg = pwho->GetBattleGround())
+                    bg->EventPlayerDamagedGO(pwho, this, m_goInfo->destructibleBuilding.destroyedEvent);
             }
         }
     }
