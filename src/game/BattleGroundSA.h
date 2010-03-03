@@ -48,21 +48,21 @@ enum BG_SA_Status
   };
 
 enum BG_SA_GateState
-  {
+{
     BG_SA_GATE_OK               = 1,
     BG_SA_GATE_DAMAGED          = 2,
     BG_SA_GATE_DESTROYED        = 3
-  };
+};
 
 enum BG_SA_Timers
-  {
+{
     BG_SA_BOAT_START            = 60000,
     BG_SA_WARMUPLENGTH          = 120000,
     BG_SA_ROUNDLENGTH           = 600000
-  };
+};
 
 enum BG_SA_WorldStates
-  {
+{
     BG_SA_TIMER_MINS            = 3559,
     BG_SA_TIMER_SEC_TENS        = 3560,
     BG_SA_TIMER_SEC_DECS        = 3561,
@@ -96,10 +96,10 @@ enum BG_SA_WorldStates
 
     BG_SA_BONUS_TIMER           = 0xdf3,
     BG_SA_ENABLE_TIMER          = 3564,
-  };
+};
 
 enum BG_SA_NPCs
-  {
+{
     BG_SA_GUN_1                 = 0,
     BG_SA_GUN_2,
     BG_SA_GUN_3,
@@ -117,10 +117,10 @@ enum BG_SA_NPCs
     BG_SA_NPC_SPARKLIGHT,
     BG_SA_NPC_RIGSPARK,
     BG_SA_NPC_MAX
-  };
+};
 
 const uint32 BG_SA_NpcEntries[BG_SA_NPC_MAX] = 
-  {
+{
     27894,
     27894,
     27894,
@@ -139,10 +139,10 @@ const uint32 BG_SA_NpcEntries[BG_SA_NPC_MAX] =
     //Fizzle Sparklight, or whatever his name was
     29260,
     29262,
-  };
+};
 
 enum BG_SA_Objects
-  {
+{
     BG_SA_GREEN_GATE = 0,
     BG_SA_YELLOW_GATE,
     BG_SA_BLUE_GATE,
@@ -164,7 +164,7 @@ enum BG_SA_Objects
     BG_SA_RIGHT_FLAG,
     BG_SA_LEFT_FLAG,
     BG_SA_MAXOBJ
-  };
+};
 
 const float BG_SA_ObjSpawnlocs[BG_SA_MAXOBJ][4] = 
 {
@@ -218,17 +218,17 @@ const uint32 BG_SA_ObjEntries[BG_SA_MAXOBJ] =
     192834,
     193182,
     193185,
-    192687, 
-    192685, 
-    192689, 
-    192690, 
+    192687,
+    192685,
+    192689,
+    192690,
     192691,
     191311,
     191311,
     191311,
     191310,
     191306,
-    191308,    
+    191308,
 };
 
 const uint32 BG_SA_Factions[2] =
@@ -284,6 +284,7 @@ class BattleGroundSA : public BattleGround
         virtual void AddPlayer(Player *plr);
         virtual void StartingEventCloseDoors();
         virtual void StartingEventOpenDoors();
+        virtual void Reset();
 
         void RemovePlayer(Player *plr,uint64 guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
@@ -296,13 +297,16 @@ class BattleGroundSA : public BattleGround
 
     private:
     
-	BattleGroundTeamId attackers;
-	uint32 TotalTime;
-	bool ShipsStarted;
-	BG_SA_GateState GateStatus[6];
-	BG_SA_Status status;
-	BattleGroundTeamId GraveyardStatus[BG_SA_GY_MAX];
-	BG_SA_RoundScore RoundScores[2]; 
-	bool TimerEnabled;
+    void ToggleTimer();
+    void SendTime();
+
+    BattleGroundTeamId attackers;
+    uint32 TotalTime;
+    bool ShipsStarted;
+    BG_SA_GateState GateStatus[6];
+    BG_SA_Status status;
+    BattleGroundTeamId GraveyardStatus[BG_SA_GY_MAX];
+    BG_SA_RoundScore RoundScores[2]; 
+    bool TimerEnabled;
 };
 #endif

@@ -39,6 +39,53 @@ BattleGroundSA::~BattleGroundSA()
 void BattleGroundSA::Update(uint32 diff)
 {
     BattleGround::Update(diff);
+    TotalTime += diff;
+
+    if(status == BG_SA_WARMUP || status == BG_SA_SECOND_WARMUP)
+    {
+        if(TotalTime >= BG_SA_WARMUPLENGTH)
+        {
+            TotalTime = 0;
+            ToggleTimer();
+            status = (status == BG_SA_WARMUP) ? BG_SA_ROUND_ONE : BG_SA_ROUND_TWO;
+        }
+        if(TotalTime >= BG_SA_BOAT_START)
+            //StartShips();
+            return;
+    }
+    else if(status == BG_SA_ROUND_ONE)
+    {
+        if(TotalTime >= BG_SA_ROUNDLENGTH)
+        {
+            RoundScores[0].time = TotalTime;
+            TotalTime = 0;
+            status = BG_SA_SECOND_WARMUP;
+            attackers = (attackers == BG_TEAM_ALLIANCE) ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE;
+            RoundScores[0].winner = attackers;
+            status = BG_SA_SECOND_WARMUP;
+            ToggleTimer();
+            //ResetObjs();
+            return;
+        }
+    }
+    else if(status == BG_SA_ROUND_TWO)
+    {
+        if(TotalTime >= BG_SA_ROUNDLENGTH)
+        {
+            RoundScores[1].time = TotalTime;
+            RoundScores[1].winner = (attackers == BG_TEAM_ALLIANCE) ? BG_TEAM_HORDE : BG_TEAM_ALLIANCE;
+
+            if(RoundScores[0].time < RoundScores[1].time)
+                EndBattleGround(RoundScores[0].winner == BG_TEAM_ALLIANCE ? ALLIANCE : HORDE);
+            else
+                EndBattleGround(RoundScores[1].winner == BG_TEAM_ALLIANCE ? ALLIANCE : HORDE);
+
+            return;
+        }
+    }
+
+    if(status == BG_SA_ROUND_ONE || status == BG_SA_ROUND_TWO)
+        SendTime();
 }
 
 void BattleGroundSA::StartingEventCloseDoors()
@@ -93,4 +140,30 @@ void BattleGroundSA::EndBattleGround(uint32 winner)
     RewardHonorToTeam(GetBonusHonorFromKill(BG_SA_HONOR_END), HORDE);
 
     BattleGround::EndBattleGround(winner);
+}
+
+void BattleGroundSA::Reset()
+{
+    TotalTime = 0;
+    attackers = ( (urand(0,1)) ? BG_TEAM_ALLIANCE : BG_TEAM_HORDE);
+    for(uint8 i = 0; i <= 5; i++)
+    {
+        GateStatus[i] = BG_SA_GATE_OK;
+    }
+    ShipsStarted = false;
+    status = BG_SA_WARMUP;
+}
+
+void BattleGroundSA::SendTime()
+{
+    uint32 end_of_round = (BG_SA_ROUNDLENGTH - TotalTime);
+    UpdateWorldState(BG_SA_TIMER_MINS, end_of_round/60000);
+    UpdateWorldState(BG_SA_TIMER_SEC_TENS, (end_of_round%60000)/10000);
+    UpdateWorldState(BG_SA_TIMER_SEC_DECS, ((end_of_round%60000)%10000)/1000);
+}
+
+void BattleGroundSA::ToggleTimer()
+{
+    TimerEnabled = !TimerEnabled;
+    UpdateWorldState(BG_SA_ENABLE_TIMER, (TimerEnabled) ? 1 : 0);
 }
