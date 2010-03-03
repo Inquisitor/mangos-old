@@ -313,6 +313,7 @@ class BattleGroundSA : public BattleGround
         // Send Worldstates
         virtual void FillInitialWorldStates(WorldPacket& data);
         virtual void Reset();
+        virtual WorldSafeLocsEntry const* GetClosestGraveYard(Player* player);
 
         void RemovePlayer(Player *plr,uint64 guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);

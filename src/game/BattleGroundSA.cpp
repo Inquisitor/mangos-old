@@ -397,3 +397,36 @@ void BattleGroundSA::CaptureGraveyard(BG_SA_Graveyards i)
         break;
     };
 }
+
+WorldSafeLocsEntry const* BattleGroundSA::GetClosestGraveYard(Player* player)
+{
+    uint32 safeloc = 0;
+    WorldSafeLocsEntry const* ret;
+    float dist, nearest;
+    float x,y,z;
+
+    player->GetPosition(x,y,z);
+
+    if(player->GetBGTeam() == attackers)
+        safeloc = BG_SA_GYEntries[BG_SA_BEACH_GY];
+    else
+        safeloc = BG_SA_GYEntries[BG_SA_DEFENDER_LAST_GY];
+
+    ret = sWorldSafeLocsStore.LookupEntry(safeloc);
+    nearest = sqrt((ret->x - x)*(ret->x - x) + (ret->y - y)*(ret->y - y)+(ret->z - z)*(ret->z - z));
+
+    for(uint8 i = BG_SA_LEFT_CAPTURABLE_GY; i < BG_SA_GY_MAX; i++)
+    {
+        if(GraveyardStatus[i] != player->GetBGTeam())
+            continue;
+
+        dist = sqrt((ret->x - x)*(ret->x - x) + (ret->y - y)*(ret->y - y)+(ret->z - z)*(ret->z - z));
+        if(dist < nearest)
+        {
+            ret = sWorldSafeLocsStore.LookupEntry(BG_SA_GYEntries[i]);
+            nearest = dist;
+        }
+    }
+
+  return ret;
+}
