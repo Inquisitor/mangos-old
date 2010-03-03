@@ -3136,7 +3136,7 @@ float Unit::MeleeMissChanceCalc(const Unit *pVictim, WeaponAttackType attType) c
     else
         m_modHitChance = m_modMeleeHitChance;
 
-    if(leveldif < 3)
+    if(leveldif < 4)
         misschance += (leveldif - m_modHitChance);
     else
         misschance += ((leveldif - 2) * chance - m_modHitChance);
