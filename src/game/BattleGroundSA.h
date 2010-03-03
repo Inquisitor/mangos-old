@@ -141,6 +141,136 @@ const uint32 BG_SA_NpcEntries[BG_SA_NPC_MAX] =
     29262,
   };
 
+enum BG_SA_Objects
+  {
+    BG_SA_GREEN_GATE = 0,
+    BG_SA_YELLOW_GATE,
+    BG_SA_BLUE_GATE,
+    BG_SA_RED_GATE,
+    BG_SA_PURPLE_GATE,
+    BG_SA_ANCIENT_GATE,
+    BG_SA_TITAN_RELIC,
+    BG_SA_BOAT_ONE,
+    BG_SA_BOAT_TWO,
+    BG_SA_SIGIL_1,
+    BG_SA_SIGIL_2,
+    BG_SA_SIGIL_3,
+    BG_SA_SIGIL_4,
+    BG_SA_SIGIL_5,
+    BG_SA_CENTRAL_FLAGPOLE,
+    BG_SA_RIGHT_FLAGPOLE,
+    BG_SA_LEFT_FLAGPOLE,
+    BG_SA_CENTRAL_FLAG,
+    BG_SA_RIGHT_FLAG,
+    BG_SA_LEFT_FLAG,
+    BG_SA_MAXOBJ
+  };
+
+const float BG_SA_ObjSpawnlocs[BG_SA_MAXOBJ][4] = 
+{
+    { 1411.57f,   108.163f,  28.692f,  5.441f  },
+    { 1055.452f,  -108.1f,   82.134f,  0.034f  },
+    { 1431.3413f, -219.437f, 30.893f,  0.9736f },
+    { 1227.667f,  -212.555f, 55.372f,  0.5023f },
+    { 1214.681f,  81.210f,   53.413f,  5.745f  },
+    { 878.555f,   -108.989f, 119.835f, 0.0565f },
+    { 836.5f,     -108.8f,   120.219f, 0.0f    },
+    //Ships
+    { 2679.696777f, -826.891235f, 3.712860f, 5.78367f  }, //rot2 1 rot3 0.0002
+    { 2574.003662f, 981.261475f,  2.603424f, 0.807696f },
+    //Sigils
+    { 1414.054f, 106.72f,   41.442f, 5.441f  },
+    { 1060.63f,  -107.8f,   94.7f,   0.034f  },
+    { 1433.383f, -216.4f,   43.642f, 0.9736f },
+    { 1230.75f,  -210.724f, 67.611f, 0.5023f },
+    { 1217.8f,   79.532f,   66.58f,  5.745f  },
+    //Flagpoles
+    { 1215.114258f, -65.711861f,  70.084267f, -3.124123f },
+    { 1338.863892f, -153.336533f, 30.895121f, -2.530723f },
+    { 1309.124268f, 9.410645f,    30.893402f, -1.623156f },
+    //Flags
+    { 1215.108032f, -65.715767f,  70.084267f, -3.124123f },
+    { 1338.859253f, -153.327316f, 30.895077f, -2.530723f },
+    { 1309.192017f, 9.416233f,    30.893402f, 1.518436f  },
+};
+
+/* Ships:
+ * 193182 - ally
+ * 193183 - horde
+ * 193184 - horde
+ * 193185 - ally
+ * Banners:
+ * 191308 - left one,
+ * 191306 - right one,
+ * 191310 - central,
+ * Ally ones, substract 1
+ * to get horde ones.
+ */
+
+const uint32 BG_SA_ObjEntries[BG_SA_MAXOBJ] =
+{
+    190722,
+    190727,
+    190724,
+    190726,
+    190723,
+    192549,
+    192834,
+    193182,
+    193185,
+    192687, 
+    192685, 
+    192689, 
+    192690, 
+    192691,
+    191311,
+    191311,
+    191311,
+    191310,
+    191306,
+    191308,    
+};
+
+const uint32 BG_SA_Factions[2] =
+{
+    1732,
+    1735,
+};
+
+enum BG_SA_Graveyards
+{
+    BG_SA_BEACH_GY = 0,
+    BG_SA_DEFENDER_LAST_GY,
+    BG_SA_RIGHT_CAPTURABLE_GY,
+    BG_SA_LEFT_CAPTURABLE_GY,
+    BG_SA_CENTRAL_CAPTURABLE_GY,
+    BG_SA_GY_MAX
+};
+
+const uint32 BG_SA_GYEntries[BG_SA_GY_MAX] =
+{
+    1350,
+    1349,
+    1347,
+    1346,
+    1348,
+};
+
+const float BG_SA_GYOrientation[BG_SA_GY_MAX] =
+{
+    6.202f,
+    1.926f, //Right capturable GY
+    3.917f, //Left capturable GY
+    3.104f, //Center, capturable
+    6.148f  //Defender last GY
+};
+
+struct BG_SA_RoundScore
+{
+    BattleGroundTeamId winner;
+    uint32 time;
+};
+
 class BattleGroundSA : public BattleGround
 {
     friend class BattleGroundMgr;
@@ -162,6 +292,17 @@ class BattleGroundSA : public BattleGround
         /* Scorekeeping */
         void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
 
+        void EndBattleGround(uint32 winner);
+
     private:
+    
+	BattleGroundTeamId attackers;
+	uint32 TotalTime;
+	bool ShipsStarted;
+	BG_SA_GateState GateStatus[6];
+	BG_SA_Status status;
+	BattleGroundTeamId GraveyardStatus[BG_SA_GY_MAX];
+	BG_SA_RoundScore RoundScores[2]; 
+	bool TimerEnabled;
 };
 #endif

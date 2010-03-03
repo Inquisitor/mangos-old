@@ -27,6 +27,8 @@ BattleGroundSA::BattleGroundSA()
     m_StartMessageIds[BG_STARTING_EVENT_SECOND] = LANG_BG_SA_START_ONE_MINUTE;
     m_StartMessageIds[BG_STARTING_EVENT_THIRD]  = LANG_BG_SA_START_HALF_MINUTE;
     m_StartMessageIds[BG_STARTING_EVENT_FOURTH] = LANG_BG_SA_HAS_BEGUN;
+
+    TimerEnabled = false;
 }
 
 BattleGroundSA::~BattleGroundSA()
@@ -76,4 +78,19 @@ void BattleGroundSA::UpdatePlayerScore(Player* Source, uint32 type, uint32 value
         return;
 
     BattleGround::UpdatePlayerScore(Source,type,value);
+}
+
+void BattleGroundSA::EndBattleGround(uint32 winner)
+{
+    //honor reward for winning
+    if (winner == ALLIANCE)
+        RewardHonorToTeam(GetBonusHonorFromKill(BG_SA_HONOR_WIN), ALLIANCE);
+    else if (winner == HORDE)
+        RewardHonorToTeam(GetBonusHonorFromKill(BG_SA_HONOR_WIN), HORDE);
+    
+    //complete map_end rewards (even if no team wins)
+    RewardHonorToTeam(GetBonusHonorFromKill(BG_SA_HONOR_END), ALLIANCE);
+    RewardHonorToTeam(GetBonusHonorFromKill(BG_SA_HONOR_END), HORDE);
+
+    BattleGround::EndBattleGround(winner);
 }
