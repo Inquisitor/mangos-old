@@ -143,6 +143,29 @@ void BattleGroundSA::AddPlayer(Player *plr)
     //create score and add it to map, default values are set in constructor
     BattleGroundSAScore* sc = new BattleGroundSAScore;
 
+    if(!ShipsStarted)
+    {
+        if(plr->GetBGTeam() == attackers)
+        {
+            plr->CastSpell(plr,12438,true);//Without this player falls before boat loads...
+
+            if(urand(0,1))
+                plr->TeleportTo(607, 2682.936f, -830.368f, 50.0f, 2.895f, 0);
+            else
+                plr->TeleportTo(607, 2577.003f, 980.261f, 50.0f, 0.807f, 0);
+
+        }
+        else
+            plr->TeleportTo(607, 1209.7f, -65.16f, 70.1f, 0.0f, 0);
+    }
+    else
+    {
+        if(plr->GetBGTeam() == attackers)
+            plr->TeleportTo(607, 1600.381f, -106.263f, 8.8745f, 3.78f, 0);
+        else
+            plr->TeleportTo(607, 1209.7f, -65.16f, 70.1f, 0.0f, 0);
+    }
+
     m_PlayerScores[plr->GetGUID()] = sc;
 }
 
@@ -158,6 +181,15 @@ void BattleGroundSA::HandleAreaTrigger(Player * /*Source*/, uint32 /*Trigger*/)
         return;
 }
 
+void BattleGroundSA::HandleKillUnit(Creature* unit, Player* killer)
+{
+    if(!unit)
+        return;
+
+    if(unit->GetEntry() == 28781)  //Demolisher
+        UpdatePlayerScore(killer, SCORE_DESTROYED_DEMOLISHER, 1);
+}
+
 void BattleGroundSA::UpdatePlayerScore(Player* Source, uint32 type, uint32 value)
 {
 
@@ -165,7 +197,12 @@ void BattleGroundSA::UpdatePlayerScore(Player* Source, uint32 type, uint32 value
     if(itr == m_PlayerScores.end())                         // player not found...
         return;
 
-    BattleGround::UpdatePlayerScore(Source,type,value);
+    if(type == SCORE_DESTROYED_DEMOLISHER)
+        ((BattleGroundSAScore*)itr->second)->demolishers_destroyed += value;
+    else if(type == SCORE_DESTROYED_WALL)
+        ((BattleGroundSAScore*)itr->second)->gates_destroyed += value;
+    else
+        BattleGround::UpdatePlayerScore(Source,type,value);
 }
 
 void BattleGroundSA::EndBattleGround(uint32 winner)

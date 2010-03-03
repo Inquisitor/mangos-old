@@ -26,6 +26,8 @@ class BattleGroundSAScore : public BattleGroundScore
     public:
         BattleGroundSAScore() {};
         virtual ~BattleGroundSAScore() {};
+    uint8 demolishers_destroyed;
+    uint8 gates_destroyed;
 };
 
 
@@ -290,6 +292,7 @@ class BattleGroundSA : public BattleGround
 
         void RemovePlayer(Player *plr,uint64 guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
+        void HandleKillUnit(Creature *creature, Player *killer);
         //bool SetupBattleGround();
 
         /* Scorekeeping */
