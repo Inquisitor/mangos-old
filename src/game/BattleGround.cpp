@@ -33,6 +33,7 @@
 #include "Util.h"
 #include "Formulas.h"
 #include "GridNotifiersImpl.h"
+#include "GameEventMgr.h"
 
 namespace MaNGOS
 {
@@ -877,8 +878,16 @@ void BattleGround::EndBattleGround(uint32 winner)
 
 uint32 BattleGround::GetBonusHonorFromKill(uint32 kills) const
 {
+    float DailyBGModifier = 1.0f;
+    const uint32 ReqMap[4] = {30, 529, 489, 566};
+
+    for(uint8 eventId = 0; eventId < MAX_BG_DAILY_EVENT; ++eventId)
+        if(sGameEventMgr.IsActiveEvent(BG_DAILY_AV+eventId))
+            if(GetMapId() == ReqMap[eventId])
+                DailyBGModifier = 1.5f;
+
     //variable kills means how many honorable kills you scored (so we need kills * honor_for_one_kill)
-    return (uint32)MaNGOS::Honor::hk_honor_at_level(GetMaxLevel(), kills);
+    return ((uint32)MaNGOS::Honor::hk_honor_at_level(GetMaxLevel(), kills)*DailyBGModifier);
 }
 
 uint32 BattleGround::GetBattlemasterEntry() const
