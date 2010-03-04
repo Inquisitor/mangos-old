@@ -4307,8 +4307,10 @@ void Spell::DoSummon(SpellEffectIndex eff_idx)
     Pet* spawnCreature = new Pet(SUMMON_PET);
 
     int32 duration = GetSpellDuration(m_spellInfo);
-    if(Player* modOwner = m_caster->GetSpellModOwner())
-        modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DURATION, duration);
+
+    if (duration > 0)
+        if(Player* modOwner = m_caster->GetSpellModOwner())
+            modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DURATION, duration);
 
     if (m_caster->GetTypeId()==TYPEID_PLAYER && spawnCreature->LoadPetFromDB((Player*)m_caster,pet_entry))
     {
@@ -4744,8 +4746,10 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
 
     float radius = GetSpellRadius(sSpellRadiusStore.LookupEntry(m_spellInfo->EffectRadiusIndex[eff_idx]));
     int32 duration = GetSpellDuration(m_spellInfo);
-    if(Player* modOwner = m_caster->GetSpellModOwner())
-        modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DURATION, duration);
+
+    if (duration > 0)
+        if(Player* modOwner = m_caster->GetSpellModOwner())
+            modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DURATION, duration);
 
     int32 amount = damage > 0 ? damage : 1;
 
@@ -7132,8 +7136,11 @@ void Spell::DoSummonTotem(SpellEffectIndex eff_idx, uint8 slot)
     pTotem->SetTypeBySummonSpell(m_spellInfo);              // must be after Create call where m_spells initilized
 
     int32 duration=GetSpellDuration(m_spellInfo);
-    if(Player* modOwner = m_caster->GetSpellModOwner())
-        modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DURATION, duration);
+
+    if (duration > 0)
+        if(Player* modOwner = m_caster->GetSpellModOwner())
+            modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DURATION, duration);
+
     pTotem->SetDuration(duration);
 
     if (damage)                                             // if not spell info, DB values used
