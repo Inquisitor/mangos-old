@@ -1023,7 +1023,11 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
 
         // Divine Storm (use m_healthLeech to store damage for all targets)
         if (m_spellInfo->Id == 53385)
+        {
             m_healthLeech += damageInfo.damage;
+            if(Aura * pGlyph = caster->GetAura(63220, EFFECT_INDEX_0))
+                m_healthLeech += (m_healthLeech * pGlyph->GetModifier()->m_amount / 100);
+        }
 
         caster->DealSpellDamage(&damageInfo, true);
     }
@@ -3689,6 +3693,9 @@ void Spell::SendChannelStart(uint32 duration)
             }
         }
     }
+
+    //Apply haste rating
+    duration = ApplyHasteToChannelSpell(duration, m_spellInfo, this);
 
     WorldPacket data( MSG_CHANNEL_START, (8+4+4) );
     data.append(m_caster->GetPackGUID());

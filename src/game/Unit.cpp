@@ -2068,6 +2068,44 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
                 }
                 break;
             }
+            case SPELLFAMILY_PALADIN:
+            {
+                // Ardent Defender
+                if (spellProto->SpellIconID == 2135 && pVictim->GetTypeId() == TYPEID_PLAYER)
+                {
+                    int32 remainingHealth = pVictim->GetHealth() - RemainingDamage;
+                    uint32 allowedHealth = pVictim->GetMaxHealth() * 0.35f;
+                    // If damage kills us
+                    if (remainingHealth <= 0 && !((Player*)pVictim)->HasSpellCooldown(66235))
+                    {
+                        // Cast healing spell, completely avoid damage
+                        RemainingDamage = 0;
+
+                        uint32 defenseSkillValue = pVictim->GetDefenseSkillValue();
+                        // Max heal when defense skill denies critical hits from raid bosses
+                        // Formula: max defense at level + 140 (raiting from gear)
+                        uint32 reqDefForMaxHeal  = pVictim->getLevel() * 5 + 140;
+                        float pctFromDefense = (defenseSkillValue >= reqDefForMaxHeal)
+                            ? 1.0f
+                            : float(defenseSkillValue) / float(reqDefForMaxHeal);
+
+                        int32 healAmount = pVictim->GetMaxHealth() * (*i)->GetModifier()->m_amount / 100.0f * pctFromDefense;
+                        pVictim->CastCustomSpell(pVictim, 66235, &healAmount, NULL, NULL, true);
+                        ((Player*)pVictim)->AddSpellCooldown(66235,0,time(NULL) + 120);
+                    }
+                    else if (remainingHealth < allowedHealth)
+                    {
+                        // Reduce damage that brings us under 35% (or full damage if we are already under 35%) by x%
+                        uint32 damageToReduce = (pVictim->GetHealth() < allowedHealth)
+                            ? RemainingDamage
+                            : allowedHealth - remainingHealth;
+                        RemainingDamage -= damageToReduce * currentAbsorb / 100;
+                    }
+                    continue;
+
+                }
+                break;
+            }
             case SPELLFAMILY_PRIEST:
             {
                 // Guardian Spirit
@@ -2115,26 +2153,6 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
                     //reduces all damage taken while stun, fear or silence
                     if (unitflag & (UNIT_FLAG_STUNNED|UNIT_FLAG_FLEEING|UNIT_FLAG_SILENCED))
                         RemainingDamage -= RemainingDamage * currentAbsorb / 100;
-                    continue;
-                }
-                break;
-            }
-            case SPELLFAMILY_PALADIN:
-            {
-                // Ardent Defender
-                if (spellProto->SpellIconID == 2135)
-                {
-                    // Apply absorb only on damage below 35% hp 
-                    int32 absorbableDamage = RemainingDamage + 0.35f * pVictim->GetMaxHealth() - pVictim->GetHealth();
-                    if (absorbableDamage > RemainingDamage)
-                        absorbableDamage = RemainingDamage;
-                    if (absorbableDamage > 0)
-                        RemainingDamage -= absorbableDamage * currentAbsorb / 100;
-
-                    // 66233 is cooldown aura
-                    if (!((Player*)pVictim)->HasAura(66233))
-                        preventDeathSpell = (*i)->GetSpellProto();
-
                     continue;
                 }
                 break;
@@ -2386,33 +2404,6 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
                     pVictim->CastCustomSpell(pVictim, 48153, &healAmount, NULL, NULL, true);
                     pVictim->RemoveAurasDueToSpell(preventDeathSpell->Id);
                     RemainingDamage = 0;
-                }
-                break;
-            }
-            case SPELLFAMILY_PALADIN:
-            {
-                // Ardent Defender
-                if (preventDeathSpell->SpellIconID == 2135)
-                {
-                    // Calculate defense over level * 5
-                    int32 defenseAmount = pVictim->GetDefenseSkillValue() - pVictim->getLevel() * 5; 
-                    // Proceed if positive value
-                    if (defenseAmount > 0)
-                    {
-                        // Defense cap
-                        if (defenseAmount > 140)
-                            defenseAmount = 140;
-                        // Trigger cooldown aura
-                        pVictim->CastSpell(pVictim, 66233, true);
-                        // Calculate heal amount
-                        int32 healAmount = preventDeathSpell->CalculateSimpleValue(EFFECT_INDEX_1);
-                        healAmount = defenseAmount * pVictim->GetMaxHealth() * healAmount / 14000 - pVictim->GetHealth();
-                        // Heal if positive value
-                        if (healAmount > 0)
-                            pVictim->CastCustomSpell(pVictim, 66235, &healAmount, NULL, NULL, true);
-                        // Absorb Everything
-                        RemainingDamage = 0;
-                    }
                 }
                 break;
             }
@@ -3145,7 +3136,7 @@ float Unit::MeleeMissChanceCalc(const Unit *pVictim, WeaponAttackType attType) c
     else
         m_modHitChance = m_modMeleeHitChance;
 
-    if(leveldif < 3)
+    if(leveldif < 4)
         misschance += (leveldif - m_modHitChance);
     else
         misschance += ((leveldif - 2) * chance - m_modHitChance);
@@ -5898,6 +5889,12 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
                     return true;
                 }
+                // Glyph of Drain Soul - DBC has wrong spellfamily thats why its in SPELLFAMILY_MAGE 
+                case 58070:
+                {
+                    triggered_spell_id = 58068;
+                    break;
+                }
             }
             break;
         }
@@ -7270,15 +7267,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
         }
         case SPELLFAMILY_DEATHKNIGHT:
         {
-            // Blood Aura
-            if (dummySpell->SpellIconID == 2636)
-            {
-                if (GetTypeId() != TYPEID_PLAYER || !((Player*)this)->isHonorOrXPTarget(pVictim))
-                    return false;
-                basepoints0 = triggerAmount * damage / 100;
-                triggered_spell_id = 53168;
-                break;
-            }
             // Butchery
             if (dummySpell->SpellIconID == 2664)
             {
@@ -7291,11 +7279,20 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
             if (dummySpell->Id == 49028)
             {
                 // 1 dummy aura for dismiss rune blade
-                if (effIndex != EFFECT_INDEX_2)
+                if (effIndex != EFFECT_INDEX_1)
                     return false;
-                // TODO: wite script for this "fights on its own, doing the same attacks"
-                // NOTE: Trigger here on every attack and spell cast
-                return false;
+
+                Pet* runeBlade = FindGuardianWithEntry(27893);
+
+                if (runeBlade && pVictim && damage && procSpell)
+                {
+                    int32 procDmg = damage * 0.5;
+                    runeBlade->CastCustomSpell(pVictim, procSpell->Id, &procDmg, NULL, NULL, true, NULL, NULL, runeBlade->GetGUID());
+                    SendSpellNonMeleeDamageLog(pVictim, procSpell->Id, procDmg, SPELL_SCHOOL_MASK_NORMAL, 0, 0, false, 0, false);
+                    break;
+                }
+                else 
+                    return false;
             }
             // Mark of Blood
             if (dummySpell->Id == 49005)
@@ -8081,21 +8078,30 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
                         return false;
                 }
             }
-            // Blood Presence
-            else if (auraSpellInfo->Id == 48266)
+            // Glyph of Death's Embrace
+            else if (auraSpellInfo->Id == 58677)
             {
-                if (GetTypeId() != TYPEID_PLAYER)
+                if (procSpell->Id != 47633)
                     return false;
-                if (!((Player*)this)->isHonorOrXPTarget(pVictim))
-                    return false;
-                trigger_spell_id = 50475;
-                basepoints[0] = damage * triggerAmount / 100;
             }
             // Blade Barrier
             else if (auraSpellInfo->SpellIconID == 85)
             {
                 if (GetTypeId() != TYPEID_PLAYER || getClass() != CLASS_DEATH_KNIGHT ||
                     !((Player*)this)->IsBaseRuneSlotsOnCooldown(RUNE_BLOOD))
+                    return false;
+            }
+            // Improved Blood Presence
+            else if (auraSpellInfo->Id == 63611)
+            {
+                if (GetTypeId() != TYPEID_PLAYER || !((Player*)this)->isHonorOrXPTarget(pVictim) || !damage)
+                    return false;
+                basepoints[0] = triggerAmount * damage / 100;
+                trigger_spell_id = 50475;
+            }
+            else if(auraSpellInfo->Id == 49657)
+            {
+                if(pVictim == this) // Temp fix, somehow its twice-procced from Chains of Ice
                     return false;
             }
             break;
@@ -8387,6 +8393,57 @@ bool Unit::HandleOverrideClassScriptAuraProc(Unit *pVictim, uint32 /*damage*/, A
         case 6953:                                          // Warbringer
             RemoveAurasAtMechanicImmunity(IMMUNE_TO_ROOT_AND_SNARE_MASK,0,true);
             return true;
+        case 7282: // Crypt Fever and Ebon Plaguebringer
+        {
+            if (!procSpell || pVictim == this) // Here we prevent selfcasting C.F. and E.P.
+                return false;
+            switch (triggeredByAura->GetSpellProto()->Id)
+            {
+                case 49032: // C.F. Rank 1
+                {
+                    // C.F. rank 2-3 or E.P. any rank is already on victim -> do not allow cast
+                    if ( !(pVictim->HasAura(50509,EFFECT_INDEX_0) || pVictim->HasAura(50510,EFFECT_INDEX_0) ||
+                        pVictim->GetAura(SPELL_AURA_MOD_MECHANIC_DAMAGE_TAKEN_PERCENT,SPELLFAMILY_DEATHKNIGHT,UI64LIT(0x80000000000))) )
+                        triggered_spell_id = 50508;
+                    break;
+                }
+                case 49631: // C.F. Rank 2
+                {
+                    // C.F. rank 3 or E.P. any rank is already on victim -> do not allow cast
+                    if ( !(pVictim->HasAura(50510,EFFECT_INDEX_0) ||
+                        pVictim->GetAura(SPELL_AURA_MOD_MECHANIC_DAMAGE_TAKEN_PERCENT,SPELLFAMILY_DEATHKNIGHT,UI64LIT(0x80000000000))) )
+                        triggered_spell_id = 50509;
+                    break;
+                }
+                case 49632: // C.F. Rank 3
+                {
+                    // E.P. any rank is already on victim -> do not allow cast
+                    if ( !(pVictim->GetAura(SPELL_AURA_MOD_MECHANIC_DAMAGE_TAKEN_PERCENT,SPELLFAMILY_DEATHKNIGHT,UI64LIT(0x80000000000))) )
+                        triggered_spell_id = 50510;
+                    break;
+                }
+                case 51099: // E.P. Rank 1
+                {
+                    // E.P. rank 2-3 is already on victim -> do not allow cast
+                    if ( !(pVictim->HasAura(51734,EFFECT_INDEX_0) || pVictim->HasAura(51735,EFFECT_INDEX_0)) )
+                        triggered_spell_id = 51726;
+                    break;
+                }
+                case 51160: // E.P. Rank 2
+                {
+                    // E.P. rank 3 is already on victim -> do not allow cast
+                    if ( !(pVictim->HasAura(51735,EFFECT_INDEX_0)) )
+                        triggered_spell_id = 51734;
+                    break;
+                }
+                case 51161: // E.P. Rank 3
+                {
+                    triggered_spell_id = 51735;
+                    break;
+                }
+            }
+            break;
+        }
         case 7010:                                          // Revitalize (rank 1)
         case 7011:                                          // Revitalize (rank 2)
         case 7012:                                          // Revitalize (rank 3)
@@ -10002,7 +10059,7 @@ int32 Unit::SpellHealingBonus(Unit *pVictim, SpellEntry const *spellProto, int32
     float  TakenTotalMod = 1.0f;
 
     // Healing taken percent
-    float minval = float(pVictim->GetMaxNegativeAuraModifier(SPELL_AURA_MOD_HEALING_PCT, true));
+    float minval = float(pVictim->GetMaxNegativeAuraModifier(SPELL_AURA_MOD_HEALING_PCT));
     if (damagetype == DOT)
     {
         float minDotVal = float(pVictim->GetMaxNegativeAuraModifier(SPELL_AURA_MOD_PERIODIC_HEAL));
@@ -10011,7 +10068,7 @@ int32 Unit::SpellHealingBonus(Unit *pVictim, SpellEntry const *spellProto, int32
     if(minval)
         TakenTotalMod *= (100.0f + minval) / 100.0f;
 
-    float maxval = float(pVictim->GetMaxPositiveAuraModifier(SPELL_AURA_MOD_HEALING_PCT, true));
+    float maxval = float(pVictim->GetMaxPositiveAuraModifier(SPELL_AURA_MOD_HEALING_PCT));
     if(maxval)
         TakenTotalMod *= (100.0f + maxval) / 100.0f;
 
@@ -13087,10 +13144,11 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
                 }
                 break;
             case SPELL_AURA_MAELSTROM_WEAPON:
-                sLog.outDebug("ProcDamageAndSpell: casting spell id %u (triggered by %s maelstrom aura of spell %u)", spellInfo->Id,(isVictim?"a victim's":"an attacker's"), triggeredByAura->GetId());
+            case SPELL_AURA_ADD_CASTER_HIT_TRIGGER:
+                sLog.outDebug("ProcDamageAndSpell: casting spell id %u (triggered by %s maelstrom/intervene aura of spell %u)", spellInfo->Id,(isVictim?"a victim's":"an attacker's"), triggeredByAura->GetId());
 
                 // remove all stack;
-                RemoveSpellsCausingAura(SPELL_AURA_MAELSTROM_WEAPON);
+                RemoveSpellsCausingAura(auraModifier->m_auraname);
                 triggeredByAura->SetInUse(false);           // this safe, aura locked
                 continue;                                   // avoid re-remove attempts
                 // CC Auras which use their modifier amount amount to drop

@@ -120,6 +120,20 @@ uint16 GetSpellAuraMaxTicks(SpellEntry const* spellInfo)
     return 6;
 }
 
+int32 ApplyHasteToChannelSpell(int32 orginalDuration, SpellEntry const* spellInfo, Spell const* spell)
+{
+    if (!spell)
+        return orginalDuration;
+
+    if(Player* modOwner = spell->GetCaster()->GetSpellModOwner())
+        modOwner->ApplySpellMod(spellInfo->Id, SPELLMOD_CASTING_TIME, orginalDuration, spell);
+
+    if( !(spellInfo->Attributes & (SPELL_ATTR_UNK4|SPELL_ATTR_TRADESPELL)) )
+        orginalDuration = int32(orginalDuration * spell->GetCaster()->GetFloatValue(UNIT_MOD_CAST_SPEED));
+
+    return orginalDuration;
+}
+
 WeaponAttackType GetWeaponAttackType(SpellEntry const *spellInfo)
 {
     if(!spellInfo)
@@ -1893,6 +1907,27 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 if (spellInfo_1->SpellIconID==2296 && spellInfo_2->SpellIconID==2296 &&
                     spellInfo_1->SpellFamilyFlags == spellInfo_2->SpellFamilyFlags)
                     return false;
+
+                // Blood Presence and Blood Presence (triggered)
+                 if (spellInfo_1->SpellIconID == 2636 && spellInfo_2->SpellIconID == 2636)
+                     return false;
+
+                 // Ebon Plague must replace Crypt Fever.
+                if ( (spellInfo_1->Attributes & 0x40000) && (spellInfo_1->AttributesEx & 0x8) &&
+                     (spellInfo_2->Attributes & 0x10) && (spellInfo_2->AttributesEx3 & 0x40000000) )
+                    return true;
+
+                // Higher rank Crypt Fever must replace lower.
+                if ( (spellInfo_1->Attributes & 0x10) && (spellInfo_1->AttributesEx3 & 0x40000000) &&
+                     (spellInfo_2->Attributes & 0x10) && (spellInfo_2->AttributesEx3 & 0x40000000) &&
+                     spellInfo_1->Id > spellInfo_2->Id )
+                    return true;
+
+                // Higher rank Ebon Plague must replace lower.
+                if ( (spellInfo_1->Attributes & 0x40000) && (spellInfo_1->AttributesEx & 0x8) &&
+                     (spellInfo_2->Attributes & 0x40000) && (spellInfo_2->AttributesEx & 0x8) &&
+                     spellInfo_1->Id > spellInfo_2->Id)
+                    return true;
             }
             break;
         default:

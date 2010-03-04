@@ -2791,7 +2791,18 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
                 }
 
-                int32 bp = int32(count * m_caster->GetMaxHealth() * m_spellInfo->DmgMultiplier[0] / 100);
+                int32 bp = int32(count * m_caster->GetMaxHealth() * m_spellInfo->DmgMultiplier[EFFECT_INDEX_0] / 100);
+                // Improved Death Strike (percent stored in not existed EFFECT_INDEX_2 effect base points)
+                Unit::AuraList const& auraMod = m_caster->GetAurasByType(SPELL_AURA_ADD_FLAT_MODIFIER);
+                for(Unit::AuraList::const_iterator iter = auraMod.begin(); iter != auraMod.end(); ++iter)
+                {
+                    // only required spell have spellicon for SPELL_AURA_ADD_FLAT_MODIFIER
+                    if ((*iter)->GetSpellProto()->SpellIconID == 2751 && (*iter)->GetSpellProto()->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT)
+                    {
+                        bp += (*iter)->GetSpellProto()->CalculateSimpleValue(EFFECT_INDEX_2) * bp / 100;
+                        break;
+                    }
+                }
                 m_caster->CastCustomSpell(m_caster, 45470, &bp, NULL, NULL, true);
                 return;
             }
@@ -2841,7 +2852,9 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
         Script->EffectDummyItem(m_caster, m_spellInfo->Id, eff_idx, itemTarget);
 
 
-    m_caster->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, m_caster, unitTarget);
+    sLog.outDebug("Spell ScriptStart spellid %u in EffectDummy ", m_spellInfo->Id);
+    if (m_caster->IsInWorld())
+        m_caster->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, m_caster, unitTarget);
 }
 
 void Spell::EffectTriggerSpellWithValue(SpellEffectIndex eff_idx)
@@ -2997,7 +3010,9 @@ void Spell::EffectTriggerSpell(SpellEffectIndex effIndex)
                 if( // ignore positive and passive auras
                     !iter->second->IsPositive() && !iter->second->IsPassive() &&
                     // ignore physical auras
-                    (GetSpellSchoolMask(iter->second->GetSpellProto()) & SPELL_SCHOOL_MASK_NORMAL)==0 )
+                    (GetSpellSchoolMask(iter->second->GetSpellProto()) & SPELL_SCHOOL_MASK_NORMAL)==0 &&
+                    // Do not remove Deserter debuff
+                    iter->second->GetSpellProto()->Id != 26013 )
                 {
                     m_caster->RemoveAurasDueToSpell(iter->second->GetSpellProto()->Id);
                     iter = Auras.begin();
@@ -3011,6 +3026,13 @@ void Spell::EffectTriggerSpell(SpellEffectIndex effIndex)
             if (Unit *pet = unitTarget->GetPet())
                 pet->CastSpell(pet, 28305, true);
             return;
+        }
+        // Mirror Image
+        case 58832:
+        {
+            // Glyph of Mirror Image
+            if (m_caster->HasAura(63093))
+                m_caster->CastSpell(m_caster, 65047, true); // Mirror Image
         }
     }
 
@@ -3339,7 +3361,7 @@ void Spell::EffectApplyAura(SpellEffectIndex eff_idx)
         (unitTarget->GetTypeId() != TYPEID_PLAYER || !((Player*)unitTarget)->GetSession()->PlayerLoading()) )
         return;
 
-    Unit* caster = GetAffectiveCaster();
+    Unit* caster = m_originalCaster ? m_originalCaster : m_caster;
     if(!caster)
         return;
 
@@ -4195,6 +4217,11 @@ void Spell::EffectApplyAreaAura(SpellEffectIndex eff_idx)
     if (!unitTarget->isAlive())
         return;
 
+    // reapply Flametongue Totem aura (prevent to stack at spec switch)
+    if (m_spellInfo->Effect[eff_idx] == SPELL_EFFECT_APPLY_AREA_AURA_RAID && m_spellInfo->SpellFamilyFlags & (0x0000000002000000))
+        if (unitTarget->HasAura(m_spellInfo->Id))
+            unitTarget->RemoveAurasDueToSpell(m_spellInfo->Id);
+
     AreaAura* Aur = new AreaAura(m_spellInfo, eff_idx, &m_currentBasePoints[eff_idx], unitTarget, m_caster, m_CastItem);
     unitTarget->AddAura(Aur);
 }
@@ -4706,6 +4733,93 @@ void Spell::DoSummonWild(SpellEffectIndex eff_idx, uint32 forceFaction)
         {
             summon->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
             summon->SetCreatorGUID(m_caster->GetGUID());
+
+            //Mirror image
+            if(creature_entry == 31216)
+            {
+                summon->SetLevel(m_caster->getLevel());
+                summon->SetMaxHealth(m_caster->GetMaxHealth());
+                summon->SetHealth(m_caster->GetHealth());
+                summon->SetDisplayId(m_caster->GetDisplayId());
+                summon->SetMaxPower(POWER_MANA, m_caster->GetMaxPower(POWER_MANA));
+                summon->SetPower(POWER_MANA, m_caster->GetPower(POWER_MANA));
+                summon->SetPvP(true);
+                summon->setFaction(m_caster->getFaction());
+                //m_caster->CastSpell(summon, 45204, false);
+                //m_caster->CastSpell((Unit*)NULL, 58838, true);
+                summon->SetUInt32Value(UNIT_FIELD_FLAGS_2, 2064);
+                if (m_caster->GetTypeId()== TYPEID_PLAYER)
+                {
+                    if (Item const* item = ((Player *)m_caster)->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND))
+                        summon->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, item->GetProto()->ItemId);
+                    if (Item const* item = ((Player *)m_caster)->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND))
+                        summon->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 1, item->GetProto()->ItemId);
+                }
+                else
+                {
+                    summon->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, m_caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID));
+                    summon->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 1, m_caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 1));
+                    summon->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 2, m_caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 2));
+                }
+
+                WorldPacket data(SMSG_MIRRORIMAGE_DATA, 68);
+                data << (uint32)m_caster->GetDisplayId();
+                if (m_caster->GetTypeId() == TYPEID_PLAYER)
+                {
+                    Player* pCreator = (Player *)m_caster;
+                    data << (uint8)pCreator->getRace();                         // race
+                    data << (uint8)pCreator->getGender();                       // gender
+                    data << (uint8)pCreator->getClass();                        // class
+                    data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 0);     // skin
+                    data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 1);     // face
+                    data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 2);     // hair
+                    data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 3);     // haircolor
+                    data << (uint8)pCreator->GetByteValue(PLAYER_BYTES_2, 0);   // facialhair
+
+                    data << (uint32)0;                    // unknown
+
+                    static const EquipmentSlots ItemSlots[] =
+                    {
+                        EQUIPMENT_SLOT_HEAD,
+                        EQUIPMENT_SLOT_SHOULDERS,
+                        EQUIPMENT_SLOT_BODY,
+                        EQUIPMENT_SLOT_CHEST,
+                        EQUIPMENT_SLOT_WAIST,
+                        EQUIPMENT_SLOT_LEGS,
+                        EQUIPMENT_SLOT_FEET,
+                        EQUIPMENT_SLOT_WRISTS,
+                        EQUIPMENT_SLOT_HANDS,
+                        EQUIPMENT_SLOT_BACK,
+                        EQUIPMENT_SLOT_TABARD,
+                        EQUIPMENT_SLOT_END
+                    };
+
+                    // Display items in visible slots
+                    for (EquipmentSlots const* itr = &ItemSlots[0]; *itr != EQUIPMENT_SLOT_END; ++itr)
+                        if (Item const* item =  pCreator->GetItemByPos(INVENTORY_SLOT_BAG_0, *itr))
+                            data << (uint32)item->GetProto()->DisplayInfoID;    // display id
+                        else
+                            data << (uint32)0;                    // no item found, so no id
+                }
+                else
+                {
+                    // Skip player data for creatures
+                    data << (uint32)0;
+                    data << (uint32)0;
+                    data << (uint32)0;
+                    data << (uint32)0;
+                    data << (uint32)0;
+                    data << (uint32)0;
+                    data << (uint32)0;
+                    data << (uint32)0;
+                    data << (uint32)0;
+                    data << (uint32)0;
+                    data << (uint32)0;
+                    data << (uint32)0;
+                    data << (uint32)0;
+                    data << (uint32)0;
+                }
+           }
 
             if(forceFaction)
                 summon->setFaction(forceFaction);
@@ -6868,7 +6982,8 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
         return;
 
     sLog.outDebug("Spell ScriptStart spellid %u in EffectScriptEffect ", m_spellInfo->Id);
-    m_caster->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, m_caster, unitTarget);
+    if (m_caster->IsInWorld())
+        m_caster->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, m_caster, unitTarget);
 }
 
 void Spell::EffectSanctuary(SpellEffectIndex /*eff_idx*/)

@@ -1349,6 +1349,7 @@ void World::Update(uint32 diff)
     if(m_gameTime > m_NextDailyQuestReset)
     {
         ResetDailyQuests();
+        SelectRandomBGDaily();
         m_NextDailyQuestReset += DAY;
     }
 
@@ -1938,6 +1939,20 @@ void World::ResetDailyQuests()
     for(SessionMap::const_iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
         if(itr->second->GetPlayer())
             itr->second->GetPlayer()->ResetDailyQuestStatus();
+}
+
+void World::SelectRandomBGDaily()
+{
+    //Delay all events
+    for(uint8 eventId = 0; eventId < MAX_BG_DAILY_EVENT; ++eventId)
+    {
+        sGameEventMgr.StopEvent(BG_DAILY_AV+eventId);
+        WorldDatabase.PExecute("UPDATE game_event SET occurence = 5184000 WHERE entry = %u", BG_DAILY_AV+eventId);
+    }
+    //Start new event  
+    uint8 random = urand(0,3);
+    sGameEventMgr.StartEvent(BG_DAILY_AV+random);
+    WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", BG_DAILY_AV+random);
 }
 
 void World::SetPlayerLimit( int32 limit, bool needUpdate )

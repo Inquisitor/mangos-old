@@ -742,8 +742,12 @@ enum MangosStrings
     LANG_BG_AV_H_GENERAL_DEAD           = 789,
     LANG_BG_AV_A_GENERAL_DEAD           = 790,
 
-
-    // Room for batleground/arena strings 791-799 not used
+    LANG_BG_SA_START_TWO_MINUTES        = 792,
+    LANG_BG_SA_START_ONE_MINUTE         = 793,
+    LANG_BG_SA_START_HALF_MINUTE        = 794,
+    LANG_BG_SA_HAS_BEGUN                = 795,
+    LANG_BG_SA_IS_UNDER_ATTACK          = 796,
+    LANG_BG_SA_IS_DESTROYED             = 797,
 
     // in game strings
     //                                  = 800, not used
