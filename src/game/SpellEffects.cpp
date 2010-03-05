@@ -1226,7 +1226,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 }
                 // Polarity Shift
                 case 28089:
-                    if(unitTarget)
+                    if(unitTarget && unitTarget->GetTypeId() == TYPEID_PLAYER)
                     {
                         //m_caster->MonsterTextEmote("The polarity has shifted!", 0, true);
                         uint32 toCast = (roll_chance_i(50) ? 28059 : 28084);
