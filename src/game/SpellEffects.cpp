@@ -58,6 +58,7 @@
 #include "CellImpl.h"
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
+#include "InstanceData.h"
 
 pEffect SpellEffects[TOTAL_SPELL_EFFECTS]=
 {
@@ -362,6 +363,11 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
 
                         if (unitTarget->HasAura(m_triggeredByAuraSpell->Id))
                             damage = 0;
+                        else 
+                        {
+                            if(unitTarget->GetInstanceData())// Shocking Data / Fail
+                                unitTarget->GetInstanceData()->SetData(23, 2);
+                        }
                         break;
                     // Meteor like spells (divided damage to targets)
                     case 24340: case 26558: case 28884:     // Meteor
