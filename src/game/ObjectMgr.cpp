@@ -44,6 +44,7 @@
 #include "Util.h"
 #include "WaypointManager.h"
 #include "GossipDef.h"
+#include "InstanceData.h"
 
 INSTANTIATE_SINGLETON_1(ObjectMgr);
 
@@ -7566,6 +7567,13 @@ bool PlayerCondition::Meets(Player const * player) const
             }
             return false;
         }
+        case CONDITION_INSTANCE_DATA:
+        {
+            if(!player->GetMap() || !player->GetMap()->IsDungeon())
+                return false;
+            Map * map = player->GetMap();
+            return ((InstanceMap*)map)->GetInstanceData() ? (((InstanceMap*)map)->GetInstanceData()->GetData(value1) == value2) : false;
+        }
         default:
             return false;
     }
@@ -7754,6 +7762,12 @@ bool PlayerCondition::IsValid(ConditionType condition, uint32 value1, uint32 val
                 return false;
             }
 
+            break;
+        }
+        case CONDITION_INSTANCE_DATA:
+        {
+            if(!value1)
+                return false;
             break;
         }
         case CONDITION_NONE:
