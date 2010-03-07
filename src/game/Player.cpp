@@ -21768,6 +21768,11 @@ void Player::ActivateSpec(uint8 specNum)
     if(specNum >= GetSpecsCount())
         return;
 
+    ClearComboPointHolders();
+    ClearAllReactives();
+    UnsummonAllTotems();
+    RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
+
     // unlearn GetActiveSpec() talents (not learned in specNum);
     // learn specNum talents
 
