@@ -10906,6 +10906,11 @@ Item* Player::EquipItem( uint16 pos, Item *pItem, bool update )
         }
         else if( slot == EQUIPMENT_SLOT_OFFHAND )
         {
+            if(Item *mainItem = GetItemByPos( INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND ))
+                if(mainItem->GetProto()->InventoryType == INVTYPE_2HWEAPON)
+                    if(!HasAura(49152,EFFECT_INDEX_0))
+                        CastSpell(this, 49152, true); // Apply Titans Grip 10% damage reduction                        
+
             UpdateExpertise(OFF_ATTACK);
             UpdateArmorPenetration();
         }
@@ -10932,6 +10937,11 @@ Item* Player::EquipItem( uint16 pos, Item *pItem, bool update )
         pItem2->SetState(ITEM_CHANGED, this);
 
         ApplyEquipCooldown(pItem2);
+
+        if(Item *mainItem = GetItemByPos( INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND ))
+            if(mainItem->GetProto()->InventoryType == INVTYPE_2HWEAPON)
+                if(!HasAura(49152,EFFECT_INDEX_0))
+                    CastSpell(this, 49152, true); // Apply Titans Grip 10% damage reduction
 
         return pItem2;
     }
@@ -19889,8 +19899,6 @@ void Player::AutoUnequipOffhandIfNeed()
         if (offItem->GetProto()->InventoryType == INVTYPE_2HWEAPON)
             if (!HasAura(49152, EFFECT_INDEX_0))
                 CastSpell(this, 49152, true);
-        else 
-            RemoveAura(49152, EFFECT_INDEX_0);
 
         return;
     }
