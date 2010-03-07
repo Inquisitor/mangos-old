@@ -21772,6 +21772,7 @@ void Player::ActivateSpec(uint8 specNum)
     ClearAllReactives();
     UnsummonAllTotems();
     RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
+    RemoveArenaAuras();
 
     // unlearn GetActiveSpec() talents (not learned in specNum);
     // learn specNum talents
