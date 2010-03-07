@@ -3557,7 +3557,7 @@ void Spell::SendLogExecute()
                         data.append(unit->GetPackGUID());
                     else
                         data << uint8(0);
-                    data << uint32(0);                      // count?
+                    data << uint32(m_caster->m_extraAttacks);
                     break;
                 case SPELL_EFFECT_INTERRUPT_CAST:
                     if(Unit *unit = m_targets.getUnitTarget())
