@@ -6761,6 +6761,13 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
                 else
                     return;
             }
+            else if (m_spellProto->SpellFamilyFlags & 0x1LL && m_spellProto->SpellFamilyFlags2 & 0x8)
+            {
+                // Glyph of Fireball
+                if (Unit * caster = GetCaster())
+                    if (caster->HasAura(56368))
+                        SetAuraDuration(0);
+            }
             else
                 return;
             break;
