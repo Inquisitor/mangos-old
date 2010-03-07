@@ -6897,6 +6897,36 @@ void Aura::HandleSpellSpecificBoosts(bool apply)
                     spellId1 = 60069;                       // Dispersion
                     spellId2 = 63230;                       // Dispersion
                     break;
+                case 47788: // Guardian Spirit
+                {
+                    if (!apply || m_removeMode != AURA_REMOVE_BY_DEFAULT)
+                        break;
+
+                    Unit* caster = GetCaster();
+                    if(!caster)
+                        return;
+                    if(caster->GetTypeId() != TYPEID_PLAYER)
+                        break;
+
+                    Player *player = ((Player*)caster);
+                    // Glyph of Guardian Spirit
+                    if(Aura * aurEff = player->GetAura(63231, EFFECT_INDEX_0))
+                    {
+                        if (!player->HasSpellCooldown(47788))
+                            break;
+
+                        player->RemoveSpellCooldown(GetSpellProto()->Id, true);
+                        player->AddSpellCooldown(GetSpellProto()->Id, 0, uint32(time(NULL) + aurEff->GetModifier()->m_amount));
+
+                        WorldPacket data(SMSG_SPELL_COOLDOWN, 8+1+4+4);
+                        data << uint64(player->GetGUID());
+                        data << uint8(0x0);                                     // flags (0x1, 0x2)
+                        data << uint32(GetSpellProto()->Id);
+                        data << uint32(aurEff->GetModifier()->m_amount*IN_MILISECONDS);
+                        player->SendDirectMessage(&data);
+                    }
+                    break;
+                }
                 default:
                     return;
             }
