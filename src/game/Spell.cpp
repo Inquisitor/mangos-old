@@ -1358,6 +1358,7 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 28796:                                 // Poison Bolt Volley
                 case 29213:                                 // Curse of the Plaguebringer
                 case 31298:                                 // Sleep
+                case 60936:                                 // Surge of Power (25 man)
                     unMaxTargets = 3;
                     break;
                 case 30843:                                 // Enfeeble TODO: exclude top threat target from target selection
