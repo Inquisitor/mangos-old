@@ -2755,7 +2755,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             return;
         }
 
-        if( GetId() == 43681 && m_target->GetTypeId() == TYPEID_PLAYER && m_removeMode == AURA_REMOVE_BY_DEFAULT && m_duration<=0 )
+        if(GetId() == 43681 && m_target->GetTypeId() == TYPEID_PLAYER && m_removeMode == AURA_REMOVE_BY_DEFAULT && m_duration<=0)
         {
             if( ((Player*)m_target)->InBattleGround() )
                 ((Player*)m_target)->LeaveBattleground();
@@ -2777,7 +2777,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     case 28084: toRemove = 29660; break;
                     case 39091: toRemove = 39092; break;
                 }
-                if( toRemove )
+                if(toRemove)
                     m_target->RemoveAurasDueToSpell(toRemove);
                 return;
             }
