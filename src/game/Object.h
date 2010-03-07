@@ -448,6 +448,12 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         bool IsInRange2d(float x, float y, float minRange, float maxRange) const;
         bool IsInRange3d(float x, float y, float z, float minRange, float maxRange) const;
 
+        bool IsInBetween(const WorldObject *obj1, const WorldObject *obj2, float size = 0) const;
+        float GetExactDist2dSq(float x, float y) const
+        { float dx = m_positionX - x; float dy = m_positionY - y; return dx*dx + dy*dy; }
+        float GetExactDist2d(const float x, const float y) const
+        { return sqrt(GetExactDist2dSq(x, y)); }
+
         float GetAngle( const WorldObject* obj ) const;
         float GetAngle( const float x, const float y ) const;
         bool HasInArc( const float arcangle, const WorldObject* obj ) const;
