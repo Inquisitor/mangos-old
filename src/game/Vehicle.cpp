@@ -467,7 +467,6 @@ void Vehicle::AddPassenger(Unit *unit, int8 seatId, bool force)
             }
             if (canFly() || HasAuraType(SPELL_AURA_FLY) || HasAuraType(SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED))
             {
-                printf("\n\n ! flying set to true ! \n\n ");
                 WorldPacket data3(SMSG_MOVE_SET_CAN_FLY, 12);
                 data3.append(GetPackGUID());
                 data3 << (uint32)(0);
