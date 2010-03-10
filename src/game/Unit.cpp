@@ -1897,7 +1897,7 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
         float discreteResistProbability[11];
         for (uint32 i = 0; i < 11; i++)
         {
-            discreteResistProbability[i] = 0.5f - 2.5f * abs(0.1f * i - averageResist);
+            discreteResistProbability[i] = 0.5f - 2.5f * fabs(0.1f * i - averageResist);
             if (discreteResistProbability[i] < 0.0f)
                 discreteResistProbability[i] = 0.0f;
         }
