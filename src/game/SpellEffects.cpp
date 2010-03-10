@@ -368,7 +368,7 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                             }
                         }
 
-                        if (unitTarget->HasAura(m_triggeredByAuraSpell->Id))
+                        if (unitTarget->HasAura(m_triggeredByAuraSpell->Id) || unitTarget->GetTypeId() != TYPEID_PLAYER )
                             damage = 0;
                         else 
                         {
