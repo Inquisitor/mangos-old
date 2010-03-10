@@ -149,7 +149,12 @@ void Creature::AddToWorld()
 {
     ///- Register the creature for guid lookup
     if(!IsInWorld() && GetGUIDHigh() == HIGHGUID_UNIT)
+    {
+        if(m_zoneScript)
+            m_zoneScript->OnCreatureCreate(this, true);
+
         GetMap()->GetObjectsStore().insert<Creature>(GetGUID(), (Creature*)this);
+    }
 
     Unit::AddToWorld();
 }
@@ -158,7 +163,12 @@ void Creature::RemoveFromWorld()
 {
     ///- Remove the creature from the accessor
     if(IsInWorld() && GetGUIDHigh() == HIGHGUID_UNIT)
+    {
+        if(m_zoneScript)
+            m_zoneScript->OnCreatureCreate(this, false);
+
         GetMap()->GetObjectsStore().erase<Creature>(GetGUID(), (Creature*)NULL);
+    }
 
     Unit::RemoveFromWorld();
 }
@@ -1046,6 +1056,14 @@ float Creature::GetSpellDamageMod(int32 Rank)
 
 bool Creature::CreateFromProto(uint32 guidlow, uint32 Entry, uint32 team, const CreatureData *data)
 {
+    SetZoneScript();
+    if(m_zoneScript && data)
+    {
+        Entry = m_zoneScript->GetCreatureEntry(guidlow, data);
+        if(!Entry)
+            return false;
+    }
+
     CreatureInfo const *cinfo = ObjectMgr::GetCreatureTemplate(Entry);
     if(!cinfo)
     {
