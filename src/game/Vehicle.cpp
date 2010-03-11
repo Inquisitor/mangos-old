@@ -24,6 +24,7 @@
 #include "Util.h"
 #include "WorldPacket.h"
 #include "InstanceData.h"
+#include "ZoneScript.h"
 
 Vehicle::Vehicle() : Creature(CREATURE_SUBTYPE_VEHICLE), m_vehicleId(0), m_VehicleData(NULL), m_vehicleInfo(NULL)
 {
