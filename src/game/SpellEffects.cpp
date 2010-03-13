@@ -8527,6 +8527,9 @@ void Spell::DoSummonVehicle(SpellEffectIndex eff_idx)
     v->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
     v->SetCreatorGUID(m_caster->GetGUID());
 
+    if(m_caster->GetTypeId() == TYPEID_PLAYER && v->AI())
+        v->AI()->SummonedBySpell((Player*)m_caster);
+
     if(damage)
     {
         m_caster->CastSpell(v, damage, true);
