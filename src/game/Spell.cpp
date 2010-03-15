@@ -4999,6 +4999,16 @@ SpellCastResult Spell::CheckCast(bool strict)
                     return SPELL_FAILED_BAD_TARGETS;
                 break;
             }
+            case SPELL_EFFECT_TRANS_DOOR:
+            {
+                if(m_caster->GetTypeId() == TYPEID_PLAYER)
+                {
+                    if(m_spellInfo->Id == 698)
+                        if(((Player*)m_caster)->GetMap()->IsBattleGround())
+                            return SPELL_FAILED_NOT_HERE;
+                }
+                break;
+            }
             default:break;
         }
     }
