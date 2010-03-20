@@ -1755,8 +1755,8 @@ GameObject* WorldObject::SummonGameObject(uint32 id, float x, float y, float z, 
 
     GetMap()->Add(pGameObj);
 
-    if( this->GetTypeId() == TYPEID_UNIT )
-        ((Unit*)this)->AddGameObject(pGameObj);
+    /*if( this->GetTypeId() == TYPEID_UNIT )
+        ((Unit*)this)->AddGameObject(pGameObj);*/
 
     return pGameObj;
 }
