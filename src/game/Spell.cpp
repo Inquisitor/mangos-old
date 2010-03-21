@@ -819,6 +819,8 @@ void Spell::AddUnitTarget(Unit* pVictim, SpellEffectIndex effIndex)
 
     // Procs can miss, weapon enchants can miss, triggered spells and effects cannot miss (miss already calculated in triggering spell)
     bool canMiss = (m_triggeredByAuraSpell || !m_IsTriggeredSpell);
+    if(m_caster->GetTypeId() != TYPEID_PLAYER && ((Creature*)m_caster)->isVehicle())
+        canMiss = false;
     target.missCondition = m_caster->SpellHitResult(pVictim, m_spellInfo, m_canReflect, canMiss);
 
     // Spell have speed - need calculate incoming time

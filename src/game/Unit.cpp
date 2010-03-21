@@ -2968,7 +2968,7 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell, 
 }
 
 // TODO need use unit spell resistances in calculations
-SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
+SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell, bool canMiss)
 {
     // Can`t miss on dead target (on skinning for example)
     if (!pVictim->isAlive())
@@ -3036,8 +3036,9 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
 
     int32 rand = irand(0,10000);
 
-    if (rand < tmp)
-        return SPELL_MISS_MISS;
+    if (canMiss)
+        if (rand < tmp)
+            return SPELL_MISS_MISS;
 
     int32 deflect_chance = pVictim->GetTotalAuraModifier(SPELL_AURA_DEFLECT_SPELLS)*100;
     tmp+=deflect_chance;
@@ -3096,7 +3097,7 @@ SpellMissInfo Unit::SpellHitResult(Unit *pVictim, SpellEntry const *spell, bool 
             return MeleeSpellHitResult(pVictim, spell, canMiss);
         case SPELL_DAMAGE_CLASS_NONE:
         case SPELL_DAMAGE_CLASS_MAGIC:
-            return MagicSpellHitResult(pVictim, spell);
+            return MagicSpellHitResult(pVictim, spell, ((GetTypeId() != TYPEID_PLAYER && ((Creature*)this)->isVehicle()) ? false : true));
     }
     return SPELL_MISS_NONE;
 }
