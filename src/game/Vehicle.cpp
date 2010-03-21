@@ -30,6 +30,7 @@ Vehicle::Vehicle() : Creature(CREATURE_SUBTYPE_VEHICLE), m_vehicleId(0), m_Vehic
 {
     m_updateFlag = (UPDATEFLAG_LIVING | UPDATEFLAG_HAS_POSITION | UPDATEFLAG_VEHICLE);
     m_comboPointsForCast = 0;
+    m_regenUpdateTimer = 100;
 }
 
 Vehicle::~Vehicle()
