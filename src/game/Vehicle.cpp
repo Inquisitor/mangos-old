@@ -78,13 +78,13 @@ void Vehicle::Update(uint32 diff)
         despawn = false;
     }
 
-    if(m_regenTimer <= diff)
+    if(m_regenUpdateTimer <= diff)
     {
         RegeneratePower(getPowerType());
-        m_regenTimer = 1000;
+        m_regenUpdateTimer = 100;
     }
     else
-        m_regenTimer -= diff;
+        m_regenUpdateTimer -= diff;
 }
 
 void Vehicle::RegeneratePower(Powers power)
@@ -102,7 +102,7 @@ void Vehicle::RegeneratePower(Powers power)
     if(m_vehicleInfo->m_powerType == POWER_TYPE_PYRITE)
         return;
 
-    addvalue = 10.0;
+    addvalue = 1.0;
 
     ModifyPower(power, (int32)addvalue);
 

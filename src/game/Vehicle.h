@@ -108,6 +108,7 @@ class MANGOS_DLL_SPEC Vehicle : public Creature
         SeatMap m_Seats;
         bool despawn;
         int32 m_spawnduration;
+        uint32 m_regenUpdateTimer;
 
     private:
         void SaveToDB(uint32, uint8)                        // overwrited of Creature::SaveToDB     - don't must be called
