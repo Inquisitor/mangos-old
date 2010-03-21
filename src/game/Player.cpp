@@ -7265,7 +7265,7 @@ void Player::ApplyItemEquipSpell(Item *item, bool apply, bool form_change)
     if(!proto)
         return;
 
-    for (int i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
+    for (uint8 i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
     {
         _Spell const& spellData = proto->Spells[i];
 
@@ -7379,7 +7379,7 @@ void Player::CastItemCombatSpell(Unit* Target, WeaponAttackType attType)
     if (!Target || Target == this )
         return;
 
-    for (int i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
+    for (uint8 i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
     {
         _Spell const& spellData = proto->Spells[i];
 
@@ -7419,12 +7419,12 @@ void Player::CastItemCombatSpell(Unit* Target, WeaponAttackType attType)
     }
 
     // item combat enchantments
-    for(int e_slot = 0; e_slot < MAX_ENCHANTMENT_SLOT; ++e_slot)
+    for(uint8 e_slot = 0; e_slot < MAX_ENCHANTMENT_SLOT; ++e_slot)
     {
         uint32 enchant_id = item->GetEnchantmentId(EnchantmentSlot(e_slot));
         SpellItemEnchantmentEntry const *pEnchant = sSpellItemEnchantmentStore.LookupEntry(enchant_id);
         if(!pEnchant) continue;
-        for (int s = 0; s < 3; ++s)
+        for (uint8 s = 0; s < 3; ++s)
         {
             if (pEnchant->type[s]!=ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL)
                 continue;
@@ -7463,7 +7463,6 @@ void Player::CastItemCombatSpell(Unit* Target, WeaponAttackType attType)
                             return;
 
                         Aura *poison = 0;
-                        bool hasTalentPassed = false;
                         // Lookup for Deadly poison (only attacker applied)
                         Unit::AuraList const& auras = Target->GetAurasByType(SPELL_AURA_PERIODIC_DAMAGE);
                         for(Unit::AuraList::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
@@ -7538,7 +7537,7 @@ void Player::CastItemUseSpell(Item *item,SpellCastTargets const& targets,uint8 c
     int count = 0;
 
     // item spells casted at use
-    for(int i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
+    for(uint8 i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
     {
         _Spell const& spellData = proto->Spells[i];
 
@@ -19632,7 +19631,7 @@ void Player::SendInstanceResetWarning( uint32 mapid, Difficulty difficulty, uint
 
 void Player::ApplyEquipCooldown( Item * pItem )
 {
-    for(int i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
+    for(uint8 i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
     {
         _Spell const& spellData = pItem->GetProto()->Spells[i];
 
