@@ -4003,6 +4003,10 @@ bool Unit::AddAura(Aura *Aur)
                     break;
                 }
 
+                // Hacky fix for Malygos' Power Spark
+                if(aur2->GetId() == 55849)
+                    break;
+
                 bool stop = false;
 
                 // m_auraname can be modified to SPELL_AURA_NONE for area auras, use original
