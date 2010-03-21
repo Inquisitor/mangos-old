@@ -29,6 +29,7 @@
 Vehicle::Vehicle() : Creature(CREATURE_SUBTYPE_VEHICLE), m_vehicleId(0), m_VehicleData(NULL), m_vehicleInfo(NULL)
 {
     m_updateFlag = (UPDATEFLAG_LIVING | UPDATEFLAG_HAS_POSITION | UPDATEFLAG_VEHICLE);
+    m_comboPointsForCast = 0;
 }
 
 Vehicle::~Vehicle()

@@ -11923,7 +11923,7 @@ int32 Unit::CalculateSpellDuration(SpellEntry const* spellProto, SpellEffectInde
     else
         unitPlayer = NULL;
 
-    uint8 comboPoints = unitPlayer ? unitPlayer->GetComboPoints() : 0;
+    uint8 comboPoints = (GetTypeId() != TYPEID_PLAYER && ((Creature*)this)->isVehicle() ? ((Vehicle*)this)->m_comboPointsForCast : (unitPlayer ? unitPlayer->GetComboPoints() : 0));
 
     int32 minduration = GetSpellDuration(spellProto);
     int32 maxduration = GetSpellMaxDuration(spellProto);

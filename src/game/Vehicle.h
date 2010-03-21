@@ -79,6 +79,7 @@ class MANGOS_DLL_SPEC Vehicle : public Creature
         int8 GetEmptySeatsCount(bool force = true);
         void EmptySeatsCountChanged();
         int8 GetTotalSeatsCount() { return m_Seats.size(); }
+        uint8 m_comboPointsForCast;
 
         void Dismiss();
 

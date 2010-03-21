@@ -2791,7 +2791,10 @@ void Spell::cast(bool skipCheck)
         // in case delayed spell remove item at cast delay start
         TakeCastItem();
         if(m_caster->GetTypeId() != TYPEID_PLAYER && ((Creature*)m_caster)->isVehicle() && NeedsComboPoints(m_spellInfo))
-                ((Player*)m_caster->GetCharmer())->ClearComboPoints();
+        {
+            ((Vehicle*)m_caster)->m_comboPointsForCast = ((Player*)m_caster->GetCharmer())->GetComboPoints();
+            ((Player*)m_caster->GetCharmer())->ClearComboPoints();
+        }
 
         // Okay, maps created, now prepare flags
         m_immediateHandled = false;
