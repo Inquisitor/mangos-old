@@ -2789,6 +2789,13 @@ void Spell::cast(bool skipCheck)
     SendCastResult(castResult);
     SendSpellGo();                                          // we must send smsg_spell_go packet before m_castItem delete in TakeCastItem()...
 
+    // Cache combo points used for spell and clear real one to prevent mutlti-casting delayed spells
+    if(m_caster->GetTypeId() != TYPEID_PLAYER && ((Creature*)m_caster)->isVehicle() && NeedsComboPoints(m_spellInfo))
+    {
+        ((Vehicle*)m_caster)->m_comboPointsForCast = ((Player*)m_caster->GetCharmer())->GetComboPoints();
+        ((Player*)m_caster->GetCharmer())->ClearComboPoints();
+    }
+
     // Okay, everything is prepared. Now we need to distinguish between immediate and evented delayed spells
     if (m_spellInfo->speed > 0.0f || m_spellInfo->Id == 14157)
     {
@@ -2796,11 +2803,6 @@ void Spell::cast(bool skipCheck)
         // Remove used for cast item if need (it can be already NULL after TakeReagents call
         // in case delayed spell remove item at cast delay start
         TakeCastItem();
-        if(m_caster->GetTypeId() != TYPEID_PLAYER && ((Creature*)m_caster)->isVehicle() && NeedsComboPoints(m_spellInfo))
-        {
-            ((Vehicle*)m_caster)->m_comboPointsForCast = ((Player*)m_caster->GetCharmer())->GetComboPoints();
-            ((Player*)m_caster->GetCharmer())->ClearComboPoints();
-        }
 
         // Okay, maps created, now prepare flags
         m_immediateHandled = false;

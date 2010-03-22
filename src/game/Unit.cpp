@@ -3040,9 +3040,8 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
 
     int32 rand = irand(0,10000);
 
-    if (canMiss)
-        if (rand < tmp)
-            return SPELL_MISS_MISS;
+    if (rand < tmp)
+        return SPELL_MISS_MISS;
 
     int32 deflect_chance = pVictim->GetTotalAuraModifier(SPELL_AURA_DEFLECT_SPELLS)*100;
     tmp+=deflect_chance;
