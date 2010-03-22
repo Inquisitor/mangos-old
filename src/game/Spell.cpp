@@ -31,6 +31,7 @@
 #include "Player.h"
 #include "Pet.h"
 #include "Unit.h"
+#include "Vehicle.h"
 #include "Spell.h"
 #include "DynamicObject.h"
 #include "Group.h"
