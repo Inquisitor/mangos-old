@@ -2968,10 +2968,14 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell, 
 }
 
 // TODO need use unit spell resistances in calculations
-SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell, bool canMiss)
+SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
 {
     // Can`t miss on dead target (on skinning for example)
     if (!pVictim->isAlive())
+        return SPELL_MISS_NONE;
+
+    // Vehicles cannot miss on thier targets
+    if(GetTypeId() != TYPEID_PLAYER && ((Creature*)this)->isVehicle())
         return SPELL_MISS_NONE;
 
     SpellSchoolMask schoolMask = GetSpellSchoolMask(spell);
@@ -3097,7 +3101,7 @@ SpellMissInfo Unit::SpellHitResult(Unit *pVictim, SpellEntry const *spell, bool 
             return MeleeSpellHitResult(pVictim, spell, canMiss);
         case SPELL_DAMAGE_CLASS_NONE:
         case SPELL_DAMAGE_CLASS_MAGIC:
-            return MagicSpellHitResult(pVictim, spell, ((GetTypeId() != TYPEID_PLAYER && ((Creature*)this)->isVehicle()) ? false : true));
+            return MagicSpellHitResult(pVictim, spell);
     }
     return SPELL_MISS_NONE;
 }
