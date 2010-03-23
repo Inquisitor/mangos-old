@@ -41,6 +41,9 @@ mangos_worldd_LDADD = \
 	../shared/Auth/libmangosauth.a \
 	../shared/libmangosshared.a \
 	../shared/vmap/libmangosvmaps.a \
+    ../shared/pathfinding/Detour/libmangosdetour.a \
+    ../shared/pathfinding/Recast/libmangosrecast.a \
+    ../shared/pathfinding/libmangospathfinding.a \
 	../framework/libmangosframework.a \
 	../../dep/src/sockets/libmangossockets.a \
 	../../dep/src/g3dlite/libg3dlite.a

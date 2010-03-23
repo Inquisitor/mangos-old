@@ -39,6 +39,15 @@
 #include "MapInstanced.h"
 #include "InstanceSaveMgr.h"
 #include "VMapFactory.h"
+//#include "OS_TLI.h"
+#include "pathfinding/InputGeom.h"
+#include "pathfinding/Recast/Recast.h"
+#include "pathfinding/Detour/DetourNavMesh.h"
+#include "pathfinding/Detour/DetourNavMeshBuilder.h"
+// navmesh
+//#include "ModelContainerView.h"
+#include <fstream>
+#include <search.h>
 
 #define MAX_CREATURE_ATTACK_RADIUS  (45.0f * sWorld.getConfig(CONFIG_FLOAT_RATE_CREATURE_AGGRO))
 
@@ -118,6 +127,380 @@ bool Map::ExistVMap(uint32 mapid,int gx,int gy)
 
     return true;
 }
+void Map::LoadNavMesh(int gx, int gy)
+{
+    if (m_navMesh[gx][gy])
+        return;
+    // map file name
+    char *tmp=NULL;
+    int len = sWorld.GetDataPath().length()+strlen("mmaps/%03u%02u%02u.obj")+1;
+    tmp = new char[len];
+    snprintf(tmp, len, (char *)(sWorld.GetDataPath()+"mmaps/%03u%02u%02u.obj").c_str(),i_id,gx,gy);
+    sLog.outDetail("Loading map %s",tmp);
+    InputGeom* m_geom = new InputGeom;
+    if (m_geom->loadMesh(tmp))
+    {
+        const float* bmin = m_geom->getMeshBoundsMin();
+	const float* bmax = m_geom->getMeshBoundsMax();
+	const float* verts = m_geom->getMesh()->getVerts();
+	const int nverts = m_geom->getMesh()->getVertCount();
+	const int* tris = m_geom->getMesh()->getTris();
+	const int ntris = m_geom->getMesh()->getTriCount();
+	rcConfig m_cfg;
+	//
+	// Step 1. Initialize build config.
+	//
+
+	// Init build configuration from GUI
+	memset(&m_cfg, 0, sizeof(m_cfg));
+        // Change config settings here!
+	m_cfg.cs = 0.3f;
+	m_cfg.ch = 0.2f;
+	m_cfg.walkableSlopeAngle = 50.0f;
+	m_cfg.walkableHeight = 10;
+	m_cfg.walkableClimb = 4;
+	m_cfg.walkableRadius = 2;
+	m_cfg.maxEdgeLen = (int)(12 / 0.3f);
+	m_cfg.maxSimplificationError = 1.3f;
+	m_cfg.minRegionSize = (int)rcSqr(50);
+	m_cfg.mergeRegionSize = (int)rcSqr(20);
+	m_cfg.maxVertsPerPoly = (int)6;
+	m_cfg.detailSampleDist = 1.8f;
+	m_cfg.detailSampleMaxError = 0.2f * 1;
+        bool m_keepInterResults = false;
+        printf("CellSize        : %.2f\n",m_cfg.cs);
+        printf("CellHeight      : %.2f\n",m_cfg.ch);
+        printf("WalkableSlope   : %.2f\n",m_cfg.walkableSlopeAngle);
+        printf("WalkableHeight  : %.2f\n",m_cfg.walkableHeight);
+        printf("walkableClimb   : %.2f\n",m_cfg.walkableClimb);
+        printf("walkableRadius  : %.2f\n",m_cfg.walkableRadius);
+        printf("maxEdgeLen      : %03u\n",m_cfg.maxEdgeLen);
+        printf("maxSimplific.Er.: %.2f\n",m_cfg.maxSimplificationError);
+        printf("minRegionSize   : %04u\n",m_cfg.minRegionSize);
+        printf("mergedRegSize   : %04u\n",m_cfg.mergeRegionSize);
+        printf("maxVertsPerPoly : %05u\n",m_cfg.maxVertsPerPoly);
+        printf("detailSampledist: %.2f\n",m_cfg.detailSampleDist);
+        printf("det.Samp.max.err: %.2f\n",m_cfg.detailSampleMaxError);
+	// Set the area where the navigation will be build.
+	// Here the bounds of the input mesh are used, but the
+	// area could be specified by an user defined box, etc.
+	vcopy(m_cfg.bmin, bmin);
+	vcopy(m_cfg.bmax, bmax);
+	rcCalcGridSize(m_cfg.bmin, m_cfg.bmax, m_cfg.cs, &m_cfg.width, &m_cfg.height);
+
+	//
+	// Step 2. Rasterize input polygon soup.
+	//
+
+	// Allocate voxel heighfield where we rasterize our input data to.
+	rcHeightfield* m_solid = new rcHeightfield;
+	if (!m_solid)
+	{
+		sLog.outError("buildNavigation: Out of memory 'solid'.");
+		return;
+	}
+	if (!rcCreateHeightfield(*m_solid, m_cfg.width, m_cfg.height, m_cfg.bmin, m_cfg.bmax, m_cfg.cs, m_cfg.ch))
+	{
+		sLog.outError("buildNavigation: Could not create solid heightfield.");
+		return;
+	}
+
+	// Allocate array that can hold triangle flags.
+	// If you have multiple meshes you need to process, allocate
+	// and array which can hold the max number of triangles you need to process.
+	unsigned char* m_triflags = new unsigned char[ntris];
+	if (!m_triflags)
+	{
+		sLog.outError("buildNavigation: Out of memory 'triangleFlags' (%d).", ntris);
+		return;
+	}
+
+	// Find triangles which are walkable based on their slope and rasterize them.
+	// If your input data is multiple meshes, you can transform them here, calculate
+	// the flags for each of the meshes and rasterize them.
+	memset(m_triflags, 0, ntris*sizeof(unsigned char));
+	rcMarkWalkableTriangles(m_cfg.walkableSlopeAngle, verts, nverts, tris, ntris, m_triflags);
+	rcRasterizeTriangles(verts, nverts, tris, m_triflags, ntris, *m_solid, m_cfg.walkableClimb);
+
+	if (!m_keepInterResults)
+	{
+		delete [] m_triflags;
+		m_triflags = 0;
+	}
+
+	//
+	// Step 3. Filter walkables surfaces.
+	//
+
+	// Once all geoemtry is rasterized, we do initial pass of filtering to
+	// remove unwanted overhangs caused by the conservative rasterization
+	// as well as filter spans where the character cannot possibly stand.
+	rcFilterLowHangingWalkableObstacles(m_cfg.walkableClimb, *m_solid);
+	rcFilterLedgeSpans(m_cfg.walkableHeight, m_cfg.walkableClimb, *m_solid);
+	rcFilterWalkableLowHeightSpans(m_cfg.walkableHeight, *m_solid);
+
+
+	//
+	// Step 4. Partition walkable surface to simple regions.
+	//
+
+	// Compact the heightfield so that it is faster to handle from now on.
+	// This will result more cache coherent data as well as the neighbours
+	// between walkable cells will be calculated.
+	rcCompactHeightfield* m_chf = new rcCompactHeightfield;
+	if (!m_chf)
+	{
+		sLog.outError("buildNavigation: Out of memory 'chf'.");
+		return;
+	}
+	if (!rcBuildCompactHeightfield(m_cfg.walkableHeight, m_cfg.walkableClimb, RC_WALKABLE, *m_solid, *m_chf))
+	{
+		sLog.outError( "buildNavigation: Could not build compact data.");
+		return;
+	}
+
+	if (!m_keepInterResults)
+	{
+		delete m_solid;
+		m_solid = 0;
+	}
+
+	// Erode the walkable area by agent radius.
+	if (!rcErodeArea(RC_WALKABLE_AREA, m_cfg.walkableRadius, *m_chf))
+	{
+		sLog.outError("buildNavigation: Could not erode.");
+		return;
+	}
+
+	// (Optional) Mark areas.
+	const ConvexVolume* vols = m_geom->getConvexVolumes();
+	for (int i  = 0; i < m_geom->getConvexVolumeCount(); ++i)
+		rcMarkConvexPolyArea(vols[i].verts, vols[i].nverts, vols[i].hmin, vols[i].hmax, (unsigned char)vols[i].area, *m_chf);
+
+	// Prepare for region partitioning, by calculating distance field along the walkable surface.
+	if (!rcBuildDistanceField(*m_chf))
+	{
+		sLog.outError("buildNavigation: Could not build distance field.");
+		return;
+	}
+
+	// Partition the walkable surface into simple regions without holes.
+	if (!rcBuildRegions(*m_chf, m_cfg.borderSize, m_cfg.minRegionSize, m_cfg.mergeRegionSize))
+	{
+		sLog.outError("buildNavigation: Could not build regions.");
+	}
+
+	//
+	// Step 5. Trace and simplify region contours.
+	//
+
+	// Create contours.
+	rcContourSet* m_cset = new rcContourSet;
+	if (!m_cset)
+	{
+		sLog.outError("buildNavigation: Out of memory 'cset'.");
+		return;
+	}
+	if (!rcBuildContours(*m_chf, m_cfg.maxSimplificationError, m_cfg.maxEdgeLen, *m_cset))
+	{
+		sLog.outError("buildNavigation: Could not create contours.");
+		return;
+	}
+
+	//
+	// Step 6. Build polygons mesh from contours.
+	//
+
+	// Build polygon navmesh from the contours.
+	rcPolyMesh* m_pmesh = new rcPolyMesh;
+	if (!m_pmesh)
+	{
+		sLog.outError("buildNavigation: Out of memory 'pmesh'.");
+		return;
+	}
+	if (!rcBuildPolyMesh(*m_cset, m_cfg.maxVertsPerPoly, *m_pmesh))
+	{
+		sLog.outError( "buildNavigation: Could not triangulate contours.");
+		return;
+	}
+
+	//
+	// Step 7. Create detail mesh which allows to access approximate height on each polygon.
+	//
+
+	rcPolyMeshDetail* m_dmesh = new rcPolyMeshDetail;
+	if (!m_dmesh)
+	{
+		sLog.outError("buildNavigation: Out of memory 'pmdtl'.");
+		return;
+	}
+
+	if (!rcBuildPolyMeshDetail(*m_pmesh, *m_chf, m_cfg.detailSampleDist, m_cfg.detailSampleMaxError, *m_dmesh))
+	{
+		sLog.outError("buildNavigation: Could not build detail mesh.");
+	}
+
+	if (!m_keepInterResults)
+	{
+		delete m_chf;
+		m_chf = 0;
+		delete m_cset;
+		m_cset = 0;
+	}
+
+	// At this point the navigation mesh data is ready, you can access it from m_pmesh.
+	// See duDebugDrawPolyMesh or dtCreateNavMeshData as examples how to access the data.
+
+	//
+	// (Optional) Step 8. Create Detour data from Recast poly mesh.
+	//
+
+	// The GUI may allow more max points per polygon than Detour can handle.
+	// Only build the detour navmesh if we do not exceed the limit.
+	if (m_cfg.maxVertsPerPoly <= DT_VERTS_PER_POLYGON)
+	{
+		unsigned char* navData = 0;
+		int navDataSize = 0;
+                // Update poly flags from areas.
+		for (int i = 0; i < m_pmesh->npolys; ++i)
+		{
+                    // for now all generated navmesh is walkable by everyone.
+                    // else there will be no pathfinding at all!
+                    m_pmesh->flags[i] = RC_WALKABLE_AREA;
+		}
+
+		dtNavMeshCreateParams params;
+		memset(&params, 0, sizeof(params));
+		params.verts = m_pmesh->verts;
+		params.vertCount = m_pmesh->nverts;
+		params.polys = m_pmesh->polys;
+		params.polyAreas = m_pmesh->areas;
+		params.polyFlags = m_pmesh->flags;
+		params.polyCount = m_pmesh->npolys;
+		params.nvp = m_pmesh->nvp;
+		params.detailMeshes = m_dmesh->meshes;
+		params.detailVerts = m_dmesh->verts;
+		params.detailVertsCount = m_dmesh->nverts;
+		params.detailTris = m_dmesh->tris;
+		params.detailTriCount = m_dmesh->ntris;
+		params.offMeshConVerts = m_geom->getOffMeshConnectionVerts();
+		params.offMeshConRad = m_geom->getOffMeshConnectionRads();
+		params.offMeshConDir = m_geom->getOffMeshConnectionDirs();
+		params.offMeshConAreas = m_geom->getOffMeshConnectionAreas();
+		params.offMeshConFlags = m_geom->getOffMeshConnectionFlags();
+		params.offMeshConCount = m_geom->getOffMeshConnectionCount();
+		params.walkableHeight = 2.0f;
+		params.walkableRadius = 0.6f;
+		params.walkableClimb = 0.9f;
+		vcopy(params.bmin, m_pmesh->bmin);
+		vcopy(params.bmax, m_pmesh->bmax);
+		params.cs = m_cfg.cs;
+		params.ch = m_cfg.ch;
+		printf("vertcount       : %05u\n",params.vertCount);
+                printf("polycount       : %05u\n",params.polyCount);
+                printf("detailVertsCount: %05u\n",params.detailVertsCount);
+                printf("detailTriCount  : %05u\n",params.detailTriCount);
+                printf("walkableClimb   : %.2f\n",params.walkableClimb);
+                printf("walkableRadius  : %.2f\n",params.walkableRadius);
+                printf("walkableHeight  : %.2f\n",params.walkableHeight);
+		if (!dtCreateNavMeshData(&params, &navData, &navDataSize))
+		{
+			sLog.outError("Could not build Detour navmesh.");
+			return;
+		}
+
+		m_navMesh[gx][gy] = new dtNavMesh;
+		if (!m_navMesh[gx][gy])
+		{
+			delete [] navData;
+			sLog.outError("Could not create Detour navmesh");
+			return;
+		}
+
+		if (!m_navMesh[gx][gy]->init(navData, navDataSize, true, 2048))
+		{
+			delete [] navData;
+			sLog.outError("Could not init Detour navmesh");
+			return;
+		}
+                sLog.outDetail("Loaded map: %s Polymesh: Verts:%d  Polys:%d",tmp,m_pmesh->nverts, m_pmesh->npolys);
+
+	}
+    }
+    
+}
+
+Position Map::getNextPositionOnPathToLocation(const float startx, const float starty, const float startz, const float endx, const float endy, const float endz)
+{
+    //convert to nav coords.
+    float startPos[3]               = { starty, startz, startx };
+    float endPos[3]                 = { endy, endz, endx };
+    float mPolyPickingExtents[3]    = { 2.00f, 4.00f, 2.00f };
+    dtQueryFilter* mPathFilter = new dtQueryFilter();
+    int gx = 32 - (startx/533.333333f);
+    int gy = 32 - (starty/533.333333f);
+    Position pos = Position();
+    pos.x = endx;
+    pos.y = endy;
+    pos.z = endz;
+    if (m_navMesh[gx][gy]) {
+        sLog.outDetail("NAVMESH OK");
+        sLog.outDetail("Trying to find Start and end Poligons");
+        dtPolyRef mStartRef = m_navMesh[gx][gy]->findNearestPoly(startPos,mPolyPickingExtents,mPathFilter,0); // this maybe should be saved on mob for later
+        dtPolyRef mEndRef   = m_navMesh[gx][gy]->findNearestPoly(endPos,mPolyPickingExtents,mPathFilter,0); // saved on player? probably waste since player moves to much
+        if (mStartRef != 0 && mEndRef != 0)
+        {
+            sLog.outDetail("Positions found NavMesh[%03u][%03u]: start [%03u], end [%03u]",gx,gy,mStartRef,mEndRef);
+            dtPolyRef mPathResults[50];
+            // Params:
+            //	startRef - (in) ref to path start polygon.
+            //	endRef - (in) ref to path end polygon.
+            //	startPos[3] - (in) Path start location.
+            //	endPos[3] - (in) Path end location.
+            //  filter - (in) path polygon filter.
+            //	path - (out) array holding the search result.
+            //	maxPathSize - (in) The max number of polygons the path array can hold.
+            // Returns: Number of polygons in search result array.
+            //int findPath(dtPolyRef startRef, dtPolyRef endRef,
+            //                       const float* startPos, const float* endPos,
+            //                       dtQueryFilter* filter,
+            //                       dtPolyRef* path, const int maxPathSize);
+            int mNumPathResults = m_navMesh[gx][gy]->findPath(mStartRef, mEndRef,startPos, endPos, mPathFilter ,mPathResults,50);//TODO: CHANGE ME
+            if(mNumPathResults <= 0) {
+                return pos;
+            }
+             // we are at goal already.
+            //	startPos[3] - (in) Path start location.
+	//	endPo[3] - (in) Path end location.
+	//	path - (in) Array of connected polygons describing the corridor.
+	//	pathSize - (in) Number of polygons in path array.
+	//	straightPath - (out) Points describing the straight path.
+	//  straightPathFlags - (out, opt) Flags describing each point type, see dtStraightPathFlags.
+	//  straightPathRefs - (out, opt) References to polygons at point locations.
+	//	maxStraightPathSize - (in) The max number of points the straight path array can hold.
+	// Returns: Number of points in the path.
+	//int findStraightPath(const float* startPos, const float* endPos,
+	//					 const dtPolyRef* path, const int pathSize,
+	//					 float* straightPath, unsigned char* straightPathFlags, dtPolyRef* straightPathRefs,
+	//					 const int maxStraightPathSize);
+            float actualpath[3*20];
+            unsigned char* flags = 0;
+            dtPolyRef* polyrefs = 0;
+            int mNumPathPoints = m_navMesh[gx][gy]->findStraightPath(startPos, endPos,mPathResults, mNumPathResults, actualpath, flags, polyrefs,20);
+            if (mNumPathPoints < 3)
+                return pos;
+            pos.x = actualpath[5]; //0 3 6
+            pos.y = actualpath[3]; //1 4 7
+            pos.z = actualpath[4]; //2 5 8
+            sLog.outDetail("Pathfinding Next Point: x[%.2f] y[%.2f] z[%.2f]", pos.x, pos.y, pos.z);
+            return pos;
+        }
+    }
+    return pos;
+   
+}
+
+
 
 void Map::LoadVMap(int gx,int gy)
 {
@@ -182,8 +565,10 @@ void Map::LoadMap(int gx,int gy, bool reload)
 void Map::LoadMapAndVMap(int gx,int gy)
 {
     LoadMap(gx,gy);
-    if(i_InstanceId == 0)
+    if(i_InstanceId == 0) {
         LoadVMap(gx, gy);                                   // Only load the data for the base map
+        LoadNavMesh(gx,gy);
+    }
 }
 
 void Map::InitStateMachine()
@@ -216,6 +601,7 @@ Map::Map(uint32 id, time_t expiry, uint32 InstanceId, uint8 SpawnMode, Map* _par
         {
             //z code
             GridMaps[idx][j] =NULL;
+            m_navMesh[idx][j] = NULL;
             setNGrid(NULL, idx, j);
         }
     }

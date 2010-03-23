@@ -22,6 +22,7 @@
 #include "Creature.h"
 #include "DestinationHolderImp.h"
 #include "World.h"
+#include "Unit.h"
 
 #define SMALL_ALPHA 0.05f
 
@@ -69,9 +70,13 @@ void TargetedMovementGeneratorMedium<T,D>::_setTargetLocation(T &owner)
         if( i_destinationHolder.HasDestination() && i_destinationHolder.GetDestinationDiff(x,y,z) < bothObjectSize )
             return;
     */
+    float myx,myy,myz;
+    //the Creature after us is actually in owner variable..
+    owner.GetPosition(myx,myy,myz);
+    Position travelto = i_target->GetMap()->getNextPositionOnPathToLocation(myx,myy,myz,x,y,z);
     Traveller<T> traveller(owner);
-    i_destinationHolder.SetDestination(traveller, x, y, z);
-
+    i_destinationHolder.SetDestination(traveller, travelto.x,travelto.y,travelto.z);
+    sLog.outString("Moving to x[%.2f] y[%.2f] z[%.2f]", travelto.x, travelto.y, travelto.z);
     D::_addUnitStateMove(owner);
     if (owner.GetTypeId() == TYPEID_UNIT && ((Creature*)&owner)->canFly())
         ((Creature&)owner).AddSplineFlag(SPLINEFLAG_UNKNOWN7);

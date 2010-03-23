@@ -33,6 +33,8 @@
 #include "GameSystem/GridRefManager.h"
 #include "MapRefManager.h"
 #include "Utilities/TypeList.h"
+#include "pathfinding/Detour/DetourNavMesh.h"
+#include "Unit.h"
 
 #include <bitset>
 #include <list>
@@ -229,6 +231,20 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
 {
     friend class MapReference;
     public:
+        /*
+         * Creates a new Map object
+         *
+         * The Map objects handles keeping track of objects inside the map, also it offers methods
+         * for line of sight checking and eventually pathfinding.
+         * Fruthermore it support many more helper functions.
+         *
+         * @param id The id of the map
+         * @param time_t the current time
+         * @param InstanceId The id of the instance associated with this class
+         * @param SpawnMode the SpawnMode to be used on this map.
+         * @param The parent map of this map (used with instances).
+         *
+         */
         Map(uint32 id, time_t, uint32 InstanceId, uint8 SpawnMode, Map* _parent = NULL);
         virtual ~Map();
 
@@ -300,6 +316,9 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         // can return INVALID_HEIGHT if under z+2 z coord not found height
         float GetHeight(float x, float y, float z, bool pCheckVMap=true) const;
         bool IsInWater(float x, float y, float z, float min_depth = 2.0f) const;    // does not use z pos. This is for future use
+
+        Position getNextPositionOnPathToLocation(const float startx, const float starty, const float startz, const float endx, const float endy, const float endz);
+
 
         ZLiquidStatus getLiquidStatus(float x, float y, float z, uint8 ReqLiquidType, LiquidData *data = 0) const;
 
@@ -435,6 +454,8 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         void LoadMapAndVMap(int gx, int gy);
         void LoadVMap(int gx, int gy);
         void LoadMap(int gx,int gy, bool reload = false);
+        void LoadNavMesh(int gx, int gy);
+
         GridMap *GetGrid(float x, float y);
 
         void SetTimer(uint32 t) { i_gridExpiry = t < MIN_GRID_DELAY ? MIN_GRID_DELAY : t; }
@@ -502,6 +523,9 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         //used for fast base_map (e.g. MapInstanced class object) search for
         //InstanceMaps and BattleGroundMaps...
         Map* m_parentMap;
+
+        // no idea what this all does
+        dtNavMesh *m_navMesh[MAX_NUMBER_OF_GRIDS][MAX_NUMBER_OF_GRIDS];
 
         NGridType* i_grids[MAX_NUMBER_OF_GRIDS][MAX_NUMBER_OF_GRIDS];
         GridMap *GridMaps[MAX_NUMBER_OF_GRIDS][MAX_NUMBER_OF_GRIDS];
