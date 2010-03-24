@@ -70,6 +70,8 @@ void TargetedMovementGeneratorMedium<T,D>::_setTargetLocation(T &owner)
         if( i_destinationHolder.HasDestination() && i_destinationHolder.GetDestinationDiff(x,y,z) < bothObjectSize )
             return;
     */
+    if (!i_destinationHolder.HasArrived())
+        return;
     float myx,myy,myz;
     //the Creature after us is actually in owner variable..
     owner.GetPosition(myx,myy,myz);

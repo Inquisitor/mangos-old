@@ -32,7 +32,10 @@
 #include "ObjectMgr.h"
 #include "ObjectDefines.h"
 #include "SpellMgr.h"
-
+#include "sys/time.h"
+#include "CellImpl.h"    
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
 bool ChatHandler::HandleDebugSendSpellFailCommand(const char* args)
 {
     if (!*args)
@@ -212,7 +215,64 @@ bool ChatHandler::HandleDebugUpdateWorldStateCommand(const char* args)
     m_session->GetPlayer()->SendUpdateWorldState(world, state);
     return true;
 }
+bool ChatHandler::HandleDebugMoveMapCommand(const char* args)
+{
+    float range;
+    char* w = strtok((char*)args, " ");
+    if (!w) {
+        SendSysMessage("Syntax is .debug movemap range");
+        return false;
+    }
+    range = atof(w);
+    PSendSysMessage("Generating MoveMap Path for all creatures around player In range:%.2f", range);
+    // Iterate for all slave masters
+    CellPair pair(MaNGOS::ComputeCellPair( m_session->GetPlayer()->GetPositionX(), m_session->GetPlayer()->GetPositionY()) );
+    Cell cell(pair);
+    cell.data.Part.reserved = ALL_DISTRICT;
+    cell.SetNoCreate();
 
+    std::list<Creature*> creatureList;
+
+    MaNGOS::AnyUnitInObjectRangeCheck go_check(m_session->GetPlayer(), range); // 25 yards check
+    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(m_session->GetPlayer(), creatureList, go_check);
+    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+    // Get Creatures
+    cell.Visit(pair, go_visit, *(m_session->GetPlayer()->GetMap()), *(m_session->GetPlayer()), range);
+
+    if (!creatureList.empty())
+    {
+         // Do what You want with these creatures
+        PSendSysMessage("Found %i Creatures.", creatureList.size());
+        std::list<Creature*>::iterator aCreature = creatureList.begin();
+        struct timeval first,  second,  lapsed;
+        struct timezone tzp;
+        int pathes = 0;
+        gettimeofday (&first, &tzp);
+        float x,y,z;
+        float gx,gy,gz;
+        m_session->GetPlayer()->GetPosition(gx,gy,gz);
+        Map *theMap = m_session->GetPlayer()->GetMap();
+        while (aCreature != creatureList.end()) {
+            (*aCreature)->GetPosition(x,y,z);
+            theMap->getNextPositionOnPathToLocation(x,y,z,gx,gy,gz);
+            pathes++;
+            aCreature++;
+        }
+        gettimeofday(&second, &tzp);
+        if (first.tv_usec > second.tv_usec) {
+            second.tv_usec += 1000000;
+            second.tv_sec--;
+        }
+        lapsed.tv_usec = second.tv_usec - first.tv_usec;
+        lapsed.tv_sec = second.tv_sec - first.tv_sec;
+        sLog.outDetail("Generated %i pathes in %i seconds %i µs", pathes,lapsed.tv_sec,lapsed.tv_usec);
+        PSendSysMessage("Generated %i pathes in %i seconds %i µs", pathes,lapsed.tv_sec,lapsed.tv_usec);
+
+    } else {
+        SendSysMessage("No Creatures around player :(");
+    }
+}
 bool ChatHandler::HandleDebugPlayCinematicCommand(const char* args)
 {
     // USAGE: .debug play cinematic #cinematicid

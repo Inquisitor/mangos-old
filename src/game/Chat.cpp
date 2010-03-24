@@ -173,6 +173,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "entervehicle",   SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugEnterVehicle,               "", NULL },
         { "uws",            SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugUpdateWorldStateCommand,    "", NULL },
         { "update",         SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugUpdateCommand,              "", NULL },
+        { "movemap",        SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugMoveMapCommand,             "", NULL },
         { NULL,             0,                  false, NULL,                                                "", NULL }
     };
 
