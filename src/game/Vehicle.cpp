@@ -29,6 +29,8 @@
 Vehicle::Vehicle() : Creature(CREATURE_SUBTYPE_VEHICLE), m_vehicleId(0), m_VehicleData(NULL), m_vehicleInfo(NULL)
 {
     m_updateFlag = (UPDATEFLAG_LIVING | UPDATEFLAG_HAS_POSITION | UPDATEFLAG_VEHICLE);
+    m_comboPointsForCast = 0;
+    m_regenUpdateTimer = 100;
 }
 
 Vehicle::~Vehicle()
@@ -77,13 +79,13 @@ void Vehicle::Update(uint32 diff)
         despawn = false;
     }
 
-    if(m_regenTimer <= diff)
+    if(m_regenUpdateTimer <= diff)
     {
         RegeneratePower(getPowerType());
-        m_regenTimer = 1000;
+        m_regenUpdateTimer = 100;
     }
     else
-        m_regenTimer -= diff;
+        m_regenUpdateTimer -= diff;
 }
 
 void Vehicle::RegeneratePower(Powers power)
@@ -101,7 +103,7 @@ void Vehicle::RegeneratePower(Powers power)
     if(m_vehicleInfo->m_powerType == POWER_TYPE_PYRITE)
         return;
 
-    addvalue = 10.0;
+    addvalue = 1.0;
 
     ModifyPower(power, (int32)addvalue);
 

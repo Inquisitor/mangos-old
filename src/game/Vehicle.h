@@ -79,6 +79,7 @@ class MANGOS_DLL_SPEC Vehicle : public Creature
         int8 GetEmptySeatsCount(bool force = true);
         void EmptySeatsCountChanged();
         int8 GetTotalSeatsCount() { return m_Seats.size(); }
+        uint8 m_comboPointsForCast;
 
         void Dismiss();
 
@@ -107,6 +108,7 @@ class MANGOS_DLL_SPEC Vehicle : public Creature
         SeatMap m_Seats;
         bool despawn;
         int32 m_spawnduration;
+        uint32 m_regenUpdateTimer;
 
     private:
         void SaveToDB(uint32, uint8)                        // overwrited of Creature::SaveToDB     - don't must be called

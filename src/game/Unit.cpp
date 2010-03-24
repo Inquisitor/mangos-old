@@ -2974,6 +2974,10 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
     if (!pVictim->isAlive())
         return SPELL_MISS_NONE;
 
+    // Vehicles cannot miss on thier targets
+    if(GetTypeId() != TYPEID_PLAYER && ((Creature*)this)->isVehicle())
+        return SPELL_MISS_NONE;
+
     SpellSchoolMask schoolMask = GetSpellSchoolMask(spell);
     // PvP - PvE spell misschances per leveldif > 2
     int32 lchance = pVictim->GetTypeId() == TYPEID_PLAYER ? 7 : 11;
@@ -4002,6 +4006,10 @@ bool Unit::AddAura(Aura *Aur)
                     RemoveAura(i2,AURA_REMOVE_BY_STACK);
                     break;
                 }
+
+                // Hacky fix for Malygos' Power Spark
+                if(aur2->GetId() == 55849)
+                    break;
 
                 bool stop = false;
 
@@ -11918,7 +11926,7 @@ int32 Unit::CalculateSpellDuration(SpellEntry const* spellProto, SpellEffectInde
     else
         unitPlayer = NULL;
 
-    uint8 comboPoints = unitPlayer ? unitPlayer->GetComboPoints() : 0;
+    uint8 comboPoints = (GetTypeId() != TYPEID_PLAYER && ((Creature*)this)->isVehicle() ? ((Vehicle*)this)->m_comboPointsForCast : (unitPlayer ? unitPlayer->GetComboPoints() : 0));
 
     int32 minduration = GetSpellDuration(spellProto);
     int32 maxduration = GetSpellMaxDuration(spellProto);
