@@ -44,7 +44,6 @@
 #include "pathfinding/Recast/Recast.h"
 #include "pathfinding/Detour/DetourNavMesh.h"
 #include "pathfinding/Detour/DetourNavMeshBuilder.h"
-#include "sys/time.h"
 // navmesh
 //#include "ModelContainerView.h"
 #include <fstream>

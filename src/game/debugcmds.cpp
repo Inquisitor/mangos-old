@@ -32,7 +32,6 @@
 #include "ObjectMgr.h"
 #include "ObjectDefines.h"
 #include "SpellMgr.h"
-#include "sys/time.h"
 #include "CellImpl.h"    
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"
@@ -245,10 +244,9 @@ bool ChatHandler::HandleDebugMoveMapCommand(const char* args)
          // Do what You want with these creatures
         PSendSysMessage("Found %i Creatures.", creatureList.size());
         std::list<Creature*>::iterator aCreature = creatureList.begin();
-        struct timeval first,  second,  lapsed;
-        struct timezone tzp;
-        int pathes = 0;
-        gettimeofday (&first, &tzp);
+        uint32 pathes = 0;
+        uint32 uStartTime = getMSTime();
+
         float x,y,z;
         float gx,gy,gz;
         m_session->GetPlayer()->GetPosition(gx,gy,gz);
@@ -256,21 +254,19 @@ bool ChatHandler::HandleDebugMoveMapCommand(const char* args)
         while (aCreature != creatureList.end()) {
             (*aCreature)->GetPosition(x,y,z);
             theMap->getNextPositionOnPathToLocation(x,y,z,gx,gy,gz);
-            pathes++;
+            ++pathes;
             aCreature++;
         }
-        gettimeofday(&second, &tzp);
-        if (first.tv_usec > second.tv_usec) {
-            second.tv_usec += 1000000;
-            second.tv_sec--;
-        }
-        lapsed.tv_usec = second.tv_usec - first.tv_usec;
-        lapsed.tv_sec = second.tv_sec - first.tv_sec;
-        sLog.outDetail("Generated %i pathes in %i seconds %i µs", pathes,lapsed.tv_sec,lapsed.tv_usec);
-        PSendSysMessage("Generated %i pathes in %i seconds %i µs", pathes,lapsed.tv_sec,lapsed.tv_usec);
 
-    } else {
+        uint32 uPathLoadTime = getMSTimeDiff(uStartTime, getMSTime());
+        sLog.outDetail("Generated %i pathes in %i seconds %i ms", pathes,(uPathLoadTime % 60000) / 1000, uPathLoadTime);
+        PSendSysMessage("Generated %i pathes in %i seconds %i ms", pathes,(uPathLoadTime % 60000) / 1000, uPathLoadTime);
+        return true;
+    } 
+    else 
+    {
         SendSysMessage("No Creatures around player :(");
+        return false;
     }
 }
 bool ChatHandler::HandleDebugPlayCinematicCommand(const char* args)
