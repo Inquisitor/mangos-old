@@ -432,7 +432,6 @@ void GameObject::Update(uint32 p_time)
                 }
 
                 SetGoState(GO_STATE_READY);
-
                 //any return here in case battleground traps
             }
 
@@ -1117,8 +1116,12 @@ void GameObject::Use(Unit* user)
             if (uint32 trapEntry = info->goober.linkedTrapId)
                 TriggeringLinkedGameObject(trapEntry, user);
 
-            SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE);
-            SetLootState(GO_ACTIVATED);
+            // Not sure if its proper but fixes some disappearing portals etc
+            if(info->goober.autoCloseTime != 0)
+            {
+                SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE);
+                SetLootState(GO_ACTIVATED);
+            }
 
             uint32 time_to_restore = info->GetAutoCloseTime();
 
