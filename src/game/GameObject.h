@@ -604,6 +604,9 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         // overwrite WorldObject function for proper name localization
         const char* GetNameForLocaleIdx(int32 locale_idx) const;
 
+        // Event handler
+        EventProcessor m_ObjectEvents;
+
         void SaveToDB();
         void SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask);
         bool LoadFromDB(uint32 guid, Map *map);
@@ -649,7 +652,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         bool isSpawnedByDefault() const { return m_spawnedByDefault; }
         uint32 GetRespawnDelay() const { return m_respawnDelayTime; }
         void Refresh();
-        void Delete();
+        void Delete(uint32 timeMSToDeDelete = 0);
         void getFishLoot(Loot *loot, Player* loot_owner);
         GameobjectTypes GetGoType() const { return GameobjectTypes(GetByteValue(GAMEOBJECT_BYTES_1, 1)); }
         void SetGoType(GameobjectTypes type) { SetByteValue(GAMEOBJECT_BYTES_1, 1, type); }
@@ -731,4 +734,15 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         GridReference<GameObject> m_gridRef;
 };
+
+class ForcedDeleteDelayEvent : public BasicEvent
+{
+    public:
+        ForcedDeleteDelayEvent(GameObject& owner) : BasicEvent(), m_owner(owner) { }
+        bool Execute(uint64 e_time, uint32 p_time);
+
+    private:
+        GameObject& m_owner;
+};
+
 #endif
