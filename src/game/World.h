@@ -572,10 +572,11 @@ class World
         // callback for UpdateRealmCharacters
         void _UpdateRealmCharCount(QueryResult *resultCharCount, uint32 accountId);
 
+        // Daily initializers
         void InitDailyQuestResetTime();
         void ResetDailyQuests();
-        void SelectRandomBGDaily();
-        //void RandomDungeon();
+        void SelectRandomDailyQuest();
+
     private:
         void setConfig(eConfigUint32Values index, char const* fieldname, uint32 defvalue);
         void setConfig(eConfigInt32Values index, char const* fieldname, int32 defvalue);

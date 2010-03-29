@@ -2634,14 +2634,48 @@ enum BattleGroundTypeId
 };
 #define MAX_BATTLEGROUND_TYPE_ID 33
 
+
+// Daily Quests defines
+// Count of all possible events
+#define MAX_DAILY_EVENTS 20
+
+// Battleground dailies
 enum BattlegroundDailyEvent
 {
-    BG_DAILY_AV                = 50,
-    BG_DAILY_AB                = 51,
-    BG_DAILY_WSG               = 52,
-    BG_DAILY_EOTS              = 53,
+    BG_DAILY_AV                 = 50,
+    BG_DAILY_AB                 = 51,
+    BG_DAILY_WSG                = 52,
+    BG_DAILY_EOTS               = 53,
 };
-#define MAX_BG_DAILY_EVENT       4
+#define MAX_BG_DAILY_EVENT        4
+
+// Heroic dungeon dailies
+enum RandomDungeon
+{
+    DUNGEON_DAILY_INGVAR        = 54,
+    DUNGEON_DAILY_KERISTRASZA   = 55,
+    DUNGEON_DAILY_LEYGUARD      = 56,
+    DUNGEON_DAILY_KINGYMIRON    = 57,
+    DUNGEON_DAILY_THARONJA      = 58,
+    DUNGEON_DAILY_GALDRAH       = 59,
+    DUNGEON_DAILY_MALGANIS      = 60,
+    DUNGEON_DAILY_SJONNIR       = 61,
+    DUNGEON_DAILY_LOKEN         = 62,
+    DUNGEON_DAILY_ANUBARAK      = 63,
+    DUNGEON_DAILY_VOLAZJ        = 64,
+    DUNGEON_DAILY_CYANIGOSA     = 65,
+};
+#define MAX_DUNGEON_DAILY_EVENT   12
+
+// Heroic dungeon trash dailies
+enum RandomTimearForesees
+{
+    TF_DAILY_CENTRIFUGE         = 66,
+    TF_DAILY_YMIRON             = 67,
+    TF_DAILY_INFINITE           = 68,
+    TF_DAILY_TITANIUM           = 69,
+};
+#define MAX_TF_DAILY_EVENT        4
 
 enum MailResponseType
 {

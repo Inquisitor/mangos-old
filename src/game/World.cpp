@@ -1354,7 +1354,7 @@ void World::Update(uint32 diff)
     if(m_gameTime > m_NextDailyQuestReset)
     {
         ResetDailyQuests();
-        SelectRandomBGDaily();
+        SelectRandomDailyQuest();
         m_NextDailyQuestReset += DAY;
     }
 
@@ -1947,18 +1947,29 @@ void World::ResetDailyQuests()
             itr->second->GetPlayer()->ResetDailyQuestStatus();
 }
 
-void World::SelectRandomBGDaily()
+void World::SelectRandomDailyQuest()
 {
     //Delay all events
-    for(uint8 eventId = 0; eventId < MAX_BG_DAILY_EVENT; ++eventId)
+    for(uint8 eventId = 0; eventId < MAX_DAILY_EVENTS; ++eventId)
     {
         sGameEventMgr.StopEvent(BG_DAILY_AV+eventId);
         WorldDatabase.PExecute("UPDATE game_event SET occurence = 5184000 WHERE entry = %u", BG_DAILY_AV+eventId);
     }
-    //Start new event  
-    uint8 random = urand(0,3);
-    sGameEventMgr.StartEvent(BG_DAILY_AV+random);
-    WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", BG_DAILY_AV+random);
+
+    //Start new event for Battleground dailies
+    uint8 BGRandom = urand(0, MAX_BG_DAILY_EVENT-1);
+    sGameEventMgr.StartEvent(BG_DAILY_AV+BGRandom);
+    WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", BG_DAILY_AV+BGRandom);
+
+    //Start new event for Heroic dungeon dailies
+    uint8 DHeroicRand = urand(0, MAX_DUNGEON_DAILY_EVENT-1);
+    sGameEventMgr.StartEvent(DUNGEON_DAILY_INGVAR+DHeroicRand);
+    WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", BG_DAILY_AV+DHeroicRand);
+
+    //Start new event for Heroic dungeon trash dailies
+    uint8 DTrashRand = urand(0, MAX_TF_DAILY_EVENT-1);
+    sGameEventMgr.StartEvent(TF_DAILY_CENTRIFUGE+DTrashRand);
+    WorldDatabase.PExecute("UPDATE game_event SET occurence = 1400 WHERE entry = %u", BG_DAILY_AV+DTrashRand);
 }
 
 void World::SetPlayerLimit( int32 limit, bool needUpdate )
