@@ -460,7 +460,7 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
             m_creature->PlayDirectSound(action.sound.soundId);
             break;
         case ACTION_T_EMOTE:
-            m_creature->HandleEmoteCommand(action.emote.emoteId);
+            m_creature->HandleEmote(action.emote.emoteId);
             break;
         case ACTION_T_RANDOM_SOUND:
         {
@@ -473,7 +473,7 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
         {
             int32 temp = GetRandActionParam(rnd, action.random_emote.emoteId1, action.random_emote.emoteId2, action.random_emote.emoteId3);
             if (temp >= 0)
-                m_creature->HandleEmoteCommand(temp);
+                m_creature->HandleEmote(temp);
             break;
         }
         case ACTION_T_CAST:
@@ -578,7 +578,7 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
         case ACTION_T_CAST_EVENT:
             if (Unit* target = GetTargetByType(action.cast_event.target, pActionInvoker))
                 if (target->GetTypeId() == TYPEID_PLAYER)
-                    ((Player*)target)->CastedCreatureOrGO(action.cast_event.creatureId, m_creature->GetGUID(), action.cast_event.spellId);
+                    ((Player*)target)->CastedCreatureOrGO(action.cast_event.creatureId, m_creature->GetObjectGuid(), action.cast_event.spellId);
             break;
         case ACTION_T_SET_UNIT_FIELD:
         {
@@ -679,7 +679,7 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
             for (ThreatList::const_iterator i = threatList.begin(); i != threatList.end(); ++i)
                 if (Unit* Temp = Unit::GetUnit(*m_creature,(*i)->getUnitGuid()))
                     if (Temp->GetTypeId() == TYPEID_PLAYER)
-                        ((Player*)Temp)->CastedCreatureOrGO(action.cast_event_all.creatureId, m_creature->GetGUID(), action.cast_event_all.spellId);
+                        ((Player*)Temp)->CastedCreatureOrGO(action.cast_event_all.creatureId, m_creature->GetObjectGuid(), action.cast_event_all.spellId);
             break;
         }
         case ACTION_T_REMOVEAURASFROMSPELL:
@@ -840,7 +840,7 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
                 return;
             }
 
-            pGameObj->SetRespawnTime(action.summon_gobject.duration > 0 ? action.summon_gobject.duration/IN_MILISECONDS : 0);
+            pGameObj->SetRespawnTime(action.summon_gobject.duration > 0 ? action.summon_gobject.duration/IN_MILLISECONDS : 0);
             target->GetMap()->Add(pGameObj);
             target->AddGameObject(pGameObj);
 
@@ -945,6 +945,13 @@ void CreatureEventAI::EnterEvadeMode()
 void CreatureEventAI::JustDied(Unit* killer)
 {
     Reset();
+
+    if (m_creature->isGuard())
+    {
+        //Send Zone Under Attack message to the LocalDefense and WorldDefense Channels
+        if (Player* pKiller = killer->GetCharmerOrOwnerPlayerOrPlayerItself())
+            m_creature->SendZoneUnderAttackMessage(pKiller);
+    }
 
     if (bEmptyList)
         return;
@@ -1093,7 +1100,7 @@ void CreatureEventAI::MoveInLineOfSight(Unit *who)
     if (m_creature->isCivilian() || m_creature->IsNeutralToAll())
         return;
 
-    if (!m_creature->hasUnitState(UNIT_STAT_STUNNED | UNIT_STAT_DIED) && who->isTargetableForAttack() &&
+    if (m_creature->CanInitiateAttack() && who->isTargetableForAttack() &&
         m_creature->IsHostileTo(who) && who->isInAccessablePlaceFor(m_creature))
     {
         if (!m_creature->canFly() && m_creature->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
@@ -1378,7 +1385,7 @@ void CreatureEventAI::DoScriptText(int32 textEntry, WorldObject* pSource, Unit* 
     {
         if (pSource->GetTypeId() == TYPEID_UNIT || pSource->GetTypeId() == TYPEID_PLAYER)
         {
-            ((Unit*)pSource)->HandleEmoteCommand((*i).second.Emote);
+            ((Unit*)pSource)->HandleEmote((*i).second.Emote);
         }
         else
             sLog.outErrorDb("CreatureEventAI: DoScriptText entry %i tried to process emote for invalid TypeId (%u).",textEntry,pSource->GetTypeId());

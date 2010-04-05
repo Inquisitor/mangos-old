@@ -19,14 +19,14 @@
 #ifndef MANGOSSERVER_VEHICLE_H
 #define MANGOSSERVER_VEHICLE_H
 
-#include "ObjectDefines.h"
+#include "ObjectGuid.h"
 #include "Creature.h"
 #include "Unit.h"
 #include "ObjectMgr.h"
 
 struct VehicleSeat
 {
-    //VehicleSeatEntry const *seatInfo;
+    VehicleSeatEntry const *seatInfo;
     Unit* passenger;
     uint8 flags;
     uint32 vs_flags;
@@ -79,6 +79,8 @@ class MANGOS_DLL_SPEC Vehicle : public Creature
         int8 GetEmptySeatsCount(bool force = true);
         void EmptySeatsCountChanged();
         int8 GetTotalSeatsCount() { return m_Seats.size(); }
+        bool HasEmptySeat(int8 seatId) const;
+        int8 GetNextEmptySeatNum(int8 seatId, bool next) const;
         uint8 m_comboPointsForCast;
 
         void Dismiss();
@@ -113,11 +115,11 @@ class MANGOS_DLL_SPEC Vehicle : public Creature
     private:
         void SaveToDB(uint32, uint8)                        // overwrited of Creature::SaveToDB     - don't must be called
         {
-            assert(false);
+            ASSERT(false);
         }
         void DeleteFromDB()                                 // overwrited of Creature::DeleteFromDB - don't must be called
         {
-            assert(false);
+            ASSERT(false);
         }
 };
 #endif

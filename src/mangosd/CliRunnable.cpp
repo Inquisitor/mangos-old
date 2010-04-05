@@ -36,7 +36,7 @@
 #include "Chat.h"
 #include "WorldPacket.h"
 
-void utf8print(const char* str)
+void utf8print(void* arg, const char* str)
 {
 #if PLATFORM == PLATFORM_WINDOWS
     wchar_t wtemp_buf[6000];
@@ -50,6 +50,12 @@ void utf8print(const char* str)
 #else
     printf("%s", str);
 #endif
+}
+
+void commandFinished(void*, bool sucess)
+{
+    printf("mangos>");
+    fflush(stdout);
 }
 
 /// Delete a user account and all associated characters in this realm
@@ -408,7 +414,7 @@ void CliRunnable::run()
                 continue;
             }
 
-            sWorld.QueueCliCommand(&utf8print,command.c_str());
+            sWorld.QueueCliCommand(new CliCommandHolder(0, SEC_CONSOLE, NULL, command.c_str(), &utf8print, &commandFinished));
         }
         else if (feof(stdin))
         {

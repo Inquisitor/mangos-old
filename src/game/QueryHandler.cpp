@@ -26,7 +26,7 @@
 #include "Log.h"
 #include "World.h"
 #include "ObjectMgr.h"
-#include "ObjectDefines.h"
+#include "ObjectGuid.h"
 #include "Player.h"
 #include "UpdateMask.h"
 #include "NPCHandler.h"
@@ -39,7 +39,7 @@ void WorldSession::SendNameQueryOpcode(Player *p)
         return;
                                                             // guess size
     WorldPacket data( SMSG_NAME_QUERY_RESPONSE, (8+1+1+1+1+1+10) );
-    data.append(p->GetPackGUID());                          // player guid
+    data << p->GetPackGUID();                               // player guid
     data << uint8(0);                                       // added in 3.1; if > 1, then end of packet
     data << p->GetName();                                   // played name
     data << uint8(0);                                       // realm name for cross realm BG usage
@@ -458,7 +458,7 @@ void WorldSession::HandleCorpseMapPositionQuery( WorldPacket & recv_data )
     uint32 unk;
     recv_data >> unk;
 
-    WorldPacket data(CMSG_CORPSE_MAP_POSITION_QUERY_RESPONSE, 4+4+4+4);
+    WorldPacket data(SMSG_CORPSE_MAP_POSITION_QUERY_RESPONSE, 4+4+4+4);
     data << float(0);
     data << float(0);
     data << float(0);
@@ -523,12 +523,12 @@ void WorldSession::HandleQuestPOIQuery(WorldPacket& recv_data)
                 for(QuestPOIVector::const_iterator itr = POI->begin(); itr != POI->end(); ++itr)
                 {
                     data << uint32(itr->PoiId);             // POI index
-                    data << int32(itr->ObjectiveIndex);     // Objective index
-                    data << uint32(itr->MapId);             // Mapid
-                    data << uint32(itr->AreaId);            // WorldMapArea index
-                    data << uint32(itr->FloorId);           // Floorid
-                    data << uint32(itr->Unk3);              // Unknown
-                    data << uint32(itr->Unk4);              // Unknown
+                    data << int32(itr->ObjectiveIndex);     // objective index
+                    data << uint32(itr->MapId);             // mapid
+                    data << uint32(itr->MapAreaId);         // world map area id
+                    data << uint32(itr->FloorId);           // floor id
+                    data << uint32(itr->Unk3);              // unknown
+                    data << uint32(itr->Unk4);              // unknown
                     data << uint32(itr->points.size());     // POI points count
 
                     for(std::vector<QuestPOIPoint>::const_iterator itr2 = itr->points.begin(); itr2 != itr->points.end(); ++itr2)

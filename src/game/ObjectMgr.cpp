@@ -25,7 +25,7 @@
 #include "Log.h"
 #include "MapManager.h"
 #include "ObjectMgr.h"
-#include "ObjectDefines.h"
+#include "ObjectGuid.h"
 #include "SpellMgr.h"
 #include "UpdateMask.h"
 #include "World.h"
@@ -45,6 +45,9 @@
 #include "WaypointManager.h"
 #include "GossipDef.h"
 #include "InstanceData.h"
+#include "Mail.h"
+
+#include <limits>
 
 INSTANTIATE_SINGLETON_1(ObjectMgr);
 
@@ -129,23 +132,30 @@ bool SpellClickInfo::IsFitToRequirements(Player const* player) const
     return true;
 }
 
-ObjectMgr::ObjectMgr()
+template<typename T>
+T IdGenerator<T>::Generate()
 {
-    m_hiCharGuid        = 1;
-    m_hiCreatureGuid    = 1;
-    m_hiItemGuid        = 1;
-    m_hiGoGuid          = 1;
-    m_hiCorpseGuid      = 1;
-    m_hiVehicleGuid     = 1;
-    m_hiPetNumber       = 1;
-    m_ItemTextId        = 1;
-    m_mailid            = 1;
-    m_equipmentSetGuid  = 1;
-    m_guildId           = 1;
-    m_arenaTeamId       = 1;
-    m_auctionid         = 1;
-    m_groupId           = 1;
+    if (m_nextGuid >= std::numeric_limits<T>::max()-1)
+    {
+        sLog.outError("%s guid overflow!! Can't continue, shutting down server. ",m_name);
+        World::StopNow(ERROR_EXIT_CODE);
+    }
+    return m_nextGuid++;
+}
 
+template uint32 IdGenerator<uint32>::Generate();
+template uint64 IdGenerator<uint64>::Generate();
+
+ObjectMgr::ObjectMgr() :
+    m_ArenaTeamIds("Arena team ids"),
+    m_AuctionIds("Auction ids"),
+    m_EquipmentSetIds("Equipment set ids"),
+    m_GuildIds("Guild ids"),
+    m_ItemTextIds("Item text ids"),
+    m_MailIds("Mail ids"),
+    m_PetNumbers("Pet numbers"),
+    m_GroupIds("Group ids")
+{
     // Only zero condition left, others will be added while loading DB tables
     mConditions.resize(1);
 }
@@ -932,7 +942,10 @@ void ObjectMgr::LoadCreatureAddons(SQLStorage& creatureaddons, char const* entry
         }
 
         if (!sEmotesStore.LookupEntry(addon->emote))
+        {
             sLog.outErrorDb("Creature (%s %u) have invalid emote (%u) defined in `%s`.", entryName, addon->guidOrEntry, addon->emote, creatureaddons.GetTableName());
+            const_cast<CreatureDataAddon*>(addon)->emote = 0;
+        }
 
         if (addon->splineFlags & (SPLINEFLAG_TRAJECTORY|SPLINEFLAG_UNKNOWN3))
         {
@@ -2250,6 +2263,40 @@ void ObjectMgr::LoadItemPrototypes()
             sLog.outErrorDb("Item (Entry: %u) has wrong HolidayId value (%u)", i, proto->HolidayId);
             const_cast<ItemPrototype*>(proto)->HolidayId = 0;
         }
+
+        if(proto->ExtraFlags)
+        {
+            if (proto->ExtraFlags & ~ITEM_EXTRA_ALL)
+                sLog.outErrorDb("Item (Entry: %u) has wrong ExtraFlags (%u) with unused bits set",i,proto->ExtraFlags);
+
+            if (proto->ExtraFlags & ITEM_EXTRA_NON_CONSUMABLE)
+            {
+                bool can_be_need = false;
+                for (int j = 0; j < MAX_ITEM_PROTO_SPELLS; ++j)
+                {
+                    if(proto->Spells[j].SpellCharges < 0)
+                    {
+                        can_be_need = true;
+                        break;
+                    }
+                }
+
+                if (!can_be_need)
+                {
+                    sLog.outErrorDb("Item (Entry: %u) has redundant non-consumable flag in ExtraFlags, item not have negative charges", i);
+                    const_cast<ItemPrototype*>(proto)->ExtraFlags &= ~ITEM_EXTRA_NON_CONSUMABLE;
+                }
+            }
+
+            if (proto->ExtraFlags & ITEM_EXTRA_REAL_TIME_DURATION)
+            {
+                if (proto->Duration == 0)
+                {
+                    sLog.outErrorDb("Item (Entry: %u) has redundant real-time duration flag in ExtraFlags, item not have duration", i);
+                    const_cast<ItemPrototype*>(proto)->ExtraFlags &= ~ITEM_EXTRA_REAL_TIME_DURATION;
+                }
+            }
+        }
     }
 
     // check some dbc referenced items (avoid duplicate reports)
@@ -2523,7 +2570,7 @@ void ObjectMgr::LoadPlayerInfo()
             uint32 current_race = fields[0].GetUInt32();
             uint32 current_class = fields[1].GetUInt32();
             uint32 mapId     = fields[2].GetUInt32();
-            uint32 zoneId    = fields[3].GetUInt32();
+            uint32 areaId    = fields[3].GetUInt32();
             float  positionX = fields[4].GetFloat();
             float  positionY = fields[5].GetFloat();
             float  positionZ = fields[6].GetFloat();
@@ -2569,7 +2616,7 @@ void ObjectMgr::LoadPlayerInfo()
             PlayerInfo* pInfo = &playerInfo[current_race][current_class];
 
             pInfo->mapId     = mapId;
-            pInfo->zoneId    = zoneId;
+            pInfo->areaId    = areaId;
             pInfo->positionX = positionX;
             pInfo->positionY = positionY;
             pInfo->positionZ = positionZ;
@@ -3235,8 +3282,8 @@ void ObjectMgr::LoadGuilds()
 
     //delete unused LogGuid records in guild_eventlog and guild_bank_eventlog table
     //you can comment these lines if you don't plan to change CONFIG_UINT32_GUILD_EVENT_LOG_COUNT and CONFIG_UINT32_GUILD_BANK_EVENT_LOG_COUNT
-    CharacterDatabase.PQuery("DELETE FROM guild_eventlog WHERE LogGuid > '%u'", sWorld.getConfig(CONFIG_UINT32_GUILD_EVENT_LOG_COUNT));
-    CharacterDatabase.PQuery("DELETE FROM guild_bank_eventlog WHERE LogGuid > '%u'", sWorld.getConfig(CONFIG_UINT32_GUILD_BANK_EVENT_LOG_COUNT));
+    CharacterDatabase.PExecute("DELETE FROM guild_eventlog WHERE LogGuid > '%u'", sWorld.getConfig(CONFIG_UINT32_GUILD_EVENT_LOG_COUNT));
+    CharacterDatabase.PExecute("DELETE FROM guild_bank_eventlog WHERE LogGuid > '%u'", sWorld.getConfig(CONFIG_UINT32_GUILD_BANK_EVENT_LOG_COUNT));
 
     sLog.outString();
     sLog.outString( ">> Loaded %u guild definitions", count );
@@ -4560,6 +4607,27 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
                     sLog.outErrorDb("Table `%s` has invalid gameobject (Entry: %u) in SCRIPT_COMMAND_TEMP_SUMMON_OBJECT for script id %u",tablename,tmp.datalong,tmp.id);
                     continue;
                 }
+                break;
+            }
+            case SCRIPT_COMMAND_CREATE_ITEM:
+            {
+                if (!GetItemPrototype(tmp.datalong))
+                {
+                    sLog.outErrorDb("Table `%s` has nonexistent item (entry: %u) in SCRIPT_COMMAND_CREATE_ITEM for script id %u",
+                        tablename, tmp.datalong, tmp.id);
+                    continue;
+                }
+                if (!tmp.datalong2)
+                {
+                    sLog.outErrorDb("Table `%s` SCRIPT_COMMAND_CREATE_ITEM but amount is %u for script id %u",
+                        tablename, tmp.datalong2, tmp.id);
+                    continue;
+                }
+                break;
+            }
+            case SCRIPT_COMMAND_DESPAWN_SELF:
+            {
+                // for later, we might consider despawn by database guid, and define in datalong2 as option to despawn self.
                 break;
             }
         }
@@ -5907,7 +5975,7 @@ void ObjectMgr::PackGroupIds()
         bar.step();
     }
 
-    m_groupId = groupId;
+    m_GroupIds.Set(groupId);
 
     sLog.outString( ">> Group Ids remapped, next group id is %u", groupId );
     sLog.outString();
@@ -5918,139 +5986,93 @@ void ObjectMgr::SetHighestGuids()
     QueryResult *result = CharacterDatabase.Query( "SELECT MAX(guid) FROM characters" );
     if( result )
     {
-        m_hiCharGuid = (*result)[0].GetUInt32()+1;
+        m_CharGuids.Set((*result)[0].GetUInt32()+1);
         delete result;
     }
 
     result = WorldDatabase.Query( "SELECT MAX(guid) FROM creature" );
     if( result )
     {
-        m_hiCreatureGuid = (*result)[0].GetUInt32()+1;
-        m_hiVehicleGuid = m_hiCreatureGuid;
+        m_CreatureGuids.Set((*result)[0].GetUInt32()+1);
+        m_VehicleGuids.Set((*result)[0].GetUInt32()+1);
         delete result;
     }
 
     result = CharacterDatabase.Query( "SELECT MAX(guid) FROM item_instance" );
     if( result )
     {
-        m_hiItemGuid = (*result)[0].GetUInt32()+1;
+        m_ItemGuids.Set((*result)[0].GetUInt32()+1);
         delete result;
     }
 
     // Cleanup other tables from not existed guids (>=m_hiItemGuid)
-    CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item >= '%u'", m_hiItemGuid);
-    CharacterDatabase.PExecute("DELETE FROM mail_items WHERE item_guid >= '%u'", m_hiItemGuid);
-    CharacterDatabase.PExecute("DELETE FROM auctionhouse WHERE itemguid >= '%u'", m_hiItemGuid);
-    CharacterDatabase.PExecute("DELETE FROM guild_bank_item WHERE item_guid >= '%u'", m_hiItemGuid);
+    CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item >= '%u'", m_ItemGuids.GetNextAfterMaxUsed());
+    CharacterDatabase.PExecute("DELETE FROM mail_items WHERE item_guid >= '%u'", m_ItemGuids.GetNextAfterMaxUsed());
+    CharacterDatabase.PExecute("DELETE FROM auctionhouse WHERE itemguid >= '%u'", m_ItemGuids.GetNextAfterMaxUsed());
+    CharacterDatabase.PExecute("DELETE FROM guild_bank_item WHERE item_guid >= '%u'", m_ItemGuids.GetNextAfterMaxUsed());
 
     result = WorldDatabase.Query("SELECT MAX(guid) FROM gameobject" );
     if( result )
     {
-        m_hiGoGuid = (*result)[0].GetUInt32()+1;
+        m_GameobjectGuids.Set((*result)[0].GetUInt32()+1);
         delete result;
     }
 
     result = CharacterDatabase.Query("SELECT MAX(id) FROM auctionhouse" );
     if( result )
     {
-        m_auctionid = (*result)[0].GetUInt32()+1;
+        m_AuctionIds.Set((*result)[0].GetUInt32()+1);
         delete result;
     }
 
     result = CharacterDatabase.Query( "SELECT MAX(id) FROM mail" );
     if( result )
     {
-        m_mailid = (*result)[0].GetUInt32()+1;
+        m_MailIds.Set((*result)[0].GetUInt32()+1);
         delete result;
     }
 
     result = CharacterDatabase.Query( "SELECT MAX(id) FROM item_text" );
     if( result )
     {
-        m_ItemTextId = (*result)[0].GetUInt32()+1;
+        m_ItemTextIds.Set((*result)[0].GetUInt32()+1);
         delete result;
     }
 
     result = CharacterDatabase.Query( "SELECT MAX(guid) FROM corpse" );
     if( result )
     {
-        m_hiCorpseGuid = (*result)[0].GetUInt32()+1;
+        m_CorpseGuids.Set((*result)[0].GetUInt32()+1);
         delete result;
     }
 
     result = CharacterDatabase.Query("SELECT MAX(arenateamid) FROM arena_team");
     if (result)
     {
-        m_arenaTeamId = (*result)[0].GetUInt32()+1;
+        m_ArenaTeamIds.Set((*result)[0].GetUInt32()+1);
         delete result;
     }
 
     result = CharacterDatabase.Query("SELECT MAX(setguid) FROM character_equipmentsets");
     if (result)
     {
-        m_equipmentSetGuid = (*result)[0].GetUInt64()+1;
+        m_EquipmentSetIds.Set((*result)[0].GetUInt64()+1);
         delete result;
     }
 
     result = CharacterDatabase.Query( "SELECT MAX(guildid) FROM guild" );
     if (result)
     {
-        m_guildId = (*result)[0].GetUInt32()+1;
+        m_GuildIds.Set((*result)[0].GetUInt32()+1);
         delete result;
     }
 
     result = CharacterDatabase.Query( "SELECT MAX(groupId) FROM groups" );
     if (result)
     {
-        m_groupId = (*result)[0].GetUInt32()+1;
+        m_GroupIds.Set((*result)[0].GetUInt32()+1);
         delete result;
     }
-}
-
-uint32 ObjectMgr::GenerateArenaTeamId()
-{
-    ASSERT(m_arenaTeamId<0xFFFFFFFE);
-    return m_arenaTeamId++;
-}
-
-uint32 ObjectMgr::GenerateAuctionID()
-{
-    ASSERT(m_auctionid<0xFFFFFFFE);
-    return m_auctionid++;
-}
-
-uint64 ObjectMgr::GenerateEquipmentSetGuid()
-{
-    ASSERT(m_equipmentSetGuid<0xFFFFFFFFFFFFFFFEll);
-    return m_equipmentSetGuid++;
-}
-
-uint32 ObjectMgr::GenerateGuildId()
-{
-    ASSERT(m_guildId<0xFFFFFFFE);
-    return m_guildId++;
-}
-
-uint32 ObjectMgr::GenerateGroupId()
-{
-    if(m_groupId>=0xFFFFFFFE)
-    {
-        sLog.outError("Group ids overflow!! Can't continue, shutting down server. ");
-        World::StopNow(ERROR_EXIT_CODE);
-    }
-    return m_groupId++;
-}
-
-uint32 ObjectMgr::GenerateMailID()
-{
-    ASSERT(m_mailid<0xFFFFFFFE)
-    return m_mailid++;
-}
-
-uint32 ObjectMgr::GenerateItemTextID()
-{
-    ASSERT(m_ItemTextId<0xFFFFFFFE);
-    return m_ItemTextId++;
 }
 
 uint32 ObjectMgr::CreateItemText(std::string text)
@@ -6072,23 +6094,15 @@ uint32 ObjectMgr::GenerateLowGuid(HighGuid guidhigh)
     switch(guidhigh)
     {
         case HIGHGUID_ITEM:
-            ASSERT(m_hiItemGuid<0xFFFFFFFE);
-            return m_hiItemGuid++;
+            return m_ItemGuids.Generate();
         case HIGHGUID_UNIT:
-            ASSERT(m_hiCreatureGuid<0x00FFFFFE);
-            return m_hiCreatureGuid++;
+            return m_CreatureGuids.Generate();
         case HIGHGUID_PLAYER:
-            ASSERT(m_hiCharGuid<0xFFFFFFFE);
-            return m_hiCharGuid++;
+            return m_CharGuids.Generate();
         case HIGHGUID_GAMEOBJECT:
-            ASSERT(m_hiGoGuid<0x00FFFFFE);
-            return m_hiGoGuid++;
+            return m_GameobjectGuids.Generate();
         case HIGHGUID_CORPSE:
-            ASSERT(m_hiCorpseGuid<0xFFFFFFFE);
-            return m_hiCorpseGuid++;
-        case HIGHGUID_VEHICLE:
-            ASSERT(m_hiVehicleGuid<0xFFFFFFFE);
-            return m_hiVehicleGuid++;
+            return m_CorpseGuids.Generate();
         default:
             ASSERT(0);
     }
@@ -6500,7 +6514,7 @@ void ObjectMgr::LoadPetNumber()
     if(result)
     {
         Field *fields = result->Fetch();
-        m_hiPetNumber = fields[0].GetUInt32()+1;
+        m_PetNumbers.Set(fields[0].GetUInt32()+1);
         delete result;
     }
 
@@ -6508,7 +6522,7 @@ void ObjectMgr::LoadPetNumber()
     bar.step();
 
     sLog.outString();
-    sLog.outString( ">> Loaded the max pet number: %d", m_hiPetNumber-1);
+    sLog.outString( ">> Loaded the max pet number: %d", m_PetNumbers.GetNextAfterMaxUsed()-1);
 }
 
 std::string ObjectMgr::GeneratePetName(uint32 entry)
@@ -6528,16 +6542,15 @@ std::string ObjectMgr::GeneratePetName(uint32 entry)
     return *(list0.begin()+urand(0, list0.size()-1)) + *(list1.begin()+urand(0, list1.size()-1));
 }
 
-uint32 ObjectMgr::GeneratePetNumber()
-{
-    return ++m_hiPetNumber;
-}
-
 void ObjectMgr::LoadCorpses()
 {
     uint32 count = 0;
-    //                                                     0           1           2           3            4    5     6     7            8         10
-    QueryResult *result = CharacterDatabase.Query("SELECT position_x, position_y, position_z, orientation, map, data, time, corpse_type, instance, guid FROM corpse WHERE corpse_type <> 0");
+    //                                                    0            1       2                  3                  4                  5                   6
+    QueryResult *result = CharacterDatabase.Query("SELECT corpse.guid, player, corpse.position_x, corpse.position_y, corpse.position_z, corpse.orientation, corpse.map, "
+    //   7     8            9         10         11      12    13     14           15            16              17       18
+        "time, corpse_type, instance, phaseMask, gender, race, class, playerBytes, playerBytes2, equipmentCache, guildId, playerFlags FROM corpse "
+        "JOIN characters ON player = characters.guid "
+        "LEFT JOIN guild_member ON player=guild_member.guid WHERE corpse_type <> 0");
 
     if( !result )
     {
@@ -6558,7 +6571,7 @@ void ObjectMgr::LoadCorpses()
 
         Field *fields = result->Fetch();
 
-        uint32 guid = fields[result->GetFieldCount()-1].GetUInt32();
+        uint32 guid = fields[0].GetUInt32();
 
         Corpse *corpse = new Corpse;
         if(!corpse->LoadFromDB(guid,fields))
@@ -6716,8 +6729,8 @@ void ObjectMgr::LoadQuestPOI()
 
     uint32 count = 0;
 
-    //                                                  0        1        2      3       4        5      6      7
-    QueryResult *result = WorldDatabase.Query("SELECT questId, poiId, objIndex, mapId, areaId, floorId, unk3, unk4 FROM quest_poi");
+    //                                                0        1      2         3      4          5        6     7
+    QueryResult *result = WorldDatabase.Query("SELECT questId, poiId, objIndex, mapId, mapAreaId, floorId, unk3, unk4 FROM quest_poi");
 
     if(!result)
     {
@@ -6737,32 +6750,16 @@ void ObjectMgr::LoadQuestPOI()
         Field *fields = result->Fetch();
         bar.step();
 
-        uint32 questId  = fields[0].GetUInt32();
-        uint32 poiId    = fields[1].GetUInt32();
-        int32 objIndex  = fields[2].GetInt32();
-        uint32 mapId    = fields[3].GetUInt32();
-        uint32 areaId   = fields[4].GetUInt32();
-        uint32 floorId  = fields[5].GetUInt32();
-        uint32 unk3     = fields[6].GetUInt32();
-        uint32 unk4     = fields[7].GetUInt32();
+        uint32 questId          = fields[0].GetUInt32();
+        uint32 poiId            = fields[1].GetUInt32();
+        int32  objIndex         = fields[2].GetInt32();
+        uint32 mapId            = fields[3].GetUInt32();
+        uint32 mapAreaId        = fields[4].GetUInt32();
+        uint32 floorId          = fields[5].GetUInt32();
+        uint32 unk3             = fields[6].GetUInt32();
+        uint32 unk4             = fields[7].GetUInt32();
 
-        QuestPOI POI(poiId, objIndex, mapId, areaId, floorId, unk3, unk4);
-
-        QueryResult *points = WorldDatabase.PQuery("SELECT x, y FROM quest_poi_points WHERE questId='%u' AND poiId='%i'", questId, poiId);
-
-        if(points)
-        {
-            do 
-            {
-                Field *pointFields = points->Fetch();
-                int32 x = pointFields[0].GetInt32();
-                int32 y = pointFields[1].GetInt32();
-                QuestPOIPoint point(x, y);
-                POI.points.push_back(point);
-            } while (points->NextRow());
-
-            delete points;
-        }
+        QuestPOI POI(poiId, objIndex, mapId, mapAreaId, floorId, unk3, unk4);
 
         mQuestPOIMap[questId].push_back(POI);
 
@@ -6770,6 +6767,35 @@ void ObjectMgr::LoadQuestPOI()
     } while (result->NextRow());
 
     delete result;
+
+    QueryResult *points = WorldDatabase.Query("SELECT questId, poiId, x, y FROM quest_poi_points");
+
+    if (points)
+    {
+        do
+        {
+            Field *pointFields  = points->Fetch();
+
+            uint32 questId      = pointFields[0].GetUInt32();
+            uint32 poiId        = pointFields[1].GetUInt32();
+            int32  x            = pointFields[2].GetInt32();
+            int32  y            = pointFields[3].GetInt32();
+
+            QuestPOIVector& vect = mQuestPOIMap[questId];
+
+            for(QuestPOIVector::iterator itr = vect.begin(); itr != vect.end(); ++itr)
+            {
+                if (itr->PoiId != poiId)
+                    continue;
+
+                QuestPOIPoint point(x, y);
+                itr->points.push_back(point);
+                break;
+            }
+        } while (points->NextRow());
+
+        delete points;
+    }
 
     sLog.outString();
     sLog.outString(">> Loaded %u quest POI definitions", count);
@@ -7721,6 +7747,8 @@ bool PlayerCondition::Meets(Player const * player) const
             Map * map = player->GetMap();
             return ((InstanceMap*)map)->GetInstanceData() ? (((InstanceMap*)map)->GetInstanceData()->GetData(value1) == value2) : false;
         }
+        case CONDITION_NOITEM:
+            return !player->HasItemCount(value1, value2);
         default:
             return false;
     }
@@ -7752,11 +7780,18 @@ bool PlayerCondition::IsValid(ConditionType condition, uint32 value1, uint32 val
             break;
         }
         case CONDITION_ITEM:
+        case CONDITION_NOITEM:
         {
             ItemPrototype const *proto = ObjectMgr::GetItemPrototype(value1);
             if(!proto)
             {
                 sLog.outErrorDb("Item condition requires to have non existing item (%u), skipped", value1);
+                return false;
+            }
+
+            if(value2 < 1)
+            {
+                sLog.outErrorDb("Item condition useless with count < 1, skipped");
                 return false;
             }
             break;

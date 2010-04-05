@@ -418,7 +418,7 @@ void WorldSession::HandleItemQuerySingleOpcode( WorldPacket & recv_data )
         data << pProto->GemProperties;
         data << pProto->RequiredDisenchantSkill;
         data << pProto->ArmorDamageModifier;
-        data << abs(pProto->Duration);                      // added in 2.4.2.8209, duration (seconds)
+        data << pProto->Duration;                           // added in 2.4.2.8209, duration (seconds)
         data << pProto->ItemLimitCategory;                  // WotLK, ItemLimitCategory
         data << pProto->HolidayId;                          // Holiday.dbc?
         SendPacket( &data );
@@ -470,12 +470,11 @@ void WorldSession::HandlePageQuerySkippedOpcode( WorldPacket & recv_data )
     sLog.outDebug( "WORLD: Received CMSG_PAGE_TEXT_QUERY" );
 
     uint32 itemid;
-    uint64 guid;
+    ObjectGuid guid;
 
     recv_data >> itemid >> guid;
 
-    sLog.outDetail( "Packet Info: itemid: %u guidlow: %u guidentry: %u guidhigh: %u",
-        itemid, GUID_LOPART(guid), GUID_ENPART(guid), GUID_HIPART(guid));
+    sLog.outDetail( "Packet Info: itemid: %u guid: %s", itemid, guid.GetString().c_str());
 }
 
 void WorldSession::HandleSellItemOpcode( WorldPacket & recv_data )
@@ -1230,6 +1229,8 @@ void WorldSession::HandleSocketOpcode(WorldPacket& recv_data)
         {
             if(ItemLimitCategoryEntry const* limitEntry = sItemLimitCategoryStore.LookupEntry(iGemProto->ItemLimitCategory))
             {
+                // NOTE: limitEntry->mode not checked because if item have have-limit then it applied and to equip case
+
                 for (int j = 0; j < MAX_GEM_SOCKETS; ++j)
                 {
                     if (Gems[j])

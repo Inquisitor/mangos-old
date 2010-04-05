@@ -71,7 +71,11 @@ bool PointMovementGenerator<T>::Update(T &unit, const uint32 &diff)
 
     unit.addUnitState(UNIT_STAT_ROAMING_MOVE);
     Traveller<T> traveller(unit);
-    i_destinationHolder.UpdateTraveller(traveller, diff, false);
+    if (i_destinationHolder.UpdateTraveller(traveller, diff, false))
+    {
+        if (!IsActive(unit))                                // force stop processing (movement can move out active zone with cleanup movegens list)
+            return true;                                    // not expire now, but already lost
+    }
 
     if(i_destinationHolder.HasArrived())
     {
@@ -97,8 +101,8 @@ void PointMovementGenerator<Creature>::MovementInform(Creature &unit)
     if (unit.isTemporarySummon())
     {
         TemporarySummon* pSummon = (TemporarySummon*)(&unit);
-        if (IS_CREATURE_GUID(pSummon->GetSummonerGUID()))
-            if(Creature* pSummoner = unit.GetMap()->GetCreature(pSummon->GetSummonerGUID()))
+        if (pSummon->GetSummonerGuid().IsCreature())
+            if(Creature* pSummoner = unit.GetMap()->GetCreature(pSummon->GetSummonerGuid()))
                 if (pSummoner->AI())
                     pSummoner->AI()->SummonedMovementInform(&unit, POINT_MOTION_TYPE, id);
     }

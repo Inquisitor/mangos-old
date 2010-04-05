@@ -23,6 +23,7 @@
 #include "../../game/Player.h"
 #include "../../game/Map.h"
 #include "../../game/ObjectMgr.h"
+#include "../../game/SpellAuras.h"
 
 //uint8 loglevel = 0;
 int nrscripts;
@@ -79,6 +80,18 @@ bool GossipHello ( Player * player, Creature *_Creature )
 }
 
 MANGOS_DLL_EXPORT
+bool GOGossipHello(Player *pPlayer, GameObject *pGo)
+{
+    Script *tmpscript = m_scripts[pGo->GetGOInfo()->ScriptId];
+    if (!tmpscript || !tmpscript->pGOGossipHello)
+        return false;
+
+    pPlayer->PlayerTalkClass->ClearMenus();
+
+    return tmpscript->pGOGossipHello(pPlayer, pGo);
+}
+
+MANGOS_DLL_EXPORT
 bool GossipSelect( Player *player, Creature *_Creature,uint32 sender, uint32 action )
 {
     debug_log("DEBUG: Gossip selection, sender: %d, action: %d",sender, action);
@@ -93,6 +106,20 @@ bool GossipSelect( Player *player, Creature *_Creature,uint32 sender, uint32 act
 }
 
 MANGOS_DLL_EXPORT
+bool GOGossipSelect(Player *pPlayer, GameObject *pGo, uint32 sender, uint32 action)
+{
+    debug_log("DEBUG: GO Gossip selection, sender: %u, action: %u", sender, action);
+
+    Script *tmpscript = m_scripts[pGo->GetGOInfo()->ScriptId];
+    if (!tmpscript || !tmpscript->pGOGossipSelect)
+        return false;
+
+    pPlayer->PlayerTalkClass->ClearMenus();
+
+    return tmpscript->pGOGossipSelect(pPlayer, pGo, sender, action);
+}
+
+MANGOS_DLL_EXPORT
 bool GossipSelectWithCode( Player *player, Creature *_Creature, uint32 sender, uint32 action, const char* sCode )
 {
     debug_log("DEBUG: Gossip selection, sender: %d, action: %d",sender, action);
@@ -104,6 +131,20 @@ bool GossipSelectWithCode( Player *player, Creature *_Creature, uint32 sender, u
     player->PlayerTalkClass->ClearMenus();
 
     return tmpscript->pGossipSelectWithCode(player,_Creature,sender,action,sCode);
+}
+
+MANGOS_DLL_EXPORT
+bool GOGossipSelectWithCode(Player *pPlayer, GameObject *pGo, uint32 sender, uint32 action, const char* sCode)
+{
+    debug_log("DEBUG: GO Gossip selection, sender: %u, action: %u", sender, action);
+
+    Script *tmpscript = m_scripts[pGo->GetGOInfo()->ScriptId];
+    if (!tmpscript || !tmpscript->pGOGossipSelectWithCode)
+        return false;
+
+    pPlayer->PlayerTalkClass->ClearMenus();
+
+    return tmpscript->pGOGossipSelectWithCode(pPlayer, pGo, sender, action, sCode);
 }
 
 MANGOS_DLL_EXPORT
@@ -308,6 +349,16 @@ bool EffectDummyItem(Unit *caster, uint32 spellId, SpellEffectIndex effIndex, It
         return false;
 
     return tmpscript->pEffectDummyItem(caster, spellId, effIndex, itemTarget);
+}
+
+MANGOS_DLL_EXPORT
+bool EffectAuraDummy(const Aura* pAura, bool apply)
+{
+    Script *tmpscript = m_scripts[((Creature*)pAura->GetTarget())->GetScriptId()];
+    if (!tmpscript || !tmpscript->pEffectAuraDummy)
+        return false;
+
+    return tmpscript->pEffectAuraDummy(pAura, apply);
 }
 
 void ScriptedAI::UpdateAI(const uint32)

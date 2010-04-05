@@ -19,7 +19,7 @@
 #include "Common.h"
 #include "Item.h"
 #include "ObjectMgr.h"
-#include "ObjectDefines.h"
+#include "ObjectGuid.h"
 #include "WorldPacket.h"
 #include "Database/DatabaseEnv.h"
 #include "ItemEnchantmentMgr.h"
@@ -159,7 +159,7 @@ void RemoveItemsSetItem(Player*player,ItemPrototype const *proto)
 
     if(!eff->item_count)                                    //all items of a set were removed
     {
-        assert(eff == player->ItemSetEff[setindex]);
+        ASSERT(eff == player->ItemSetEff[setindex]);
         delete eff;
         player->ItemSetEff[setindex] = NULL;
     }
@@ -268,7 +268,7 @@ bool Item::Create( uint32 guidlow, uint32 itemid, Player const* owner)
         SetSpellCharges(i,itemProto->Spells[i].SpellCharges);
 
     SetUInt32Value(ITEM_FIELD_FLAGS, itemProto->Flags);
-    SetUInt32Value(ITEM_FIELD_DURATION, abs(itemProto->Duration));
+    SetUInt32Value(ITEM_FIELD_DURATION, itemProto->Duration);
 
     return true;
 }
@@ -418,14 +418,14 @@ bool Item::LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult *result)
     }
 
     // update duration if need, and remove if not need
-    if((proto->Duration==0) != (GetUInt32Value(ITEM_FIELD_DURATION)==0))
+    if ((proto->Duration == 0) != (GetUInt32Value(ITEM_FIELD_DURATION) == 0))
     {
-        SetUInt32Value(ITEM_FIELD_DURATION,abs(proto->Duration));
+        SetUInt32Value(ITEM_FIELD_DURATION, proto->Duration);
         need_save = true;
     }
 
     // set correct owner
-    if(owner_guid != 0 && GetOwnerGUID() != owner_guid)
+    if (owner_guid != 0 && GetOwnerGUID() != owner_guid)
     {
         SetOwnerGUID(owner_guid);
         need_save = true;
@@ -441,7 +441,7 @@ bool Item::LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult *result)
         sObjectMgr.mItemRefundableMap.insert(insertpair);
     }
 
-    if(need_save)                                           // normal item changed state set not work at loading
+    if (need_save)                                          // normal item changed state set not work at loading
     {
         std::ostringstream ss;
         ss << "UPDATE item_instance SET data = '";
@@ -984,7 +984,7 @@ Item* Item::CreateItem( uint32 item, uint32 count, Player const* player )
         if ( count > pProto->GetMaxStackSize())
             count = pProto->GetMaxStackSize();
 
-        assert(count !=0 && "pProto->Stackable==0 but checked at loading already");
+        ASSERT(count !=0 && "pProto->Stackable==0 but checked at loading already");
 
         Item *pItem = NewItemOrBag( pProto );
         if( pItem->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_ITEM), item, player) )
@@ -1118,4 +1118,29 @@ bool Item::IsEligibleForRefund()
     }
 
     return true;
+}
+
+bool Item::HasMaxCharges() const
+{
+    ItemPrototype const* itemProto = GetProto();
+
+    for(int i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
+        if (GetSpellCharges(i) != itemProto->Spells[i].SpellCharges)
+            return false;
+
+    return true;
+}
+
+void Item::RestoreCharges()
+{
+    ItemPrototype const* itemProto = GetProto();
+
+    for(int i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
+    {
+        if (GetSpellCharges(i) != itemProto->Spells[i].SpellCharges)
+        {
+            SetSpellCharges(i, itemProto->Spells[i].SpellCharges);
+            SetState(ITEM_CHANGED);
+        }
+    }
 }

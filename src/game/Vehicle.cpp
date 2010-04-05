@@ -40,7 +40,7 @@ Vehicle::~Vehicle()
 void Vehicle::AddToWorld()
 {
     ///- Register the vehicle for guid lookup
-    if (!IsInWorld() && GetGUIDHigh() == HIGHGUID_VEHICLE)
+    if(!IsInWorld() && GetObjectGuid().GetHigh() == HIGHGUID_VEHICLE)
         GetMap()->GetObjectsStore().insert<Vehicle>(GetGUID(), (Vehicle*)this);
 
     Unit::AddToWorld();
@@ -49,7 +49,7 @@ void Vehicle::AddToWorld()
 void Vehicle::RemoveFromWorld()
 {
     ///- Remove the vehicle from the accessor
-    if (IsInWorld() && GetGUIDHigh() == HIGHGUID_VEHICLE)
+    if (IsInWorld() && GetObjectGuid().GetHigh() == HIGHGUID_VEHICLE)
         GetMap()->GetObjectsStore().erase<Vehicle>(GetGUID(), (Vehicle*)NULL);
 
     ///- Don't call the function for Creature, normal mobs + totems go in a different storage
@@ -108,7 +108,7 @@ void Vehicle::RegeneratePower(Powers power)
     ModifyPower(power, (int32)addvalue);
 
     WorldPacket data(SMSG_POWER_UPDATE);
-    data.append(GetPackGUID());
+    data << GetPackGUID();
     data << uint8(power);
     data << uint32(addvalue+curValue);
     SendMessageToSet(&data, true);
@@ -235,7 +235,7 @@ void Vehicle::InitSeats()
             if (VehicleSeatEntry const *veSeat = sVehicleSeatStore.LookupEntry(seatId))
             {
                 VehicleSeat newseat;
-                //newseat.seatInfo = veSeat;
+                newseat.seatInfo = veSeat;
                 newseat.passenger = NULL;
                 newseat.flags = SEAT_FREE;
                 newseat.vs_flags = sObjectMgr.GetSeatFlags(seatId);
@@ -349,6 +349,37 @@ int8 Vehicle::GetEmptySeatsCount(bool force)
     return count;
 }
 
+int8 Vehicle::GetNextEmptySeatNum(int8 seatId, bool next) const
+{
+    SeatMap::const_iterator seat = m_Seats.find(seatId);
+    if(seat == m_Seats.end()) return -1;
+    while(seat->second.passenger || !seat->second.seatInfo->IsUsable())
+    {
+        if(next)
+        {
+            ++seat;
+            if(seat == m_Seats.end())
+                seat = m_Seats.begin();
+        }
+        else
+        {
+            if(seat == m_Seats.begin())
+                seat = m_Seats.end();
+            --seat;
+        }
+        if(seat->first == seatId)
+            return -1; // no available seat
+    }
+    return seat->first;
+}
+
+bool Vehicle::HasEmptySeat(int8 seatId) const
+{
+    SeatMap::const_iterator seat = m_Seats.find(seatId);
+    if(seat == m_Seats.end()) return false;
+    return !seat->second.passenger;
+}
+
 void Vehicle::EmptySeatsCountChanged()
 {
     uint8 m_count = GetTotalSeatsCount();
@@ -458,7 +489,7 @@ void Vehicle::AddPassenger(Unit *unit, int8 seatId, bool force)
     if (unit->GetTypeId() == TYPEID_PLAYER)
     {
         WorldPacket data0(SMSG_FORCE_MOVE_ROOT, 10);
-        data0.append(unit->GetPackGUID());
+        data0 << unit->GetPackGUID();
         data0 << (uint32)((seat->second.vs_flags & SF_CAN_CAST) ? 2 : 0);
         unit->SendMessageToSet(&data0,true);
     }
@@ -479,7 +510,7 @@ void Vehicle::AddPassenger(Unit *unit, int8 seatId, bool force)
             if (canFly() || HasAuraType(SPELL_AURA_FLY) || HasAuraType(SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED))
             {
                 WorldPacket data3(SMSG_MOVE_SET_CAN_FLY, 12);
-                data3.append(GetPackGUID());
+                data3 << GetPackGUID();
                 data3 << (uint32)(0);
                 SendMessageToSet(&data3,false);
             }
@@ -513,7 +544,7 @@ void Vehicle::AddPassenger(Unit *unit, int8 seatId, bool force)
         if (GetVehicleFlags() & VF_CANT_MOVE)
         {
             WorldPacket data2(SMSG_FORCE_MOVE_ROOT, 10);
-            data2.append(GetPackGUID());
+            data2 << GetPackGUID();
             data2 << (uint32)(2);
             SendMessageToSet(&data2,false);
         }
@@ -565,14 +596,14 @@ void Vehicle::RemovePassenger(Unit *unit)
                 if (seat->second.vs_flags & SF_CAN_CAST)
                 {
                     WorldPacket data0(SMSG_FORCE_MOVE_UNROOT, 10);
-                    data0.append(unit->GetPackGUID());
+                    data0 << unit->GetPackGUID();
                     data0 << (uint32)(2);                        // can rotate
                     unit->SendMessageToSet(&data0,true);
                 }
                 else
                 {
                     WorldPacket data1(SMSG_FORCE_MOVE_UNROOT, 10);
-                    data1.append(unit->GetPackGUID());
+                    data1 << unit->GetPackGUID();
                     data1 << (uint32)(0);                        // cannot rotate
                     unit->SendMessageToSet(&data1,true);
                 }
@@ -652,7 +683,7 @@ void Vehicle::BuildVehicleActionBar(Player *plr) const
 
     for(CreatureSpellCooldowns::const_iterator itr = m_CreatureSpellCooldowns.begin(); itr != m_CreatureSpellCooldowns.end(); ++itr)
     {
-        time_t cooldown = (itr->second > curTime) ? (itr->second - curTime) * IN_MILISECONDS : 0;
+        time_t cooldown = (itr->second > curTime) ? (itr->second - curTime) * IN_MILLISECONDS : 0;
 
         data << uint32(itr->first);                         // spellid
         data << uint16(0);                                  // spell category?
@@ -662,7 +693,7 @@ void Vehicle::BuildVehicleActionBar(Player *plr) const
 
     for(CreatureSpellCooldowns::const_iterator itr = m_CreatureCategoryCooldowns.begin(); itr != m_CreatureCategoryCooldowns.end(); ++itr)
     {
-        time_t cooldown = (itr->second > curTime) ? (itr->second - curTime) * IN_MILISECONDS : 0;
+        time_t cooldown = (itr->second > curTime) ? (itr->second - curTime) * IN_MILLISECONDS : 0;
 
         data << uint32(itr->first);                         // spellid
         data << uint16(0);                                  // spell category?

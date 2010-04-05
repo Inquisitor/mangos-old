@@ -21,7 +21,7 @@
 #include "WorldPacket.h"
 #include "World.h"
 #include "ObjectMgr.h"
-#include "ObjectDefines.h"
+#include "ObjectGuid.h"
 #include "SpellMgr.h"
 #include "Creature.h"
 #include "QuestDef.h"
@@ -117,10 +117,10 @@ Creature::Creature(CreatureSubtype subtype) :
 Unit(), i_AI(NULL),
 lootForPickPocketed(false), lootForBody(false), m_groupLootTimer(0), m_groupLootId(0),
 m_lootMoney(0), m_lootRecipient(0),
-m_deathTimer(0), m_respawnTime(0), m_respawnDelay(300), m_corpseDelay(60), m_respawnradius(0.0f),
+m_deathTimer(0), m_respawnTime(0), m_respawnDelay(300), m_corpseDelay(60), m_respawnradius(5.0f),
 m_subtype(subtype), m_defaultMovementType(IDLE_MOTION_TYPE), m_DBTableGuid(0), m_equipmentId(0),
 m_AlreadyCallAssistance(false), m_AlreadySearchedAssistance(false),
-m_regenHealth(true), m_AI_locked(false), m_isDeadByDefault(false), m_meleeDamageSchoolMask(SPELL_SCHOOL_MASK_NORMAL),
+m_regenHealth(true), m_AI_locked(false), m_isDeadByDefault(false), m_needNotify(false), m_meleeDamageSchoolMask(SPELL_SCHOOL_MASK_NORMAL),
 m_creatureInfo(NULL), m_isActiveObject(false), m_splineFlags(SPLINEFLAG_WALKMODE)
 {
     m_regenTimer = 200;
@@ -149,7 +149,7 @@ Creature::~Creature()
 void Creature::AddToWorld()
 {
     ///- Register the creature for guid lookup
-    if(!IsInWorld() && GetGUIDHigh() == HIGHGUID_UNIT)
+    if(!IsInWorld() && GetObjectGuid().GetHigh() == HIGHGUID_UNIT)
     {
         if(m_zoneScript)
             m_zoneScript->OnCreatureCreate(this, true);
@@ -163,7 +163,7 @@ void Creature::AddToWorld()
 void Creature::RemoveFromWorld()
 {
     ///- Remove the creature from the accessor
-    if(IsInWorld() && GetGUIDHigh() == HIGHGUID_UNIT)
+    if(IsInWorld() && GetObjectGuid().GetHigh() == HIGHGUID_UNIT)
     {
         if(m_zoneScript)
             m_zoneScript->OnCreatureCreate(this, false);
@@ -274,16 +274,15 @@ bool Creature::InitEntry(uint32 Entry, uint32 team, const CreatureData *data )
 
     SetFloatValue(UNIT_MOD_CAST_SPEED, 1.0f);
 
-    SetSpeedRate(MOVE_WALK, cinfo->speed);
-    SetSpeedRate(MOVE_RUN,  cinfo->speed);
-    SetSpeedRate(MOVE_SWIM, cinfo->speed);
+    SetSpeedRate(MOVE_WALK, cinfo->speed_walk);
+    SetSpeedRate(MOVE_RUN,  cinfo->speed_run);
+    SetSpeedRate(MOVE_SWIM, 1.0f);                          // using 1.0 rate
+    SetSpeedRate(MOVE_FLIGHT, 1.0f);                        // using 1.0 rate
 
     SetFloatValue(OBJECT_FIELD_SCALE_X, cinfo->scale);
 
     // checked at loading
     m_defaultMovementType = MovementGeneratorType(cinfo->MovementType);
-    if(!m_respawnradius && m_defaultMovementType == RANDOM_MOTION_TYPE)
-        m_defaultMovementType = IDLE_MOTION_TYPE;
 
     return true;
 }
@@ -356,6 +355,15 @@ void Creature::Update(uint32 diff)
         m_GlobalCooldown = 0;
     else
         m_GlobalCooldown -= diff;
+
+    if (m_needNotify)
+    {
+        m_needNotify = false;
+        RelocationNotify();
+
+        if (!IsInWorld())
+            return;
+    }
 
     switch( m_deathState )
     {
@@ -787,7 +795,7 @@ bool Creature::isCanTrainingAndResetTalentsOf(Player* pPlayer) const
         && pPlayer->getClass() == GetCreatureInfo()->trainer_class;
 }
 
-void Creature::AI_SendMoveToPacket(float x, float y, float z, uint32 time, SplineFlags flags, uint8 type)
+void Creature::AI_SendMoveToPacket(float x, float y, float z, uint32 time, SplineFlags flags, SplineType type)
 {
     /*    uint32 timeElap = getMSTime();
         if ((timeElap - m_startMove) < m_moveTime)
@@ -1266,7 +1274,7 @@ void Creature::setDeathState(DeathState s)
 {
     if ((s == JUST_DIED && !m_isDeadByDefault) || (s == JUST_ALIVED && m_isDeadByDefault))
     {
-        m_deathTimer = m_corpseDelay*IN_MILISECONDS;
+        m_deathTimer = m_corpseDelay*IN_MILLISECONDS;
 
         // always save boss respawn time at death to prevent crash cheating
         if (sWorld.getConfig(CONFIG_BOOL_SAVE_RESPAWN_TIME_IMMEDIATLY) || isWorldBoss())
@@ -1674,6 +1682,20 @@ bool Creature::CanAssistTo(const Unit* u, const Unit* enemy, bool checkfaction /
     return true;
 }
 
+bool Creature::CanInitiateAttack()
+{
+    if (hasUnitState(UNIT_STAT_STUNNED | UNIT_STAT_DIED))
+        return false;
+
+    if (HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE))
+        return false;
+
+    if (isPassiveToHostile())
+        return false;
+
+    return true;
+}
+
 void Creature::SaveRespawnTime()
 {
     if(isPet() || !m_DBTableGuid)
@@ -1682,7 +1704,7 @@ void Creature::SaveRespawnTime()
     if(m_respawnTime > time(NULL))                          // dead (no corpse)
         sObjectMgr.SaveCreatureRespawnTime(m_DBTableGuid, GetInstanceId(), m_respawnTime);
     else if(m_deathTimer > 0)                               // dead (corpse)
-        sObjectMgr.SaveCreatureRespawnTime(m_DBTableGuid, GetInstanceId(), time(NULL) + m_respawnDelay + m_deathTimer / IN_MILISECONDS);
+        sObjectMgr.SaveCreatureRespawnTime(m_DBTableGuid, GetInstanceId(), time(NULL) + m_respawnDelay + m_deathTimer / IN_MILLISECONDS);
 }
 
 bool Creature::IsOutOfThreatArea(Unit* pVictim) const
@@ -1867,7 +1889,7 @@ void Creature::AddCreatureSpellCooldown(uint32 spellid)
         modOwner->ApplySpellMod(spellid, SPELLMOD_COOLDOWN, cooldown);
 
     if(cooldown)
-        _AddCreatureSpellCooldown(spellid, time(NULL) + cooldown/IN_MILISECONDS);
+        _AddCreatureSpellCooldown(spellid, time(NULL) + cooldown/IN_MILLISECONDS);
 
     if(spellInfo->Category)
         _AddCreatureCategoryCooldown(spellInfo->Category, time(NULL));
@@ -1886,7 +1908,7 @@ bool Creature::HasCategoryCooldown(uint32 spell_id) const
         return true;
 
     CreatureSpellCooldowns::const_iterator itr = m_CreatureCategoryCooldowns.find(spellInfo->Category);
-    return (itr != m_CreatureCategoryCooldowns.end() && time_t(itr->second + (spellInfo->CategoryRecoveryTime / IN_MILISECONDS)) > time(NULL));
+    return (itr != m_CreatureCategoryCooldowns.end() && time_t(itr->second + (spellInfo->CategoryRecoveryTime / IN_MILLISECONDS)) > time(NULL));
 }
 
 bool Creature::HasSpellCooldown(uint32 spell_id) const
@@ -1915,7 +1937,7 @@ time_t Creature::GetRespawnTimeEx() const
     if(m_respawnTime > now)                                 // dead (no corpse)
         return m_respawnTime;
     else if(m_deathTimer > 0)                               // dead (corpse)
-        return now + m_respawnDelay + m_deathTimer / IN_MILISECONDS;
+        return now + m_respawnDelay + m_deathTimer / IN_MILLISECONDS;
     else
         return now;
 }
@@ -1932,7 +1954,7 @@ void Creature::GetRespawnCoord( float &x, float &y, float &z, float* ori, float*
             if (ori)
                 *ori = data->orientation;
             if (dist)
-                *dist = data->spawndist;
+                *dist = GetRespawnRadius();
 
             return;
         }
@@ -1958,7 +1980,7 @@ void Creature::AllLootRemovedFromCorpse()
 
         // corpse was not skinnable -> apply corpse looted timer
         if (!cinfo || !cinfo->SkinLootId)
-            nDeathTimer = (uint32)((m_corpseDelay * IN_MILISECONDS) * sWorld.getConfig(CONFIG_FLOAT_RATE_CORPSE_DECAY_LOOTED));
+            nDeathTimer = (uint32)((m_corpseDelay * IN_MILLISECONDS) * sWorld.getConfig(CONFIG_FLOAT_RATE_CORPSE_DECAY_LOOTED));
         // corpse skinnable, but without skinning flag, and then skinned, corpse will despawn next update
         else
             nDeathTimer = 0;
@@ -2122,25 +2144,6 @@ void Creature::SendMonsterMoveWithSpeedToCurrentDestination(Player* player)
         SendMonsterMoveWithSpeed(x, y, z, 0, player);
 }
 
-void Creature::SendMonsterMoveWithSpeed(float x, float y, float z, uint32 transitTime, Player* player)
-{
-    if (!transitTime)
-    {
-        if(GetTypeId()==TYPEID_PLAYER)
-        {
-            Traveller<Player> traveller(*(Player*)this);
-            transitTime = traveller.GetTotalTrevelTimeTo(x, y, z);
-        }
-        else
-        {
-            Traveller<Creature> traveller(*(Creature*)this);
-            transitTime = traveller.GetTotalTrevelTimeTo(x, y, z);
-        }
-    }
-    //float orientation = (float)atan2((double)dy, (double)dx);
-    SendMonsterMove(x, y, z, 0, GetSplineFlags(), transitTime, player);
-}
-
 void Creature::SendAreaSpiritHealerQueryOpcode(Player *pl)
 {
     uint32 next_resurrect = 0;
@@ -2150,3 +2153,23 @@ void Creature::SendAreaSpiritHealerQueryOpcode(Player *pl)
     data << GetGUID() << next_resurrect;
     pl->SendDirectMessage(&data);
 }
+
+void Creature::RelocationNotify()
+{
+    CellPair new_val = MaNGOS::ComputeCellPair(GetPositionX(), GetPositionY());
+    Cell cell(new_val);
+    CellPair cellpair = cell.cellPair();
+
+    MaNGOS::CreatureRelocationNotifier relocationNotifier(*this);
+    cell.data.Part.reserved = ALL_DISTRICT;
+    cell.SetNoCreate();                                     // not trigger load unloaded grids at notifier call
+
+    TypeContainerVisitor<MaNGOS::CreatureRelocationNotifier, WorldTypeMapContainer > c2world_relocation(relocationNotifier);
+    TypeContainerVisitor<MaNGOS::CreatureRelocationNotifier, GridTypeMapContainer >  c2grid_relocation(relocationNotifier);
+
+    float radius = MAX_CREATURE_ATTACK_RADIUS * sWorld.getConfig(CONFIG_FLOAT_RATE_CREATURE_AGGRO);
+
+    cell.Visit(cellpair, c2world_relocation, *GetMap(), *this, radius);
+    cell.Visit(cellpair, c2grid_relocation, *GetMap(), *this, radius);
+}
+

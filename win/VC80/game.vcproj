@@ -1310,7 +1310,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\game\ObjectDefines.h"
+				RelativePath="..\..\src\game\ObjectGuid.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\ObjectGuid.h"
 				>
 			</File>
 			<File
@@ -1463,14 +1467,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\game\DBCStructure.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\game\GlobalEvents.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\game\GlobalEvents.h"
 				>
 			</File>
 			<File

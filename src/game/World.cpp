@@ -52,7 +52,6 @@
 #include "OutdoorPvPMgr.h"
 #include "TemporarySummon.h"
 #include "VMapFactory.h"
-#include "GlobalEvents.h"
 #include "GameEventMgr.h"
 #include "PoolManager.h"
 #include "Database/DatabaseImpl.h"
@@ -62,6 +61,7 @@
 #include "WaypointManager.h"
 #include "GMTicketMgr.h"
 #include "Util.h"
+#include "../mangosd/RASocket.h"
 
 INSTANTIATE_SINGLETON_1( World );
 
@@ -518,9 +518,9 @@ void World::LoadConfigSettings(bool reload)
     setConfigMinMax(CONFIG_UINT32_COMPRESSION, "Compression", 1, 1, 9);
     setConfig(CONFIG_BOOL_ADDON_CHANNEL, "AddonChannel", true);
     setConfig(CONFIG_BOOL_GRID_UNLOAD, "GridUnload", true);
-    setConfigPos(CONFIG_UINT32_INTERVAL_SAVE, "PlayerSaveInterval", 15 * MINUTE * IN_MILISECONDS);
+    setConfigPos(CONFIG_UINT32_INTERVAL_SAVE, "PlayerSaveInterval", 15 * MINUTE * IN_MILLISECONDS);
 
-    setConfigMin(CONFIG_UINT32_INTERVAL_GRIDCLEAN, "GridCleanUpDelay", 5 * MINUTE * IN_MILISECONDS, MIN_GRID_DELAY);
+    setConfigMin(CONFIG_UINT32_INTERVAL_GRIDCLEAN, "GridCleanUpDelay", 5 * MINUTE * IN_MILLISECONDS, MIN_GRID_DELAY);
     if (reload)
         sMapMgr.SetGridCleanUpDelay(getConfig(CONFIG_UINT32_INTERVAL_GRIDCLEAN));
 
@@ -528,7 +528,7 @@ void World::LoadConfigSettings(bool reload)
     if (reload)
         sMapMgr.SetMapUpdateInterval(getConfig(CONFIG_UINT32_INTERVAL_MAPUPDATE));
 
-    setConfig(CONFIG_UINT32_INTERVAL_CHANGEWEATHER, "ChangeWeatherInterval", 10 * MINUTE * IN_MILISECONDS);
+    setConfig(CONFIG_UINT32_INTERVAL_CHANGEWEATHER, "ChangeWeatherInterval", 10 * MINUTE * IN_MILLISECONDS);
 
     if (configNoReload(reload, CONFIG_UINT32_PORT_WORLD, "WorldServerPort", DEFAULT_WORLDSERVER_PORT))
         setConfig(CONFIG_UINT32_PORT_WORLD, "WorldServerPort", DEFAULT_WORLDSERVER_PORT);
@@ -597,7 +597,7 @@ void World::LoadConfigSettings(bool reload)
     setConfig(CONFIG_BOOL_CAST_UNSTUCK, "CastUnstuck", true);
     setConfig(CONFIG_UINT32_MAX_SPELL_CASTS_IN_CHAIN, "MaxSpellCastsInChain", 10);
     setConfig(CONFIG_UINT32_INSTANCE_RESET_TIME_HOUR, "Instance.ResetTimeHour", 4);
-    setConfig(CONFIG_UINT32_INSTANCE_UNLOAD_DELAY,    "Instance.UnloadDelay", 30 * MINUTE * IN_MILISECONDS);
+    setConfig(CONFIG_UINT32_INSTANCE_UNLOAD_DELAY,    "Instance.UnloadDelay", 30 * MINUTE * IN_MILLISECONDS);
 
     setConfig(CONFIG_UINT32_MAX_PRIMARY_TRADE_SKILL, "MaxPrimaryTradeSkill", 2);
     setConfigMinMax(CONFIG_UINT32_MIN_PETITION_SIGNS, "MinPetitionSigns", 9, 0, 9);
@@ -623,7 +623,7 @@ void World::LoadConfigSettings(bool reload)
     setConfigPos(CONFIG_UINT32_UPTIME_UPDATE, "UpdateUptimeInterval", 10);
     if (reload)
     {
-        m_timers[WUPDATE_UPTIME].SetInterval(getConfig(CONFIG_UINT32_UPTIME_UPDATE)*MINUTE*IN_MILISECONDS);
+        m_timers[WUPDATE_UPTIME].SetInterval(getConfig(CONFIG_UINT32_UPTIME_UPDATE)*MINUTE*IN_MILLISECONDS);
         m_timers[WUPDATE_UPTIME].Reset();
     }
 
@@ -709,22 +709,24 @@ void World::LoadConfigSettings(bool reload)
     else
         setConfig(CONFIG_BOOL_DECLINED_NAMES_USED, "DeclinedNames", false);
 
-    setConfig(CONFIG_BOOL_BATTLEGROUND_CAST_DESERTER,              "Battleground.CastDeserter", true);
-    setConfig(CONFIG_BOOL_BATTLEGROUND_QUEUE_ANNOUNCER_ENABLE,     "Battleground.QueueAnnouncer.Enable", false);
-    setConfig(CONFIG_BOOL_BATTLEGROUND_QUEUE_ANNOUNCER_PLAYERONLY, "Battleground.QueueAnnouncer.PlayerOnly", false);
-
+    setConfig(CONFIG_BOOL_BATTLEGROUND_CAST_DESERTER,                  "Battleground.CastDeserter", true);
+    setConfigMinMax(CONFIG_UINT32_BATTLEGROUND_QUEUE_ANNOUNCER_JOIN,   "Battleground.QueueAnnouncer.Join", 0, 0, 2);
+    setConfig(CONFIG_BOOL_BATTLEGROUND_QUEUE_ANNOUNCER_START,          "Battleground.QueueAnnouncer.Start", false);
     setConfig(CONFIG_UINT32_BATTLEGROUND_INVITATION_TYPE,              "Battleground.InvitationType", 0);
-    setConfig(CONFIG_UINT32_BATTLEGROUND_PREMATURE_FINISH_TIMER,       "BattleGround.PrematureFinishTimer", 5 * MINUTE * IN_MILISECONDS);
-    setConfig(CONFIG_UINT32_BATTLEGROUND_PREMADE_GROUP_WAIT_FOR_MATCH, "BattleGround.PremadeGroupWaitForMatch", 30 * MINUTE * IN_MILISECONDS);
+    setConfig(CONFIG_UINT32_BATTLEGROUND_PREMATURE_FINISH_TIMER,       "BattleGround.PrematureFinishTimer", 5 * MINUTE * IN_MILLISECONDS);
+    setConfig(CONFIG_UINT32_BATTLEGROUND_PREMADE_GROUP_WAIT_FOR_MATCH, "BattleGround.PremadeGroupWaitForMatch", 30 * MINUTE * IN_MILLISECONDS);
     setConfig(CONFIG_UINT32_ARENA_MAX_RATING_DIFFERENCE,               "Arena.MaxRatingDifference", 150);
-    setConfig(CONFIG_UINT32_ARENA_RATING_DISCARD_TIMER,                "Arena.RatingDiscardTimer", 10 * MINUTE * IN_MILISECONDS);
+    setConfig(CONFIG_UINT32_ARENA_RATING_DISCARD_TIMER,                "Arena.RatingDiscardTimer", 10 * MINUTE * IN_MILLISECONDS);
     setConfig(CONFIG_BOOL_ARENA_AUTO_DISTRIBUTE_POINTS,                "Arena.AutoDistributePoints", false);
     setConfig(CONFIG_UINT32_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS,       "Arena.AutoDistributeInterval", 7);
-    setConfig(CONFIG_BOOL_ARENA_QUEUE_ANNOUNCER_ENABLE,                "Arena.QueueAnnouncer.Enable", false);
+    setConfig(CONFIG_BOOL_ARENA_QUEUE_ANNOUNCER_JOIN,                  "Arena.QueueAnnouncer.Join", false);
+    setConfig(CONFIG_BOOL_ARENA_QUEUE_ANNOUNCER_EXIT,                  "Arena.QueueAnnouncer.Exit", false);
     setConfig(CONFIG_UINT32_ARENA_SEASON_ID,                           "Arena.ArenaSeason.ID", 1);
     setConfig(CONFIG_BOOL_ARENA_SEASON_IN_PROGRESS,                    "Arena.ArenaSeason.InProgress", true);
 
     setConfig(CONFIG_BOOL_OFFHAND_CHECK_AT_TALENTS_RESET, "OffhandCheckAtTalentsReset", false);
+
+    setConfig(CONFIG_BOOL_KICK_PLAYER_ON_BAD_PACKET, "Network.KickOnBadPacket", false);
 
     if(int clientCacheId = sConfig.GetIntDefault("ClientCacheVersion", 0))
     {
@@ -893,8 +895,8 @@ void World::SetInitialWorldSettings()
     uint32 realm_zone = getConfig(CONFIG_UINT32_REALM_ZONE);
     loginDatabase.PExecute("UPDATE realmlist SET icon = %u, timezone = %u WHERE id = '%d'", server_type, realm_zone, realmID);
 
-    ///- Remove the bones after a restart
-    CharacterDatabase.PExecute("DELETE FROM corpse WHERE corpse_type = '0'");
+    ///- Remove the bones (they should not exist in DB though) and old corpses after a restart
+    CharacterDatabase.PExecute("DELETE FROM corpse WHERE corpse_type = '0' OR time < (UNIX_TIMESTAMP()-'%u')", 3*DAY);
 
     ///- Load the DBC files
     sLog.outString("Initialize data stores...");
@@ -1239,22 +1241,21 @@ void World::SetInitialWorldSettings()
 
     m_timers[WUPDATE_OBJECTS].SetInterval(0);
     m_timers[WUPDATE_SESSIONS].SetInterval(0);
-    m_timers[WUPDATE_WEATHERS].SetInterval(1*IN_MILISECONDS);
-    m_timers[WUPDATE_AUCTIONS].SetInterval(MINUTE*IN_MILISECONDS);
-    m_timers[WUPDATE_UPTIME].SetInterval(m_configUint32Values[CONFIG_UINT32_UPTIME_UPDATE]*MINUTE*IN_MILISECONDS);
+    m_timers[WUPDATE_WEATHERS].SetInterval(1*IN_MILLISECONDS);
+    m_timers[WUPDATE_AUCTIONS].SetInterval(MINUTE*IN_MILLISECONDS);
+    m_timers[WUPDATE_UPTIME].SetInterval(m_configUint32Values[CONFIG_UINT32_UPTIME_UPDATE]*MINUTE*IN_MILLISECONDS);
                                                             //Update "uptime" table based on configuration entry in minutes.
-    m_timers[WUPDATE_CORPSES].SetInterval(20*MINUTE*IN_MILISECONDS);
-                                                            //erase corpses every 20 minutes
+    m_timers[WUPDATE_CORPSES].SetInterval(3*HOUR*IN_MILLISECONDS);
 
     //to set mailtimer to return mails every day between 4 and 5 am
     //mailtimer is increased when updating auctions
     //one second is 1000 -(tested on win system)
-    mail_timer = uint32((((localtime( &m_gameTime )->tm_hour + 20) % 24)* HOUR * IN_MILISECONDS) / m_timers[WUPDATE_AUCTIONS].GetInterval() );
+    mail_timer = uint32((((localtime( &m_gameTime )->tm_hour + 20) % 24)* HOUR * IN_MILLISECONDS) / m_timers[WUPDATE_AUCTIONS].GetInterval() );
                                                             //1440
-    mail_timer_expires = uint32( (DAY * IN_MILISECONDS) / (m_timers[WUPDATE_AUCTIONS].GetInterval()));
+    mail_timer_expires = uint32( (DAY * IN_MILLISECONDS) / (m_timers[WUPDATE_AUCTIONS].GetInterval()));
     sLog.outDebug("Mail timer set to: %u, mail return is called every %u minutes", mail_timer, mail_timer_expires);
 
-    ///- Initilize static helper structures
+    ///- Initialize static helper structures
     AIRegistry::Initialize();
     Player::InitVisibleBits();
 
@@ -1433,7 +1434,7 @@ void World::Update(uint32 diff)
     {
         m_timers[WUPDATE_CORPSES].Reset();
 
-        CorpsesErase();
+        sObjectAccessor.RemoveOldCorpses();
     }
 
     ///- Process Game events when necessary
@@ -1447,7 +1448,7 @@ void World::Update(uint32 diff)
 
     /// </ul>
     ///- Move all creatures with "delayed move" and remove and delete all objects with "delayed remove"
-    sMapMgr.DoDelayedMovesAndRemoves();
+    sMapMgr.RemoveAllObjectsInRemoveList();
 
     // update the instance reset times
     sInstanceSaveMgr.Update();
@@ -1837,16 +1838,18 @@ void World::UpdateSessions( uint32 diff )
     }
 }
 
-// This handles the issued and queued CLI commands
+// This handles the issued and queued CLI/RA commands
 void World::ProcessCliCommands()
 {
+    /*
     CliCommandHolder::Print* zprint = NULL;
-
+    void* callbackArg = NULL;
     CliCommandHolder* command;
     while (cliCmdQueue.next(command))
     {
         sLog.outDebug("CLI command under processing...");
         zprint = command->m_print;
+
         if (command->guid)
         {
             char outStr[64];
@@ -1862,12 +1865,50 @@ void World::ProcessCliCommands()
             snprintf( (char*)outStr, 64, "%u|END\r\n", command->guid);
             zprint(outStr);
         }
+
+        callbackArg = command->m_callbackArg;
+        CliHandler handler(command->m_cliAccountId, command->m_cliAccessLevel, callbackArg, zprint);
+        handler.ParseCommands(command->m_command);
+
+        if(command->m_commandFinished)
+            command->m_commandFinished(callbackArg, !handler.HasSentErrorMessage());
+
+
+        delete command;
+    }*/
+
+
+    CliCommandHolder::Print* zprint = NULL;
+    void* callbackArg = NULL;
+    CliCommandHolder* command;
+    while (cliCmdQueue.next(command))
+    {
+        sLog.outDebug("CLI command under processing...");
+        zprint = command->m_print;
+        callbackArg = command->m_callbackArg;
+
+        if (command->guid)
+        {
+            /*char outStr[64];
+            snprintf( (char*)outStr, 64, "%u|BEGIN\r\n", command->guid);
+            RASocket::zprint(NULL, outStr);*/
+        }
+
+        CliHandler handler(command->m_cliAccountId, command->m_cliAccessLevel, callbackArg, zprint);
+        handler.ParseCommands(command->m_command);
+
+        if(command->m_commandFinished)
+            command->m_commandFinished(callbackArg, !handler.HasSentErrorMessage());
+
+        if (command->guid)
+        {
+            /*char outStr[64];
+            snprintf( (char*)outStr, 64, "%u|END\r\n", command->guid);
+            RASocket::zprint(NULL, outStr);*/
+        }
+
         delete command;
     }
-
-    // print the console message here so it looks right
-    if (zprint)
-        zprint("mangos>");
 }
 
 void World::InitResultQueue()
@@ -2014,7 +2055,7 @@ void World::LoadDBVersion()
         m_CreatureEventAIVersion = "Unknown creature EventAI.";
 }
 
-void World::setConfig(eConfigUint32Values index, char const* fieldname, uint32 defvalue)
+void World::setConfig(eConfigUInt32Values index, char const* fieldname, uint32 defvalue)
 {
     setConfig(index, sConfig.GetIntDefault(fieldname,defvalue));
 }
@@ -2024,7 +2065,7 @@ void World::setConfig(eConfigInt32Values index, char const* fieldname, int32 def
     setConfig(index, sConfig.GetIntDefault(fieldname,defvalue));
 }
 
-void World::setConfig(eConfigFLoatValues index, char const* fieldname, float defvalue)
+void World::setConfig(eConfigFloatValues index, char const* fieldname, float defvalue)
 {
     setConfig(index, sConfig.GetFloatDefault(fieldname,defvalue));
 }
@@ -2034,7 +2075,7 @@ void World::setConfig( eConfigBoolValues index, char const* fieldname, bool defv
     setConfig(index, sConfig.GetBoolDefault(fieldname,defvalue));
 }
 
-void World::setConfigPos(eConfigUint32Values index, char const* fieldname, uint32 defvalue)
+void World::setConfigPos(eConfigUInt32Values index, char const* fieldname, uint32 defvalue)
 {
     setConfig(index, fieldname, defvalue);
     if (int32(getConfig(index)) < 0)
@@ -2044,7 +2085,7 @@ void World::setConfigPos(eConfigUint32Values index, char const* fieldname, uint3
     }
 }
 
-void World::setConfigPos(eConfigFLoatValues index, char const* fieldname, float defvalue)
+void World::setConfigPos(eConfigFloatValues index, char const* fieldname, float defvalue)
 {
     setConfig(index, fieldname, defvalue);
     if (getConfig(index) < 0.0f)
@@ -2054,7 +2095,7 @@ void World::setConfigPos(eConfigFLoatValues index, char const* fieldname, float 
     }
 }
 
-void World::setConfigMin(eConfigUint32Values index, char const* fieldname, uint32 defvalue, uint32 minvalue)
+void World::setConfigMin(eConfigUInt32Values index, char const* fieldname, uint32 defvalue, uint32 minvalue)
 {
     setConfig(index, fieldname, defvalue);
     if (getConfig(index) < minvalue)
@@ -2074,7 +2115,7 @@ void World::setConfigMin(eConfigInt32Values index, char const* fieldname, int32 
     }
 }
 
-void World::setConfigMin(eConfigFLoatValues index, char const* fieldname, float defvalue, float minvalue)
+void World::setConfigMin(eConfigFloatValues index, char const* fieldname, float defvalue, float minvalue)
 {
     setConfig(index, fieldname, defvalue);
     if (getConfig(index) < minvalue)
@@ -2084,7 +2125,7 @@ void World::setConfigMin(eConfigFLoatValues index, char const* fieldname, float 
     }
 }
 
-void World::setConfigMinMax(eConfigUint32Values index, char const* fieldname, uint32 defvalue, uint32 minvalue, uint32 maxvalue)
+void World::setConfigMinMax(eConfigUInt32Values index, char const* fieldname, uint32 defvalue, uint32 minvalue, uint32 maxvalue)
 {
     setConfig(index, fieldname, defvalue);
     if (getConfig(index) < minvalue)
@@ -2114,7 +2155,7 @@ void World::setConfigMinMax(eConfigInt32Values index, char const* fieldname, int
     }
 }
 
-void World::setConfigMinMax(eConfigFLoatValues index, char const* fieldname, float defvalue, float minvalue, float maxvalue)
+void World::setConfigMinMax(eConfigFloatValues index, char const* fieldname, float defvalue, float minvalue, float maxvalue)
 {
     setConfig(index, fieldname, defvalue);
     if (getConfig(index) < minvalue)
@@ -2129,7 +2170,7 @@ void World::setConfigMinMax(eConfigFLoatValues index, char const* fieldname, flo
     }
 }
 
-bool World::configNoReload(bool reload, eConfigUint32Values index, char const* fieldname, uint32 defvalue)
+bool World::configNoReload(bool reload, eConfigUInt32Values index, char const* fieldname, uint32 defvalue)
 {
     if (!reload)
         return true;
@@ -2153,7 +2194,7 @@ bool World::configNoReload(bool reload, eConfigInt32Values index, char const* fi
     return false;
 }
 
-bool World::configNoReload(bool reload, eConfigFLoatValues index, char const* fieldname, float defvalue)
+bool World::configNoReload(bool reload, eConfigFloatValues index, char const* fieldname, float defvalue)
 {
     if (!reload)
         return true;

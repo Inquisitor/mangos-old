@@ -81,7 +81,7 @@ enum WorldTimers
 };
 
 /// Configuration elements
-enum eConfigUint32Values
+enum eConfigUInt32Values
 {
     CONFIG_UINT32_COMPRESSION = 0,
     CONFIG_UINT32_INTERVAL_SAVE,
@@ -159,6 +159,7 @@ enum eConfigUint32Values
     CONFIG_UINT32_BATTLEGROUND_INVITATION_TYPE,
     CONFIG_UINT32_BATTLEGROUND_PREMATURE_FINISH_TIMER,
     CONFIG_UINT32_BATTLEGROUND_PREMADE_GROUP_WAIT_FOR_MATCH,
+    CONFIG_UINT32_BATTLEGROUND_QUEUE_ANNOUNCER_JOIN,
     CONFIG_UINT32_ARENA_MAX_RATING_DIFFERENCE,
     CONFIG_UINT32_ARENA_RATING_DISCARD_TIMER,
     CONFIG_UINT32_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS,
@@ -183,7 +184,7 @@ enum eConfigInt32Values
 };
 
 /// Server config
-enum eConfigFLoatValues
+enum eConfigFloatValues
 {
     CONFIG_FLOAT_RATE_HEALTH = 0,
     CONFIG_FLOAT_RATE_POWER_MANA,
@@ -296,10 +297,11 @@ enum eConfigBoolValues
     CONFIG_BOOL_DECLINED_NAMES_USED,
     CONFIG_BOOL_SKILL_MILLING,
     CONFIG_BOOL_BATTLEGROUND_CAST_DESERTER,
-    CONFIG_BOOL_BATTLEGROUND_QUEUE_ANNOUNCER_ENABLE,
-    CONFIG_BOOL_BATTLEGROUND_QUEUE_ANNOUNCER_PLAYERONLY,
+    CONFIG_BOOL_BATTLEGROUND_QUEUE_ANNOUNCER_START,
     CONFIG_BOOL_ARENA_AUTO_DISTRIBUTE_POINTS,
-    CONFIG_BOOL_ARENA_QUEUE_ANNOUNCER_ENABLE,
+    CONFIG_BOOL_ARENA_QUEUE_ANNOUNCER_JOIN,
+    CONFIG_BOOL_ARENA_QUEUE_ANNOUNCER_EXIT,
+    CONFIG_BOOL_KICK_PLAYER_ON_BAD_PACKET,
     CONFIG_BOOL_VALUE_COUNT
 };
 
@@ -367,21 +369,27 @@ enum RealmZone
 #define SCRIPT_COMMAND_REMOVE_AURA          14              // source (datalong2!=0) or target (datalong==0) unit, datalong = spell_id
 #define SCRIPT_COMMAND_CAST_SPELL           15              // source/target cast spell at target/source (script->datalong2: 0: s->t 1: s->s 2: t->t 3: t->s
 #define SCRIPT_COMMAND_PLAY_SOUND           16              // source = any object, target=any/player, datalong (sound_id), datalong2 (bitmask: 0/1=anyone/target, 0/2=with distance dependent, so 1|2 = 3 is target with distance dependent)
-#define SCRIPT_COMMAND_ADD_QUEST_COUNT      17              // source = any, target = any, datalong = quest_id, datalong2 = quest_field, dataint = increment value
-#define SCRIPT_COMMAND_TEMP_SUMMON_OBJECT   18              // source = any (summoner), datalong=gameobject entry, datalong2=despawn_delay
-
+#define SCRIPT_COMMAND_CREATE_ITEM          17              // source or target must be player, datalong = item entry, datalong2 = amount
+#define SCRIPT_COMMAND_DESPAWN_SELF         18              // source or target must be creature, datalong = despawn delay
+#define SCRIPT_COMMAND_ADD_QUEST_COUNT      19              // source = any, target = any, datalong = quest_id, datalong2 = quest_field, dataint = increment value
+#define SCRIPT_COMMAND_TEMP_SUMMON_OBJECT   20              // source = any (summoner), datalong=gameobject entry, datalong2=despawn_delay
 
 /// Storage class for commands issued for delayed execution
 struct CliCommandHolder
 {
-    typedef void Print(const char*);
+    typedef void Print(void*, const char*);
+    typedef void CommandFinished(void*, bool success);
 
     uint32 guid;
+    uint32 m_cliAccountId;                                  // 0 for console and real account id for RA/soap
+    AccountTypes m_cliAccessLevel;
+    void* m_callbackArg;
     char *m_command;
     Print* m_print;
+    CommandFinished* m_commandFinished;
 
-    CliCommandHolder(const char *command, Print* zprint)
-        : guid(0), m_command(NULL), m_print(zprint)
+    CliCommandHolder(uint32 accountId, AccountTypes cliAccessLevel, void* callbackArg, const char *command, Print* zprint, CommandFinished* commandFinished)
+        : m_cliAccountId(accountId), m_cliAccessLevel(cliAccessLevel), m_callbackArg(callbackArg), m_print(zprint), m_commandFinished(commandFinished)
      {
         char* command_clean = NULL;
         sscanf (command, "%d|", &guid);
@@ -402,6 +410,7 @@ struct CliCommandHolder
         }
 
         size_t len = strlen(command_clean)+1;
+
         m_command = new char[len];
         memcpy(m_command, command_clean, len);
      }
@@ -504,15 +513,15 @@ class World
 
         void UpdateSessions( uint32 diff );
 
-        /// et a server configuration element (see #eConfigFLoatValues)
-        void setConfig(eConfigFLoatValues index,float value) { m_configFloatValues[index]=value; }
-        /// Get a server configuration element (see #eConfigFLoatValues)
-        float getConfig(eConfigFLoatValues rate) const { return m_configFloatValues[rate]; }
+        /// et a server configuration element (see #eConfigFloatValues)
+        void setConfig(eConfigFloatValues index,float value) { m_configFloatValues[index]=value; }
+        /// Get a server configuration element (see #eConfigFloatValues)
+        float getConfig(eConfigFloatValues rate) const { return m_configFloatValues[rate]; }
 
-        /// Set a server configuration element (see #eConfigUint32Values)
-        void setConfig(eConfigUint32Values index, uint32 value) { m_configUint32Values[index]=value; }
-        /// Get a server configuration element (see #eConfigUint32Values)
-        uint32 getConfig(eConfigUint32Values index) const { return m_configUint32Values[index]; }
+        /// Set a server configuration element (see #eConfigUInt32Values)
+        void setConfig(eConfigUInt32Values index, uint32 value) { m_configUint32Values[index]=value; }
+        /// Get a server configuration element (see #eConfigUInt32Values)
+        uint32 getConfig(eConfigUInt32Values index) const { return m_configUint32Values[index]; }
 
         /// Set a server configuration element (see #eConfigInt32Values)
         void setConfig(eConfigInt32Values index, int32 value) { m_configInt32Values[index]=value; }
@@ -549,7 +558,7 @@ class World
         static float GetVisibleObjectGreyDistance()         { return m_VisibleObjectGreyDistance;     }
 
         void ProcessCliCommands();
-        void QueueCliCommand( CliCommandHolder::Print* zprintf, char const* input ) { cliCmdQueue.add(new CliCommandHolder(input, zprintf)); }
+        void QueueCliCommand(CliCommandHolder* commandHolder) { cliCmdQueue.add(commandHolder); }
 
         void UpdateResultQueue();
         void InitResultQueue();
@@ -578,21 +587,21 @@ class World
         void SelectRandomDailyQuest();
 
     private:
-        void setConfig(eConfigUint32Values index, char const* fieldname, uint32 defvalue);
+        void setConfig(eConfigUInt32Values index, char const* fieldname, uint32 defvalue);
         void setConfig(eConfigInt32Values index, char const* fieldname, int32 defvalue);
-        void setConfig(eConfigFLoatValues index, char const* fieldname, float defvalue);
+        void setConfig(eConfigFloatValues index, char const* fieldname, float defvalue);
         void setConfig(eConfigBoolValues index, char const* fieldname, bool defvalue);
-        void setConfigPos(eConfigUint32Values index, char const* fieldname, uint32 defvalue);
-        void setConfigPos(eConfigFLoatValues index, char const* fieldname, float defvalue);
-        void setConfigMin(eConfigUint32Values index, char const* fieldname, uint32 defvalue, uint32 minvalue);
+        void setConfigPos(eConfigUInt32Values index, char const* fieldname, uint32 defvalue);
+        void setConfigPos(eConfigFloatValues index, char const* fieldname, float defvalue);
+        void setConfigMin(eConfigUInt32Values index, char const* fieldname, uint32 defvalue, uint32 minvalue);
         void setConfigMin(eConfigInt32Values index, char const* fieldname, int32 defvalue, int32 minvalue);
-        void setConfigMin(eConfigFLoatValues index, char const* fieldname, float defvalue, float minvalue);
-        void setConfigMinMax(eConfigUint32Values index, char const* fieldname, uint32 defvalue, uint32 minvalue, uint32 maxvalue);
+        void setConfigMin(eConfigFloatValues index, char const* fieldname, float defvalue, float minvalue);
+        void setConfigMinMax(eConfigUInt32Values index, char const* fieldname, uint32 defvalue, uint32 minvalue, uint32 maxvalue);
         void setConfigMinMax(eConfigInt32Values index, char const* fieldname, int32 defvalue, int32 minvalue, int32 maxvalue);
-        void setConfigMinMax(eConfigFLoatValues index, char const* fieldname, float defvalue, float minvalue, float maxvalue);
-        bool configNoReload(bool reload, eConfigUint32Values index, char const* fieldname, uint32 defvalue);
+        void setConfigMinMax(eConfigFloatValues index, char const* fieldname, float defvalue, float minvalue, float maxvalue);
+        bool configNoReload(bool reload, eConfigUInt32Values index, char const* fieldname, uint32 defvalue);
         bool configNoReload(bool reload, eConfigInt32Values index, char const* fieldname, int32 defvalue);
-        bool configNoReload(bool reload, eConfigFLoatValues index, char const* fieldname, float defvalue);
+        bool configNoReload(bool reload, eConfigFloatValues index, char const* fieldname, float defvalue);
         bool configNoReload(bool reload, eConfigBoolValues index, char const* fieldname, bool defvalue);
 
         static volatile bool m_stopEvent;

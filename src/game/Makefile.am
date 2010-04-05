@@ -124,8 +124,6 @@ libmangosgame_a_SOURCES = \
 	GameEventMgr.h \
 	GameObject.cpp \
 	GameObject.h \
-	GlobalEvents.cpp \
-	GlobalEvents.h \
 	GMTicketHandler.cpp \
 	GMTicketMgr.cpp \
 	GMTicketMgr.h \
@@ -194,7 +192,8 @@ libmangosgame_a_SOURCES = \
 	ObjectAccessor.cpp \
 	ObjectAccessor.h \
 	Object.cpp \
-	ObjectDefines.h \
+	ObjectGuid.cpp \
+	ObjectGuid.h \
 	ObjectGridLoader.cpp \
 	ObjectGridLoader.h \
 	Object.h \

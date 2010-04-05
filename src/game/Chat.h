@@ -72,12 +72,15 @@ class ChatHandler
         int ParseCommands(const char* text);
 
         bool isValidChatMessage(const char* msg);
+        bool HasSentErrorMessage() { return sentErrorMessage;}
     protected:
         explicit ChatHandler() : m_session(NULL) {}      // for CLI subclass
 
         bool hasStringAbbr(const char* name, const char* part);
 
         // function with different implementation for chat/console
+        virtual uint32 GetAccountId() const;
+        virtual AccountTypes GetAccessLevel() const;
         virtual bool isAvailable(ChatCommand const& cmd) const;
         virtual std::string GetNameLink() const { return GetNameLink(m_session->GetPlayer()); }
         virtual bool needReportToTarget(Player* chr) const;
@@ -230,6 +233,7 @@ class ChatHandler
         bool HandleListCreatureCommand(const char* args);
         bool HandleListItemCommand(const char* args);
         bool HandleListObjectCommand(const char* args);
+        bool HandleListTalentsCommand(const char * args);
 
         bool HandleLookupAreaCommand(const char* args);
         bool HandleLookupCreatureCommand(const char* args);
@@ -554,6 +558,7 @@ class ChatHandler
         bool HandleUnBanHelper(BanMode mode,char const* args);
         void HandleCharacterLevel(Player* player, uint64 player_guid, uint32 oldlevel, uint32 newlevel);
         void HandleLearnSkillRecipesHelper(Player* player,uint32 skill_id);
+        void ShowSpellListHelper(Player* target, SpellEntry const* spellInfo, LocaleConstant loc);
 
         void SetSentErrorMessage(bool val){ sentErrorMessage = val;};
     private:
@@ -567,11 +572,14 @@ class ChatHandler
 class CliHandler : public ChatHandler
 {
     public:
-        typedef void Print(char const*);
-        explicit CliHandler(Print* zprint, uint32 _guid) : m_print(zprint), guid(_guid) {}
+        typedef void Print(void*, char const*);
+        explicit CliHandler(uint32 accountId, AccountTypes accessLevel, void* callbackArg, Print* zprint)
+            : m_accountId(accountId), m_loginAccessLevel(accessLevel), m_callbackArg(callbackArg), m_print(zprint) {}
 
         // overwrite functions
         const char *GetMangosString(int32 entry) const;
+        uint32 GetAccountId() const;
+        AccountTypes GetAccessLevel() const;
         bool isAvailable(ChatCommand const& cmd) const;
         void SendSysMessage(const char *str);
         std::string GetNameLink() const;
@@ -580,6 +588,9 @@ class CliHandler : public ChatHandler
         int GetSessionDbLocaleIndex() const;
 
     private:
+        uint32 m_accountId;
+        AccountTypes m_loginAccessLevel;
+        void* m_callbackArg;
         Print* m_print;
         uint32 guid;
 };

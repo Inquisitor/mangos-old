@@ -124,9 +124,12 @@ bool ConfusedMovementGenerator<T>::Update(T &unit, const uint32 &diff)
         // currently moving, update location
         unit.addUnitState(UNIT_STAT_CONFUSED_MOVE);
         Traveller<T> traveller(unit);
-        if( i_destinationHolder.UpdateTraveller(traveller, diff, false))
+        if (i_destinationHolder.UpdateTraveller(traveller, diff, false))
         {
-            if( i_destinationHolder.HasArrived())
+            if (!IsActive(unit))                            // force stop processing (movement can move out active zone with cleanup movegens list)
+                return true;                                // not expire now, but already lost
+
+            if (i_destinationHolder.HasArrived())
             {
                 // arrived, stop and wait a bit
                 unit.StopMoving();
@@ -144,7 +147,7 @@ bool ConfusedMovementGenerator<T>::Update(T &unit, const uint32 &diff)
         {
             // start moving
             unit.addUnitState(UNIT_STAT_CONFUSED_MOVE);
-            assert( i_nextMove <= MAX_CONF_WAYPOINTS );
+            ASSERT( i_nextMove <= MAX_CONF_WAYPOINTS );
             const float x = i_waypoints[i_nextMove][0];
             const float y = i_waypoints[i_nextMove][1];
             const float z = i_waypoints[i_nextMove][2];

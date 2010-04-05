@@ -221,8 +221,6 @@ enum LevelRequirementVsMode
 #pragma pack(pop)
 #endif
 
-typedef UNORDERED_MAP<Creature*, CreatureMover> CreatureMoveList;
-
 #define MAX_HEIGHT            100000.0f                     // can be use for find ground height at surface
 #define INVALID_HEIGHT       -100000.0f                     // for check, must be equal to VMAP_INVALID_HEIGHT, real value for unknown height is VMAP_INVALID_HEIGHT_VALUE
 #define MIN_UNLOAD_DELAY      1                             // immediate unload
@@ -346,12 +344,11 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
             GetZoneAndAreaIdByAreaFlag(zoneid,areaid,GetAreaFlag(x,y,z),i_id);
         }
 
-        virtual void MoveAllCreaturesInMoveList();
         virtual void RemoveAllObjectsInRemoveList();
 
-        bool CreatureRespawnRelocation(Creature *c);        // used only in MoveAllCreaturesInMoveList and ObjectGridUnloader
+        bool CreatureRespawnRelocation(Creature *c);        // used only in CreatureRelocation and ObjectGridUnloader
 
-        // assert print helper
+        // ASSERT print helper
         bool CheckGridIntegrity(Creature* c, bool moved) const;
 
         uint32 GetInstanceId() const { return i_InstanceId; }
@@ -390,9 +387,6 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         }
 
         void AddObjectToRemoveList(WorldObject *obj);
-        void DoDelayedMovesAndRemoves();
-
-        virtual bool RemoveBones(uint64 guid, float x, float y);
 
         void UpdateObjectVisibility(WorldObject* obj, Cell cell, CellPair cellpair);
         void UpdatePlayerVisibility(Player* player, Cell cell, CellPair cellpair);
@@ -427,14 +421,14 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
 
         void RemoveFromActive(Creature* obj);
 
-        Creature* GetCreature(uint64 guid);
-        Vehicle* GetVehicle(uint64 guid);
-        Pet* GetPet(uint64 guid);
-        Creature* GetCreatureOrPetOrVehicle(uint64 guid);
-        GameObject* GetGameObject(uint64 guid);
-        DynamicObject* GetDynamicObject(uint64 guid);
-        Corpse* GetCorpse(uint64 guid);
-        WorldObject* GetWorldObject(uint64 guid);
+        Creature* GetCreature(ObjectGuid guid);
+        Vehicle* GetVehicle(ObjectGuid guid);
+        Pet* GetPet(ObjectGuid guid);
+        Creature* GetCreatureOrPetOrVehicle(ObjectGuid guid);
+        GameObject* GetGameObject(ObjectGuid guid);
+        DynamicObject* GetDynamicObject(ObjectGuid guid);
+        Corpse* GetCorpse(ObjectGuid guid);
+        WorldObject* GetWorldObject(ObjectGuid guid);
 
         TypeUnorderedMapContainer<AllMapStoredObjectTypes>& GetObjectsStore() { return m_objectsStore; }
 
@@ -469,9 +463,6 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         void CreatureRelocationNotify(Creature *creature, Cell newcell, CellPair newval);
 
         bool CreatureCellRelocation(Creature *creature, Cell new_cell);
-
-        void AddCreatureToMoveList(Creature *c, float x, float y, float z, float ang);
-        CreatureMoveList i_creaturesToMove;
 
         bool loaded(const GridPair &) const;
         void EnsureGridCreated(const GridPair &);
@@ -535,9 +526,9 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         std::multimap<time_t, ScriptAction> m_scriptSchedule;
 
         // Map local low guid counters
-        uint32 m_hiDynObjectGuid;
-        uint32 m_hiPetGuid;
-        uint32 m_hiVehicleGuid;
+        ObjectGuidGenerator<HIGHGUID_DYNAMICOBJECT> m_DynObjectGuids;
+        ObjectGuidGenerator<HIGHGUID_PET> m_PetGuids;
+        ObjectGuidGenerator<HIGHGUID_VEHICLE> m_VehGuids;
 
         // Type specific code for add/remove to/from grid
         template<class T>
@@ -616,6 +607,7 @@ class MANGOS_DLL_SPEC BattleGroundMap : public Map
         BattleGroundMap(uint32 id, time_t, uint32 InstanceId, Map* _parent, uint8 spawnMode);
         ~BattleGroundMap();
 
+        void Update(const uint32&);
         bool Add(Player *);
         void Remove(Player *, bool);
         bool CanEnter(Player* player);

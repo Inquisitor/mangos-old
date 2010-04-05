@@ -124,7 +124,7 @@ void WorldSession::HandleMoveWorldportAckOpcode()
         {
             // short preparations to continue flight
             FlightPathMovementGenerator* flight = (FlightPathMovementGenerator*)(GetPlayer()->GetMotionMaster()->top());
-            flight->Initialize(*GetPlayer());
+            flight->Reset(*GetPlayer());
             return;
         }
 
@@ -178,15 +178,15 @@ void WorldSession::HandleMoveWorldportAckOpcode()
 void WorldSession::HandleMoveTeleportAck(WorldPacket& recv_data)
 {
     sLog.outDebug("MSG_MOVE_TELEPORT_ACK");
-    uint64 guid;
 
-    if(!recv_data.readPackGUID(guid))
-        return;
+    ObjectGuid guid;
+
+    recv_data >> guid.ReadAsPacked();
 
     uint32 flags, time;
     recv_data >> flags >> time;
-    DEBUG_LOG("Guid " UI64FMTD, guid);
-    DEBUG_LOG("Flags %u, time %u", flags, time/IN_MILISECONDS);
+    DEBUG_LOG("Guid: %s", guid.GetString().c_str());
+    DEBUG_LOG("Flags %u, time %u", flags, time/IN_MILLISECONDS);
 
     Unit *mover = _player->m_mover;
     Player *plMover = mover->GetTypeId() == TYPEID_PLAYER ? (Player*)mover : NULL;
@@ -194,7 +194,7 @@ void WorldSession::HandleMoveTeleportAck(WorldPacket& recv_data)
     if(!plMover || !plMover->IsBeingTeleportedNear())
         return;
 
-    if(guid != plMover->GetGUID())
+    if(guid != plMover->GetObjectGuid())
         return;
 
     plMover->SetSemaphoreTeleportNear(false);
@@ -241,12 +241,11 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     }
 
     /* extract packet */
-    uint64 guid;
+    ObjectGuid guid;
+    MovementInfo movementInfo;
 
-    if(!recv_data.readPackGUID(guid))
-        return;
-
-    MovementInfo movementInfo(recv_data);
+    recv_data >> guid.ReadAsPacked();
+    recv_data >> movementInfo;
     /*----------------*/
 
     if (!MaNGOS::IsValidMapCoord(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z, movementInfo.GetPos()->o))
@@ -279,7 +278,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
             // elevators also cause the client to send MOVEFLAG_ONTRANSPORT - just unmount if the guid can be found in the transport list
             for (MapManager::TransportSet::const_iterator iter = sMapMgr.m_Transports.begin(); iter != sMapMgr.m_Transports.end(); ++iter)
             {
-                if ((*iter)->GetGUID() == movementInfo.GetTransportGuid())
+                if ((*iter)->GetObjectGuid() == movementInfo.GetTransportGuid())
                 {
                     plMover->m_transport = (*iter);
                     (*iter)->AddPassenger(plMover);
@@ -375,26 +374,21 @@ void WorldSession::HandleForceSpeedChangeAck(WorldPacket &recv_data)
     uint32 opcode = recv_data.GetOpcode();
     sLog.outDebug("WORLD: Recvd %s (%u, 0x%X) opcode", LookupOpcodeName(opcode), opcode, opcode);
     /* extract packet */
-    uint64 guid;
-    uint32 unk1;
+    ObjectGuid guid;
+    MovementInfo movementInfo;
     float  newspeed;
 
-    if(!recv_data.readPackGUID(guid))
-        return;
+    recv_data >> guid.ReadAsPacked();
+    recv_data >> Unused<uint32>();                          // counter or moveEvent
+    recv_data >> movementInfo;
+    recv_data >> newspeed;
 
     // now can skip not our packet
-    if(_player->GetGUID() != guid)
+    if(_player->GetObjectGuid() != guid)
     {
         recv_data.rpos(recv_data.wpos());                   // prevent warnings spam
         return;
     }
-
-    // continue parse packet
-    recv_data >> unk1;                                      // counter or moveEvent
-
-    MovementInfo movementInfo(recv_data);
-
-    recv_data >> newspeed;
     /*----------------*/
 
     // client ACK send one packet for mounted/run case and need skip all except last from its
@@ -472,19 +466,18 @@ void WorldSession::HandleMoveNotActiveMover(WorldPacket &recv_data)
     sLog.outDebug("WORLD: Recvd CMSG_MOVE_NOT_ACTIVE_MOVER");
     recv_data.hexlike();
 
-    uint64 old_mover_guid;
+    ObjectGuid old_mover_guid;
+    MovementInfo mi;
 
-    if(!recv_data.readPackGUID(old_mover_guid))
-        return;
+    recv_data >> old_mover_guid.ReadAsPacked();
+    recv_data >> mi;
 
-    if(_player->m_mover->GetGUID() == old_mover_guid)
+    if(_player->m_mover->GetObjectGuid() == old_mover_guid)
     {
-        sLog.outError("HandleMoveNotActiveMover: incorrect mover guid: mover is " I64FMT " and should be " I64FMT " instead of " UI64FMTD, _player->m_mover->GetGUID(), _player->GetGUID(), old_mover_guid);
+        sLog.outError("HandleMoveNotActiveMover: incorrect mover guid: mover is " I64FMT " and should be " I64FMT " instead of " UI64FMTD, _player->m_mover->GetGUID(), _player->GetGUID(), old_mover_guid.GetRawValue());
         recv_data.rpos(recv_data.wpos());                   // prevent warnings spam
         return;
     }
-
-    MovementInfo mi(recv_data);
 
     _player->m_movementInfo = mi;
 }
@@ -494,20 +487,16 @@ void WorldSession::HandleDismissControlledVehicle(WorldPacket &recv_data)
     sLog.outDebug("WORLD: Recvd CMSG_DISMISS_CONTROLLED_VEHICLE");
     recv_data.hexlike();
 
+    ObjectGuid guid;
+    MovementInfo mi;
+
+    recv_data >> guid.ReadAsPacked();
+    recv_data >> mi;
+
     uint64 vehicleGUID = _player->GetVehicleGUID();
 
     if(!vehicleGUID)                                        // something wrong here...
-    {
-        recv_data.rpos(recv_data.wpos());                   // prevent warnings spam
         return;
-    }
-
-    uint64 guid;
-
-    if(!recv_data.readPackGUID(guid))
-        return;
-
-    MovementInfo mi(recv_data);
 
     _player->m_movementInfo = mi;
 
@@ -525,57 +514,15 @@ void WorldSession::HandleRequestVehicleExit(WorldPacket &recv_data)
 {
     sLog.outDebug("WORLD: Recvd CMSG_REQUEST_VEHICLE_EXIT");
     recv_data.hexlike();
- 
+
     uint64 vehicleGUID = _player->GetVehicleGUID();
- 
+
     if(!vehicleGUID)                                        // something wrong here...
         return;
- 
+
     if(Vehicle *vehicle = _player->GetMap()->GetVehicle(vehicleGUID))
     {
         _player->ExitVehicle();
-    }
-}
-
-void WorldSession::HandleRequestVehiclePrevSeat(WorldPacket &recv_data)
-{
-    sLog.outDebug("WORLD: Recvd CMSG_REQUEST_VEHICLE_PREV_SEAT");
-    recv_data.hexlike();
- 
-    uint64 vehicleGUID = _player->GetVehicleGUID();
-
-    if(!vehicleGUID)                                        // something wrong here...
-        return;
-
-    if(Vehicle *vehicle = _player->GetMap()->GetVehicle(vehicleGUID))
-    {
-        int8 prv_seat = _player->m_SeatData.seat;
-        if(Vehicle *v = vehicle->GetNextEmptySeat(&prv_seat, false, false))
-        {
-            vehicle->RemovePassenger(_player);
-            _player->EnterVehicle(v, prv_seat, false);
-        }
-    }
-}
-
-void WorldSession::HandleRequestVehicleNextSeat(WorldPacket &recv_data)
-{
-    sLog.outDebug("WORLD: Recvd CMSG_REQUEST_VEHICLE_NEXT_SEAT");
-    recv_data.hexlike();
-
-    uint64 vehicleGUID = _player->GetVehicleGUID();
-
-    if(!vehicleGUID)                                        // something wrong here...
-        return;
-
-    if(Vehicle *vehicle = _player->GetMap()->GetVehicle(vehicleGUID))
-    {
-        int8 nxt_seat = _player->m_SeatData.seat;
-        if(Vehicle *v = vehicle->GetNextEmptySeat(&nxt_seat, true, false))
-        {
-            vehicle->RemovePassenger(_player);
-            _player->EnterVehicle(v, nxt_seat, false);
-        }
     }
 }
 
@@ -591,18 +538,17 @@ void WorldSession::HandleRequestVehicleSwitchSeat(WorldPacket &recv_data)
 
     if(Vehicle *vehicle = _player->GetMap()->GetVehicle(vehicleGUID))
     {
-        uint64 guid = 0;
-        if(!recv_data.readPackGUID(guid))
-            return;
+        ObjectGuid guid;
+        recv_data >> guid.ReadAsPacked();
 
         int8 seatId = 0;
         recv_data >> seatId;
 
-        if(guid)
+        if(!guid.IsEmpty())
         {
-            if(vehicleGUID != guid)
+            if(vehicleGUID != guid.GetRawValue())
             {
-                if(Vehicle *veh = _player->GetMap()->GetVehicle(guid))
+                if(Vehicle *veh = _player->GetMap()->GetVehicle(guid.GetRawValue()))
                 {
                     if(!_player->IsWithinDistInMap(veh, 10))
                         return;
@@ -623,7 +569,7 @@ void WorldSession::HandleRequestVehicleSwitchSeat(WorldPacket &recv_data)
         }
     }
 }
- 
+
 void WorldSession::HandleChangeSeatsOnControlledVehicle(WorldPacket &recv_data)
 {
     sLog.outDebug("WORLD: Recvd CMSG_CHANGE_SEATS_ON_CONTROLLED_VEHICLE");
@@ -634,43 +580,40 @@ void WorldSession::HandleChangeSeatsOnControlledVehicle(WorldPacket &recv_data)
     if(!vehicleGUID)                                        // something wrong here...
         return;
 
-    if(Vehicle *vehicle = _player->GetMap()->GetVehicle(vehicleGUID))
+    if(recv_data.GetOpcode() == CMSG_REQUEST_VEHICLE_PREV_SEAT)
     {
-        MovementInfo mi(recv_data);
-        //_player->m_movementInfo = mi;
+        GetPlayer()->ChangeSeat(-1, false);
+        return;
+    }
+    else if(recv_data.GetOpcode() == CMSG_REQUEST_VEHICLE_NEXT_SEAT)
+    {
+        GetPlayer()->ChangeSeat(-1, true);
+        return;
+    }
 
-        uint64 guid = 0;
-        if(!recv_data.readPackGUID(guid))
-            return;
+    ObjectGuid guid, guid2;
+    recv_data >> guid.ReadAsPacked();
 
-        int8 seatId = 0;
-        recv_data >> seatId;
-        
-        if(guid)
+    MovementInfo mi;
+    recv_data >> mi;
+    _player->m_movementInfo = mi;
+
+    recv_data >> guid2.ReadAsPacked(); //guid of vehicle or of vehicle in target seat
+
+    int8 seatId;
+    recv_data >> seatId;
+
+    if(guid.GetRawValue() == guid2.GetRawValue())
+        _player->ChangeSeat(seatId, false);
+    else if(Vehicle *vehicle = _player->GetMap()->GetVehicle(guid2.GetRawValue()))
+    {
+        if(vehicle->HasEmptySeat(seatId))
         {
-            if(vehicleGUID != guid)
-            {
-                if(Vehicle *veh = _player->GetMap()->GetVehicle(guid))
-                {
-                    if(!_player->IsWithinDistInMap(veh, 10))
-                        return;
-
-                    if(Vehicle *v = veh->FindFreeSeat(&seatId, false))
-                    {
-                        vehicle->RemovePassenger(_player);
-                        _player->EnterVehicle(v, seatId, false);
-                    }
-                }
-                return;
-            }
+            _player->ExitVehicle();
+            _player->EnterVehicle(vehicle, seatId);
         }
-        if(Vehicle *v = vehicle->FindFreeSeat(&seatId, false))
-        {
-            vehicle->RemovePassenger(_player);
-            _player->EnterVehicle(v, seatId, false);
-        }
-     }
- }
+    }
+}
 
 void WorldSession::HandleMountSpecialAnimOpcode(WorldPacket& /*recvdata*/)
 {
@@ -686,43 +629,38 @@ void WorldSession::HandleMoveKnockBackAck( WorldPacket & recv_data )
 {
     sLog.outDebug("CMSG_MOVE_KNOCK_BACK_ACK");
 
-    uint64 guid;                                            // guid - unused
-    if(!recv_data.readPackGUID(guid))
-        return;
+    ObjectGuid guid;                                        // guid - unused
+    MovementInfo movementInfo;
 
-    recv_data.read_skip<uint32>();                          // unk
-
-    MovementInfo movementInfo(recv_data);
+    recv_data >> guid.ReadAsPacked();
+    recv_data >> Unused<uint32>();                          // unk
+    recv_data >> movementInfo;
 }
 
 void WorldSession::HandleMoveHoverAck( WorldPacket& recv_data )
 {
     sLog.outDebug("CMSG_MOVE_HOVER_ACK");
 
-    uint64 guid;                                            // guid - unused
-    if(!recv_data.readPackGUID(guid))
-        return;
+    ObjectGuid guid;                                        // guid - unused
+    MovementInfo movementInfo;
 
-    recv_data.read_skip<uint32>();                          // unk
-
-    MovementInfo movementInfo(recv_data);
-
-    recv_data.read_skip<uint32>();                          // unk2
+    recv_data >> guid.ReadAsPacked();
+    recv_data >> Unused<uint32>();                          // unk1
+    recv_data >> movementInfo;
+    recv_data >> Unused<uint32>();                          // unk2
 }
 
 void WorldSession::HandleMoveWaterWalkAck(WorldPacket& recv_data)
 {
     sLog.outDebug("CMSG_MOVE_WATER_WALK_ACK");
 
-    uint64 guid;                                            // guid - unused
-    if(!recv_data.readPackGUID(guid))
-        return;
+    ObjectGuid guid;                                        // guid - unused
+    MovementInfo movementInfo;
 
-    recv_data.read_skip<uint32>();                          // unk
-
-    MovementInfo movementInfo(recv_data);
-
-    recv_data.read_skip<uint32>();                          // unk2
+    recv_data >> guid.ReadAsPacked();
+    recv_data >> Unused<uint32>();                          // unk1
+    recv_data >> movementInfo;
+    recv_data >> Unused<uint32>();                          // unk2
 }
 
 void WorldSession::HandleSummonResponseOpcode(WorldPacket& recv_data)

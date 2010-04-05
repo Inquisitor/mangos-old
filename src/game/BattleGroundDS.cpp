@@ -62,7 +62,7 @@ void BattleGroundDS::Update(uint32 diff)
                         float angle = (plr->GetBGTeam() == ALLIANCE /* gold */) ? plr->GetAngle(1259.58f, 764.43f) : plr->GetAngle(1325.84f, 817.304f);
 
                         WorldPacket data(SMSG_MOVE_KNOCK_BACK, 8+4+4+4+4+4);
-                        data.append(plr->GetPackGUID());
+                        data << plr->GetPackGUID();
                         data << uint32(0);                                  // Sequence
                         data << float(cos(angle));                          // x direction
                         data << float(sin(angle));                          // y direction
