@@ -224,7 +224,7 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
 
                 char outMsg[512];
                 snprintf( (char*)outMsg, 512, "WHSIPER_REPLY FROM:%s TO:%s TEXT:%s\n", GetPlayer()->GetName(), to.c_str(), msg.c_str());
-                RASocket::raprint(NULL, outMsg);
+                RASocket::raprint(outMsg);
                 return;
             }
 
