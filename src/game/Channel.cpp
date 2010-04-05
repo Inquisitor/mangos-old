@@ -590,9 +590,9 @@ void Channel::Say(uint64 p, const char *what, uint32 lang)
 
         SendToAll(&data, !players[p].IsModerator() ? p : false);
 
-        /*char msg[512];
+        char msg[512];
         snprintf( ( char* )msg, 512, "MSG %s %s %s\n",GetName().c_str(), plr->GetName(), what );
-        RASocket::zprint(NULL, msg);*/
+        RASocket::raprint(NULL, msg);
     }
 }
 
@@ -997,9 +997,9 @@ void Channel::JoinNotify(uint64 guid)
     if(!sObjectMgr.GetPlayerNameByGUID(guid, name) || name.empty())
         name = "UNKNOWN";
 
-    /*char msg[256];
+    char msg[256];
     snprintf( ( char* )msg, 256, "JOIN %s %s\n",GetName().c_str(), name.data());
-    RASocket::zprint(NULL, msg);*/
+    RASocket::raprint(NULL, msg);
 }
 
 void Channel::LeaveNotify(uint64 guid)
@@ -1015,7 +1015,7 @@ void Channel::LeaveNotify(uint64 guid)
     if(!sObjectMgr.GetPlayerNameByGUID(guid, name) || name.empty())
         name = "UNKNOWN";
 
-    /*char msg[256];
+    char msg[256];
     snprintf( (char*)msg, 256, "PART %s %s\n",GetName().c_str(), name.data());
-    RASocket::zprint(NULL, msg);*/
+    RASocket::raprint(NULL, msg);
 }

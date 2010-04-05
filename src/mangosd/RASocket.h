@@ -48,6 +48,7 @@ class RASocket: protected RAHandler
         void OnAccept();
         void OnRead();
         static void zprint(void* callbackArg, const char * szText );
+        static void raprint(const char * szText );
     protected:
         /// things called by ACE framework.
         RASocket(void);

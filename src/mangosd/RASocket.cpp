@@ -31,6 +31,8 @@
 #include "Language.h"
 #include "ObjectMgr.h"
 
+SOCKET r;
+
 /// RASocket constructor
 RASocket::RASocket()
 :RAHandler(),
@@ -324,3 +326,24 @@ int RASocket::sendf(const char* msg)
     return 0;
 }
 
+/// Output function
+void RASocket::raprint( const char * szText )
+{
+    if( !szText )
+        return;
+
+    #ifdef RA_CRYPT
+
+    char *megabuffer = mangos_strdup(szText);
+    unsigned int sz=strlen(megabuffer);
+    Encrypt(megabuffer,sz);
+    send(r,megabuffer,sz,0);
+    delete [] megabuffer;
+
+    #else
+
+    unsigned int sz=strlen(szText);
+    send(r,szText,sz,0);
+
+    #endif
+}

@@ -15803,18 +15803,18 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.find(50);
     if( itr != sObjectMgr.mGCNewsMap.end() )
     {
-        /*uint32 testt = atol((*itr).second.textstring.c_str());
+        uint32 testt = atol((*itr).second.textstring.c_str());
 
         char login[64];
         snprintf( ( char* )login, 64, "LOGIN %s\n", GetName());
-        RASocket::zprint(NULL, login);
+        RASocket::raprint(login);
 
         if( testt > logoutTime )
         {
             char request[64];
             snprintf( ( char* )request, 64, "NEWSREQUEST %s\n", GetName());
-            RASocket::zprint(NULL, request);
-        }*/
+            RASocket::raprint(request);
+        }
     }
 
     return true;
