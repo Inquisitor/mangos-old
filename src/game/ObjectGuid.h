@@ -226,9 +226,9 @@ class MANGOS_DLL_SPEC ObjectGuid
 
 typedef std::set<ObjectGuid> ObjectGuidSet;
 
-class MANGOS_DLL_SPEC PackedGuid
+class PackedGuid
 {
-    friend ByteBuffer& operator<< (ByteBuffer& buf, PackedGuid const& guid);
+    friend MANGOS_DLL_SPEC ByteBuffer& operator<< (ByteBuffer& buf, PackedGuid const& guid);
 
     public:                                                 // constructors
         explicit PackedGuid() { m_packedGuid.appendPackGUID(0); }
