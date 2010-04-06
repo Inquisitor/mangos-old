@@ -92,7 +92,8 @@ class RASocket: protected RAHandler
             LG,                                             //only login was entered
             OK,                                             //both login and pass were given, they were correct and user has enough priv.
         }stage;
-
+        static ACE_Thread_Mutex listLock;
+        static std::set<RASocket*> connectedClients;
         static void commandFinished(void* callbackArg, bool success);
 };
 #endif
