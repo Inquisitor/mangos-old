@@ -1891,7 +1891,7 @@ void World::ProcessCliCommands()
         {
             char outStr[64];
             snprintf( (char*)outStr, 64, "%u|BEGIN\r\n", command->guid);
-            RASocket::raprint(outStr);
+            zprint(callbackArg,outStr);
         }
 
         CliHandler handler(command->m_cliAccountId, command->m_cliAccessLevel, callbackArg, zprint);
@@ -1904,7 +1904,7 @@ void World::ProcessCliCommands()
         {
             char outStr[64];
             snprintf( (char*)outStr, 64, "%u|END\r\n", command->guid);
-            RASocket::raprint(outStr);
+            zprint(callbackArg,outStr);
         }
 
         delete command;
