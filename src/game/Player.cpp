@@ -16957,6 +16957,8 @@ void Player::SaveToDB()
     GetSession()->SaveTutorialsData();                      // changed only while character in game
     _SaveGlyphs();
     _SaveTalents();
+    if(m_session->isLogingOut())                            // only save stats on logout
+        _SaveStats();
 
     CharacterDatabase.CommitTransaction();
 
@@ -17348,6 +17350,36 @@ void Player::_SaveTalents()
             }
         }
     }
+}
+
+// save player stats -- only for external usage
+// real stats will be recalculated on player login
+void Player::_SaveStats()
+{
+    CharacterDatabase.PExecute("DELETE FROM character_stats WHERE guid = '%u'", GetGUIDLow());
+    std::ostringstream ss;
+    ss << "INSERT INTO character_stats (guid, maxhealth, maxpower1, maxpower2, maxpower3, maxpower4, maxpower5, maxpower6, maxpower7, "
+        "strength, agility, stamina, intellect, spirit, armor, resHoly, resFire, resNature, resFrost, resShadow, resArcane, "
+        "blockPct, dodgePct, parryPct, critPct, rangedCritPct, spellCritPct, attackPower, rangedAttackPower, spellPower) VALUES ("
+        << GetGUIDLow() << ", "
+        << GetMaxHealth() << ", ";
+    for(int i = 0; i < MAX_POWERS; ++i)
+        ss << GetMaxPower(Powers(i)) << ", ";
+    for(int i = 0; i < MAX_STATS; ++i)
+        ss << GetStat(Stats(i)) << ", ";
+    // armor + school resistances
+    for(int i = 0; i < MAX_SPELL_SCHOOL; ++i)
+        ss << GetResistance(SpellSchools(i)) << ",";
+    ss << GetFloatValue(PLAYER_BLOCK_PERCENTAGE) << ", "
+       << GetFloatValue(PLAYER_DODGE_PERCENTAGE) << ", "
+       << GetFloatValue(PLAYER_PARRY_PERCENTAGE) << ", "
+       << GetFloatValue(PLAYER_CRIT_PERCENTAGE) << ", "
+       << GetFloatValue(PLAYER_RANGED_CRIT_PERCENTAGE) << ", "
+       << GetFloatValue(PLAYER_SPELL_CRIT_PERCENTAGE1) << ", "
+       << GetUInt32Value(UNIT_FIELD_ATTACK_POWER) << ", "
+       << GetUInt32Value(UNIT_FIELD_RANGED_ATTACK_POWER) << ", "
+       << GetBaseSpellPowerBonus() << ")";
+    CharacterDatabase.Execute( ss.str().c_str() );
 }
 
 void Player::outDebugValues() const
