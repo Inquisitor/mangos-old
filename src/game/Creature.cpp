@@ -1956,6 +1956,7 @@ void Creature::GetRespawnCoord( float &x, float &y, float &z, float* ori, float*
             if (dist)
                 *dist = GetRespawnRadius();
 
+            ASSERT(x==x); // we can get false only for NAN
             return;
         }
     }
@@ -1963,7 +1964,7 @@ void Creature::GetRespawnCoord( float &x, float &y, float &z, float* ori, float*
     float orient;
 
     GetSummonPoint(x, y, z, orient);
-
+    ASSERT(x==x); // we can get false only for NAN
     if (ori)
         *ori = orient;
     if (dist)
