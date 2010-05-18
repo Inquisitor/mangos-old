@@ -1717,7 +1717,7 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
 
     if (x == 0.0f && y == 0.0f && z == 0.0f)
         GetClosePoint(x, y, z, pCreature->GetObjectSize());
-
+    ASSERT(x==x);
     pCreature->Relocate(x, y, z, ang);
     pCreature->SetSummonPoint(x, y, z, ang);
 

@@ -4618,7 +4618,10 @@ void Spell::DoSummon(SpellEffectIndex eff_idx)
         z = m_targets.m_destZ;
     }
     else
+    {
         m_caster->GetClosePoint(x, y, z, spawnCreature->GetObjectSize());
+        ASSERT(x==x);
+    }
 
     spawnCreature->Relocate(x, y, z, -m_caster->GetOrientation());
     spawnCreature->SetSummonPoint(x, y, z, -m_caster->GetOrientation());
@@ -5144,7 +5147,7 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
         // Summon if dest location not present near caster
         else
             m_caster->GetClosePoint(px, py, pz,spawnCreature->GetObjectSize());
-
+        ASSERT(x==x);
         spawnCreature->Relocate(px, py, pz, m_caster->GetOrientation());
         spawnCreature->SetSummonPoint(px, py, pz, m_caster->GetOrientation());
 
@@ -7557,11 +7560,11 @@ void Spell::DoSummonTotem(SpellEffectIndex eff_idx, uint8 slot_dbc)
 
     float x, y, z;
     m_caster->GetClosePoint(x, y, z, pTotem->GetObjectSize(), 2.0f, angle);
-
+    ASSERT(x==x);
     // totem must be at same Z in case swimming caster and etc.
     if( fabs( z - m_caster->GetPositionZ() ) > 5 )
         z = m_caster->GetPositionZ();
-
+    
     pTotem->Relocate(x, y, z, m_caster->GetOrientation());
     pTotem->SetSummonPoint(x, y, z, m_caster->GetOrientation());
 
@@ -8175,7 +8178,7 @@ void Spell::DoSummonCritter(SpellEffectIndex eff_idx, uint32 forceFaction)
      // Summon if dest location not present near caster
      else
          m_caster->GetClosePoint(x, y, z, critter->GetObjectSize());
-
+    ASSERT(x==x);
     critter->Relocate(x, y, z, m_caster->GetOrientation());
     critter->SetSummonPoint(x, y, z, m_caster->GetOrientation());
 
