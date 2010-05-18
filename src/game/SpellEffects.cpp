@@ -5147,7 +5147,7 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
         // Summon if dest location not present near caster
         else
             m_caster->GetClosePoint(px, py, pz,spawnCreature->GetObjectSize());
-        ASSERT(x==x);
+        ASSERT(px==px);
         spawnCreature->Relocate(px, py, pz, m_caster->GetOrientation());
         spawnCreature->SetSummonPoint(px, py, pz, m_caster->GetOrientation());
 
