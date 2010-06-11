@@ -6857,7 +6857,6 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
 
                     // Remove Taunt cooldown
                     ((Player*)unitTarget)->RemoveSpellCooldown(355, true);
-
                     return;
                 }
                 case 52173: // Coyote Spirit Despawn
@@ -7206,6 +7205,50 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                         return;
 
                     m_caster->CastSpell(unitTarget, 72588, true);
+                    return;
+                }
+                // Burst at the Seams (Quest: That's Abominable!)
+                case 59576:
+                {
+                    Unit * pCaster = GetCaster();
+                    // Iterate for all creatures around cast place
+                    CellPair pair(MaNGOS::ComputeCellPair(pCaster->GetPositionX(), pCaster->GetPositionY()));
+                    Cell cell(pair);
+                    cell.data.Part.reserved = ALL_DISTRICT;
+                    cell.SetNoCreate();
+
+                    std::list<Creature*> creatureList;
+
+                    MaNGOS::AnyUnitInPointRangeCheck go_check(pCaster->GetPositionX(), pCaster->GetPositionY(), pCaster->GetPositionZ(), 20);
+                    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
+                    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+
+                    // Get Creatures
+                    cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+
+                    if (!creatureList.empty())
+                    {
+                        uint32 m_counted = 0;
+                        for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+                        {
+                            uint32 entryToCredit = 0;
+                            switch((*itr)->GetEntry())
+                            {
+                                case 31142: entryToCredit = 31743; break;
+                                case 31147: entryToCredit = 32168; break;
+                                case 31205: entryToCredit = 32167; break;
+                            }
+                            if(GetCaster()->GetOwner())
+                            {
+                                if(GetCaster()->GetOwner()->GetTypeId() == TYPEID_PLAYER)
+                                    ((Player*)GetCaster()->GetOwner())->KilledMonsterCredit(entryToCredit, 0);
+                            }
+
+                            unitTarget->DealDamage((*itr), (*itr)->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                            
+                        }
+                        unitTarget->DealDamage(unitTarget, unitTarget->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                    }
                     return;
                 }
             }
