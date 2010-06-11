@@ -49,11 +49,15 @@ HomeMovementGenerator<Creature>::_setTargetLocation(Creature & owner)
         owner.GetRespawnCoord(x, y, z);
 
     CreatureTraveller traveller(owner);
+#ifdef _PATHFINDING_ENABLED
     float myx,myy,myz;
     //the Creature after us is actually in owner variable..
     owner.GetPosition(myx,myy,myz);
     Position travelto = owner.GetMap()->getNextPositionOnPathToLocation(myx,myy,myz,x,y,z);
     uint32 travel_time = i_destinationHolder.SetDestination(traveller, travelto.x, travelto.y, travelto.z);
+#else 
+    uint32 travel_time = i_destinationHolder.SetDestination(traveller, x, y, z);
+#endif
     modifyTravelTime(travel_time);
     owner.clearUnitState(UNIT_STAT_ALL_STATE);
 }
@@ -70,6 +74,7 @@ HomeMovementGenerator<Creature>::Update(Creature &owner, const uint32& time_diff
 
     if (time_diff > i_travel_timer)
     {
+        #ifdef _PATHFINDING_ENABLED
         // When reaching end position check if this is really the spawnpoint, if not continue moving.
         float x, y, z;
         owner.GetRespawnCoord(x, y, z);
@@ -82,6 +87,8 @@ HomeMovementGenerator<Creature>::Update(Creature &owner, const uint32& time_diff
             modifyTravelTime(travel_time);
             return true;
         }
+        #endif
+
         owner.AddSplineFlag(SPLINEFLAG_WALKMODE);
 
         // restore orientation of not moving creature at returning to home
