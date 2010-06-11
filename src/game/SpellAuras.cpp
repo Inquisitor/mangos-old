@@ -3939,12 +3939,23 @@ void Aura::HandleForceReaction(bool apply, bool Real)
     if (apply && faction_rank >= REP_FRIENDLY || !apply && player->GetReputationRank(faction_id) >= REP_FRIENDLY)
         player->StopAttackFaction(faction_id);
 
-    // Nitro Boosts - drop BG flag if is carrying
+    
     if (SpellEntry const *spellInfo = GetSpellProto())
-        if (spellInfo->Id == 54861)
+    {
+        // Nitro Boosts - drop BG flag if is carrying
+        if (spellInfo->Id == 54861) 
+        {
             if((player->HasAura(23335) || player->HasAura(23333) || player->HasAura(34976)) && player->InBattleGround())
                 if(BattleGround *bg = player->GetBattleGround())
                     bg->EventPlayerDroppedFlag(player);
+        }
+        // Shadowy Disguse - Apply proper transformation
+        else if(spellInfo->Id == 32756)
+        {
+            uint32 auraId = player->getGender() == GENDER_FEMALE ? 38081 : 38080;
+            apply ? player->CastSpell(player, auraId, true) : player->RemoveAura(auraId, EFFECT_INDEX_0);
+        }
+    }
 }
 
 void Aura::HandleAuraModSkill(bool apply, bool /*Real*/)
