@@ -370,7 +370,7 @@ void BattleGround::Update(uint32 diff)
             EndBattleGround(winner);
             m_PrematureCountDown = false;
         }
-        else
+        else if (!sBattleGroundMgr.isTesting())
         {
             uint32 newtime = m_PrematureCountDownTimer - diff;
             // announce every minute
@@ -741,7 +741,7 @@ void BattleGround::EndBattleGround(uint32 winner)
             winner_rating = winner_arena_team->GetStats().rating;
             int32 winner_change = winner_arena_team->WonAgainst(loser_rating);
             int32 loser_change = loser_arena_team->LostAgainst(winner_rating);
-            sLog.outDebug("--- Winner rating: %u, Loser rating: %u, Winner change: %u, Losser change: %u ---", winner_rating, loser_rating, winner_change, loser_change);
+            DEBUG_LOG("--- Winner rating: %u, Loser rating: %u, Winner change: %u, Losser change: %u ---", winner_rating, loser_rating, winner_change, loser_change);
 
             std::string winner_ids = "";
             std::string loser_ids = "";
@@ -907,50 +907,37 @@ uint32 BattleGround::GetBattlemasterEntry() const
 
 void BattleGround::RewardMark(Player *plr,uint32 count)
 {
-    BattleGroundMarks mark;
-    bool IsSpell;
     switch(GetTypeID())
     {
         case BATTLEGROUND_AV:
-            IsSpell = true;
             if (count == ITEM_WINNER_COUNT)
-                mark = SPELL_AV_MARK_WINNER;
+                RewardSpellCast(plr,SPELL_AV_MARK_WINNER);
             else
-                mark = SPELL_AV_MARK_LOSER;
+                RewardSpellCast(plr,SPELL_AV_MARK_LOSER);
             break;
         case BATTLEGROUND_WS:
-            IsSpell = true;
             if (count == ITEM_WINNER_COUNT)
-                mark = SPELL_WS_MARK_WINNER;
+                RewardSpellCast(plr,SPELL_WS_MARK_WINNER);
             else
-                mark = SPELL_WS_MARK_LOSER;
+                RewardSpellCast(plr,SPELL_WS_MARK_LOSER);
             break;
         case BATTLEGROUND_AB:
-            IsSpell = true;
             if (count == ITEM_WINNER_COUNT)
-                mark = SPELL_AB_MARK_WINNER;
+                RewardSpellCast(plr,SPELL_AB_MARK_WINNER);
             else
-                mark = SPELL_AB_MARK_LOSER;
+                RewardSpellCast(plr,SPELL_AB_MARK_LOSER);
             break;
-        case BATTLEGROUND_EY:
-            IsSpell = false;
-            mark = ITEM_EY_MARK_OF_HONOR;
-            break;
-        case BATTLEGROUND_SA:
+        /*case BATTLEGROUND_SA:
             IsSpell = true;
             if (count == ITEM_WINNER_COUNT)
                 mark = SPELL_SA_MARK_WINNER;
             else
                 mark = SPELL_SA_MARK_LOSER;
-            break;
+            break;*/
+        case BATTLEGROUND_EY:                               // no rewards
         default:
-            return;
+            break;
     }
-
-    if (IsSpell)
-        RewardSpellCast(plr,mark);
-    else
-        RewardItem(plr,mark,count);
 }
 
 void BattleGround::RewardSpellCast(Player *plr, uint32 spell_id)
@@ -1022,8 +1009,7 @@ void BattleGround::SendRewardMarkByMail(Player *plr,uint32 mark, uint32 count)
         // text
         std::string textFormat = plr->GetSession()->GetMangosString(LANG_BG_MARK_BY_MAIL);
         char textBuf[300];
-        snprintf(textBuf,300,textFormat.c_str(),GetName(),GetName());
-        uint32 itemTextId = sObjectMgr.CreateItemText( textBuf );
+        snprintf(textBuf, 300, textFormat.c_str(), GetName(), GetName());
 
         MailDraft(subject, textBuf)
             .AddItem(markItem)
@@ -1187,7 +1173,7 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
         if (Transport)
             plr->TeleportToBGEntryPoint();
 
-        sLog.outDetail("BATTLEGROUND: Removed player %s from BattleGround.", plr->GetName());
+        DETAIL_LOG("BATTLEGROUND: Removed player %s from BattleGround.", plr->GetName());
     }
 
     //battleground object will be deleted next BattleGround::Update() call
@@ -1317,7 +1303,7 @@ void BattleGround::AddPlayer(Player *plr)
     AddOrSetPlayerToCorrectBgGroup(plr, guid, team);
 
     // Log
-    sLog.outDetail("BATTLEGROUND: Player %s joined the battle.", plr->GetName());
+    DETAIL_LOG("BATTLEGROUND: Player %s joined the battle.", plr->GetName());
 }
 
 /* this method adds player to his team's bg group, or sets his correct group if player is already in bg group */
