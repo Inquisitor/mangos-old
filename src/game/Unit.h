@@ -344,6 +344,9 @@ enum AuraRemoveMode
     AURA_REMOVE_BY_DISPEL,
     AURA_REMOVE_BY_DEATH,
     AURA_REMOVE_BY_DELETE,                                  // use for speedup and prevent unexpected effects at player logout/pet unsummon (must be used _only_ after save), delete.
+    AURA_REMOVE_BY_SHIELD_BREAK,                            // when absorb shield is removed by damage
+    AURA_REMOVE_BY_EXPIRE,                                  // at duration end
+
 };
 
 enum UnitMods
@@ -851,10 +854,18 @@ struct DiminishingReturn
     uint32                  hitCount;
 };
 
+// At least some values expected fixed and used in auras field, other custom
 enum MeleeHitOutcome
 {
-    MELEE_HIT_EVADE, MELEE_HIT_MISS, MELEE_HIT_DODGE, MELEE_HIT_BLOCK, MELEE_HIT_PARRY,
-    MELEE_HIT_GLANCING, MELEE_HIT_CRIT, MELEE_HIT_CRUSHING, MELEE_HIT_NORMAL
+    MELEE_HIT_EVADE     = 0,
+    MELEE_HIT_MISS      = 1,
+    MELEE_HIT_DODGE     = 2,                                // used as misc in SPELL_AURA_IGNORE_COMBAT_RESULT
+    MELEE_HIT_BLOCK     = 3,                                // used as misc in SPELL_AURA_IGNORE_COMBAT_RESULT
+    MELEE_HIT_PARRY     = 4,                                // used as misc in SPELL_AURA_IGNORE_COMBAT_RESULT
+    MELEE_HIT_GLANCING  = 5,
+    MELEE_HIT_CRIT      = 6,
+    MELEE_HIT_CRUSHING  = 7,
+    MELEE_HIT_NORMAL    = 8,
 };
 
 struct CleanDamage
@@ -891,7 +902,7 @@ struct CalcDamageInfo
 
 // Spell damage info structure based on structure sending in SMSG_SPELLNONMELEEDAMAGELOG opcode
 struct SpellNonMeleeDamage{
-    SpellNonMeleeDamage(Unit *_attacker, Unit *_target, uint32 _SpellID, uint32 _schoolMask)
+    SpellNonMeleeDamage(Unit *_attacker, Unit *_target, uint32 _SpellID, SpellSchoolMask _schoolMask)
         : target(_target), attacker(_attacker), SpellID(_SpellID), damage(0), overkill(0), schoolMask(_schoolMask),
         absorb(0), resist(0), physicalLog(false), unused(false), blocked(0), HitInfo(0)
     {}
@@ -901,7 +912,7 @@ struct SpellNonMeleeDamage{
     uint32 SpellID;
     uint32 damage;
     uint32 overkill;
-    uint32 schoolMask;
+    SpellSchoolMask schoolMask;
     uint32 absorb;
     uint32 resist;
     bool   physicalLog;
@@ -1524,10 +1535,10 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         // removing specific aura stack
         void RemoveAura(Aura* aura, AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
         void RemoveAura(AuraMap::iterator &i, AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
-        void RemoveAura(uint32 spellId, SpellEffectIndex effindex, Aura* except = NULL);
+        void RemoveAura(uint32 spellId, SpellEffectIndex effindex, Aura* except = NULL, AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
 
         // removing specific aura stacks by diff reasons and selections
-        void RemoveAurasDueToSpell(uint32 spellId, Aura* except = NULL);
+        void RemoveAurasDueToSpell(uint32 spellId, Aura* except = NULL, AuraRemoveMode mode = AURA_REMOVE_BY_DEFAULT);
         void RemoveAurasDueToItemSpell(Item* castItem,uint32 spellId);
         void RemoveAurasByCasterSpell(uint32 spellId, uint64 casterGUID);
         void RemoveAurasByCasterSpell(uint32 spellId, SpellEffectIndex effindex, uint64 casterGUID);
@@ -1564,11 +1575,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
             val *= GetModifierValue(UnitMods(UNIT_MOD_RESISTANCE_START+school), TOTAL_PCT);
             ApplyModSignedFloatValue((val > 0 ? UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE+school : UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE+school), val, apply);
         }
-        void ApplyResistanceBuffModsPercentMod(SpellSchools school, float val, bool apply)
-        {
-            ApplyPercentModFloatValue(UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE+school, val, apply);
-            ApplyPercentModFloatValue(UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE+school, val, apply);
-        }
+        void ApplyResistanceBuffModsPercentMod(SpellSchools school, bool positive, float val, bool apply) { ApplyPercentModFloatValue(positive ? UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE+school : UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE+school, val, apply); }
         void InitStatBuffMods()
         {
             for(int i = STAT_STRENGTH; i < MAX_STATS; ++i) SetFloatValue(UNIT_FIELD_POSSTAT0+i, 0);
