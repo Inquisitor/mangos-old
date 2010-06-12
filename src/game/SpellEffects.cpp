@@ -7228,7 +7228,6 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
 
                     if (!creatureList.empty())
                     {
-                        uint32 m_counted = 0;
                         for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
                         {
                             uint32 entryToCredit = 0;
@@ -7238,14 +7237,12 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                                 case 31147: entryToCredit = 32168; break;
                                 case 31205: entryToCredit = 32167; break;
                             }
+
                             if(GetCaster()->GetOwner())
-                            {
                                 if(GetCaster()->GetOwner()->GetTypeId() == TYPEID_PLAYER)
                                     ((Player*)GetCaster()->GetOwner())->KilledMonsterCredit(entryToCredit, 0);
-                            }
 
                             unitTarget->DealDamage((*itr), (*itr)->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                            
                         }
                         unitTarget->DealDamage(unitTarget, unitTarget->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                     }
