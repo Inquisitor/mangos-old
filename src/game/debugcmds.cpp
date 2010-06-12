@@ -216,6 +216,10 @@ bool ChatHandler::HandleDebugUpdateWorldStateCommand(const char* args)
 }
 bool ChatHandler::HandleDebugMoveMapCommand(const char* args)
 {
+#ifndef _PATHFINDING_ENABLED
+    SendSysMessage("Pathfinding is disabled");
+    return false;
+#else
     float range;
     char* w = strtok((char*)args, " ");
     if (!w) {
@@ -268,6 +272,7 @@ bool ChatHandler::HandleDebugMoveMapCommand(const char* args)
         SendSysMessage("No Creatures around player :(");
         return false;
     }
+#endif
 }
 bool ChatHandler::HandleDebugPlayCinematicCommand(const char* args)
 {

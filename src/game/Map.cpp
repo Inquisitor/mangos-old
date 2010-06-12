@@ -297,7 +297,9 @@ void Map::LoadMapAndVMap(int gx,int gy)
     LoadMap(gx,gy);
     if(i_InstanceId == 0) {
         LoadVMap(gx, gy);                                   // Only load the data for the base map
-        LoadNavMesh(gx,gy);
+#ifdef _PATHFINDING_ENABLED
+         LoadNavMesh(gx,gy); 
+#endif
     }
 }
 
