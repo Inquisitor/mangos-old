@@ -3270,6 +3270,17 @@ void Map::ScriptsProcess()
 
                 break;
             }
+            case SCRIPT_COMMAND_SET_ENTRY:
+            {
+                if(!target || target->GetTypeId() != TYPEID_UNIT)
+                {
+                    sLog.outError("SCRIPT_COMMAND_SET_ENTRY (script id %u) call for NULL target or non-creature type.", step.script->id);
+                    break;
+                }
+
+                Creature *pCreature = (Creature*)target;
+                pCreature->UpdateEntry(step.script->datalong, ALLIANCE, 0, step.script->datalong2 ? true : false);
+            }
             default:
                 sLog.outError("Unknown SCRIPT_COMMAND_ %u called for script id %u.",step.script->command, step.script->id);
                 break;

@@ -412,6 +412,7 @@ enum RealmZone
 #define SCRIPT_COMMAND_DESPAWN_SELF         18              // source or target must be creature, datalong = despawn delay
 #define SCRIPT_COMMAND_ADD_QUEST_COUNT      19              // source = any, target = any, datalong = quest_id, datalong2 = quest_field, dataint = increment value
 #define SCRIPT_COMMAND_TEMP_SUMMON_OBJECT   20              // source = any (summoner), datalong=gameobject entry, datalong2=despawn_delay
+#define SCRIPT_COMMAND_SET_ENTRY            21              // source = any target = creature only, datalong = entry to transform datalong2 = bool (preserve HP and MP)
 
 /// Storage class for commands issued for delayed execution
 struct CliCommandHolder
