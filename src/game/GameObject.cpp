@@ -488,13 +488,13 @@ void GameObject::AddUniqueUse(Player* player)
     m_unique_users.insert(player->GetGUIDLow());
 }
 
-void GameObject::Delete(uint32 timeMSToDeDelete)
+void GameObject::Delete(uint32 timeMSToDelete)
 {
-    if (timeMSToDeDelete)
+    if (timeMSToDelete)
     {
         ForcedDeleteDelayEvent *pEvent = new ForcedDeleteDelayEvent(*this);
 
-        m_ObjectEvents.AddEvent(pEvent, m_ObjectEvents.CalculateTime(timeMSToDeDelete));
+        m_ObjectEvents.AddEvent(pEvent, m_ObjectEvents.CalculateTime(timeMSToDelete));
         return;
     }
 

@@ -667,7 +667,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         bool isSpawnedByDefault() const { return m_spawnedByDefault; }
         uint32 GetRespawnDelay() const { return m_respawnDelayTime; }
         void Refresh();
-        void Delete(uint32 timeMSToDeDelete = 0);
+        void Delete(uint32 timeMSToDelete = 0);
         void getFishLoot(Loot *loot, Player* loot_owner);
         GameobjectTypes GetGoType() const { return GameobjectTypes(GetByteValue(GAMEOBJECT_BYTES_1, 1)); }
         void SetGoType(GameobjectTypes type) { SetByteValue(GAMEOBJECT_BYTES_1, 1, type); }

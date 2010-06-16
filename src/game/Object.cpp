@@ -1737,7 +1737,8 @@ GameObject* WorldObject::SummonGameObject(uint32 id, float x, float y, float z, 
         return NULL;
     }
 
-    pGameObj->Delete(despwtime);
+    if(despwtime)
+        pGameObj->Delete(despwtime);
     //pGameObj->SetRespawnTime(despwtime > 0 ? despwtime/IN_MILLISECONDS : 0);
 
     GetMap()->Add(pGameObj);
