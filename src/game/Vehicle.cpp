@@ -533,7 +533,8 @@ void Vehicle::AddPassenger(Unit *unit, int8 seatId, bool force)
             if (((Player*)unit)->GetGroup())
                 ((Player*)unit)->SetGroupUpdateFlag(GROUP_UPDATE_VEHICLE);
 
-            ((Player*)unit)->SetFarSightGUID(GetGUID());
+            ((Player*)unit)->GetCamera().SetView(this);
+            //((Player*)unit)->SetFarSightGUID(GetGUID());
 
             BuildVehicleActionBar((Player*)unit);
         }
@@ -591,7 +592,8 @@ void Vehicle::RemovePassenger(Unit *unit)
             // restore player control
             if (unit->GetTypeId() == TYPEID_PLAYER)
             {
-                ((Player*)unit)->SetFarSightGUID(NULL);
+                ((Player*)unit)->GetCamera().ResetView();
+                //((Player*)unit)->SetFarSightGUID(NULL);
 
                 if (seat->second.vs_flags & SF_CAN_CAST)
                 {

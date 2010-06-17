@@ -51,14 +51,6 @@ struct ScriptAction;
 class BattleGround;
 class GridMap;
 
-struct CreatureMover
-{
-    CreatureMover() : x(0), y(0), z(0), ang(0) {}
-    CreatureMover(float _x, float _y, float _z, float _ang) : x(_x), y(_y), z(_z), ang(_ang) {}
-
-    float x, y, z, ang;
-};
-
 // GCC have alternative #pragma pack(N) syntax and old gcc version not support pack(push,N), also any gcc version not support it at some platform
 #if defined( __GNUC__ )
 #pragma pack(1)
@@ -91,26 +83,14 @@ enum LevelRequirementVsMode
 #define INVALID_HEIGHT       -100000.0f                     // for check, must be equal to VMAP_INVALID_HEIGHT, real value for unknown height is VMAP_INVALID_HEIGHT_VALUE
 #define MIN_UNLOAD_DELAY      1                             // immediate unload
 
-//#define _PATHFINDING_ENABLED
+//#define _PATHFINDING_ENABLED                              // Removing comment from this enables pathfinding code
 
 class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::ObjectLevelLockable<Map, ACE_Thread_Mutex>
 {
     friend class MapReference;
+    friend class ObjectGridLoader;
+    friend class ObjectWorldLoader;
     public:
-        /*
-         * Creates a new Map object
-         *
-         * The Map objects handles keeping track of objects inside the map, also it offers methods
-         * for line of sight checking and eventually pathfinding.
-         * Fruthermore it support many more helper functions.
-         *
-         * @param id The id of the map
-         * @param time_t the current time
-         * @param InstanceId The id of the instance associated with this class
-         * @param SpawnMode the SpawnMode to be used on this map.
-         * @param The parent map of this map (used with instances).
-         *
-         */
         Map(uint32 id, time_t, uint32 InstanceId, uint8 SpawnMode, Map* _parent = NULL);
         virtual ~Map();
 
@@ -174,11 +154,10 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
 
         // some calls like isInWater should not use vmaps due to processor power
         // can return INVALID_HEIGHT if under z+2 z coord not found height
-        float GetHeight(float x, float y, float z, bool pCheckVMap=true) const;
+        float GetHeight(float x, float y, float z, bool pCheckVMap=true) const;   
         bool IsInWater(float x, float y, float z, float min_depth = 2.0f) const;    // does not use z pos. This is for future use
 
         Position getNextPositionOnPathToLocation(const float startx, const float starty, const float startz, const float endx, const float endy, const float endz);
-
 
         GridMapLiquidStatus getLiquidStatus(float x, float y, float z, uint8 ReqLiquidType, GridMapLiquidData *data = 0) const;
 
@@ -240,7 +219,6 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         void AddObjectToRemoveList(WorldObject *obj);
 
         void UpdateObjectVisibility(WorldObject* obj, Cell cell, CellPair cellpair);
-        void UpdateObjectsVisibilityFor(Player* player, Cell cell, CellPair cellpair);
 
         void resetMarkedCells() { marked_cells.reset(); }
         bool isCellMarked(uint32 pCellId) { return marked_cells.test(pCellId); }
@@ -310,7 +288,6 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         void SendRemoveTransports( Player * player );
 
         void PlayerRelocationNotify(Player* player, Cell cell, CellPair cellpair);
-        void CreatureRelocationNotify(Creature *creature, Cell newcell, CellPair newval);
 
         bool CreatureCellRelocation(Creature *creature, Cell new_cell);
 
