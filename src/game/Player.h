@@ -919,6 +919,7 @@ enum PlayerLoginQueryIndex
     PLAYER_LOGIN_QUERY_LOADMAILEDITEMS,
     PLAYER_LOGIN_QUERY_LOADTALENTS,
     PLAYER_LOGIN_QUERY_LOADWEEKLYQUESTSTATUS,
+    PLAYER_LOGIN_QUERY_LOADBGSTATUS,
 
     MAX_PLAYER_LOGIN_QUERY
 };
@@ -1997,6 +1998,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void ModifyHonorPoints( int32 value );
         void ModifyArenaPoints( int32 value );
         uint32 GetMaxPersonalArenaRatingRequirement(uint32 minarenaslot);
+        void RewardRandomBattlegroud( bool win);
 
         //End of PvP System
 
@@ -2182,6 +2184,14 @@ class MANGOS_DLL_SPEC Player : public Unit
         bool CanUseBattleGroundObject();
         bool isTotalImmune();
         bool CanCaptureTowerPoint();
+
+        bool RandomBGDone() { return m_FirstRBTime > 0; }
+        void SetRandomBGDone()
+        {
+            m_FirstRBTime = uint64(time(NULL));
+            m_FirstRBDone = true;
+        }
+        void ResetBGStatus() { m_FirstRBTime = 0; }
 
         /*********************************************************/
         /***               OUTDOOR PVP SYSTEM                  ***/
@@ -2459,6 +2469,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void _LoadDeclinedNames(QueryResult *result);
         void _LoadArenaTeamInfo(QueryResult *result);
         void _LoadEquipmentSets(QueryResult *result);
+        void _LoadBGStatus(QueryResult* result);
         void _LoadBGData(QueryResult* result);
         void _LoadGlyphs(QueryResult *result);
         void _LoadIntoDataField(const char* data, uint32 startOffset, uint32 count);
@@ -2478,6 +2489,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void _SaveSpells();
         void _SaveEquipmentSets();
         void _SaveBGData();
+        void _SaveBGStatus();
         void _SaveGlyphs();
         void _SaveTalents();
         void _SaveStats();
@@ -2571,6 +2583,7 @@ class MANGOS_DLL_SPEC Player : public Unit
 
         bool   m_DailyQuestChanged;
         bool   m_WeeklyQuestChanged;
+        bool   m_FirstRBDone;
 
         uint32 m_drunkTimer;
         uint16 m_drunk;
@@ -2694,6 +2707,9 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint32 m_timeSyncTimer;
         uint32 m_timeSyncClient;
         uint32 m_timeSyncServer;
+
+        // Battleground reward system
+        uint32 m_FirstRBTime;
 };
 
 void AddItemsSetItem(Player*player,Item *item);

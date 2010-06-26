@@ -210,6 +210,7 @@ void BattleGround::BroadcastWorker(Do& _do)
 BattleGround::BattleGround()
 {
     m_TypeID            = BattleGroundTypeId(0);
+    m_RandomTypeID      = BattleGroundTypeId(0);
     m_Status            = STATUS_NONE;
     m_ClientInstanceID  = 0;
     m_EndTime           = 0;
@@ -223,6 +224,7 @@ BattleGround::BattleGround()
     m_Events            = 0;
     m_IsRated           = false;
     m_BuffChange        = false;
+    m_IsRandom          = false;
     m_Name              = "";
     m_LevelMin          = 0;
     m_LevelMax          = 0;
@@ -818,6 +820,11 @@ void BattleGround::EndBattleGround(uint32 winner)
             continue;
         }
 
+        if(!team) team = plr->GetTeam();
+        
+        if(IsRandom() || BattleGroundMgr::IsBGWeekend(GetTypeID()))
+            plr->RewardRandomBattlegroud(team == winner);
+
         // should remove spirit of redemption
         if (plr->HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
             plr->RemoveSpellsCausingAura(SPELL_AURA_MOD_SHAPESHIFT);
@@ -914,7 +921,7 @@ uint32 BattleGround::GetBonusHonorFromKill(uint32 kills) const
 
 uint32 BattleGround::GetBattlemasterEntry() const
 {
-    switch(GetTypeID())
+    switch(GetTypeID(true))
     {
         case BATTLEGROUND_AV: return 15972;
         case BATTLEGROUND_WS: return 14623;
@@ -927,7 +934,7 @@ uint32 BattleGround::GetBattlemasterEntry() const
 
 void BattleGround::RewardMark(Player *plr,uint32 count)
 {
-    switch(GetTypeID())
+    switch(GetTypeID(true))
     {
         case BATTLEGROUND_AV:
             if (count == ITEM_WINNER_COUNT)
@@ -1040,7 +1047,7 @@ void BattleGround::SendRewardMarkByMail(Player *plr,uint32 mark, uint32 count)
 void BattleGround::RewardQuestComplete(Player *plr)
 {
     uint32 quest;
-    switch(GetTypeID())
+    switch(GetTypeID(true))
     {
         case BATTLEGROUND_AV:
             quest = SPELL_AV_QUEST_REWARD;
@@ -1822,7 +1829,7 @@ void BattleGround::HandleTriggerBuff(uint64 const& go_guid)
         index--;
     if (index < 0)
     {
-        sLog.outError("BattleGround (Type: %u) has buff gameobject (Guid: %u Entry: %u Type:%u) but it hasn't that object in its internal data",GetTypeID(),GUID_LOPART(go_guid),obj->GetEntry(),obj->GetGoType());
+        sLog.outError("BattleGround (Type: %u) has buff gameobject (Guid: %u Entry: %u Type:%u) but it hasn't that object in its internal data",GetTypeID(true),GUID_LOPART(go_guid),obj->GetEntry(),obj->GetGoType());
         return;
     }
 

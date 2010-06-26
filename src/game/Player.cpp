@@ -496,6 +496,7 @@ Player::Player (WorldSession *session): Unit(), m_achievementMgr(this), m_reputa
 
     m_DailyQuestChanged = false;
     m_WeeklyQuestChanged = false;
+    m_FirstRBDone = false;
 
     for (int i=0; i<MAX_TIMERS; ++i)
         m_MirrorTimer[i] = DISABLED_MIRROR_TIMER;
@@ -6649,6 +6650,32 @@ bool Player::RewardHonor(Unit *uVictim, uint32 groupsize, float honor)
     return true;
 }
 
+void Player::RewardRandomBattlegroud(bool win)
+{
+    uint32 hk = 0;
+    //bool ap = false;
+
+    if(!win)
+        hk = 5;
+    else
+    {
+        if(RandomBGDone())
+            hk = 15;
+        else
+        {
+            hk = 30;
+            /*if(getLevel() >= sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
+                ap = true;*/
+            SetRandomBGDone();
+        }
+    }
+
+    if(hk)
+        RewardHonor(NULL, 1, MaNGOS::Honor::hk_honor_at_level(getLevel(),hk));
+    /*if(ap)
+        ModifyArenaPoints(25);*/
+}
+
 void Player::ModifyHonorPoints( int32 value )
 {
     if(value < 0)
@@ -8002,7 +8029,7 @@ void Player::SendLoot(ObjectGuid guid, LootType loot_type)
                 uint32 lootid =  go->GetGOInfo()->GetLootId();
                 if ((go->GetEntry() == BG_AV_OBJECTID_MINE_N || go->GetEntry() == BG_AV_OBJECTID_MINE_S))
                     if (BattleGround *bg = GetBattleGround())
-                        if (bg->GetTypeID() == BATTLEGROUND_AV)
+                        if (bg->GetTypeID(true) == BATTLEGROUND_AV)
                             if (!(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(go->GetEntry(), GetTeam())))
                             {
                                 SendLootRelease(guid);
@@ -8077,7 +8104,7 @@ void Player::SendLoot(ObjectGuid guid, LootType loot_type)
                 bones->lootForBody = true;
                 uint32 pLevel = bones->loot.gold;
                 bones->loot.clear();
-                if (GetBattleGround()->GetTypeID() == BATTLEGROUND_AV)
+                if (GetBattleGround()->GetTypeID(true) == BATTLEGROUND_AV)
                     loot->FillLoot(0, LootTemplates_Creature, this, false);
                 // It may need a better formula
                 // Now it works like this: lvl10: ~6copper, lvl70: ~9silver
@@ -8632,25 +8659,25 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
             }
             break;
         case 2597:                                          // AV
-            if (bg && bg->GetTypeID() == BATTLEGROUND_AV)
+            if (bg && bg->GetTypeID(true) == BATTLEGROUND_AV)
                 bg->FillInitialWorldStates(data, count);
             else
                 FillInitialWorldState(data,count, AV_world_states);
             break;
         case 3277:                                          // WS
-            if (bg && bg->GetTypeID() == BATTLEGROUND_WS)
+            if (bg && bg->GetTypeID(true) == BATTLEGROUND_WS)
                 bg->FillInitialWorldStates(data, count);
             else
                 FillInitialWorldState(data,count, WS_world_states);
             break;
         case 3358:                                          // AB
-            if (bg && bg->GetTypeID() == BATTLEGROUND_AB)
+            if (bg && bg->GetTypeID(true) == BATTLEGROUND_AB)
                 bg->FillInitialWorldStates(data, count);
             else
                 FillInitialWorldState(data,count, AB_world_states);
             break;
         case 3820:                                          // EY
-            if (bg && bg->GetTypeID() == BATTLEGROUND_EY)
+            if (bg && bg->GetTypeID(true) == BATTLEGROUND_EY)
                 bg->FillInitialWorldStates(data, count);
             else
                 FillInitialWorldState(data,count, EY_world_states);
@@ -8814,7 +8841,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
             }
             break;
         case 3702:                                          // Blade's Edge Arena
-            if (bg && bg->GetTypeID() == BATTLEGROUND_BE)
+            if (bg && bg->GetTypeID(true) == BATTLEGROUND_BE)
                 bg->FillInitialWorldStates(data, count);
             else
             {
@@ -8824,7 +8851,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
             }
             break;
         case 3968:                                          // Ruins of Lordaeron
-            if (bg && bg->GetTypeID() == BATTLEGROUND_RL)
+            if (bg && bg->GetTypeID(true) == BATTLEGROUND_RL)
                 bg->FillInitialWorldStates(data, count);
             else
             {
@@ -8834,7 +8861,7 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
             }
             break;
         case 4378:                                          // Dalaran Sewers arena
-            if (bg && bg->GetTypeID() == BATTLEGROUND_DS)
+            if (bg && bg->GetTypeID(true) == BATTLEGROUND_DS)
                 bg->FillInitialWorldStates(data, count);
             else
             {
@@ -14033,7 +14060,7 @@ void Player::RewardQuest( Quest const *pQuest, uint32 reward, Object* questGiver
     RemoveTimedQuest(quest_id);
 
     if (BattleGround* bg = GetBattleGround())
-        if (bg->GetTypeID() == BATTLEGROUND_AV)
+        if (bg->GetTypeID(true) == BATTLEGROUND_AV)
             ((BattleGroundAV*)bg)->HandleQuestComplete(pQuest->GetQuestId(), this);
 
     if (pQuest->GetRewChoiceItemsCount() > 0)
@@ -15595,6 +15622,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
         m_movementInfo.ClearTransportData();
     }
 
+    _LoadBGStatus(holder->GetResult(PLAYER_LOGIN_QUERY_LOADBGSTATUS));
     _LoadBGData(holder->GetResult(PLAYER_LOGIN_QUERY_LOADBGDATA));
 
     if(m_bgData.bgInstanceID)                                                //saved in BattleGround
@@ -17127,6 +17155,17 @@ bool Player::_LoadHomeBind(QueryResult *result)
         m_homebindMapId, m_homebindAreaId, m_homebindX, m_homebindY, m_homebindZ);
 
     return true;
+}
+
+void Player::_LoadBGStatus(QueryResult *result)
+{
+    if (result)
+    {
+        m_FirstRBTime = (*result)[0].GetUInt32();
+        delete result;
+    }
+    else
+        m_FirstRBTime = 0;
 }
 
 /*********************************************************/
@@ -22347,6 +22386,18 @@ void Player::_SaveBGData()
             GetGUIDLow(), m_bgData.bgInstanceID, m_bgData.bgTeam, m_bgData.joinPos.coord_x, m_bgData.joinPos.coord_y, m_bgData.joinPos.coord_z,
             m_bgData.joinPos.orientation, m_bgData.joinPos.mapid, m_bgData.taxiPath[0], m_bgData.taxiPath[1], m_bgData.mountSpell);
     }
+}
+
+void Player::_SaveBGStatus()
+{
+    if(!m_FirstRBDone)
+        return;
+
+    CharacterDatabase.PExecute("DELETE FROM character_battleground_status WHERE guid='%u'", GetGUIDLow());
+    CharacterDatabase.PExecute("INSERT INTO character_battleground_status VALUES ('%u', '%u')",
+        GetGUIDLow(), m_FirstRBTime);
+
+    m_FirstRBDone = false;
 }
 
 void Player::DeleteEquipmentSet(uint64 setGuid)
