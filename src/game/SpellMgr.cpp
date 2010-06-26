@@ -381,6 +381,9 @@ SpellSpecific GetSpellSpecific(uint32 spellId)
                 // SpellIcon 2560 is Spell 46687, does not have this flag
                 if ((spellInfo->AttributesEx2 & SPELL_ATTR_EX2_FOOD_BUFF) || spellInfo->SpellIconID == 2560)
                     return SPELL_WELL_FED;
+
+                else if (spellInfo->EffectApplyAuraName[EFFECT_INDEX_0] == SPELL_AURA_MOD_STAT && spellInfo->Attributes & SPELL_ATTR_NOT_SHAPESHIFT                     && spellInfo->SchoolMask & SPELL_SCHOOL_MASK_NATURE && spellInfo->PreventionType == SPELL_PREVENTION_TYPE_SILENCE)
+                    return SPELL_SCROLL;
             }
             break;
         }
@@ -1750,6 +1753,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
             {
                 case SPELLFAMILY_GENERIC:                   // same family case
                 {
+                    // scrolls of intelect/stamina etc.
+                    if (GetSpellSpecific(spellInfo_1->Id) == SPELL_SCROLL &&
+                        GetSpellSpecific(spellInfo_2->Id) == SPELL_SCROLL)
+                        return true;
+
                     // Thunderfury
                     if ((spellInfo_1->Id == 21992 && spellInfo_2->Id == 27648) ||
                         (spellInfo_2->Id == 21992 && spellInfo_1->Id == 27648))
