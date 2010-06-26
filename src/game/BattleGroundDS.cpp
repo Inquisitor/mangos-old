@@ -59,6 +59,12 @@ void BattleGroundDS::Update(uint32 diff)
                         if(plr->GetPositionZ() < 11.0f)
                             continue;
 
+                        // Remove Demonic Circle
+                        for(BattleGroundPlayerMap::const_iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
+                            if (Player *plr = sObjectMgr.GetPlayer(itr->first))
+                                if(GameObject* obj = plr->GetGameObject(48018))
+                                    obj->Delete();
+
                         float angle = (plr->GetBGTeam() == ALLIANCE /* gold */) ? plr->GetAngle(1259.58f, 764.43f) : plr->GetAngle(1325.84f, 817.304f);
 
                         WorldPacket data(SMSG_MOVE_KNOCK_BACK, 8+4+4+4+4+4);
