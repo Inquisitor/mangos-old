@@ -1472,6 +1472,22 @@ void BattleGround::UpdatePlayerScore(Player *Source, uint32 type, uint32 value)
     }
 }
 
+uint32 BattleGround::GetDamageDoneForTeam(uint32 TeamID)
+{
+    uint32 finaldamage = 0;
+    for(BattleGroundPlayerMap::iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
+    {
+        uint32 team = itr->second.Team;
+        Player *plr = sObjectMgr.GetPlayer(itr->first);
+        if (!plr)
+            continue;        
+        if(!team) team = plr->GetTeam();
+        if(team == TeamID)
+            finaldamage += GetPlayerScore(plr, SCORE_DAMAGE_DONE);
+    }
+    return finaldamage;
+}
+
 bool BattleGround::AddObject(uint32 type, uint32 entry, float x, float y, float z, float o, float rotation0, float rotation1, float rotation2, float rotation3, uint32 /*respawnTime*/)
 {
     // must be created this way, adding to godatamap would add it to the base map of the instance
