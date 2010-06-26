@@ -1297,7 +1297,9 @@ void Aura::SetStackAmount(uint8 stackAmount)
         if (amount!=m_modifier.m_amount)
         {
             ApplyModifier(false, true);
-            m_modifier.m_amount = amount;
+            // Lifebloom has special amount calculation in final bloom
+            if(m_spellProto->SpellFamilyName != SPELLFAMILY_DRUID && !(m_spellProto->SpellFamilyFlags & UI64LIT(0x1000000000)))
+                m_modifier.m_amount = amount;
             ApplyModifier(true, true);
         }
     }
@@ -3222,9 +3224,14 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         // prevent double apply bonuses
                         if (target->GetTypeId() != TYPEID_PLAYER || !((Player*)target)->GetSession()->PlayerLoading())
                         {
-                            m_modifier.m_amount = caster->SpellHealingBonusDone(target, GetSpellProto(), m_modifier.m_amount, SPELL_DIRECT_DAMAGE);
-                            m_modifier.m_amount = target->SpellHealingBonusTaken(caster, GetSpellProto(), m_modifier.m_amount, SPELL_DIRECT_DAMAGE);
-                        }
+                            if(m_stackAmount <= 1)
+                            {
+                                const SpellEntry* finalBloomEntry = sSpellStore.LookupEntry(33778);
+                                m_modifier.m_amount = caster->SpellHealingBonusDone(m_target, finalBloomEntry, m_modifier.m_amount, HEAL);
+                                m_modifier.m_amount = m_target->SpellHealingBonusTaken(caster, finalBloomEntry, m_modifier.m_amount, HEAL);
+                            }else
+                                m_modifier.m_amount += (m_stackAmount == 2) ? m_modifier.m_amount : (m_modifier.m_amount / 2);
+                        } 
                     }
                 }
                 else
@@ -3243,9 +3250,10 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     // final heal
                     if (target->IsInWorld() && GetStackAmount() > 0)
                     {
-                        int32 amount = m_modifier.m_amount / GetStackAmount();
-                        target->CastCustomSpell(target, 33778, &amount, NULL, NULL, true, NULL, this, GetCasterGUID());
+                        //Heal
+                        m_target->CastCustomSpell(m_target, 33778, &m_modifier.m_amount, NULL, NULL, true, NULL, this, GetCasterGUID());
 
+                        //Return mana
                         if (Unit* caster = GetCaster())
                         {
                             int32 returnmana = (GetSpellProto()->ManaCostPercentage * caster->GetCreateMana() / 100) * GetStackAmount() / 2;
@@ -5484,7 +5492,11 @@ void Aura::HandlePeriodicHeal(bool apply, bool /*Real*/)
             m_modifier.m_amount += ap > holy ? ap : holy;
         }
 
-        m_modifier.m_amount = caster->SpellHealingBonusDone(target, GetSpellProto(), m_modifier.m_amount, DOT, GetStackAmount());
+        //Lifebloom special stacking
+        if(m_spellProto->SpellFamilyName == SPELLFAMILY_DRUID && (m_spellProto->SpellFamilyFlags & UI64LIT(0x1000000000)) && GetStackAmount() > 1)
+            m_modifier.m_amount += (GetStackAmount() == 2) ? m_modifier.m_amount : (m_modifier.m_amount / 2);
+        else
+            m_modifier.m_amount = caster->SpellHealingBonusDone(m_target, GetSpellProto(), m_modifier.m_amount, DOT, GetStackAmount());
     }
 }
 
