@@ -653,6 +653,7 @@ void BattleGroundEY::EventPlayerCapturedFlag(Player *Source, BG_EY_Nodes node)
     RewardXpToTeam(0, 0.6, Source->GetTeam());
 
     UpdatePlayerScore(Source, SCORE_FLAG_CAPTURES, 1);
+    Source->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_BG_OBJECTIVE_CAPTURE,1);
 }
 
 void BattleGroundEY::UpdatePlayerScore(Player *Source, uint32 type, uint32 value)
