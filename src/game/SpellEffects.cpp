@@ -2560,14 +2560,18 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
             // Life Tap
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000040000))
             {
+                // in 333 there still seems to be spirit dependence although it is stated that there is not
+                uint32 spirit = uint32(m_caster->GetStat(STAT_SPIRIT));
+                damage+=spirit*15/10;
+//              Think its not need (also need remove Life Tap from SpellDamageBonus or add new value)
+//              damage = m_caster->SpellDamageBonus(m_caster, m_spellInfo,uint32(damage > 0 ? damage : 0), SPELL_DIRECT_DAMAGE);
                 if (unitTarget && (int32(unitTarget->GetHealth()) > damage))
                 {
                     // Shouldn't Appear in Combat Log
                     unitTarget->ModifyHealth(-damage);
 
-                    int32 spell_power = m_caster->SpellBaseDamageBonusDone(GetSpellSchoolMask(m_spellInfo));
-                    int32 mana = damage + spell_power / 2;
-
+                    int32 spell_power = m_caster->SpellBaseDamageBonusDone(GetSpellSchoolMask(m_spellInfo)) + unitTarget->SpellBaseDamageBonusTaken(GetSpellSchoolMask(m_spellInfo));
+                    int32 mana = damage + (spell_power * 5/10 * m_caster->CalculateLevelPenalty(m_spellInfo));
                     // Improved Life Tap mod
                     Unit::AuraList const& auraDummy = m_caster->GetAurasByType(SPELL_AURA_DUMMY);
                     for(Unit::AuraList::const_iterator itr = auraDummy.begin(); itr != auraDummy.end(); ++itr)
@@ -2595,6 +2599,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                 return;
             }
+
             // Improved Drain Soul trigger dummy damage
             if (m_spellInfo->SpellIconID == 113)
             {
