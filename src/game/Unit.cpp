@@ -887,8 +887,9 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
                         // the reset time is set but not added to the scheduler
                         // until the players leave the instance
                         time_t resettime = cVictim->GetRespawnTimeEx() + 2 * HOUR;
-                        if(InstanceSave *save = sInstanceSaveMgr.GetInstanceSave(cVictim->GetInstanceId()))
-                            if(save->GetResetTime() < resettime) save->SetResetTime(resettime);
+                        if (InstanceSave *save = m->GetInstanceSave())
+                            if (save->GetResetTime() < resettime)
+                                save->SetResetTime(resettime);
                     }
                 }
             }
@@ -4801,7 +4802,20 @@ void Unit::RemoveAura(AuraMap::iterator &i, AuraRemoveMode mode)
     DEBUG_FILTER_LOG(LOG_FILTER_SPELL_CAST, "Aura %u now is remove mode %d",Aur->GetModifier()->m_auraname, mode);
 
     // some auras also need to apply modifier (on caster) on remove
-    if (mode != AURA_REMOVE_BY_DELETE || Aur->GetModifier()->m_auraname == SPELL_AURA_MOD_POSSESS)
+    if (mode == AURA_REMOVE_BY_DELETE)
+    {
+        switch (Aur->GetModifier()->m_auraname)
+        {
+            // need properly undo any auras with player-caster mover set (or will crash at next caster move packet)
+            case SPELL_AURA_MOD_POSSESS:
+            case SPELL_AURA_MOD_POSSESS_PET:
+            case SPELL_AURA_CONTROL_VEHICLE:
+                Aur->ApplyModifier(false,true);
+                break;
+            default: break;
+        }
+    }
+    else
         Aur->ApplyModifier(false,true);
 
     if (Aur->_RemoveAura())
@@ -14446,9 +14460,9 @@ void Unit::EnterVehicle(Vehicle *vehicle, int8 seat_id, bool force)
     if(!veSeat)
         return;
 
-    m_SeatData.OffsetX = (veSeat->m_attachmentOffsetX + v->GetObjectSize()) * GetFloatValue(OBJECT_FIELD_SCALE_X);      // transport offsetX
-    m_SeatData.OffsetY = (veSeat->m_attachmentOffsetY + v->GetObjectSize()) * GetFloatValue(OBJECT_FIELD_SCALE_X);      // transport offsetY
-    m_SeatData.OffsetZ = (veSeat->m_attachmentOffsetZ + v->GetObjectSize()) * GetFloatValue(OBJECT_FIELD_SCALE_X);      // transport offsetZ
+    m_SeatData.OffsetX = (veSeat->m_attachmentOffsetX + v->GetObjectBoundingRadius()) * GetFloatValue(OBJECT_FIELD_SCALE_X); // transport offsetX
+    m_SeatData.OffsetY = (veSeat->m_attachmentOffsetY + v->GetObjectBoundingRadius()) * GetFloatValue(OBJECT_FIELD_SCALE_X); // transport offsetY
+    m_SeatData.OffsetZ = (veSeat->m_attachmentOffsetZ + v->GetObjectBoundingRadius()) * GetFloatValue(OBJECT_FIELD_SCALE_X); // transport offsetZ
     m_SeatData.Orientation = veSeat->m_passengerYaw;                                                                    // NOTE : needs confirmation
     m_SeatData.c_time = v->GetCreationTime();
     m_SeatData.dbc_seat = veSeat->m_ID;
@@ -14503,7 +14517,7 @@ void Unit::ExitVehicle()
                     vehicle->SetSpawnDuration(1);
                 }
             }
-            v_size = vehicle->GetObjectSize();
+            v_size = vehicle->GetObjectBoundingRadius();
             vehicle->RemovePassenger(this);
         }
         SetVehicleGUID(0);
