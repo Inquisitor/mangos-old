@@ -1378,6 +1378,7 @@ void World::Update(uint32 diff)
     if (m_gameTime > m_NextDailyQuestReset)
     {
         ResetDailyQuests();
+        ResetBGDaily();
 
         SelectRandomDailyQuest();
     }
@@ -2061,6 +2062,14 @@ void World::ResetWeeklyQuests()
 
     m_NextWeeklyQuestReset = time_t(m_NextWeeklyQuestReset + WEEK);
     CharacterDatabase.PExecute("UPDATE saved_variables SET NextWeeklyQuestResetTime = '"UI64FMTD"'", uint64(m_NextWeeklyQuestReset));
+}
+
+void World::ResetBGDaily()
+{
+    CharacterDatabase.Execute("DELETE FROM character_battleground_status");
+    for(SessionMap::const_iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
+        if (itr->second->GetPlayer())
+            itr->second->GetPlayer()->ResetBGStatus();
 }
 
 void World::SelectRandomDailyQuest()

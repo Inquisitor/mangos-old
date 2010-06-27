@@ -627,6 +627,7 @@ class World
         void InitWeeklyQuestResetTime();
         void ResetDailyQuests();
         void ResetWeeklyQuests();
+        void ResetBGDaily();
         void SelectRandomDailyQuest();
 
     private:
