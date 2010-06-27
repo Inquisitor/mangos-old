@@ -17345,6 +17345,7 @@ void Player::SaveToDB()
         _SaveMail();
 
     _SaveBGData();
+    _SaveBGStatus();
     _SaveInventory();
     _SaveQuestStatus();
     _SaveDailyQuestStatus();
