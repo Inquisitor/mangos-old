@@ -1290,14 +1290,6 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
             }
         }
     }
-
-    /*if( m_caster->HasAura(44544, EFFECT_INDEX_0) && !m_IsTriggeredSpell && !m_CastItem ) // Fingers of Frost removing (after 2 spells)
-    {
-        Aura * FoF = m_caster->GetAura(44544, EFFECT_INDEX_0);
-        FoF->DropAuraCharge();
-        if( FoF->GetAuraCharges() == 0 )
-            m_caster->RemoveAura(44544, EFFECT_INDEX_0);
-    }*/
 }
 
 void Spell::DoAllEffectOnTarget(GOTargetInfo *target)

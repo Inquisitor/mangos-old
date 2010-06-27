@@ -8562,11 +8562,6 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
     if( cooldown && GetTypeId()==TYPEID_PLAYER )
         ((Player*)this)->AddSpellCooldown(trigger_spell_id,0,time(NULL) + cooldown);
 
-    /*// Fingers of Frost
-    if (trigger_spell_id == 44544)
-        if (target->HasAura(44544))
-            target->GetAura(44544, EFFECT_INDEX_0)->SetAuraCharges(2);*/
-
     return true;
 }
 
@@ -14992,7 +14987,7 @@ bool Unit::CheckAndIncreaseCastCounter()
 
 bool Unit::isIgnoreUnitState(SpellEntry const *spell)
 {
-    if(!HasAuraType(SPELL_AURA_IGNORE_UNIT_STATE))
+    if(!HasAuraType(SPELL_AURA_IGNORE_TARGET_AURA_STATE))
         return false;
 
     if(spell->SpellFamilyName == SPELLFAMILY_MAGE)
@@ -15004,7 +14999,7 @@ bool Unit::isIgnoreUnitState(SpellEntry const *spell)
         if(spell->Id == 11170 || spell->Id == 12982 || spell->Id == 12983)
             return true;
     }
-    Unit::AuraList const& stateAuras = GetAurasByType(SPELL_AURA_IGNORE_UNIT_STATE);
+    Unit::AuraList const& stateAuras = GetAurasByType(SPELL_AURA_IGNORE_TARGET_AURA_STATE);
     for(Unit::AuraList::const_iterator j = stateAuras.begin();j != stateAuras.end(); ++j)
     {
         if((*j)->isAffectedOnSpell(spell))
