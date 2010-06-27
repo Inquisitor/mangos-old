@@ -464,7 +464,7 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                 else if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000020000000000)) && m_spellInfo->Category==1209)
                 {
                     int32 shieldBlockVal = int32(m_caster->GetShieldBlockValue());
-                    if(shieldBlockVal > 2760) shieldBlockVal = 2760;
+                    if(shieldBlockVal > int32(m_caster->getLevel()*34.5)) shieldBlockVal = int32(m_caster->getLevel()*34.5);
                         damage += shieldBlockVal;
                 }
                 // Victory Rush
@@ -848,7 +848,7 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                 else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0010000000000000))
                 {
                     int32 shieldBlockVal = int32(m_caster->GetShieldBlockValue());
-                    if(shieldBlockVal > 2760) shieldBlockVal = 2760;
+                    if(shieldBlockVal > int32(m_caster->getLevel()*34.5)) shieldBlockVal = int32(m_caster->getLevel()*34.5);
                         damage += shieldBlockVal;
                 }
                 // Judgement
