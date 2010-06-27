@@ -967,8 +967,8 @@ bool Aura::IsNeedVisibleSlot(Unit const* caster) const
         case SPELL_EFFECT_APPLY_AREA_AURA_FRIEND:
         case SPELL_EFFECT_APPLY_AREA_AURA_PARTY:
         case SPELL_EFFECT_APPLY_AREA_AURA_RAID:
-            // passive auras (except totem auras) do not get placed in caster slot
-            return (m_target != caster || totemAura || !m_isPassive) && m_modifier.m_auraname != SPELL_AURA_NONE;
+            // passive auras must be placed in caster slot
+            return (totemAura || !m_isPassive || m_isPassive) && m_modifier.m_auraname != SPELL_AURA_NONE;
         default:
             break;
     }
@@ -2682,6 +2682,19 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 }
                 break;
             }
+            case SPELLFAMILY_MAGE:
+            {
+                // hack for Fingers of Frost stacks
+                if (GetId() == 74396)
+                {
+                    if (Aura *aur = m_target->GetAura(74396, EFFECT_INDEX_0))
+                    {
+                        if (aur->GetStackAmount() < 3)
+                            SetAuraCharges(3);
+                    }
+                }
+                break;
+            }
             case SPELLFAMILY_SHAMAN:
             {
                 // Tidal Force
@@ -2878,6 +2891,12 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 target->CastSpell(target, 58601, true);
                 // Parachute
                 target->CastSpell(target, 45472, true);
+                return;
+            }
+            case 74396:                                     // Fingers of Frost effect remove
+            {
+                if (GetAuraCharges() <= 0)
+                    m_target->RemoveAurasDueToSpell(44544);
                 return;
             }
         }
@@ -9578,6 +9597,11 @@ void Aura::HandleIgnoreAuraState(bool apply, bool Real)
 {
     if (GetId() == 64976 || GetId() == 57499 )
         SendFakeAuraUpdate(GetId(), apply);
+    /*else if(GetId() == 44544)
+    {
+        printf("\n ! fof setting charges to 3 ! \n ");
+        SetAuraCharges(3); // 3 because first is droped on proc
+    }*/
 }
 
 void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply, Unit * pPlayer )

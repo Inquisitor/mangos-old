@@ -1291,13 +1291,13 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
         }
     }
 
-    if( m_caster->HasAura(44544, EFFECT_INDEX_0) && !m_IsTriggeredSpell && !m_CastItem ) // Fingers of Frost removing (after 2 spells)
+    /*if( m_caster->HasAura(44544, EFFECT_INDEX_0) && !m_IsTriggeredSpell && !m_CastItem ) // Fingers of Frost removing (after 2 spells)
     {
         Aura * FoF = m_caster->GetAura(44544, EFFECT_INDEX_0);
         FoF->DropAuraCharge();
         if( FoF->GetAuraCharges() == 0 )
             m_caster->RemoveAura(44544, EFFECT_INDEX_0);
-    }
+    }*/
 }
 
 void Spell::DoAllEffectOnTarget(GOTargetInfo *target)
@@ -2884,6 +2884,9 @@ void Spell::cast(bool skipCheck)
             // Ice Block
             if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000008000000000))
                 AddPrecastSpell(41425);                     // Hypothermia
+            // Fingers of Frost
+            else if (m_spellInfo->Id == 44544)
+                AddPrecastSpell(74396);
             break;
         }
         case SPELLFAMILY_WARRIOR:
@@ -3436,6 +3439,12 @@ void Spell::finish(bool ok)
     // Stop Attack for some spells
     if( m_spellInfo->Attributes & SPELL_ATTR_STOP_ATTACK_TARGET )
         m_caster->AttackStop();
+
+    // hack for Fingers of Frost stacks remove
+    if(m_caster->HasAura(74396) && !m_IsTriggeredSpell && m_spellInfo->SpellFamilyName == SPELLFAMILY_MAGE)
+        if (Aura *aur = m_caster->GetAura(74396, EFFECT_INDEX_0))
+            if(aur->DropAuraCharge())
+                m_caster->RemoveAura(aur);
 }
 
 void Spell::SendCastResult(SpellCastResult result)
