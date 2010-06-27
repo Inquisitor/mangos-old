@@ -4899,6 +4899,10 @@ void Aura::HandleAuraModTotalThreat(bool apply, bool Real)
     if (!Real)
         return;
 
+    //Mirror Image aura which is applied to every unit around - It should work only for units already in combat with caster thus yet disabled.
+    if(GetId() == 55342)
+        return;
+
     Unit *target = GetTarget();
 
     if (!target->isAlive() || target->GetTypeId() != TYPEID_PLAYER)
