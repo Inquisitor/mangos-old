@@ -500,7 +500,7 @@ void BattleGroundAB::EndBattleGround(uint32 winner)
     if(winner)
     {
         RewardHonorToTeam(GetBonusHonorFromKill(1), winner);
-        RewardXpToTeam(0, 0.8, winner);
+        RewardXpToTeam(0, 0.8f, winner);
     }
 
     //complete map_end rewards (even if no team wins)
