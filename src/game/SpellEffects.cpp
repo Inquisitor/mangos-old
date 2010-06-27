@@ -2482,11 +2482,17 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 if (!unitTarget)
                     return;
 
-                uint32 rage = m_caster->GetPower(POWER_RAGE);
+                uint32 original_rage = m_caster->GetPower(POWER_RAGE);
+                uint32 rage = original_rage;
+
+                // This is needed to proper cast of 20647
+                SpellEntry const *executeInfo = sSpellStore.LookupEntry(20647);
+                if(!original_rage)
+                    m_caster->SetPower(POWER_RAGE,executeInfo->manaCost);
 
                 // up to max 30 rage cost
-                if (rage > 300)
-                    rage = 300;
+                if (int32(rage) > (300 - GetPowerCost()))
+                    rage = (300 - GetPowerCost());
 
                 // Glyph of Execution bonus
                 uint32 rage_modified = rage;
@@ -2499,26 +2505,20 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                 m_caster->CastCustomSpell(unitTarget, 20647, &basePoints0, NULL, NULL, true, 0);
 
-                // Sudden Death
-                if (m_caster->HasAura(52437))
-                {
-                    Unit::AuraList const& auras = m_caster->GetAurasByType(SPELL_AURA_PROC_TRIGGER_SPELL);
-                    for (Unit::AuraList::const_iterator itr = auras.begin(); itr != auras.end(); ++itr)
-                    {
-                        // Only Sudden Death have this SpellIconID with SPELL_AURA_PROC_TRIGGER_SPELL
-                        if ((*itr)->GetSpellProto()->SpellIconID == 1989)
-                        {
-                            // saved rage top stored in next affect
-                            uint32 lastrage = (*itr)->GetSpellProto()->CalculateSimpleValue(EFFECT_INDEX_1)*10;
-                            if(lastrage < rage)
-                                rage -= lastrage;
-                            break;
-                        }
-                    }
-                    m_caster->RemoveAura(52437, EFFECT_INDEX_0); // Remove Sudden Death after calculations
-                }
+                uint32 rageLeft = original_rage-rage; // for easier sudden death calculation
+                uint32 lastrage=0;
+                // Sudden Death - this must be stored somewhere :/
+                if(m_caster->HasAura(29723))
+                    lastrage = 30;
+                else if(m_caster->HasAura(29725))
+                    lastrage = 70;
+                else if(m_caster->HasAura(29724))
+                    lastrage = 100;
 
-                m_caster->SetPower(POWER_RAGE,m_caster->GetPower(POWER_RAGE)-rage);
+                if(rageLeft < lastrage)
+                    rageLeft = lastrage;
+
+                m_caster->SetPower(POWER_RAGE,rageLeft);
                 return;
             }
 
