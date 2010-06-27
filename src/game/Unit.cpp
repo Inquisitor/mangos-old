@@ -3863,8 +3863,10 @@ float Unit::GetTotalAuraMultiplierByMiscMask(AuraType auratype, uint32 misc_mask
     AuraList const& mTotalAuraList = GetAurasByType(auratype);
     for(AuraList::const_iterator i = mTotalAuraList.begin();i != mTotalAuraList.end(); ++i)
     {
+        
         Modifier* mod = (*i)->GetModifier();
-        if ((mod->m_miscvalue & misc_mask) != 0 && (*i)->GetSpellProto()->EquippedItemClass == -1 && (*i)->GetSpellProto()->EquippedItemInventoryTypeMask == 0 )
+        //if ((mod->m_miscvalue & misc_mask) != 0 && (*i)->GetSpellProto()->EquippedItemClass == -1 && (*i)->GetSpellProto()->EquippedItemInventoryTypeMask == 0 )
+        if (mod->m_miscvalue & misc_mask)
         {
             if((*i)->IsStacking())
                 multiplier *= (100.0f + mod->m_amount)/100.0f;
