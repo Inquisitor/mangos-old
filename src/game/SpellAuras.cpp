@@ -8887,10 +8887,21 @@ void Aura::PeriodicDummyTick()
             break;
         case SPELLFAMILY_MAGE:
         {
-            if (spell->Id == 55342)
+            /*if (spell->Id == 55342)
             {
                 // Set name of summons to name of caster
                 m_target->CastSpell((Unit *)NULL, m_spellProto->EffectTriggerSpell[m_effIndex], true);
+                m_isPeriodic = false;
+            }*/
+            // Mirror Image
+            if (spell->Id == 55342)
+            {
+                if(m_target->GetTypeId() != TYPEID_PLAYER)
+                    break;
+                //Clear target
+                WorldPacket data(SMSG_CLEAR_TARGET, 8);
+                data << m_target->GetGUID();
+                ((Player*)m_target)->SendMessageToSetInRange(&data, 80.0f, false, false, true);
                 m_isPeriodic = false;
             }
             break;
