@@ -4138,10 +4138,10 @@ SpellCastResult Spell::CheckOrTakeRunePower(bool take)
 
 void Spell::TakeReagents()
 {
-    if(m_IsTriggeredSpell)                                  // reagents used in triggered spell removed by original spell or don't must be removed.
+    if (m_caster->GetTypeId() != TYPEID_PLAYER)
         return;
 
-    if (m_caster->GetTypeId() != TYPEID_PLAYER)
+    if (IgnoreItemRequirements())                           // reagents used in triggered spell removed by original spell or don't must be removed.
         return;
 
     Player* p_caster = (Player*)m_caster;
