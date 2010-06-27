@@ -6931,33 +6931,6 @@ void Aura::HandleShapeshiftBoosts(bool apply)
                     break;
                 }
             }
-
-            // Heart of the Wild
-            if (form == FORM_CAT || form == FORM_BEAR || form == FORM_DIREBEAR)
-            {
-                Unit::AuraList const& mModTotalStatPct = target->GetAurasByType(SPELL_AURA_MOD_TOTAL_STAT_PERCENTAGE);
-                for(Unit::AuraList::const_iterator i = mModTotalStatPct.begin(); i != mModTotalStatPct.end(); ++i)
-                {
-                    if ((*i)->GetSpellProto()->SpellIconID == 240 && (*i)->GetModifier()->m_miscvalue == 3)
-                    {
-                        int32 HotWMod = (*i)->GetModifier()->m_amount / 2;
-                        uint32 HotWSpellId = 0;
-
-                        switch(HotWMod)
-                        {
-                            case  2: HotWSpellId = form == FORM_CAT ? 30902 : 19255; break;
-                            case  4: HotWSpellId = form == FORM_CAT ? 30903 : 19256; break;
-                            case  6: HotWSpellId = form == FORM_CAT ? 30904 : 19257; break;
-                            case  8: HotWSpellId = form == FORM_CAT ? 30905 : 19258; break;
-                            case 10: HotWSpellId = form == FORM_CAT ? 30906 : 19259; break;
-                            default: HotWSpellId = 0; break;
-                        }
-
-                        m_target->CastSpell(m_target, HotWSpellId, true);
-                        break;
-                    }
-                }
-            }
         }
     }
     else
@@ -6993,6 +6966,45 @@ void Aura::HandleShapeshiftBoosts(bool apply)
         }
         else
             m_target->RemoveAurasDueToSpell(66530);
+    }
+
+    // Heart of the Wild
+    if (form == FORM_CAT || form == FORM_BEAR || form == FORM_DIREBEAR || !apply)
+    {
+        Unit::AuraList const& mModTotalStatPct = target->GetAurasByType(SPELL_AURA_MOD_TOTAL_STAT_PERCENTAGE);
+        for(Unit::AuraList::const_iterator i = mModTotalStatPct.begin(); i != mModTotalStatPct.end(); ++i)
+        {
+            if ((*i)->GetSpellProto()->SpellIconID == 240 && (*i)->GetModifier()->m_miscvalue == 3)
+            {
+                if(apply)
+                {
+                    int32 HotWMod = (*i)->GetModifier()->m_amount / 2;
+                    uint32 HotWSpellId = 0;
+
+                    switch(HotWMod)
+                    {
+                        case  2: HotWSpellId = form == FORM_CAT ? 30902 : 19255; break;
+                        case  4: HotWSpellId = form == FORM_CAT ? 30903 : 19256; break;
+                        case  6: HotWSpellId = form == FORM_CAT ? 30904 : 19257; break;
+                        case  8: HotWSpellId = form == FORM_CAT ? 30905 : 19258; break;
+                        case 10: HotWSpellId = form == FORM_CAT ? 30906 : 19259; break;
+                        default: HotWSpellId = 0; break;
+                    }
+
+                    m_target->CastSpell(m_target, HotWSpellId, true);
+                }
+                else
+                {
+                    for(uint8 i = 0; i < 5; i++)
+                    {
+                        m_target->RemoveAurasDueToSpell(19255+i);
+                        m_target->RemoveAurasDueToSpell(30902+i);
+                    }
+                }
+                        
+                break;
+            }
+        }
     }
 }
 
