@@ -20504,14 +20504,14 @@ bool Player::IsSpellFitByClassAndRace( uint32 spell_id ) const
     return false;
 }
 
-bool Player::HasQuest( uint32 questId ) const
+bool Player::HasQuest(uint32 questId) const
 {
-    for( int i = 0; i < MAX_QUEST_LOG_SIZE; ++i )
+    for (uint32 i = 0; i < MAX_QUEST_LOG_SIZE; ++i)
     {
         uint32 questid = GetQuestSlotQuestId(i);
-        if ( questid == 0 )
+        if (questid == 0)
             continue;
-        if( questid == questId )
+        if (questid == questId)
             return true;
 
         return false;
@@ -20521,10 +20521,10 @@ bool Player::HasQuest( uint32 questId ) const
 
 bool Player::HasQuestForGO(int32 GOId) const
 {
-    for( int i = 0; i < MAX_QUEST_LOG_SIZE; ++i )
+    for (uint32 i = 0; i < MAX_QUEST_LOG_SIZE; ++i)
     {
         uint32 questid = GetQuestSlotQuestId(i);
-        if ( questid == 0 )
+        if (questid == 0)
             continue;
 
         QuestStatusMap::const_iterator qs_itr = mQuestStatus.find(questid);
@@ -20542,7 +20542,7 @@ bool Player::HasQuestForGO(int32 GOId) const
             if(GetGroup() && GetGroup()->isRaidGroup() && qinfo->IsAllowedInRaid())
                 continue;
 
-            for (int j = 0; j < QUEST_OBJECTIVES_COUNT; ++j)
+            for (uint8 j = 0; j < QUEST_OBJECTIVES_COUNT; ++j)
             {
                 if (qinfo->ReqCreatureOrGOId[j]>=0)         //skip non GO case
                     continue;
