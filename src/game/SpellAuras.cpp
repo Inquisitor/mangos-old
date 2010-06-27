@@ -9602,16 +9602,23 @@ void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
 
 void Aura::HandleAuraCloneCaster(bool Apply, bool Real)
 {
-    if (!Real || !Apply)
+    if (!Real)
         return;
 
-    Unit * caster = GetCaster();
-    if (!caster)
-        return;
-
-    // Set item visual
-    m_target->SetDisplayId(caster->GetDisplayId());
-    m_target->SetUInt32Value(UNIT_FIELD_FLAGS_2, 2064);
+    if (Apply)
+    {
+        Unit * caster = GetCaster();
+        if (!caster)
+            return;
+        // Set display id
+        m_target->SetDisplayId(caster->GetDisplayId());
+        m_target->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE);
+    }
+    else
+    {
+        m_target->SetDisplayId(m_target->GetNativeDisplayId());
+        m_target->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE);
+    }
 }
 
 void Aura::ApplyHasteToPeriodic()
