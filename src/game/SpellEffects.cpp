@@ -299,6 +299,14 @@ void Spell::EffectInstaKill(SpellEffectIndex /*eff_idx*/)
         m_caster->CastSpell(m_caster, spellID, true);
     }
 
+    if(m_spellInfo->Id == 52479)
+    {
+        if(unitTarget->GetTypeId()==TYPEID_PLAYER)
+            return;
+        if(unitTarget->GetEntry() != 28822)
+            return;
+    }
+
     if(m_caster == unitTarget)                              // prevent interrupt message
         finish();
 
