@@ -6187,6 +6187,31 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 case 30295:
                 case 30296:
                 {
+                    // Improved Soul Leech
+                    AuraList const& SoulLeechAuras = GetAurasByType(SPELL_AURA_DUMMY);
+                    for (AuraList::const_iterator i = SoulLeechAuras.begin(); i != SoulLeechAuras.end(); ++i)
+                    {
+                        if ((*i)->GetId() == 54117 || (*i)->GetId() == 54118)
+                        {
+                            if ((*i)->GetEffIndex() != 0)
+                                continue;
+                            basepoints[0] = int32((*i)->GetModifier()->m_amount);
+                            target = GetPet();
+                            if (target)
+                            {
+                                // regen mana for pet
+                                CastCustomSpell(target,54607,&basepoints[0],NULL,NULL,true,castItem,triggeredByAura);
+                            }
+                            // regen mana for caster
+                            CastCustomSpell(this,59117,&basepoints[0],NULL,NULL,true,castItem,triggeredByAura);
+                            // Replenishment - roll chance
+                            if (roll_chance_i((*i)->GetSpellProto()->CalculateSimpleValue(EFFECT_INDEX_1)))
+                                CastSpell(this,57669,true, castItem, triggeredByAura);
+
+                            break;
+                        }
+                    }
+
                     // health
                     basepoints[0] = int32(damage*triggerAmount/100);
                     target = this;
