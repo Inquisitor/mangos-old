@@ -7758,20 +7758,17 @@ void Spell::EffectSanctuary(SpellEffectIndex /*eff_idx*/)
 
     std::list<Unit *> targets;
     {
-        MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck u_check(this, this, radius);
-        MaNGOS::UnitListSearcher<MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck> searcher(this, targets, u_check);
-        Cell::VisitAllObjects(this, searcher, radius);
+        MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck u_check(m_caster, m_caster, m_caster->GetMap()->GetVisibilityDistance());
+        MaNGOS::UnitListSearcher<MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck> searcher(m_caster, targets, u_check);
+        Cell::VisitAllObjects(m_caster, searcher, m_caster->GetMap()->GetVisibilityDistance());
     }
 
     for(std::list<Unit *>::iterator tIter = targets.begin(); tIter != targets.end(); ++tIter)
     {
-        if (!(*tIter)->hasUnitState(UNIT_STAT_CASTING))
-            continue;
-
-        for (uint32 i = CURRENT_FIRST_NON_MELEE_SPELL; i < CURRENT_MAX_SPELL; i++)
+        for (uint32 i = CURRENT_FIRST_NON_MELEE_SPELL; i < CURRENT_MAX_SPELL; ++i)
         {
-            if ((*tIter)->GetCurrentSpell(i)
-            && (*tIter)->GetCurrentSpell(i)->m_targets.getUnitTargetGUID() == unitTarget->GetGUID())
+            if ((*tIter)->GetCurrentSpell(CurrentSpellTypes(i))
+            && (*tIter)->GetCurrentSpell(CurrentSpellTypes(i))->m_targets.getUnitTargetGUID() == unitTarget->GetGUID())
             {
                 (*tIter)->InterruptSpell(CurrentSpellTypes(i), false);
             }
