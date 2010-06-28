@@ -1404,7 +1404,7 @@ void Group::ChangeMembersGroup(Player *player, uint8 group)
     }
 }
 
-void Group::UpdateLooterGuid( Creature* creature, bool ifneed )
+void Group::UpdateLooterGuid( WorldObject* object, bool ifneed )
 {
     switch (GetLootMethod())
     {
@@ -1424,7 +1424,7 @@ void Group::UpdateLooterGuid( Creature* creature, bool ifneed )
         {
             // not update if only update if need and ok
             Player* looter = ObjectAccessor::FindPlayer(guid_itr->guid);
-            if(looter && looter->IsWithinDist(creature, sWorld.getConfig(CONFIG_FLOAT_GROUP_XP_DISTANCE), false))
+            if(looter && looter->IsWithinDist(object, sWorld.getConfig(CONFIG_FLOAT_GROUP_XP_DISTANCE), false))
                 return;
         }
         ++guid_itr;
@@ -1437,16 +1437,16 @@ void Group::UpdateLooterGuid( Creature* creature, bool ifneed )
         {
             if(Player* pl = ObjectAccessor::FindPlayer(itr->guid))
             {
-                if (pl->IsWithinDist(creature, sWorld.getConfig(CONFIG_FLOAT_GROUP_XP_DISTANCE), false))
+                if (pl->IsWithinDist(object, sWorld.getConfig(CONFIG_FLOAT_GROUP_XP_DISTANCE), false))
                 {
-                    bool refresh = pl->GetLootGUID() == creature->GetGUID();
+                    bool refresh = pl->GetLootGUID() == object->GetGUID();
 
                     //if(refresh)                             // update loot for new looter
                     //    pl->GetSession()->DoLootRelease(pl->GetLootGUID());
                     SetLooterGuid(pl->GetGUID());
                     SendUpdate();
                     if(refresh)                             // update loot for new looter
-                        pl->SendLoot(creature->GetGUID(), LOOT_CORPSE);
+                        pl->SendLoot(object->GetGUID(), LOOT_CORPSE);
                     return;
                 }
             }
@@ -1458,16 +1458,16 @@ void Group::UpdateLooterGuid( Creature* creature, bool ifneed )
     {
         if(Player* pl = ObjectAccessor::FindPlayer(itr->guid))
         {
-            if (pl->IsWithinDist(creature, sWorld.getConfig(CONFIG_FLOAT_GROUP_XP_DISTANCE), false))
+            if (pl->IsWithinDist(object, sWorld.getConfig(CONFIG_FLOAT_GROUP_XP_DISTANCE), false))
             {
-                bool refresh = pl->GetLootGUID()==creature->GetGUID();
+                bool refresh = pl->GetLootGUID()==object->GetGUID();
 
                 //if(refresh)                               // update loot for new looter
                 //    pl->GetSession()->DoLootRelease(pl->GetLootGUID());
                 SetLooterGuid(pl->GetGUID());
                 SendUpdate();
                 if(refresh)                                 // update loot for new looter
-                    pl->SendLoot(creature->GetGUID(), LOOT_CORPSE);
+                    pl->SendLoot(object->GetGUID(), LOOT_CORPSE);
                 return;
             }
         }

@@ -199,7 +199,7 @@ class MANGOS_DLL_SPEC Group
         void   ChangeLeader(const uint64 &guid);
         void   SetLootMethod(LootMethod method) { m_lootMethod = method; }
         void   SetLooterGuid(const uint64 &guid) { m_looterGuid = guid; }
-        void   UpdateLooterGuid( Creature* creature, bool ifneed = false );
+        void   UpdateLooterGuid( WorldObject* object, bool ifneed = false );
         void   SetLootThreshold(ItemQualities threshold) { m_lootThreshold = threshold; }
         void   Disband(bool hideDestroy=false);
 
