@@ -7756,6 +7756,28 @@ void Spell::EffectSanctuary(SpellEffectIndex /*eff_idx*/)
         return;
     //unitTarget->CombatStop();
 
+    std::list<Unit *> targets;
+    {
+        MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck u_check(this, this, radius);
+        MaNGOS::UnitListSearcher<MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck> searcher(this, targets, u_check);
+        Cell::VisitAllObjects(this, searcher, radius);
+    }
+
+    for(std::list<Unit *>::iterator tIter = targets.begin(); tIter != targets.end(); ++tIter)
+    {
+        if (!(*tIter)->hasUnitState(UNIT_STAT_CASTING))
+            continue;
+
+        for (uint32 i = CURRENT_FIRST_NON_MELEE_SPELL; i < CURRENT_MAX_SPELL; i++)
+        {
+            if ((*tIter)->GetCurrentSpell(i)
+            && (*tIter)->GetCurrentSpell(i)->m_targets.getUnitTargetGUID() == unitTarget->GetGUID())
+            {
+                (*tIter)->InterruptSpell(CurrentSpellTypes(i), false);
+            }
+        }
+    }
+
     unitTarget->CombatStop();
     unitTarget->getHostileRefManager().deleteReferences();  // stop all fighting
     // Vanish allows to remove all threat and cast regular stealth so other spells can be used
