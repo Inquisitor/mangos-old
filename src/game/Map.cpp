@@ -2002,6 +2002,7 @@ bool InstanceMap::Add(Player *player)
                         GetInstanceSave()->GetGroupCount(), GetInstanceSave()->CanReset());
                     //ASSERT(false);
                     player->RepopAtGraveyard();
+                    return false;
                 }
             }
             else
@@ -2026,6 +2027,7 @@ bool InstanceMap::Add(Player *player)
                                 groupBind->save->GetPlayerCount(), groupBind->save->GetGroupCount(), groupBind->save->CanReset());
                         //ASSERT(false);
                         player->RepopAtGraveyard();
+                        return false;
                     }
                     // bind to the group or keep using the group save
                     if (!groupBind)
@@ -2053,6 +2055,7 @@ bool InstanceMap::Add(Player *player)
                                 sLog.outError("GroupBind save NULL");
                             //ASSERT(false);
                             player->TeleportToHomebind();
+                            return false;
                         }
                         // if the group/leader is permanently bound to the instance
                         // players also become permanently bound when they enter
