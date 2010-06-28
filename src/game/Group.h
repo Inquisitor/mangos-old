@@ -345,7 +345,7 @@ class MANGOS_DLL_SPEC Group
         void SendLootAllPassed(const Roll &r);
         void GroupLoot(Creature *creature, Loot *loot);
         void NeedBeforeGreed(Creature *creature, Loot *loot);
-        void MasterLoot(Creature *creature, Loot *loot);
+        void MasterLoot(WorldObject* object, Loot *loot);
         void CountRollVote(ObjectGuid const& playerGUID, ObjectGuid const& lootedTarget, uint32 itemSlot, RollVote choise);
         void StartLootRool(Creature* lootTarget, Loot* loot, uint8 itemSlot, bool skipIfCanNotUse);
         void EndRoll();
