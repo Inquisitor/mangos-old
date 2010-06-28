@@ -219,10 +219,14 @@ bool MapManager::CanPlayerEnter(uint32 mapid, Player* player)
             }
         }
 
+        player->Unmount();
         return true;
     }
     else
+    {
+        player->Unmount();
         return true;
+    }
 }
 
 void MapManager::DeleteInstance(uint32 mapid, uint32 instanceId)
