@@ -825,25 +825,16 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
         }
         case ACTION_T_SUMMON_GOBJECT:
         {
-            if( !pActionInvoker )
+            if (!pActionInvoker)
                 return;
 
             Unit* target = GetTargetByType(action.summon_gobject.target, pActionInvoker);
-            if( !target )
+            if (!target)
                 target = pActionInvoker;
 
-            GameObject* pGameObj = new GameObject;
-            if(!pGameObj->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), action.summon_gobject.id, target->GetMap(),
-            target->GetPhaseMask(), target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
-            {
-                delete pGameObj;
-                return;
-            }
-
-            pGameObj->SetRespawnTime(action.summon_gobject.duration > 0 ? action.summon_gobject.duration/IN_MILLISECONDS : 0);
-            target->GetMap()->Add(pGameObj);
-            target->AddGameObject(pGameObj);
-
+            if(GameObject * pGameObj = target->SummonGameObject(action.summon_gobject.id, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, action.summon_gobject.duration))
+                if(target->GetTypeId() == TYPEID_UNIT)
+                    target->AddGameObject(pGameObj);
             break;
         }
         case ACTION_T_ADD_ITEM:

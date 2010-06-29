@@ -3188,28 +3188,29 @@ void Map::ScriptsProcess()
                 }
 
                 Quest const* pQuest = sObjectMgr.GetQuestTemplate(QuestID);
-                if( !pQuest )
+                if (!pQuest)
                 {
                     sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT Quest Template doesnt exist for quest: %u",QuestID);
                     break;
                 }
 
-                uint16 log_slot = user->FindQuestSlot( pQuest->GetQuestId() );
-                if( log_slot > MAX_QUEST_LOG_SIZE)
+                uint16 log_slot = user->FindQuestSlot(pQuest->GetQuestId());
+                if (log_slot > MAX_QUEST_LOG_SIZE)
                     break;
 
                 QuestStatusData& q_status = user->getQuestStatusMap()[QuestID];
 
-                if( q_status.m_creatureOrGOcount[x]+ increment >  pQuest->ReqCreatureOrGOCount[x] ) // We shouldnt go above required count
+                if(q_status.m_creatureOrGOcount[x] + increment > pQuest->ReqCreatureOrGOCount[x]) // We shouldnt go above required count
                     break;
 
                 uint32 oldCount = q_status.m_creatureOrGOcount[x];
                 q_status.m_creatureOrGOcount[x] = oldCount + increment;
-                if (q_status.uState != QUEST_NEW) q_status.uState = QUEST_CHANGED;
+                if (q_status.uState != QUEST_NEW) 
+                    q_status.uState = QUEST_CHANGED;
 
-                user->SendQuestUpdateAddCreatureOrGo( pQuest, 0, x, oldCount, increment );
-                if( user->CanCompleteQuest(QuestID) )
-                    user->CompleteQuest( QuestID );
+                user->SendQuestUpdateAddCreatureOrGo(pQuest, 0, x, oldCount, increment);
+                if (user->CanCompleteQuest(QuestID))
+                    user->CompleteQuest(QuestID);
 
                 break;
             }
@@ -3221,29 +3222,19 @@ void Map::ScriptsProcess()
                     break;
                 }
 
-                GameObject* pGameObj = new GameObject;
-
-                WorldObject* summoner = dynamic_cast<WorldObject*>(source);
+                WorldObject * pSummoner = dynamic_cast<WorldObject*>(source);
 
                 float x = step.script->x;
                 float y = step.script->y;
                 float z = step.script->z;
                 float o = step.script->o;
 
-                if(!pGameObj->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), step.script->datalong, summoner->GetMap(),
-                    summoner->GetPhaseMask(), x==0?summoner->GetPositionX():x, y==0?summoner->GetPositionY():y, z==0?summoner->GetPositionZ():z, o==0?summoner->GetOrientation():o, 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
-                {
-                    delete pGameObj;
-                    sLog.outError("SCRIPT_COMMAND_TEMP_SUMMON_OBJECT GameObject could not be created Entry: %u.", step.script->datalong);
-                    break;
-                }
+                if(!x && !y && !z)
+                    pSummoner->GetPosition(x,y,z);
 
-                pGameObj->SetRespawnTime(step.script->datalong2 > 0 ? step.script->datalong2/IN_MILLISECONDS : 0);
-
-                summoner->GetMap()->Add(pGameObj);
-                
-                if( summoner->GetTypeId() == TYPEID_UNIT )
-                    ((Unit*)summoner)->AddGameObject(pGameObj);
+                if(GameObject * pGameObj = pSummoner->SummonGameObject(step.script->datalong, x,y,z, o, step.script->datalong2))
+                    if (pSummoner->GetTypeId() == TYPEID_UNIT)
+                        ((Unit*)pSummoner)->AddGameObject(pGameObj);
                 break;
             }
             case SCRIPT_COMMAND_CREATE_ITEM:
