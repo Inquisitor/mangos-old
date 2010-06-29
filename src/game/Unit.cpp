@@ -2105,41 +2105,29 @@ void Unit::CalculateAbsorbAndResist(Unit *pCaster, SpellSchoolMask schoolMask, D
             case SPELLFAMILY_PALADIN:
             {
                 // Ardent Defender
-                if (spellProto->SpellIconID == 2135 && GetTypeId() == TYPEID_PLAYER)
+                if (preventDeathSpell->SpellIconID == 2135)
                 {
-                    // count HP after this attack
-                    int32 remainingHealth = int32(GetHealth()) - RemainingDamage;
-                    // count how much HP required to turn on absorb effect
-                    int32 allowedHealth = int32(GetMaxHealth() * 0.35f);
-                    // If current processed attack would kill us
-                    if (remainingHealth <= 0 && !((Player*)this)->HasAura(66233))
+                    // Calculate defense over level * 5
+                    int32 defenseAmount = GetDefenseSkillValue() - getLevel() * 5; 
+                    // Proceed if positive value
+                    if (defenseAmount > 0)
                     {
-                        // Cast healing spell, completely avoid damage
-                        RemainingDamage = 0;
-                      
-                        uint32 defenseSkillValue = GetDefenseSkillValue();
-                        uint32 baseLevelSkillValue = getLevel() * 5;
-                        // If player does not achieve even lvl cap of defense return 0%
-                        float pctFromDefense = (defenseSkillValue <= baseLevelSkillValue) ? 0.0f :
-                        // If player overexeceded maxlevelcap+140 return 100%
-                        (((defenseSkillValue - baseLevelSkillValue) >= 140) ? 1.0f : 
-                        // else scale pct
-                        ((float(defenseSkillValue) - float(baseLevelSkillValue)) / 140));
-
-                        int32 healAmount = int32(GetMaxHealth() * (*i)->GetSpellProto()->EffectBasePoints[EFFECT_INDEX_1] *  pctFromDefense / 100);
-                        CastCustomSpell(this, 66235, &healAmount, NULL, NULL, true);
+                        // Defense cap
+                        if (defenseAmount > 140)
+                            defenseAmount = 140;
+                        // Trigger cooldown aura
                         CastSpell(this, 66233, true);
+                        // Calculate heal amount
+                        int32 healAmount = preventDeathSpell->CalculateSimpleValue(EFFECT_INDEX_1);
+                        healAmount = defenseAmount * GetMaxHealth() * healAmount / 14000 - GetHealth();
+                        // Heal if positive value
+                        if (healAmount > 0)
+                            CastCustomSpell(this, 66235, &healAmount, NULL, NULL, true);
+                        // Absorb Everything
+                        RemainingDamage = 0;
                     }
-                    else if (remainingHealth < allowedHealth)
-                    {
-                        // Reduce damage that brings us under 35% (or full damage if we are already under 35%) by x%
-                        int32 damageToReduce = (int32(GetHealth()) < allowedHealth)
-                            ? RemainingDamage
-                            : allowedHealth - remainingHealth;
-                        RemainingDamage -= damageToReduce * currentAbsorb / 100;
-                    }
-                    continue;    
                 }
+
                 break;
             }
             case SPELLFAMILY_PRIEST:
@@ -2193,6 +2181,26 @@ void Unit::CalculateAbsorbAndResist(Unit *pCaster, SpellSchoolMask schoolMask, D
                 }
                 break;
             }
+            case SPELLFAMILY_PALADIN:
+            {
+                // Ardent Defender
+                if (spellProto->SpellIconID == 2135)
+                {
+                    // Apply absorb only on damage below 35% hp 
+                    int32 absorbableDamage = RemainingDamage + 0.35f * GetMaxHealth() - GetHealth();
+                    if (absorbableDamage > RemainingDamage)
+                        absorbableDamage = RemainingDamage;
+                    if (absorbableDamage > 0)
+                        RemainingDamage -= absorbableDamage * currentAbsorb / 100;
+
+                    // 66233 is cooldown aura
+                    if (!((Player*)this)->HasAura(66233))
+                        preventDeathSpell = (*i)->GetSpellProto();
+
+                    continue;
+                }
+                break;
+            } 
             case SPELLFAMILY_DEATHKNIGHT:
             {
                 // Shadow of Death
