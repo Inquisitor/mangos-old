@@ -72,7 +72,7 @@ bool DynamicObject::Create( uint32 guidlow, Unit *caster, uint32 spellId, SpellE
 
     SetEntry(spellId);
 
-    SetObjectScale(2.0f);
+    SetObjectScale(1.0f);
 
     SetUInt64Value(DYNAMICOBJECT_CASTER, caster->GetGUID());
 
