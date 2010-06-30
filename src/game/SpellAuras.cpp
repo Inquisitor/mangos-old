@@ -9573,9 +9573,7 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
             }
         }
 
-
         //target->i_AI = new PlayerAI(target);
-
     }
     else
     {
@@ -9601,11 +9599,6 @@ void Aura::HandleIgnoreAuraState(bool apply, bool Real)
 {
     if (GetId() == 64976 || GetId() == 57499 )
         SendFakeAuraUpdate(GetId(), apply);
-    /*else if(GetId() == 44544)
-    {
-        printf("\n ! fof setting charges to 3 ! \n ");
-        SetAuraCharges(3); // 3 because first is droped on proc
-    }*/
 }
 
 void Aura::SendFakeAuraUpdate(uint32 auraId, bool apply, Unit * pPlayer )
