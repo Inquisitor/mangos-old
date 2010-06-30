@@ -220,11 +220,13 @@ bool MapManager::CanPlayerEnter(uint32 mapid, Player* player)
         }
 
         player->Unmount();
+        player->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
         return true;
     }
     else
     {
         player->Unmount();
+        player->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
         return true;
     }
 }
