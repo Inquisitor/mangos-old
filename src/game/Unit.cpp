@@ -12289,6 +12289,10 @@ int32 Unit::CalculateSpellDamage(Unit const* target, SpellEntry const* spellProt
     if(HasAura(53042) && (spellSpec == SPELL_BATTLE_ELIXIR || spellSpec == SPELL_GUARDIAN_ELIXIR || spellSpec == SPELL_FLASK_ELIXIR))
         value *= 1.4f;
 
+    // Magic Absorption always misses 1 point
+    if(spellProto->Id == 29444 && effect_index == EFFECT_INDEX_1)
+        value += spellProto->EffectRealPointsPerLevel[EFFECT_INDEX_1];
+
     if(Player* modOwner = GetSpellModOwner())
     {
         modOwner->ApplySpellMod(spellProto->Id, SPELLMOD_ALL_EFFECTS, value);
