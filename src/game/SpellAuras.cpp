@@ -6394,7 +6394,6 @@ void Aura::HandleModMeleeRangedSpeedPct(bool apply, bool /*Real*/)
 
    if(IsStacking())
     {
-        target->ApplyCastTimePercentMod(m_modifier.m_amount, apply);
         target->ApplyAttackTimePercentMod(BASE_ATTACK, m_modifier.m_amount, apply);
         target->ApplyAttackTimePercentMod(OFF_ATTACK, m_modifier.m_amount, apply);
         target->ApplyAttackTimePercentMod(RANGED_ATTACK, m_modifier.m_amount, apply);
