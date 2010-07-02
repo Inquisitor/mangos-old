@@ -6309,7 +6309,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     basepoints[0] += damage * triggerAmount/100;
 
                     // limit absorb amount
-                    if (basepoints[0] > pVictim->getLevel()*125)
+                    if (basepoints[0] > (int)pVictim->getLevel()*125)
                         basepoints[0] = pVictim->getLevel()*125;
 
                     triggered_spell_id = 47753;
@@ -6324,7 +6324,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     // avoid double triggering from 2 auras
                     if (triggeredByAura->GetEffIndex() != EFFECT_INDEX_1)
                         return false;
-
 
                     // Renew
                     Aura* healingAura = pVictim->GetAura(SPELL_AURA_PERIODIC_HEAL, SPELLFAMILY_PRIEST, UI64LIT(0x40), 0, GetGUID());
@@ -7048,7 +7047,7 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                 // Seal of Corruption (damage calc on apply aura)
                 case 53736:
                 {
-                    if (effIndex != EFFECT_INDEX_0 || !(procFlag & PROC_FLAG_SUCCESSFUL_MELEE_HIT))         // effect 1,2 used by seal unleashing code
+                    if (effIndex != EFFECT_INDEX_0 || !(procFlag & PROC_FLAG_SUCCESSFUL_MELEE_HIT)) // effect 1,2 used by seal unleashing code
                         return false;
 
                     // At melee attack or Hammer of the Righteous spell damage considered as melee attack
@@ -13604,7 +13603,7 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
                         break;
                     int32 damageLeft = triggeredByAura->GetModifier()->m_amount;
                     // No damage left
-                    if (damageLeft < damage )
+                    if (damageLeft < (int)damage )
                         RemoveSpellsCausingAura(triggeredByAura->GetModifier()->m_auraname);
                     else
                         triggeredByAura->GetModifier()->m_amount = (damageLeft-damage);
