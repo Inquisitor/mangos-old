@@ -443,16 +443,33 @@ void AchievementMgr::ResetAchievementCriteria(AchievementCriteriaTypes type, uin
             case ACHIEVEMENT_CRITERIA_TYPE_BG_OBJECTIVE_CAPTURE:
             case ACHIEVEMENT_CRITERIA_TYPE_HONORABLE_KILL_AT_AREA:
             {
-                switch(achievementCriteria->referredAchievement)
+                switch(achievementCriteria->referredAchievement) // All achievements that should reset its progress.
                 {
-                    case 200:
-                    case 206:
-                    case 1252:
-                    case 158:
-                    case 157:
-                        continue;
+                    case 73:
+                    case 204:
+                    case 203:
+                    case 213:
+                    case 216:
+                    case 229:
+                    case 231:
+                    case 583:
+                    case 584:
+                    case 587:
+                    case 872:
+                    case 1153:
+                    case 1251:
+                    case 1765: 
+                    case 2193:
+                    case 2189:
+                    case 2190:
+                    case 1766:
+                    case 3845:
+                    case 3848:
+                    case 3849:
+                    case 3853:
+                        SetCriteriaProgress(achievementCriteria, 0, PROGRESS_SET);
+                    default: continue; // Do not reset progress for other achievements.
                 }
-                SetCriteriaProgress(achievementCriteria, 0, PROGRESS_SET);
             }
             default:                                        // reset all cases
                 break;
