@@ -6409,7 +6409,6 @@ void Aura::HandleModMeleeRangedSpeedPct(bool apply, bool /*Real*/)
         // unapply old aura
         if(target->m_modAttackSpeedPct[NONSTACKING_MOD_ALL])
         {
-            target->ApplyCastTimePercentMod(target->m_modAttackSpeedPct[NONSTACKING_MOD_ALL], false);
             target->ApplyAttackTimePercentMod(BASE_ATTACK, target->m_modAttackSpeedPct[NONSTACKING_MOD_ALL], false);
             target->ApplyAttackTimePercentMod(OFF_ATTACK, target->m_modAttackSpeedPct[NONSTACKING_MOD_ALL], false);
             target->ApplyAttackTimePercentMod(RANGED_ATTACK, target->m_modAttackSpeedPct[NONSTACKING_MOD_ALL], false);
@@ -6418,7 +6417,6 @@ void Aura::HandleModMeleeRangedSpeedPct(bool apply, bool /*Real*/)
         if(!apply)
             amount = target->GetMaxPositiveAuraModifier(SPELL_AURA_SLOW_ALL, true);
 
-        target->ApplyCastTimePercentMod(amount, true);
         target->ApplyAttackTimePercentMod(BASE_ATTACK, amount, true);
         target->ApplyAttackTimePercentMod(OFF_ATTACK, amount, true);
         target->ApplyAttackTimePercentMod(RANGED_ATTACK, amount, true);
