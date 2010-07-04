@@ -7736,6 +7736,12 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     }
                 }
             }
+            // Hungering Cold - not break from diseases
+            if (dummySpell->SpellIconID == 2797)
+            {
+                if (procSpell && procSpell->Dispel == DISPEL_DISEASE)
+                    return false;
+            }
             break;
         }
         case SPELLFAMILY_PET:
