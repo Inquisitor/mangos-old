@@ -893,29 +893,29 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
         {
             case SPELLFAMILY_GENERIC:
             {
-                switch( m_spellInfo->Id )
+                switch(m_spellInfo->Id)
                 {
                     case 50547: // Q: Atop the Woodlands (H/A)
                     {
-                        if( m_caster->GetTypeId() == TYPEID_PLAYER )
+                        if (m_caster->GetTypeId() == TYPEID_PLAYER)
                         {
-                            if( ((Player*)m_caster)->GetQuestStatus(12084) == QUEST_STATUS_INCOMPLETE || ((Player*)m_caster)->GetQuestStatus(12083) == QUEST_STATUS_INCOMPLETE )
+                            if (((Player*)m_caster)->GetQuestStatus(12084) == QUEST_STATUS_INCOMPLETE || ((Player*)m_caster)->GetQuestStatus(12083) == QUEST_STATUS_INCOMPLETE)
                                 ((Player*)m_caster)->KilledMonsterCredit(26831, 0);
                         }
                         return;
                     }
                     case 50546: // Q: The Focus on the Beach (H/A)
                     {
-                        if( m_caster->GetTypeId() == TYPEID_PLAYER )
+                        if (m_caster->GetTypeId() == TYPEID_PLAYER)
                         {
-                            if( ((Player*)m_caster)->GetQuestStatus(12065) == QUEST_STATUS_INCOMPLETE || ((Player*)m_caster)->GetQuestStatus(12066) == QUEST_STATUS_INCOMPLETE )
+                            if (((Player*)m_caster)->GetQuestStatus(12065) == QUEST_STATUS_INCOMPLETE || ((Player*)m_caster)->GetQuestStatus(12066) == QUEST_STATUS_INCOMPLETE)
                                 ((Player*)m_caster)->KilledMonsterCredit(26773, 0);
                         }
                         return;
                     }
                     case 43385: // Q: Field Test
                     {
-                        if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                        if (m_caster->GetTypeId() != TYPEID_PLAYER)
                             return;
 
                         ((Player*)m_caster)->KilledMonsterCredit(24281, 0);
@@ -1211,7 +1211,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 }
                 // Polarity Shift
                 case 28089:
-                    if(unitTarget && unitTarget->GetTypeId() == TYPEID_PLAYER)
+                    if (unitTarget && unitTarget->GetTypeId() == TYPEID_PLAYER)
                     {
                         uint32 toCast = (roll_chance_i(50) ? 28059 : 28084);
                         unitTarget->RemoveAurasDueToSpell( (toCast == 28059)? 28084 : 28059 );
@@ -1220,7 +1220,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     break;
                 // Polarity Shift
                 case 39096:
-                    if(unitTarget)
+                    if (unitTarget)
                         unitTarget->CastSpell(unitTarget, roll_chance_i(50) ? 39088 : 39091, true);
                     break;
                 case 29200:                                 // Purify Helboar Meat
@@ -1895,105 +1895,57 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 case 58418:                                 // Portal to Orgrimmar
                 case 58420:                                 // Portal to Stormwind
                     return;                                 // implemented in EffectScript[0]
-                case 45109: // Q: Disrupt the Greengill Coast
-                {
-                    if( !unitTarget || unitTarget->GetEntry() != 25084 && GetCaster()->GetTypeId() != TYPEID_PLAYER )
-                        return;
-
-                    // Iterate for all slave masters
-                    CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
-                    Cell cell(pair);
-                    cell.data.Part.reserved = ALL_DISTRICT;
-                    cell.SetNoCreate();
-
-                    std::list<Creature*> creatureList;
-                    std::vector<Creature*> creatureVector;
-
-                    MaNGOS::AnyUnitInObjectRangeCheck go_check(unitTarget, 25); // 25 yards check
-                    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(unitTarget, creatureList, go_check);
-                    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-
-                    // Get Creatures
-                    cell.Visit(pair, go_visit, *(unitTarget->GetMap()), *unitTarget, 25);
-
-                    if (!creatureList.empty())
-                    {
-                        for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
-                        {
-                            if( (*itr)->GetEntry() == 25060 ) // Add to vector only if its Myrmidon creature
-                                creatureVector.push_back(*itr);
-                        }
-                    }
-                    if( !creatureVector.empty() )
-                    {    // Attack slave's master
-                        Creature * Myrmidon = creatureVector[ rand()%creatureVector.size()]; // Get random one from all possible
-                        for( std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr )
-                        {
-                            if( (*itr)->GetEntry() == 25084 && (*itr)->GetDistance2d( m_targets.m_destX, m_targets.m_destY) < 10 )
-                            {
-                                (*itr)->SetEntry(25085); // Change creature to Freed Murloc
-                                (*itr)->AddThreat( Myrmidon, 10.0f );
-                                (*itr)->SetInCombatWith( Myrmidon );
-                                (*itr)->GetMotionMaster()->MoveChase( Myrmidon );
-                                (*itr)->Attack( Myrmidon, true );
-                                ((Player*)GetCaster())->KilledMonsterCredit( 25086, 0 ); // Increment quest count
-                            }
-                        }
-                    }
-                    return;
-                }
                 case 38173: // Q: On Spirit's Wings
                 {
-                    if( !unitTarget || GetCaster()->GetTypeId() != TYPEID_PLAYER || ((Player*)GetCaster())->GetQuestStatus(10714) == QUEST_STATUS_COMPLETE )
+                    if (!unitTarget || GetCaster()->GetTypeId() != TYPEID_PLAYER || ((Player*)GetCaster())->GetQuestStatus(10714) == QUEST_STATUS_COMPLETE)
                         return;
 
+                    Player * pPlr = static_cast<Player*>(GetCaster());
+
                     // Iterate for all creatures around cast place
-                    CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+                    CellPair pair(MaNGOS::ComputeCellPair(m_targets.m_destX, m_targets.m_destY));
                     Cell cell(pair);
                     cell.data.Part.reserved = ALL_DISTRICT;
                     cell.SetNoCreate();
 
                     std::list<Creature*> creatureList;
-
-                    MaNGOS::AnyUnitInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10); // 10 yards check
-                    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
-                    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-
-                    // Get Creatures
-                    cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                    {
+                        MaNGOS::AnyUnitInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10); // 10 yards check
+                        MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
+                        TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+                        cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                    }
 
                     if (!creatureList.empty())
                     {
                         uint32 m_counted = 0;
                         for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
                         {
-                            if( (*itr)->GetEntry() == 22384 || (*itr)->GetEntry() == 22160 ) // Check if its Soothsayer or Taskmaster
+                            if ((*itr)->GetEntry() == 22384 || (*itr)->GetEntry() == 22160) // Check if its Soothsayer or Taskmaster
                                 ++m_counted; // Increment if found
                         }
-                        if( m_counted == 2 )// Complete quest if both were found (2 npcs)
+                        if (m_counted == 2) // Complete quest if both were found (2 npcs)
                         {
-                            GetCaster()->SummonCreature( 22492, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ+5, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000 );
-                            ((Player*)GetCaster())->CompleteQuest(10714); // Complete quest
+                            pPlr->SummonCreature(22492, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ+5, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000);
+                            pPlr->CompleteQuest(10714); // Complete quest
                         }
                     }
                     return;
                 }
                 case 33655: // Q: Mission: Gateways Murketh and Shaadraz
                 {
-                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
-                        return;
-                    if( !m_caster->isInFlight() )
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER || !m_caster->isInFlight())
                         return;
 
-                    if( m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -145.554f, 1511.28f, 34.3641f) < 25 )
-                        ((Player*)m_caster)->KilledMonsterCredit( 19291, 0 );
-                    if( m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -304.408f, 1524.45f, 37.9685f ) < 25 )
-                        ((Player*)m_caster)->KilledMonsterCredit( 19292, 0 );
+                    if (m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -145.554f, 1511.28f, 34.3641f) < 25)
+                        ((Player*)m_caster)->KilledMonsterCredit(19291, 0);
+                    if (m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -304.408f, 1524.45f, 37.9685f ) < 25)
+                        ((Player*)m_caster)->KilledMonsterCredit(19292, 0);
                     return;
                 }
                 case 21332: // Q: Poisoned Water
                 {
-                    if(unitTarget->GetTypeId() == TYPEID_UNIT && unitTarget->GetEntry() == 8521 || unitTarget->GetEntry() == 8519 || unitTarget->GetEntry() == 8522 || unitTarget->GetEntry() == 8520 )
+                    if (unitTarget->GetTypeId() == TYPEID_UNIT && unitTarget->GetEntry() == 8521 || unitTarget->GetEntry() == 8519 || unitTarget->GetEntry() == 8522 || unitTarget->GetEntry() == 8520)
                         ((Creature*)unitTarget)->UpdateEntry(13279);
                     return;
                 }
@@ -2029,47 +1981,47 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 }
                 case 46171: // Q:Emergency Protocol: Section 8.2, Paragraph D
                 {
-                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
 
                     Player * pPlayer = static_cast<Player*>(m_caster);
 
-                    if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 25845, 10 ) )
+                    if (pPlayer->GetClosestCreatureWithEntry(pPlayer, 25845, 10 ))
                         pPlayer->KilledMonsterCredit( 25845, 0);
 
-                    else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 25846, 10 ) )
+                    else if (pPlayer->GetClosestCreatureWithEntry(pPlayer, 25846, 10))
                         pPlayer->KilledMonsterCredit( 25846, 0);
 
-                    else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 25847, 10 ) )
+                    else if (pPlayer->GetClosestCreatureWithEntry(pPlayer, 25847, 10))
                         pPlayer->KilledMonsterCredit( 25847, 0);
 
                     return;
                 }
                 case 45653: // Q:Neutralizing the Cauldrons
                 {
-                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
 
                     Player * pPlayer = static_cast<Player*>(m_caster);
 
-                    if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 25490, 10 ) )
-                        pPlayer->KilledMonsterCredit( 25490, 0);
+                    if (pPlayer->GetClosestCreatureWithEntry( pPlayer, 25490, 10))
+                        pPlayer->KilledMonsterCredit(25490, 0);
 
-                    else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 25492, 10 ) )
-                        pPlayer->KilledMonsterCredit( 25492, 0);
+                    else if (pPlayer->GetClosestCreatureWithEntry(pPlayer, 25492, 10))
+                        pPlayer->KilledMonsterCredit(25492, 0);
 
-                    else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 25493, 10 ) )
-                        pPlayer->KilledMonsterCredit( 25493, 0);
+                    else if (pPlayer->GetClosestCreatureWithEntry(pPlayer, 25493, 10))
+                        pPlayer->KilledMonsterCredit(25493, 0);
 
                     return;
                 }
                 case 53145: // Q:A Hero's Headgear
                 {
-                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
 
-                    if( ((Player*)m_caster)->GetQuestStatus(12758) == QUEST_STATUS_INCOMPLETE )
-                        m_caster->SummonGameObject( 191179, unitTarget->GetPositionX(), unitTarget->GetPositionY(), unitTarget->GetPositionZ(), unitTarget->GetOrientation(), 300000 );
+                    if (((Player*)m_caster)->GetQuestStatus(12758) == QUEST_STATUS_INCOMPLETE)
+                        m_caster->SummonGameObject(191179, unitTarget->GetPositionX(), unitTarget->GetPositionY(), unitTarget->GetPositionZ(), unitTarget->GetOrientation(), 300000);
 
                     return;
                 }
@@ -2080,40 +2032,40 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     Player * pPlayer = static_cast<Player*>(m_caster);
 
-                    if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 29056, 10 ) )
+                    if (pPlayer->GetClosestCreatureWithEntry(pPlayer, 29056, 10))
                         pPlayer->KilledMonsterCredit( 29056, 0);
 
-                    else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 29057, 10 ) )
+                    else if (pPlayer->GetClosestCreatureWithEntry(pPlayer, 29057, 10))
                         pPlayer->KilledMonsterCredit( 29057, 0);
 
-                    else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 29058, 10 ) )
-                        pPlayer->KilledMonsterCredit( 29058, 0);
+                    else if (pPlayer->GetClosestCreatureWithEntry(pPlayer, 29058, 10))
+                        pPlayer->KilledMonsterCredit(29058, 0);
 
-                    else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 29069, 10 ) )
-                        pPlayer->KilledMonsterCredit( 29069, 0);
+                    else if (pPlayer->GetClosestCreatureWithEntry( pPlayer, 29069, 10))
+                        pPlayer->KilledMonsterCredit(29069, 0);
 
                     return;
                 }
                 case 56275: // Q:Destroy the Forges!
                 {
-                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
 
                     Player * pPlayer = static_cast<Player*>(m_caster);
 
-                    if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 30209, 10 ) )
-                        pPlayer->KilledMonsterCredit( 30209, 0);
+                    if (pPlayer->GetClosestCreatureWithEntry(pPlayer, 30209, 10))
+                        pPlayer->KilledMonsterCredit(30209, 0);
 
-                    else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 30211, 10 ) )
-                        pPlayer->KilledMonsterCredit( 30211, 0);
+                    else if (pPlayer->GetClosestCreatureWithEntry(pPlayer, 30211, 10))
+                        pPlayer->KilledMonsterCredit(30211, 0);
 
-                    else if( pPlayer->GetClosestCreatureWithEntry( pPlayer, 30212, 10 ) )
-                        pPlayer->KilledMonsterCredit( 30212, 0);
+                    else if (pPlayer->GetClosestCreatureWithEntry(pPlayer, 30212, 10))
+                        pPlayer->KilledMonsterCredit(30212, 0);
                     return;
                 }
                 case 45958: // Q:Coward Delivery... Under 30 Minutes or it's Free
                 {
-                    if( m_caster->GetTypeId() == TYPEID_PLAYER )
+                    if (m_caster->GetTypeId() == TYPEID_PLAYER)
                     {
                         m_caster->CastSpell(m_caster, 45956, true );
                         ((Player*)m_caster)->AreaExploredOrEventHappens(11711);
@@ -2122,10 +2074,10 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 }
                 case 46023: // Q:Master and Servant
                 {
-                    if( unitTarget->isDead() && unitTarget->GetTypeId() != TYPEID_PLAYER )
+                    if (unitTarget->isDead() && unitTarget->GetTypeId() != TYPEID_PLAYER)
                     {
                         uint32 spellToCast;
-                        switch( unitTarget->GetEntry() )
+                        switch(unitTarget->GetEntry())
                         {
                             case 25793: spellToCast = 46034; break;
                             case 25758: spellToCast = 46058; break;
@@ -2134,77 +2086,74 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                             case 25753: spellToCast = 46068; break;
                         }
                         ((Creature*)unitTarget)->RemoveCorpse();
-                        m_caster->CastSpell( m_caster, spellToCast, true );
-                        m_caster->CastSpell( m_caster, 46027, true );
+                        m_caster->CastSpell(m_caster, spellToCast, true);
+                        m_caster->CastSpell(m_caster, 46027, true);
                     }
                     return;
                 }
                 case 48610: // Q:Shredder Repair
                 {
-                    if(m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->isVehicle())
+                    if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->isVehicle())
                         ((Vehicle*)m_caster)->RemoveAllPassengers();
 
                     return;
                 }
                 case 45877: // Q:Bring 'Em Back Alive
                 {
-                    if( m_caster->GetVehicleGUID() != 0 )
+                    if (m_caster->GetVehicleGUID() != 0)
                         m_caster->ExitVehicle();
 
                     return;
                 }
                 case 49319: // Q:The Horse Hollerer
                 {
-                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
 
                     // Iterate for all creatures around cast place
-                    CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+                    CellPair pair(MaNGOS::ComputeCellPair(m_targets.m_destX, m_targets.m_destY));
                     Cell cell(pair);
                     cell.data.Part.reserved = ALL_DISTRICT;
                     cell.SetNoCreate();
 
                     std::list<Creature*> creatureList;
-
-                    MaNGOS::AnyUnitInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 5); // 5 yards check
-                    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
-                    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-
-                    // Get Creatures
-                    cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                    {
+                        MaNGOS::AnyUnitInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 5); // 5 yards check
+                        MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
+                        TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+                        cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                    }
 
                     if (!creatureList.empty())
                     {
                         uint32 m_counted = 0;
                         for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
-                        {
-                            if( (*itr)->GetEntry() == 26472 )
+                            if ((*itr)->GetEntry() == 26472)
                                 ++m_counted; // Increment if found
-                        }
-                        for( uint32 x = 0; x < m_counted; ++x )
+
+                        for(uint8 x = 0; x < m_counted; ++x)
                             ((Player*)m_caster)->KilledMonsterCredit(27221, 0);
                     }
                     return;
                 }
                 case 48345: // Q:Bombard the Ballistae
                 {
-                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
 
                     // Iterate for all creatures around cast place
-                    CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+                    CellPair pair(MaNGOS::ComputeCellPair(m_targets.m_destX, m_targets.m_destY));
                     Cell cell(pair);
                     cell.data.Part.reserved = ALL_DISTRICT;
                     cell.SetNoCreate();
 
                     std::list<GameObject*> gobList;
-
-                    MaNGOS::AnyGameObjectInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10.0f); // 10 yards check
-                    MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck> go_search(GetCaster(), gobList, go_check);
-                    TypeContainerVisitor<MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-
-                    // Get Creatures
-                    cell.Visit(pair, go_visit, *(GetCaster()->GetMap()));
+                    {
+                        MaNGOS::AnyGameObjectInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10.0f); // 10 yards check
+                        MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck> go_search(GetCaster(), gobList, go_check);
+                        TypeContainerVisitor<MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+                        cell.Visit(pair, go_visit, *(GetCaster()->GetMap()));
+                    }
 
                     if (!gobList.empty())
                     {
@@ -2222,51 +2171,50 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 case 49634: // Q: Towers of Certain Doom
                 case 49625:
                 {
-                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
 
-                    if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24087, 90 ) )
-                        ((Player*)m_caster)->KilledMonsterCredit( 24087, 0 );
-                    else if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24092, 90 ) )
-                        ((Player*)m_caster)->KilledMonsterCredit( 24092, 0 );
-                    else if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24093, 90 ) )
-                        ((Player*)m_caster)->KilledMonsterCredit( 24093, 0 );
-                    else if( Creature * pCrystal = m_caster->GetClosestCreatureWithEntry( m_caster, 24094, 90 ) )
-                        ((Player*)m_caster)->KilledMonsterCredit( 24094, 0 );
+                    Player * pPlr = static_cast<Player*>(m_caster);
+
+                    if (Creature * pCrystal = pPlr->GetClosestCreatureWithEntry(pPlr, 24087, 90))
+                        pPlr->KilledMonsterCredit(24087, 0);
+                    else if (Creature * pCrystal = pPlr->GetClosestCreatureWithEntry(pPlr, 24092, 90))
+                        pPlr->KilledMonsterCredit(24092, 0);
+                    else if (Creature * pCrystal = pPlr->GetClosestCreatureWithEntry(pPlr, 24093, 90))
+                        pPlr->KilledMonsterCredit(24093, 0);
+                    else if (Creature * pCrystal = pPlr->GetClosestCreatureWithEntry(pPlr, 24094, 90))
+                        pPlr->KilledMonsterCredit(24094, 0);
                     return;
                 }
                 case 43404: // Q: Mission: Plague This!
                 {
-                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
 
                     // Iterate for all creatures around cast place
-                    CellPair pair(MaNGOS::ComputeCellPair( m_targets.m_destX, m_targets.m_destY) );
+                    CellPair pair(MaNGOS::ComputeCellPair(m_targets.m_destX, m_targets.m_destY));
                     Cell cell(pair);
                     cell.data.Part.reserved = ALL_DISTRICT;
                     cell.SetNoCreate();
 
                     std::list<Creature*> creatureList;
-
-                    MaNGOS::AnyUnitInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10); // 10 yards check
-                    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
-                    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-
-                    // Get Creatures
-                    cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                    {
+                        MaNGOS::AnyUnitInPointRangeCheck go_check(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10); // 10 yards check
+                        MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
+                        TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+                        cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                    }
 
                     if (!creatureList.empty())
-                    {
                         for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
-                            if( (*itr)->GetEntry() == 24290 )
-                                m_caster->CastSpell(m_caster, 43419, true );
-                    }
+                            if ((*itr)->GetEntry() == 24290)
+                                m_caster->CastSpell(m_caster, 43419, true);
 
                     return;
                 }
                 case 47530: // Q: Strengthen the Ancients
                 {
-                    if( m_caster->GetTypeId() == TYPEID_PLAYER && unitTarget->GetTypeId() != TYPEID_PLAYER && unitTarget->GetEntry() == 26321 )
+                    if (m_caster->GetTypeId() == TYPEID_PLAYER && unitTarget->GetTypeId() != TYPEID_PLAYER && unitTarget->GetEntry() == 26321)
                     {
                         unitTarget->MonsterTextEmote("The Lothalor Acient gives you its thanks.", 0);
                         ((Player*)m_caster)->KilledMonsterCredit(26321, 0);
@@ -2310,13 +2258,13 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 }
                 case 45923: // Q: Foolish Endeavors
                 {
-                    if(unitTarget->HasAura(45924))
+                    if (unitTarget->HasAura(45924))
                         unitTarget->CastSpell(unitTarget, 45922, true);
                     return;
                 }
                 case 45607: // Q: Kaganishu
                 {
-                    if(m_caster->GetTypeId() == TYPEID_PLAYER)
+                    if (m_caster->GetTypeId() == TYPEID_PLAYER)
                         ((Player*)m_caster)->KilledMonsterCredit(25425, 0);
                     return;
                 }
@@ -7036,9 +6984,9 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                 case 32580:
                 {
                     uint32 toSummon = 0;
-                    if( unitTarget->GetClosestCreatureWithEntry(unitTarget, 21351, 10) )
+                    if (unitTarget->GetClosestCreatureWithEntry(unitTarget, 21351, 10))
                         toSummon = 21446;
-                    else if( unitTarget->GetClosestCreatureWithEntry(unitTarget, 21456, 10) )
+                    else if (unitTarget->GetClosestCreatureWithEntry(unitTarget, 21456, 10))
                         toSummon = 21452;
                     unitTarget->SummonCreature(toSummon, unitTarget->GetPositionX(), unitTarget->GetPositionY(), unitTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 300000 );
                     return;
@@ -7239,13 +7187,12 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     cell.SetNoCreate();
 
                     std::list<Creature*> creatureList;
-
-                    MaNGOS::AnyUnitInPointRangeCheck go_check(pCaster->GetPositionX(), pCaster->GetPositionY(), pCaster->GetPositionZ(), 20);
-                    MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
-                    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-
-                    // Get Creatures
-                    cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                    {
+                        MaNGOS::AnyUnitInPointRangeCheck go_check(pCaster->GetPositionX(), pCaster->GetPositionY(), pCaster->GetPositionZ(), 20);
+                        MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
+                        TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+                        cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                    }
 
                     if (!creatureList.empty())
                     {
@@ -7259,8 +7206,8 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                                 case 31205: entryToCredit = 32167; break;
                             }
 
-                            if(GetCaster()->GetOwner())
-                                if(GetCaster()->GetOwner()->GetTypeId() == TYPEID_PLAYER)
+                            if (GetCaster()->GetOwner())
+                                if (GetCaster()->GetOwner()->GetTypeId() == TYPEID_PLAYER)
                                     ((Player*)GetCaster()->GetOwner())->KilledMonsterCredit(entryToCredit, 0);
 
                             unitTarget->DealDamage((*itr), (*itr)->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
@@ -7598,10 +7545,10 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     next = iter;
                     ++next;
                     Aura *aur = iter->second;
-                    if(GetAllSpellMechanicMask(aur->GetSpellProto()) & (1 << (MECHANIC_IMMUNE_SHIELD-1)))
+                    if (GetAllSpellMechanicMask(aur->GetSpellProto()) & (1 << (MECHANIC_IMMUNE_SHIELD-1)))
                     {
                         unitTarget->RemoveAurasDueToSpell(aur->GetId());
-                        if(Auras.empty())
+                        if (Auras.empty())
                             break;
                         else
                             next = Auras.begin();
@@ -7708,7 +7655,7 @@ void Spell::EffectSanctuary(SpellEffectIndex /*eff_idx*/)
         return;
     //unitTarget->CombatStop();
 
-    std::list<Unit *> targets;
+    std::listt<Unit *> targets;
     {
         MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck u_check(m_caster, m_caster, m_caster->GetMap()->GetVisibilityDistance());
         MaNGOS::UnitListSearcher<MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck> searcher(m_caster, targets, u_check);
