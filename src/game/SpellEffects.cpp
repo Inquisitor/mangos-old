@@ -7655,7 +7655,7 @@ void Spell::EffectSanctuary(SpellEffectIndex /*eff_idx*/)
         return;
     //unitTarget->CombatStop();
 
-    std::listt<Unit *> targets;
+    std::list<Unit *> targets;
     {
         MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck u_check(m_caster, m_caster, m_caster->GetMap()->GetVisibilityDistance());
         MaNGOS::UnitListSearcher<MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck> searcher(m_caster, targets, u_check);

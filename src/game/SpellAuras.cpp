@@ -2554,16 +2554,16 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     // Q: The Big Bone Worm
                     case 39246:
                     {
+                        if (!target)
+                            return;
+
                         if (Unit* caster = GetCaster())
                         {
-                            int32 roll = rand()%100;
-                            if( roll > 20 )
-                            {
-                                for(uint32 x =0; x < urand(0,1) ? 2:3; ++x)
-                                    caster->SummonCreature(urand(0,1) ? 22482 : 22483, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
-                            }
+                            if (urand(0,10) > 2)
+                                for(uint8 x = 0; x < (urand(0,1) ? 2:3); ++x)
+                                    caster->SummonCreature(urand(0,1) ? 22482 : 22483, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
                             else 
-                                caster->SummonCreature(22038, m_target->GetPositionX(), m_target->GetPositionY(), m_target->GetPositionZ(), m_target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
+                                caster->SummonCreature(22038, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
                         }
                         return;
                     }
@@ -2572,7 +2572,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     {
                         if (Unit* caster = GetCaster())
                         {
-                            if( caster->GetTypeId() == TYPEID_PLAYER && m_target->GetEntry() == 25316 && (m_target->GetHealth() * 100 < m_target->GetMaxHealth() * 35) )
+                            if (caster->GetTypeId() == TYPEID_PLAYER && m_target->GetEntry() == 25316 && (m_target->GetHealth() * 100 < m_target->GetMaxHealth() * 35))
                             {
                                 m_target->SetVisibility(VISIBILITY_OFF);
                                 m_target->DealDamage(m_target, m_target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
@@ -2582,31 +2582,29 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     }
                     case 59579:
                     {                    
-                        CellPair pair(MaNGOS::ComputeCellPair( m_target->GetPositionX(), m_target->GetPositionY() ) );
+                        CellPair pair(MaNGOS::ComputeCellPair(m_target->GetPositionX(), m_target->GetPositionY()));
                         Cell cell(pair);
                         cell.data.Part.reserved = ALL_DISTRICT;
                         cell.SetNoCreate();
 
                         std::list<Creature*> creatureList;
-                        std::vector<Creature*> creatureVector;
-
-                        MaNGOS::AnyUnitInObjectRangeCheck go_check(m_target, 15); // 15 yards check
-                        MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(m_target, creatureList, go_check);
-                        TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-
-                        // Get Creatures
-                        cell.Visit(pair, go_visit, *(m_target->GetMap()));
+                        {
+                            MaNGOS::AnyUnitInObjectRangeCheck go_check(m_target, 15); // 15 yards check
+                            MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(m_target, creatureList, go_check);
+                            TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+                            cell.Visit(pair, go_visit, *(m_target->GetMap()));
+                        }
 
                         if (!creatureList.empty())
                         {
                             for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
                             {
-                                if( (*itr)->isAlive() && (*itr)->GetTypeId() != TYPEID_PLAYER && ( (*itr)->GetEntry() == 31142 || (*itr)->GetEntry() == 31147 || (*itr)->GetEntry() == 31205 ) )
+                                if ((*itr)->isAlive() && (*itr)->GetTypeId() != TYPEID_PLAYER && ((*itr)->GetEntry() == 31142 || (*itr)->GetEntry() == 31147 || (*itr)->GetEntry() == 31205))
                                 {
                                     m_target->CastSpell( (*itr), 59580, true );
-                                    if( m_target->GetOwner() )
+                                    if (m_target->GetOwner())
                                     {
-                                        switch( (*itr)->GetEntry() )
+                                        switch((*itr)->GetEntry())
                                         {
                                             case 31142: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 59591, true); break;
                                             case 31147: m_target->GetOwner()->CastSpell(m_target->GetOwner(), 60042, true); break;
@@ -5160,12 +5158,12 @@ void Aura::HandleModMechanicImmunity(bool apply, bool /*Real*/)
     // Demonic Circle
     if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_WARLOCK && GetSpellProto()->SpellIconID == 3221)
     {
-        if (m_target->GetTypeId() != TYPEID_PLAYER)
+        if (target->GetTypeId() != TYPEID_PLAYER)
             return;
         if (apply)
-            if( GameObject* obj = m_target->GetGameObject(48018) )
-                if (m_target->IsWithinDist(obj,GetSpellMaxRange(sSpellRangeStore.LookupEntry(GetSpellProto()->rangeIndex))))
-                    ((Player*)m_target)->TeleportTo(obj->GetMapId(),obj->GetPositionX(),obj->GetPositionY(),obj->GetPositionZ(),obj->GetOrientation());
+            if (GameObject* obj = target->GetGameObject(48018) )
+                if (target->IsWithinDist(obj,GetSpellMaxRange(sSpellRangeStore.LookupEntry(GetSpellProto()->rangeIndex))))
+                    ((Player*)target)->TeleportTo(obj->GetMapId(),obj->GetPositionX(),obj->GetPositionY(),obj->GetPositionZ(),obj->GetOrientation());
     }
 
     // Bestial Wrath
@@ -5352,28 +5350,25 @@ void Aura::HandlePeriodicTriggerSpell(bool apply, bool /*Real*/)
                 return;
             case 27819:                                     //Detonate Mana
             {
-                int32 damage = m_target->GetMaxPower(POWER_MANA);
-                m_target->ModifyPower(POWER_MANA, -(damage/4));
-                m_target->CastCustomSpell(m_target, 27820, &damage , 0, 0, true );
+                int32 damage = target->GetMaxPower(POWER_MANA);
+                target->ModifyPower(POWER_MANA, -(damage/4));
+                target->CastCustomSpell(target, 27820, &damage , 0, 0, true );
                 return;
             }
             case 51912:
             {
-                if( GetCaster() )
+                if (GetCaster() && GetCaster()->GetTypeId()== TYPEID_PLAYER)
                 {
-                    if( GetCaster()->GetTypeId()== TYPEID_PLAYER )
-                    {
-                        uint32 selfspell[4] = {45682, 45674, 45675, 45678};
-                        uint32 targetspell[4] = {45672, 45673, 45677, 45681};
-                        Player * plr = static_cast<Player*>(GetCaster());
-                        plr->KilledMonsterCredit(25505, 0);
+                    uint32 selfspell[4] = {45682, 45674, 45675, 45678};
+                    uint32 targetspell[4] = {45672, 45673, 45677, 45681};
+                    Player * plr = static_cast<Player*>(GetCaster());
+                    plr->KilledMonsterCredit(25505, 0);
 
-                        if( urand(0,10)> 5 )
-                            plr->CastSpell(plr, selfspell[urand(0,3)], true);
+                    if (urand(0,10)> 5)
+                        plr->CastSpell(plr, selfspell[urand(0,3)], true);
 
-                        if( urand(0,10)> 5 ) // Repeated becouse we want it casted unrelated to, if it was casted by player
-                            m_target->CastSpell(m_target, targetspell[urand(0,3)], true);
-                    }
+                    if (urand(0,10)> 5) // Repeated becouse we want it casted unrelated to, if it was casted by player
+                        m_target->CastSpell(m_target, targetspell[urand(0,3)], true);
                 }
             }
             default:
