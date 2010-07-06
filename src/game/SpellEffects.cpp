@@ -662,7 +662,7 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                 if (m_caster->GetTypeId()==TYPEID_PLAYER && (m_spellInfo->SpellFamilyFlags & UI64LIT(0x800000000)))
                 {
                     // consume from stack dozes not more that have combo-points
-                    if(uint32 combo = ((Player*)m_caster)->GetComboPoints())
+                    if(uint8 combo = ((Player*)m_caster)->GetComboPoints())
                     {
                         Aura *poison = 0;
                         bool hasTalentPassed = false;
@@ -714,7 +714,7 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                 // Eviscerate
                 else if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x00020000)) && m_caster->GetTypeId()==TYPEID_PLAYER)
                 {
-                    if(uint32 combo = ((Player*)m_caster)->GetComboPoints())
+                    if(uint8 combo = ((Player*)m_caster)->GetComboPoints())
                     {
                         float ap = m_caster->GetTotalAttackPowerValue(BASE_ATTACK);
                         damage += irand(int32(ap * combo * 0.03f), int32(ap * combo * 0.07f));
@@ -1876,7 +1876,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     // unclear how many summon min/max random, best guess below
                     uint32 random = urand(3,5);
 
-                    for(uint32 i = 0; i < random; ++i)
+                    for(uint32  i = 0; i < random; ++i)
                         m_caster->CastSpell(m_caster, 55528, true);
 
                     return;
