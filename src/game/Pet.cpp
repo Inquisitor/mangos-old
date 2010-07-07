@@ -221,7 +221,7 @@ bool Pet::LoadPetFromDB( Player* owner, uint32 petentry, uint32 petnumber, bool 
             sLog.outError("Pet have incorrect type (%u) for pet loading.", getPetType());
     }
 
-    if(GetEntry() == 26125) // Death Knight's Ghoul
+    if (cinfo->family == CREATURE_FAMILY_GHOUL) // Death Knight's Ghoul
         setPowerType(POWER_ENERGY);
 
     if(owner->IsPvP())

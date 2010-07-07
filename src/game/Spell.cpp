@@ -450,6 +450,50 @@ WorldObject* Spell::FindCorpseUsing()
     return result;
 }
 
+bool Spell::FillCustomTargetMap(uint32 i, UnitList &targetUnitMap)
+{
+    float radius;
+
+    if (m_spellInfo->EffectRadiusIndex[i])
+        radius = GetSpellRadius(sSpellRadiusStore.LookupEntry(m_spellInfo->EffectRadiusIndex[i]));
+    else
+        radius = GetSpellMaxRange(sSpellRangeStore.LookupEntry(m_spellInfo->rangeIndex));
+    // Resulting effect depends on spell that we want to cast
+    switch (m_spellInfo->Id)
+    {
+        case 46584: // Raise Dead
+        {
+            WorldObject* result = FindCorpseUsing <MaNGOS::RaiseDeadObjectCheck>  ();
+
+            if(result)
+            {
+                switch(result->GetTypeId())
+                {
+                    case TYPEID_UNIT:
+                        targetUnitMap.push_back((Unit*)result);
+                        break;
+                    default:
+                        break;
+                };
+            };
+            break;
+        }
+        break;
+        
+        case 47496: // Ghoul's explode
+        {
+            FillAreaTargets(targetUnitMap,m_targets.m_destX, m_targets.m_destY,radius,PUSH_DEST_CENTER,SPELL_TARGETS_AOE_DAMAGE);
+            break;
+        }
+        break;
+        
+        default:
+            return false;
+        break;
+    }
+    return true;
+}
+
 // explicitly instantiate for use in SpellEffects.cpp
 template WorldObject* Spell::FindCorpseUsing<MaNGOS::RaiseDeadObjectCheck>();
 
@@ -523,6 +567,10 @@ void Spell::FillTargetMap()
                     case TARGET_EFFECT_SELECT:
                         SetTargetMap(SpellEffectIndex(i), m_spellInfo->EffectImplicitTargetA[i], tmpUnitMap);
                         break;
+                    case TARGET_AREAEFFECT_CUSTOM:
+					case TARGET_ALL_ENEMY_IN_AREA_INSTANT:
+						if (FillCustomTargetMap(i,tmpUnitMap)) break;
+
                     case TARGET_INNKEEPER_COORDINATES:
                     case TARGET_TABLE_X_Y_Z_COORDINATES:
                     case TARGET_CASTER_COORDINATES:
