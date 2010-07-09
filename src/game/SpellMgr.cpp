@@ -1660,6 +1660,55 @@ void SpellMgr::LoadSpellThreats()
     sLog.outString( ">> Loaded %u aggro generating spells", count );
 }
 
+void SpellMgr::LoadSpellStackingRules()
+{
+    mSpellStacksMap.clear();                                // need for reload case
+
+    uint32 count = 0;
+
+    //                                                0         1
+    QueryResult *result = WorldDatabase.Query("SELECT spellId1, spellId2 FROM spell_stacking");
+    if(!result)
+    {
+
+        barGoLink bar( 1 );
+
+        bar.step();
+
+        sLog.outString();
+        sLog.outString( ">> Loaded %u spell stacking rules", count );
+        return;
+    }
+
+    barGoLink bar( (int)result->GetRowCount() );
+
+    do
+    {
+        Field *fields = result->Fetch();
+
+        bar.step();
+
+        uint32 spellId1 = fields[0].GetUInt32();
+        std::string IdsChain = fields[1].GetCppString();
+
+        Tokens tokens = StrSplit(IdsChain, " ");
+        std::set<uint32> spellSet;
+
+        Tokens::iterator iter;
+        for(iter = tokens.begin(); iter != tokens.end(); ++iter)
+            spellSet.insert(atoi((*iter).c_str()));
+        
+        mSpellStacksMap[spellId1] = spellSet;
+
+        ++count;
+    } while( result->NextRow() );
+
+    delete result;
+
+    sLog.outString();
+    sLog.outString( ">> Loaded %u spell stacking rules", count );
+}
+
 bool SpellMgr::IsRankSpellDueToSpell(SpellEntry const *spellInfo_1,uint32 spellId_2) const
 {
     SpellEntry const *spellInfo_2 = sSpellStore.LookupEntry(spellId_2);
@@ -1748,6 +1797,18 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
      // Ardent Defender cooldown debuff stacks with everything
     if (spellInfo_1->Id == 66233 || spellInfo_2->Id == 66233)
         return false;
+
+    SpellStacksMap::const_iterator sitr = mSpellStacksMap.find(spellInfo_1->Id);
+    if(sitr != mSpellStacksMap.end())
+        for(std::set<uint32>::const_iterator idItr = (*sitr).second.begin(); idItr != (*sitr).second.end(); ++idItr)
+            if(spellInfo_2->Id == (*idItr))
+                return false;
+
+    SpellStacksMap::const_iterator sitr2 = mSpellStacksMap.find(spellInfo_2->Id);
+    if(sitr2 != mSpellStacksMap.end())
+        for(std::set<uint32>::const_iterator idItr = (*sitr2).second.begin(); idItr != (*sitr2).second.end(); ++idItr)
+            if(spellInfo_1->Id == (*idItr))
+                return false;
 
     // Specific spell family spells
     switch(spellInfo_1->SpellFamilyName)

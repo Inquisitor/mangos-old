@@ -413,6 +413,7 @@ class ChatHandler
         bool HandleReloadSpellScriptsCommand(const char* args);
         bool HandleReloadSpellTargetPositionCommand(const char* args);
         bool HandleReloadSpellThreatsCommand(const char* args);
+        bool HandleReloadSpellStacksCommand(const char* args);
         bool HandleReloadSpellPetAurasCommand(const char* args);
         bool HandleReloadSpellDisabledCommand(const char* args);
         bool HandleReloadVehicleDataCommand(const char* args);

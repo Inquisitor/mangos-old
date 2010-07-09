@@ -978,6 +978,9 @@ void World::SetInitialWorldSettings()
     sLog.outString( "Loading Aggro Spells Definitions...");
     sSpellMgr.LoadSpellThreats();
 
+    sLog.outString( "Loading Spell Stacking Rules..." );
+    sSpellMgr.LoadSpellStackingRules();
+
     sLog.outString( "Loading NPC Texts..." );
     sObjectMgr.LoadGossipText();
 
