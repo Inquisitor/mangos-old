@@ -75,6 +75,7 @@ void WorldSession::HandleMoveWorldportAckOpcode()
     // relocate the player to the teleport destination
     GetPlayer()->SetMap(sMapMgr.CreateMap(loc.mapid, GetPlayer()));
     GetPlayer()->Relocate(loc.coord_x, loc.coord_y, loc.coord_z, loc.orientation);
+    GetPlayer()->m_anti_TeleTime=time(NULL);
 
     GetPlayer()->SendInitialPacketsBeforeAddToMap();
     // the CanEnter checks are done in TeleporTo but conditions may change
@@ -170,6 +171,8 @@ void WorldSession::HandleMoveWorldportAckOpcode()
 
     // resummon pet
     GetPlayer()->ResummonPetTemporaryUnSummonedIfAny();
+    GetPlayer()->Anti__SetLastTeleTime(::time(NULL));
+    GetPlayer()->m_anti_BeginFallZ=INVALID_HEIGHT;
 
     //lets process all delayed operations on successful teleport
     GetPlayer()->ProcessDelayedOperations();
@@ -219,6 +222,11 @@ void WorldSession::HandleMoveTeleportAck(WorldPacket& recv_data)
 
     // resummon pet
     GetPlayer()->ResummonPetTemporaryUnSummonedIfAny();
+    if(plMover)
+    {
+        plMover->Anti__SetLastTeleTime(::time(NULL));
+        plMover->m_anti_BeginFallZ=INVALID_HEIGHT;
+    }
 
     //lets process all delayed operations on successful teleport
     GetPlayer()->ProcessDelayedOperations();
@@ -302,6 +310,60 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     {
         // now client not include swimming flag in case jumping under water
         plMover->SetInWater( !plMover->IsInWater() || plMover->GetBaseMap()->IsUnderWater(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z) );
+    }
+
+    // Movement safety checks
+    uint32 Anti_TeleTimeDiff=plMover ? time(NULL) - plMover->Anti__GetLastTeleTime() : time(NULL);
+    static const uint32 Anti_TeleTimeIgnoreDiff=10;
+
+    if (plMover && (plMover->m_transport == 0) &&
+        GetPlayer()->GetMotionMaster()->GetCurrentMovementGeneratorType()!=FLIGHT_MOTION_TYPE &&
+        Anti_TeleTimeDiff>Anti_TeleTimeIgnoreDiff)
+    {
+        const uint32 CurTime=getMSTime();
+        if (getMSTimeDiff(GetPlayer()->m_anti_lastalarmtime,CurTime) > 5000)
+        {
+            GetPlayer()->m_anti_alarmcount = 0;
+        }
+
+        float delta_x = GetPlayer()->GetPositionX() - movementInfo.GetPos()->x;
+        float delta_y = GetPlayer()->GetPositionY() - movementInfo.GetPos()->y;
+        float delta_z = GetPlayer()->GetPositionZ() - movementInfo.GetPos()->z;
+        float delta = sqrt(delta_x * delta_x + delta_y * delta_y); // Len of movement-vector via Pythagoras (a^2+b^2=Len^2)
+        float tg_z = 0.0f; //tangens
+        float delta_t = getMSTimeDiff(GetPlayer()->m_anti_lastmovetime,CurTime);
+
+        GetPlayer()->m_anti_lastmovetime = CurTime;
+        GetPlayer()->m_anti_MovedLen += delta;
+
+        if (delta_t > 15000.0f)
+        {   delta_t = 15000.0f;   }
+
+        // Tangens of walking angel
+        if (!(movementInfo.GetMovementFlags() & (MOVEFLAG_FLYING | MOVEFLAG_SWIMMING)))
+        {
+            tg_z = ((delta !=0.0f) && (delta_z > 0.0f)) ? (atan((delta_z*delta_z) / delta) * 180.0f / M_PI) : 0.0f;
+        }
+
+
+        if (GetPlayer()->m_anti_NextLenCheck <= CurTime)
+        {
+            // Check every 500ms is a lot more advisable then 1000ms, because normal movment packet arrives every 500ms
+            uint32 OldNextLenCheck=GetPlayer()->m_anti_NextLenCheck;
+            float delta_xyt=GetPlayer()->m_anti_MovedLen/(float)(getMSTimeDiff(OldNextLenCheck-500,CurTime));
+            GetPlayer()->m_anti_NextLenCheck = CurTime+500;
+            GetPlayer()->m_anti_MovedLen = 0.0f;
+            static const float MaxDeltaXYT = 0.035f;
+
+            if (delta_xyt > MaxDeltaXYT && delta<=100.0f && GetPlayer()->GetZoneId() != 2257)
+                sLog.outError("ANTI-CHEAT ENGINE: Possible hack detected (speedhack) of %s ", GetPlayer()->GetName());
+        }
+
+        if (delta > 100.0f && GetPlayer()->GetZoneId() != 2257)
+        {
+            sLog.outError("ANTI-CHEAT ENGINE: Possible hack detected (telehack) of %s ", GetPlayer()->GetName());
+            //Anti__ReportCheat("Tele hack",delta,LookupOpcodeName(opcode));
+        }
     }
 
     /*----------------------*/
