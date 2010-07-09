@@ -1657,6 +1657,7 @@ void Unit::CalculateMeleeDamage(Unit *pVictim, uint32 damage, CalcDamageInfo *da
         {
             damageInfo->HitInfo|=HITINFO_ABSORB;
             damageInfo->procEx|=PROC_EX_ABSORB;
+            damageInfo->target->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_DAMAGE);
         }
         if (damageInfo->resist)
             damageInfo->HitInfo|=HITINFO_RESIST;
@@ -13346,7 +13347,10 @@ uint32 createProcExtendMask(SpellNonMeleeDamage *damageInfo, SpellMissInfo missC
             procEx|=PROC_EX_BLOCK;
         // On absorb
         if (damageInfo->absorb)
+        {
+            damageInfo->target->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_DAMAGE);
             procEx|=PROC_EX_ABSORB;
+        }
         // On crit
         if (damageInfo->HitInfo & SPELL_HIT_TYPE_CRIT)
             procEx|=PROC_EX_CRITICAL_HIT;
