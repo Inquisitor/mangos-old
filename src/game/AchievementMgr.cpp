@@ -1501,7 +1501,7 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                     }
                     case 233:					// Bloodthirsty Berserker
                     {
-                        if(bg->GetTypeID() != BATTLEGROUND_EY)
+                        if(bg->GetTypeID(true) != BATTLEGROUND_EY)
                             continue;
                         if(!GetPlayer()->HasAura(23505))
                             continue;
