@@ -625,13 +625,14 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
     if (!spellproto)
         return false;
 
-    if(spellproto->Id == 56266)
-        return false;
-
     switch(spellId)
     {
         case 28441:                                         // not positive dummy spell
         case 37675:                                         // Chaos Blast
+        case 56266:                                         // Vortex
+        case 58105:                                         // Power of Shadron
+        case 61248:                                         // Power of Tenebron
+        case 61251:                                         // Power of Vesperon
             return false;
         case 36032:                                         // Arcane Blast
         case 47540:                                         // Penance start dummy aura - Rank 1
