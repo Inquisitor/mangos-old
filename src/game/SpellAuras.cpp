@@ -5571,6 +5571,8 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
                 if (spellProto->SpellIconID == 147 && spellProto->SpellVisual[0] == 0)
                     // $AP*0.18/6 bonus per tick
                     m_modifier.m_amount += int32(caster->GetTotalAttackPowerValue(BASE_ATTACK) * 3 / 100);
+                else if(spellProto->Id == 57491)
+                    caster->CastSpell(target, 37317, true);
                 break;
             }
             case SPELLFAMILY_WARRIOR:
