@@ -1927,7 +1927,35 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         if (m_counted == 2) // Complete quest if both were found (2 npcs)
                         {
                             pPlr->SummonCreature(22492, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ+5, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000);
+                            pPlr->KilledMonsterCredit(22383, 0);
                             pPlr->CompleteQuest(10714); // Complete quest
+
+                            uint16 log_slot;
+                            log_slot = pPlr->FindQuestSlot( 10714 );
+                            if (log_slot >= MAX_QUEST_LOG_SIZE)
+                                return;
+
+                            uint32 QuestID = pPlr->GetQuestSlotQuestId(log_slot);
+
+                            Quest const* pQuest = GetQuestTemplateStore(QuestID);
+                            if (!pQuest)
+                                return;
+
+                            QuestStatusData& q_status = pPlr->getQuestStatusMap()[QuestID];
+                            uint32 oldCount = q_status.m_creatureOrGOcount[0];
+                            if(oldCount+ m_counted > pQuest->ReqCreatureOrGOCount[0] && oldCount == pQuest->ReqCreatureOrGOCount[0]) // We shouldnt go above required count
+                                return;
+
+                            if(oldCount+ m_counted >= pQuest->ReqCreatureOrGOCount[0] && oldCount != pQuest->ReqCreatureOrGOCount[0]) // We shouldnt go above required count
+                                q_status.m_creatureOrGOcount[0] = pQuest->ReqCreatureOrGOCount[0];
+                            else 
+                                q_status.m_creatureOrGOcount[0] = oldCount + m_counted;
+
+                            if (q_status.uState != QUEST_NEW) q_status.uState = QUEST_CHANGED;
+
+                            pPlr->SendQuestUpdateAddCreatureOrGo(pQuest, 0, 0, oldCount, m_counted);
+                            if (pPlr->CanCompleteQuest(QuestID))
+                                pPlr->CompleteQuest(QuestID);
                         }
                     }
                     return;
