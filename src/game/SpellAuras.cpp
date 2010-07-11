@@ -6210,9 +6210,14 @@ void Aura::HandleAuraModIncreaseHealthPercent(bool apply, bool /*Real*/)
 {
     GetTarget()->HandleStatModifier(UNIT_MOD_HEALTH, TOTAL_PCT, float(m_modifier.m_amount), apply);
 
-    //Will of sartharion also must set hp to max
-    if(GetId() == 61254 && apply)
-        m_target->SetHealth(m_target->GetMaxHealth());
+    
+    if(apply)
+    {
+        if(GetId() == 61254) //Will of Sartharion must set max health
+            m_target->SetHealth(m_target->GetMaxHealth());
+        else if(GetId() == 60430) // Molten Fury must increase current HP by gained value (200%)
+            m_target->SetHealth(m_target->GetHealth()*2);
+    }
 }
 
 void Aura::HandleAuraIncreaseBaseHealthPercent(bool apply, bool /*Real*/)
