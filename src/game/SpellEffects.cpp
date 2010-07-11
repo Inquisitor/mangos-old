@@ -3102,10 +3102,16 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
     else if (itemTarget)
         Script->EffectDummyItem(m_caster, m_spellInfo->Id, eff_idx, itemTarget);
 
+    // DB Scripting related check
+    if (!unitTarget)
+        return;
 
     sLog.outDebug("Spell ScriptStart spellid %u in EffectDummy ", m_spellInfo->Id);
-    if (m_caster->IsInWorld())
-        m_caster->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, GetAffectiveCaster(), unitTarget);
+    if (Unit * pSource = GetAffectiveCaster())
+    {
+        if(pSource->IsInWorld())
+            pSource->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, pSource, unitTarget);
+    }
 }
 
 void Spell::EffectTriggerSpellWithValue(SpellEffectIndex eff_idx)
@@ -3699,6 +3705,7 @@ void Spell::EffectSendEvent(SpellEffectIndex effectIndex)
     we do not handle a flag dropping or clicking on flag in battleground by sendevent system
     */
     DEBUG_FILTER_LOG(LOG_FILTER_SPELL_CAST, "Spell ScriptStart %u for spellid %u in EffectSendEvent ", m_spellInfo->EffectMiscValue[effectIndex], m_spellInfo->Id);
+
     m_caster->GetMap()->ScriptsStart(sEventScripts, m_spellInfo->EffectMiscValue[effectIndex], GetAffectiveCaster(), focusObject);
 }
 
@@ -7435,7 +7442,7 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                         m_caster->CastCustomSpell(target, spellId, &basePoint, 0, 0, false);
 
                         if (spellId == 53359) // Disarm from Chimera Shot should have 1 min cooldown
-                            ((Player*)m_caster)->AddSpellCooldown(spellId,0,uint32(time(NULL) + MINUTE));
+                            ((Player*)m_caster)->AddSpellCooldown(spellId, 0, uint32(time(NULL) + MINUTE));
                     }
 
                     return;
@@ -7671,8 +7678,11 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
         return;
 
     DEBUG_FILTER_LOG(LOG_FILTER_SPELL_CAST, "Spell ScriptStart spellid %u in EffectScriptEffect ", m_spellInfo->Id);
-    if (m_caster->IsInWorld())
-        m_caster->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, GetAffectiveCaster(), unitTarget);
+    if (Unit * pSource = GetAffectiveCaster())
+    {
+        if(pSource->IsInWorld())
+            pSource->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, pSource, unitTarget);
+    }
 }
 
 void Spell::EffectSanctuary(SpellEffectIndex /*eff_idx*/)

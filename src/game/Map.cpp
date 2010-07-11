@@ -3172,7 +3172,7 @@ void Map::ScriptsProcess()
 
                 if(source->GetTypeId() != TYPEID_PLAYER) 
                 {
-                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT call for non-player (QuestId: %u), skipping.",step.script->datalong);
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT call for non-player (QuestId: %u TypeId is %u), skipping.",step.script->datalong, uint32(source->GetTypeId()));
                     break;
                 }
                 Player * user = static_cast<Player*>(source);
