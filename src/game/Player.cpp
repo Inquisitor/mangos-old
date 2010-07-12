@@ -22519,6 +22519,7 @@ void Player::ActivateSpec(uint8 specNum)
         return;
 
     UnsummonPetTemporaryIfAny();
+    RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
 
     SendActionButtons(2);
 
