@@ -2426,6 +2426,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         void RemoveRefundable( uint64 itemGUID );
         uint32 LookupRefundable(uint64 itemGUID);
 
+        uint32 m_grid_update_timer;
+
     protected:
 
         uint32 m_contestedPvPTimer;
