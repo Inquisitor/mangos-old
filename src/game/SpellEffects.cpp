@@ -1895,7 +1895,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 case 58418:                                 // Portal to Orgrimmar
                 case 58420:                                 // Portal to Stormwind
                     return;                                 // implemented in EffectScript[0]
-                case 38173: // Q: On Spirit's Wings
+                case 38173:                                 // Q: On Spirit's Wings
                 {
                     if (!unitTarget || GetCaster()->GetTypeId() != TYPEID_PLAYER || ((Player*)GetCaster())->GetQuestStatus(10714) == QUEST_STATUS_COMPLETE)
                         return;
@@ -1960,7 +1960,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
                     return;
                 }
-                case 33655: // Q: Mission: Gateways Murketh and Shaadraz
+                case 33655:                                  // Q: Mission: Gateways Murketh and Shaadraz
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER || !m_caster->isInFlight())
                         return;
@@ -1971,7 +1971,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         ((Player*)m_caster)->KilledMonsterCredit(19292, 0);
                     return;
                 }
-                case 21332: // Q: Poisoned Water
+                case 21332:                                 // Q: Poisoned Water
                 {
                     if (unitTarget->GetTypeId() == TYPEID_UNIT && unitTarget->GetEntry() == 8521 || unitTarget->GetEntry() == 8519 || unitTarget->GetEntry() == 8522 || unitTarget->GetEntry() == 8520)
                         ((Creature*)unitTarget)->UpdateEntry(13279);
@@ -2007,7 +2007,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     m_caster->CastSpell(unitTarget,60934,true,NULL);
                     return;
                 }
-                case 46171: // Q:Emergency Protocol: Section 8.2, Paragraph D
+                case 46171:                                 // Q:Emergency Protocol: Section 8.2, Paragraph D
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
@@ -2025,7 +2025,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     return;
                 }
-                case 45653: // Q:Neutralizing the Cauldrons
+                case 45653:                                 // Q:Neutralizing the Cauldrons
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
@@ -2043,7 +2043,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     return;
                 }
-                case 53145: // Q:A Hero's Headgear
+                case 53145:                                 // Q:A Hero's Headgear
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
@@ -2053,9 +2053,9 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     return;
                 }
-                case 53038: // Q:Song of Reflection
+                case 53038:                                 // Q:Song of Reflection
                 {
-                    if( m_caster->GetTypeId() != TYPEID_PLAYER )
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
 
                     Player * pPlayer = static_cast<Player*>(m_caster);
@@ -2074,7 +2074,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     return;
                 }
-                case 56275: // Q:Destroy the Forges!
+                case 56275:                                 // Q:Destroy the Forges!
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
@@ -2091,7 +2091,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         pPlayer->KilledMonsterCredit(30212, 0);
                     return;
                 }
-                case 45958: // Q:Coward Delivery... Under 30 Minutes or it's Free
+                case 45958:                                 // Q:Coward Delivery... Under 30 Minutes or it's Free
                 {
                     if (m_caster->GetTypeId() == TYPEID_PLAYER)
                     {
@@ -2100,7 +2100,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
                     return;
                 }
-                case 46023: // Q:Master and Servant
+                case 46023:                                 // Q:Master and Servant
                 {
                     if (unitTarget->isDead() && unitTarget->GetTypeId() != TYPEID_PLAYER)
                     {
@@ -2119,21 +2119,21 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
                     return;
                 }
-                case 48610: // Q:Shredder Repair
+                case 48610:                                 // Q:Shredder Repair
                 {
                     if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->isVehicle())
                         ((Vehicle*)m_caster)->RemoveAllPassengers();
 
                     return;
                 }
-                case 45877: // Q:Bring 'Em Back Alive
+                case 45877:                                 // Q:Bring 'Em Back Alive
                 {
                     if (m_caster->GetVehicleGUID() != 0)
                         m_caster->ExitVehicle();
 
                     return;
                 }
-                case 49319: // Q:The Horse Hollerer
+                case 49319:                                 // Q:The Horse Hollerer
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
@@ -2154,7 +2154,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     if (!creatureList.empty())
                     {
-                        uint32 m_counted = 0;
+                        uint8 m_counted = 0;
                         for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
                             if ((*itr)->GetEntry() == 26472)
                                 ++m_counted; // Increment if found
@@ -2164,7 +2164,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
                     return;
                 }
-                case 48345: // Q:Bombard the Ballistae
+                case 48345:                                 // Q:Bombard the Ballistae
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
@@ -2196,7 +2196,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
                     return;
                 }
-                case 49634: // Q: Towers of Certain Doom
+                case 49634:                                 // Q: Towers of Certain Doom
                 case 49625:
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
@@ -2214,7 +2214,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         pPlr->KilledMonsterCredit(24094, 0);
                     return;
                 }
-                case 43404: // Q: Mission: Plague This!
+                case 43404:                                 // Q: Mission: Plague This!
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
@@ -2240,7 +2240,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     return;
                 }
-                case 47530: // Q: Strengthen the Ancients
+                case 47530:                                 // Q: Strengthen the Ancients
                 {
                     if (m_caster->GetTypeId() == TYPEID_PLAYER && unitTarget->GetTypeId() != TYPEID_PLAYER && unitTarget->GetEntry() == 26321)
                     {
@@ -2284,19 +2284,19 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     m_caster->CastSpell(m_caster, spell_id, true);
                     return;
                 }
-                case 45923: // Q: Foolish Endeavors
+                case 45923:                                 // Q: Foolish Endeavors
                 {
                     if (unitTarget->HasAura(45924))
                         unitTarget->CastSpell(unitTarget, 45922, true);
                     return;
                 }
-                case 45607: // Q: Kaganishu
+                case 45607:                                 // Q: Kaganishu
                 {
                     if (m_caster->GetTypeId() == TYPEID_PLAYER)
                         ((Player*)m_caster)->KilledMonsterCredit(25425, 0);
                     return;
                 }
-                case 64385: // Unusual Compass
+                case 64385:                                 // Unusual Compass
                 {
                     m_caster->SetOrientation(float(urand(0,62832)) / 10000.0f);
                     WorldPacket data;
@@ -2483,8 +2483,8 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 // in 333 there still seems to be spirit dependence although it is stated that there is not
                 uint32 spirit = uint32(m_caster->GetStat(STAT_SPIRIT));
                 damage+=spirit*15/10;
-//              Think its not need (also need remove Life Tap from SpellDamageBonus or add new value)
-//              damage = m_caster->SpellDamageBonus(m_caster, m_spellInfo,uint32(damage > 0 ? damage : 0), SPELL_DIRECT_DAMAGE);
+                // Think its not need (also need remove Life Tap from SpellDamageBonus or add new value)
+                // damage = m_caster->SpellDamageBonus(m_caster, m_spellInfo,uint32(damage > 0 ? damage : 0), SPELL_DIRECT_DAMAGE);
                 if (unitTarget && (int32(unitTarget->GetHealth()) > damage))
                 {
                     // Shouldn't Appear in Combat Log
@@ -2620,7 +2620,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     if (!pEnchant)
                         return;
 
-                    for (int s = 0; s < 3; ++s)
+                    for (uint32 s = 0; s < 3; ++s)
                     {
                         if (pEnchant->type[s]!=ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL)
                             continue;

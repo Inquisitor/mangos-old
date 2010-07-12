@@ -2551,8 +2551,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             // Reindeer Transformation
                             target->CastSpell(target, 25860, true, NULL, this);
                         return;
-                    // Q: The Big Bone Worm
-                    case 39246:
+                    case 39246:                             // Q: The Big Bone Worm
                     {
                         if (!target)
                             return;
@@ -2567,12 +2566,11 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         }
                         return;
                     }
-                    // Q: Abduction
-                    case 45611:
+                    case 45611:                             // Q: Abduction
                     {
                         if (Unit* caster = GetCaster())
                         {
-                            if (caster->GetTypeId() == TYPEID_PLAYER && target->GetEntry() == 25316 && (target->GetHealth() * 100 < target->GetMaxHealth() * 35))
+                            if (caster->GetTypeId() == TYPEID_PLAYER && target->GetEntry() == 25316 && target->GetHealthPercent() < 35)
                             {
                                 target->SetVisibility(VISIBILITY_OFF);
                                 target->DealDamage(target, target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
@@ -2580,7 +2578,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             }
                         }
                     }
-                    case 59579:
+                    case 59579: // Burst at the Seams (Feanor: Is this needed anymore ? Handled in SpellEffects (59576)
                     {                    
                         CellPair pair(MaNGOS::ComputeCellPair(target->GetPositionX(), target->GetPositionY()));
                         Cell cell(pair);
@@ -2601,7 +2599,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             {
                                 if ((*itr)->isAlive() && (*itr)->GetTypeId() != TYPEID_PLAYER && ((*itr)->GetEntry() == 31142 || (*itr)->GetEntry() == 31147 || (*itr)->GetEntry() == 31205))
                                 {
-                                    target->CastSpell( (*itr), 59580, true );
+                                    target->CastSpell((*itr), 59580, true);
                                     if (target->GetOwner())
                                     {
                                         Unit * pOwner = target->GetOwner();
@@ -2806,7 +2804,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     case 28084: toRemove = 29660; break;
                     case 39091: toRemove = 39092; break;
                 }
-                if(toRemove)
+                if (toRemove)
                     target->RemoveAurasDueToSpell(toRemove);
                 return;
             }
@@ -2856,29 +2854,29 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 target->CastSpell(target, 47287, true, NULL, this);
                 return;
             }
-            case 34219: // Q: Recharging the Batteries
+            case 34219:                                     // Q: Recharging the Batteries
             {
                 if (Unit* caster = GetCaster())
-                    if( GetTarget() &&GetTarget()->GetTypeId() == TYPEID_UNIT && GetTarget()->GetEntry() == 18879 && (GetTarget()->GetHealth() * 100 / GetTarget()->GetMaxHealth() < 30) )
-                        ((Creature*)GetTarget())->UpdateEntry(19595);
+                    if (target && target->GetTypeId() == TYPEID_UNIT && target->GetEntry() == 18879 && target->GetHealthPercent() < 30)
+                        ((Creature*)target)->UpdateEntry(19595);
                 return;
             }
-            case 31606: // Q: As the Crow Flies
+            case 31606:                                     // Q: As the Crow Flies
             {
                 if (Unit* caster = GetCaster())
-                    if( caster->GetTypeId() == TYPEID_PLAYER && ((Player*)caster)->GetQuestStatus(9718) == QUEST_STATUS_INCOMPLETE )
-                        ((Player*)caster)->CompleteQuest( 9718 );
+                    if(caster->GetTypeId() == TYPEID_PLAYER && ((Player*)caster)->GetQuestStatus(9718) == QUEST_STATUS_INCOMPLETE)
+                        ((Player*)caster)->CompleteQuest(9718);
                 return;
             }
-            case 50141: // Q: Truce?
+            case 50141:                                     // Q: Truce?
             {
                 if (Unit* caster = GetCaster())
-                    if( caster->GetTypeId() == TYPEID_PLAYER && ((Player*)caster)->GetQuestStatus(11989) == QUEST_STATUS_INCOMPLETE )
-                        ((Player*)caster)->CastSpell( caster, 50001, true );
+                    if (caster->GetTypeId() == TYPEID_PLAYER && ((Player*)caster)->GetQuestStatus(11989) == QUEST_STATUS_INCOMPLETE)
+                        ((Player*)caster)->CastSpell(caster, 50001, true);
                 return;
             }
-            case 34477: //Misdirection
-            case 57934: //Tricks of Trade
+            case 34477:                                     //Misdirection
+            case 57934:                                     //Tricks of Trade
             {
                 if (Unit * caster = GetCaster())
                     caster->SetThreatRedirectionTarget(0, 0);
@@ -3102,7 +3100,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             target->PlayDirectSound(14972, (Player *)target);
                     }
                     return;
-                case 43354: // Q: Seeds of the Blacksouled Keepers
+                case 43354:                                 // Q: Seeds of the Blacksouled Keepers
                     if (apply)
                     {
                         if (Unit* caster = GetCaster())
@@ -3115,7 +3113,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             ((Creature*)target)->ForcedDespawn();
                     }
                     return;
-                case 57806: // Q: The Restless Dead
+                case 57806:                                 // Q: The Restless Dead
                     if (apply)
                     {
                         if (Unit* caster = GetCaster())
@@ -3128,7 +3126,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             ((Creature*)target)->ForcedDespawn();
                     }
                     return;
-                case 43115: // Q: Test at Sea
+                case 43115:                                 // Q: Test at Sea
                     if (apply && target->GetEntry() == 24120)
                     {
                         switch(urand(0, 3))
