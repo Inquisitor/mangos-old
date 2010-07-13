@@ -316,7 +316,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     uint32 Anti_TeleTimeDiff=plMover ? time(NULL) - plMover->Anti__GetLastTeleTime() : time(NULL);
     static const uint32 Anti_TeleTimeIgnoreDiff=10;
 
-    if (GetSecurity() == SEC_PLAYER && plMover && (plMover->m_transport == 0) &&
+	if (plMover && plMover->IsInWorld() && GetSecurity() == SEC_PLAYER && (plMover->m_transport == 0) &&
         GetPlayer()->GetMotionMaster()->GetCurrentMovementGeneratorType()!=FLIGHT_MOTION_TYPE &&
         Anti_TeleTimeDiff>Anti_TeleTimeIgnoreDiff)
     {
