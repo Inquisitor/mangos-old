@@ -22512,13 +22512,13 @@ void Player::DeleteEquipmentSet(uint64 setGuid)
 
 void Player::ActivateSpec(uint8 specNum)
 {
-    if(GetActiveSpec() == specNum)
+    if (GetActiveSpec() == specNum)
         return;
 
-    if(specNum >= GetSpecsCount())
+    if (specNum >= GetSpecsCount())
         return;
 
-    if(GetBattleGround() && GetBattleGround()->GetStatus() == STATUS_IN_PROGRESS)
+    if (GetBattleGround() && GetBattleGround()->GetStatus() == STATUS_IN_PROGRESS)
         return;
 
     UnsummonPetTemporaryIfAny();
