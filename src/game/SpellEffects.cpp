@@ -3739,7 +3739,11 @@ void Spell::EffectSendEvent(SpellEffectIndex effectIndex)
     */
     DEBUG_FILTER_LOG(LOG_FILTER_SPELL_CAST, "Spell ScriptStart %u for spellid %u in EffectSendEvent ", m_spellInfo->EffectMiscValue[effectIndex], m_spellInfo->Id);
 
-    m_caster->GetMap()->ScriptsStart(sEventScripts, m_spellInfo->EffectMiscValue[effectIndex], GetAffectiveCaster(), focusObject);
+    if (Unit * pSource = GetAffectiveCaster())
+    {
+        if(pSource->IsInWorld())
+            m_caster->GetMap()->ScriptsStart(sEventScripts, m_spellInfo->EffectMiscValue[effectIndex], pSource, focusObject);
+    }
 }
 
 void Spell::EffectPowerBurn(SpellEffectIndex eff_idx)
