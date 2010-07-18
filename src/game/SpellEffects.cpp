@@ -3145,6 +3145,8 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
         if(pSource->IsInWorld())
             pSource->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, pSource, unitTarget);
     }
+    else
+        sLog.outError("EffectDummy has no source to start script for %u spell", m_spellInfo->Id);
 }
 
 void Spell::EffectTriggerSpellWithValue(SpellEffectIndex eff_idx)
@@ -3744,6 +3746,8 @@ void Spell::EffectSendEvent(SpellEffectIndex effectIndex)
         if(pSource->IsInWorld())
             m_caster->GetMap()->ScriptsStart(sEventScripts, m_spellInfo->EffectMiscValue[effectIndex], pSource, focusObject);
     }
+    else
+        sLog.outError("EffectSendEvent has no source to start script for %u spell", m_spellInfo->Id);
 }
 
 void Spell::EffectPowerBurn(SpellEffectIndex eff_idx)
@@ -7725,6 +7729,8 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
         if(pSource->IsInWorld())
             pSource->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, pSource, unitTarget);
     }
+    else
+        sLog.outError("EffectScriptEffect has no source to start script for %u spell", m_spellInfo->Id);
 }
 
 void Spell::EffectSanctuary(SpellEffectIndex /*eff_idx*/)
