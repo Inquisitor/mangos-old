@@ -157,7 +157,9 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         float GetHeight(float x, float y, float z, bool pCheckVMap=true) const;   
         bool IsInWater(float x, float y, float z, float min_depth = 2.0f) const;    // does not use z pos. This is for future use
 
+        #ifdef _PATHFINDING_ENABLED
         Position getNextPositionOnPathToLocation(const float startx, const float starty, const float startz, const float endx, const float endy, const float endz);
+        #endif
 
         GridMapLiquidStatus getLiquidStatus(float x, float y, float z, uint8 ReqLiquidType, GridMapLiquidData *data = 0) const;
 
@@ -271,7 +273,9 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         void LoadMapAndVMap(int gx, int gy);
         void LoadVMap(int gx, int gy);
         void LoadMap(int gx,int gy, bool reload = false);
+        #ifdef _PATHFINDING_ENABLED
         void LoadNavMesh(int gx, int gy);
+        #endif
 
         GridMap *GetGrid(float x, float y);
 
@@ -339,7 +343,9 @@ class MANGOS_DLL_SPEC Map : public GridRefManager<NGridType>, public MaNGOS::Obj
         Map* m_parentMap;
 
         // no idea what this all does
+        #ifdef _PATHFINDING_ENABLED
         dtNavMesh *m_navMesh[MAX_NUMBER_OF_GRIDS][MAX_NUMBER_OF_GRIDS];
+        #endif
 
         NGridType* i_grids[MAX_NUMBER_OF_GRIDS][MAX_NUMBER_OF_GRIDS];
         GridMap *GridMaps[MAX_NUMBER_OF_GRIDS][MAX_NUMBER_OF_GRIDS];

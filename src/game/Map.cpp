@@ -71,6 +71,7 @@ Map::~Map()
         m_instanceSave->SetUsedByMapState(false);           // field pointer can be deleted after this
 }
 
+#ifdef _PATHFINDING_ENABLED
 void Map::LoadNavMesh(int gx, int gy)
 {
     if (m_navMesh[gx][gy])
@@ -233,6 +234,7 @@ Position Map::getNextPositionOnPathToLocation(const float startx, const float st
     }
     return pos;
 }
+#endif
 
 void Map::LoadVMap(int gx,int gy)
 {
@@ -318,7 +320,9 @@ Map::Map(uint32 id, time_t expiry, uint32 InstanceId, uint8 SpawnMode, Map* _par
         {
             //z code
             GridMaps[idx][j] =NULL;
-            m_navMesh[idx][j] = NULL;
+            #ifdef _PATHFINDING_ENABLED 
+            m_navMesh[idx][j] = NULL; 
+            #endif
             setNGrid(NULL, idx, j);
         }
     }
