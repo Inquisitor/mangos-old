@@ -1977,6 +1977,12 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
         {
             switch(m_spellInfo->Id)
             {
+                case 24604:                                 // Furious Howl Rank 1
+                case 64491:                                 // Furious Howl Rank 2
+                case 64492:                                 // Furious Howl Rank 3
+                case 64493:                                 // Furious Howl Rank 4
+                case 64494:                                 // Furious Howl Rank 5
+                case 64495:                                 // Furious Howl Rank 6
                 case 70893:                                 // Culling the Herd
                 case 53434:                                 // Call of the Wild
                 {
