@@ -7358,11 +7358,11 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     uint32 spellID;
                     switch(entry)
                     {
-                        case   416: spellID = 54444; break; // imp
-                        case   417: spellID = 54509; break; // fellhunter
-                        case  1860: spellID = 54443; break; // void
-                        case  1863: spellID = 54435; break; // succubus
-                        case 17252: spellID = 54508; break; // fellguard
+                        case   416: spellID = 54444; break; // Imp
+                        case   417: spellID = 54509; break; // Felhunter
+                        case  1860: spellID = 54443; break; // Voidwalker
+                        case  1863: spellID = 54435; break; // Succubus
+                        case 17252: spellID = 54508; break; // Felguard
                         default:
                             return;
                     }
