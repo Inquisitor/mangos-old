@@ -568,8 +568,8 @@ void Spell::FillTargetMap()
                         SetTargetMap(SpellEffectIndex(i), m_spellInfo->EffectImplicitTargetA[i], tmpUnitMap);
                         break;
                     case TARGET_AREAEFFECT_CUSTOM:
-					case TARGET_ALL_ENEMY_IN_AREA_INSTANT:
-						if (FillCustomTargetMap(i,tmpUnitMap)) break;
+                    case TARGET_ALL_ENEMY_IN_AREA_INSTANT:
+                        if (FillCustomTargetMap(i,tmpUnitMap)) break;
 
                     case TARGET_INNKEEPER_COORDINATES:
                     case TARGET_TABLE_X_Y_Z_COORDINATES:
@@ -1958,6 +1958,9 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                     break;
                 default:
                     FillAreaTargets(targetUnitMap, m_targets.m_destX, m_targets.m_destY, radius, PUSH_DEST_CENTER, SPELL_TARGETS_AOE_DAMAGE);
+
+                    // exclude caster (this can be important if this not original caster)
+                    targetUnitMap.remove(m_caster);
                     break;
             }
             break;
