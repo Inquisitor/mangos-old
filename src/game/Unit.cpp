@@ -2891,7 +2891,7 @@ float Unit::MeleeSpellMissChance(Unit *pVictim, WeaponAttackType attType, int32 
 
         // Increase pet ranged hit chance by additional master ranged hit chance
         if(GetOwner() && GetOwner()->GetTypeId() == TYPEID_PLAYER)
-            missChance -= GetOwner()->m_modRangedHitChance;
+            miss_chance -= GetOwner()->m_modRangedHitChance;
     }
     else
     {
@@ -2899,7 +2899,7 @@ float Unit::MeleeSpellMissChance(Unit *pVictim, WeaponAttackType attType, int32 
 
         // Increase pet melee hit chance by additional master melee hit chance
         if(GetOwner() && GetOwner()->GetTypeId() == TYPEID_PLAYER)
-            missChance -= GetOwner()->m_modMeleeHitChance;
+            miss_chance -= GetOwner()->m_modMeleeHitChance;
     }
 
     // bonus from skills is 0.04%
