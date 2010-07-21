@@ -11573,6 +11573,20 @@ bool Unit::isVisibleForOrDetect(Unit const* u, WorldObject const* viewPoint, boo
         }
     }
 
+    // In DK starting map should be enemy players invisible
+    if(GetMapId() == 609)
+    {
+        if(GetTypeId() == TYPEID_PLAYER && u->GetTypeId() == TYPEID_PLAYER)
+        {
+            if(((Player*)this)->GetTeam() == ((Player*)u)->GetTeam())
+                invisible = false;
+            else
+                invisible = true;
+        }
+        else
+            invisible = false;
+    }
+
     // special cases for always overwrite invisibility/stealth
     if(invisible || m_Visibility == VISIBILITY_GROUP_STEALTH)
     {
