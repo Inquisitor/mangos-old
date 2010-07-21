@@ -5585,32 +5585,46 @@ SpellCastResult Spell::CheckPetCast(Unit* target)
         {
             if(!_target->isAlive())
                 return SPELL_FAILED_BAD_TARGETS;
-
-            if(IsPositiveSpell(m_spellInfo->Id))
-            {
-                if(m_caster->IsHostileTo(_target))
-                    return SPELL_FAILED_BAD_TARGETS;
-            }
-            else
-            {
-                bool duelvsplayertar = false;
-                for(int j = 0; j < MAX_EFFECT_INDEX; ++j)
-                {
-                                                            //TARGET_DUELVSPLAYER is positive AND negative
-                    duelvsplayertar |= (m_spellInfo->EffectImplicitTargetA[j] == TARGET_DUELVSPLAYER);
-                }
-                if(m_caster->IsFriendlyTo(target) && !duelvsplayertar)
-                {
-                    return SPELL_FAILED_BAD_TARGETS;
-                }
-            }
+            if(!IsValidSingleTargetSpell(_target))
+                return SPELL_FAILED_BAD_TARGETS;
         }
                                                             //cooldown
         if(((Creature*)m_caster)->HasSpellCooldown(m_spellInfo->Id))
             return SPELL_FAILED_NOT_READY;
     }
 
+    // NOTE : this is done twice, also in spell->prepare(&(spell->m_targets));
     return CheckCast(true);
+}
+
+bool Spell::IsValidSingleTargetEffect(Unit const* target, Targets type) const
+{
+    switch(type)
+    {
+        case TARGET_CHAIN_DAMAGE:
+            return !m_caster->IsFriendlyTo(target);
+        case TARGET_SINGLE_FRIEND:
+        case TARGET_AREAEFFECT_PARTY:
+            return m_caster->IsFriendlyTo(target);
+       case TARGET_SINGLE_PARTY:
+            return m_caster != target && m_caster->IsInPartyWith(target);
+        case TARGET_SINGLE_FRIEND_2:
+            return m_caster->IsInRaidWith(target);
+    }
+    return true;
+}
+
+bool Spell::IsValidSingleTargetSpell(Unit const* target) const
+{
+    for(int i = 0; i < 3; ++i)
+    {
+        if(!IsValidSingleTargetEffect(target, Targets(m_spellInfo->EffectImplicitTargetA[i])))
+            return false;
+        // Need to check B?
+        //if(!IsValidSingleTargetEffect(m_spellInfo->EffectImplicitTargetB[i], target)
+        //    return false;
+    }
+    return true;
 }
 
 SpellCastResult Spell::CheckCasterAuras() const
