@@ -3157,7 +3157,19 @@ SpellMissInfo Unit::SpellHitResult(Unit *pVictim, SpellEntry const *spell, bool 
 
     // Check for immune
     if (pVictim->IsImmunedToSpell(spell))
+    {
+        //Shattering Throw
+        if(spell->Id == 64382)
+        {
+            // remove immunity effects
+            pVictim->RemoveAurasDueToSpell(642); // Divine Shield
+            pVictim->RemoveAurasDueToSpell(1022); // Hand of Protection rank 1
+            pVictim->RemoveAurasDueToSpell(5599); // Hand of Protection rank 2
+            pVictim->RemoveAurasDueToSpell(10278); // Hand of Protection rank 3
+            pVictim->RemoveAurasDueToSpell(45438); // Ice Block
+        }
         return SPELL_MISS_IMMUNE;
+    }
 
     // All positive spells can`t miss
     if (IsPositiveSpell(spell->Id))
@@ -10706,10 +10718,6 @@ bool Unit::IsImmunedToSpell(SpellEntry const* spellInfo)
 
     // Priest's Mass Dispel can not be immuned (but can be resisted)
     if (spellInfo->SpellFamilyName == SPELLFAMILY_PRIEST && spellInfo->SpellFamilyFlags == UI64LIT(0x8000000000))
-        return false;
-
-    // Shattering Throw can pass any shield
-    if (spellInfo->SpellFamilyName == SPELLFAMILY_WARRIOR && spellInfo->SpellFamilyFlags == UI64LIT(0x40000000000000))
         return false;
 
     SpellImmuneList const& dispelList = m_spellImmune[IMMUNITY_DISPEL];

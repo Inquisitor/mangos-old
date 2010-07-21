@@ -7587,34 +7587,6 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
             }
             break;
         }
-        case SPELLFAMILY_WARRIOR:
-        {
-            // Shattering Throw
-            if (m_spellInfo->Id == 64380)
-            {
-                if (!unitTarget)
-                    return;
-
-                Unit::AuraMap& Auras = unitTarget->GetAuras();
-                for(Unit::AuraMap::iterator iter = Auras.begin(), next; iter != Auras.end(); iter = next)
-                {
-                    next = iter;
-                    ++next;
-                    Aura *aur = iter->second;
-                    if (GetAllSpellMechanicMask(aur->GetSpellProto()) & (1 << (MECHANIC_IMMUNE_SHIELD-1)))
-                    {
-                        unitTarget->RemoveAurasDueToSpell(aur->GetId());
-                        if (Auras.empty())
-                            break;
-                        else
-                            next = Auras.begin();
-                    }
-                }
-
-                return;
-            }
-            break;
-        }
         case SPELLFAMILY_POTION:
         {
             switch(m_spellInfo->Id)

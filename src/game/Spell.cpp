@@ -2935,12 +2935,6 @@ void Spell::cast(bool skipCheck)
                 AddPrecastSpell(74396);
             break;
         }
-        case SPELLFAMILY_WARRIOR:
-        {
-            if(m_spellInfo->Id == 64382)                    // Shattering Throw
-                AddPrecastSpell(64380);
-            break;
-        }
         case SPELLFAMILY_PRIEST:
         {
             // Power Word: Shield
