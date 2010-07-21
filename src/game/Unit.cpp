@@ -13704,6 +13704,16 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
                 removedSpells.push_back(triggeredByAura->GetId());
         }
 
+        // If reflecting with Imp. Spell Reflection - we must also remove auras from the remaining aura's targets
+        if (triggeredByAura->GetId() == 59725)
+            if (Unit* pImpSRCaster = triggeredByAura->GetCaster() )
+                if (Group* group = ((Player*)pImpSRCaster)->GetGroup())
+                    for(GroupReference *itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
+                        if (Player* member = itr->getSource())
+                            if (Aura* pAura = member->GetAura(59725, EFFECT_INDEX_0) )
+                                if (pAura->GetCaster() == pImpSRCaster)
+                                    member->RemoveAura(pAura);
+
         triggeredByAura->SetInUse(false);
     }
     if (!removedSpells.empty())
