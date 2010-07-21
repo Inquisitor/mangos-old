@@ -8884,14 +8884,14 @@ bool Unit::IsInPartyWith(Unit const *unit) const
     if(this == unit)
       return true;
 
-    Unit *u1 = GetCharmerOrOwnerOrSelf();
-    Unit *u2 = unit->GetCharmerOrOwnerOrSelf();
+    Unit const *u1 = GetCharmerOrOwnerOrSelf();
+    Unit const *u2 = unit->GetCharmerOrOwnerOrSelf();
 
     if(u1 == u2)
         return true;
 
     if(u1->GetTypeId() == TYPEID_PLAYER && u2->GetTypeId() == TYPEID_PLAYER)
-        return ((Player*)u1)->IsInSameGroupWith((Player*)u2);
+        return ((Player const*)u1)->IsInSameGroupWith((Player const*)u2);
     else
        return false;
 }
@@ -8901,13 +8901,13 @@ bool Unit::IsInRaidWith(Unit const *unit) const
     if(this == unit)
         return true;
 
-    const Unit *u1 = GetCharmerOrOwnerOrSelf();
-    const Unit *u2 = unit->GetCharmerOrOwnerOrSelf();
+    Unit const *u1 = GetCharmerOrOwnerOrSelf();
+    Unit const *u2 = unit->GetCharmerOrOwnerOrSelf();
     if(u1 == u2)
         return true;
 
     if(u1->GetTypeId() == TYPEID_PLAYER && u2->GetTypeId() == TYPEID_PLAYER)
-        return ((Player*)u1)->IsInSameRaidWith((Player*)u2);
+        return ((Player const*)u1)->IsInSameRaidWith((Player const*)u2);
     else
         return false;
 }
