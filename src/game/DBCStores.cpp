@@ -21,7 +21,7 @@
 #include "Log.h"
 #include "ProgressBar.h"
 #include "SharedDefines.h"
-#include "SpellAuraDefines.h"
+#include "SpellMgr.h"
 #include "ObjectGuid.h"
 
 #include "DBCfmt.h"
