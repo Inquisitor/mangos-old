@@ -2774,7 +2774,7 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
     if ( !m_IsTriggeredSpell && isSpellBreakStealth(m_spellInfo) )
     {
         m_caster->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
-        m_caster->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
+        m_caster->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_CAST);
         m_caster->RemoveAurasDueToSpell(32612);
     }
 
