@@ -8879,6 +8879,38 @@ FactionTemplateEntry const* Unit::getFactionTemplateEntry() const
     return entry;
 }
 
+bool Unit::IsInPartyWith(Unit const *unit) const
+{
+    if(this == unit)
+      return true;
+
+   const Unit *u1 = GetCharmerOrOwnerOrSelf();
+    const Unit *u2 = unit->GetCharmerOrOwnerOrSelf();
+    if(u1 == u2)
+        return true;
+
+    if(u1->GetTypeId() == TYPEID_PLAYER && u2->GetTypeId() == TYPEID_PLAYER)
+        return ((Player*)u1)->IsInSameGroupWith((Player*)u2);
+    else
+       return false;
+}
+
+bool Unit::IsInRaidWith(Unit const *unit) const
+{
+    if(this == unit)
+        return true;
+
+    const Unit *u1 = GetCharmerOrOwnerOrSelf();
+    const Unit *u2 = unit->GetCharmerOrOwnerOrSelf();
+    if(u1 == u2)
+        return true;
+
+    if(u1->GetTypeId() == TYPEID_PLAYER && u2->GetTypeId() == TYPEID_PLAYER)
+        return ((Player*)u1)->IsInSameRaidWith((Player*)u2);
+    else
+        return false;
+}
+
 bool Unit::IsHostileTo(Unit const* unit) const
 {
     // always non-hostile to self
