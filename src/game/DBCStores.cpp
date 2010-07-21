@@ -473,14 +473,46 @@ void LoadDBCStores(const std::string& dataPath)
     }
 
     //Surge of power spells should be longer
-    SpellEntry *sfix4 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(57407));
-    sfix4->DurationIndex = 28;
-    SpellEntry *sfix5 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(60936));
-    sfix5->DurationIndex = 28;
+    SpellEntry *sfix1 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(57407));
+    sfix1->DurationIndex = 28;
+    SpellEntry *sfix2 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(60936));
+    sfix2->DurationIndex = 28;
 
     //Lifebloom final heal
-    SpellEntry *sfix6 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(33778));
-    sfix6->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
+    SpellEntry *sfix3 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(33778));
+    sfix3->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
+
+    //Twilight Torment - relly dunno what blizzard intended to do
+    SpellEntry *sfix4 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(57935));
+    sfix4->AttributesEx = 0;
+    sfix4->AttributesEx4 = SPELL_ATTR_EX4_NOT_STEALABLE;
+    sfix4->CastingTimeIndex = 1;
+    sfix4->RecoveryTime = 0;
+    sfix4->procFlags = (PROC_FLAG_TAKEN_MELEE_HIT | PROC_FLAG_TAKEN_MELEE_SPELL_HIT | PROC_FLAG_TAKEN_RANGED_HIT | PROC_FLAG_TAKEN_RANGED_SPELL_HIT | PROC_FLAG_TAKEN_NEGATIVE_SPELL_HIT);
+    sfix4->procChance = 100;
+    sfix4->procCharges = 0;
+    sfix4->rangeIndex = 1;
+    sfix4->StackAmount = 0;
+    sfix4->Effect[EFFECT_INDEX_1] = 0;
+    sfix4->EffectDieSides[EFFECT_INDEX_1] = 0;
+    sfix4->EffectBasePoints[EFFECT_INDEX_0] = -1;
+    sfix4->EffectImplicitTargetA[EFFECT_INDEX_0] = 6;
+    sfix4->EffectImplicitTargetA[EFFECT_INDEX_1] = 0;
+    sfix4->EffectImplicitTargetB[EFFECT_INDEX_0] = 0;
+    sfix4->EffectImplicitTargetB[EFFECT_INDEX_1] = 0;
+    sfix4->EffectRadiusIndex[EFFECT_INDEX_0] = 0;
+    sfix4->EffectRadiusIndex[EFFECT_INDEX_1] = 0;
+    sfix4->EffectApplyAuraName[EFFECT_INDEX_0] = SPELL_AURA_PROC_TRIGGER_SPELL;
+    sfix4->EffectApplyAuraName[EFFECT_INDEX_1] = 0;
+    sfix4->EffectAmplitude[EFFECT_INDEX_0] = 0;
+    sfix4->EffectAmplitude[EFFECT_INDEX_1] = 0;
+    sfix4->EffectMiscValue[EFFECT_INDEX_0] = 0;
+    sfix4->EffectMiscValue[EFFECT_INDEX_1] = 0;
+    sfix4->EffectMiscValueB[EFFECT_INDEX_0] = 0;
+    sfix4->EffectMiscValueB[EFFECT_INDEX_1] = 0;
+    sfix4->EffectTriggerSpell[EFFECT_INDEX_0] = 57988;
+    sfix4->EffectTriggerSpell[EFFECT_INDEX_1] = 0;
+
 
     for (uint32 j = 0; j < sSkillLineAbilityStore.GetNumRows(); ++j)
     {
