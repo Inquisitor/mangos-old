@@ -7350,11 +7350,6 @@ bool Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAu
                     triggered_spell_id = 71824;
                     break;
                 }
-                // Earthen Power (Rank 1,2)
-                case 51523:
-                case 51524:
-                    triggered_spell_id = 63532;
-                    break;
             }
             // Storm, Earth and Fire
             if (dummySpell->SpellIconID == 3063)
@@ -11663,6 +11658,7 @@ bool Unit::isVisibleForOrDetect(Unit const* u, WorldObject const* viewPoint, boo
     if(!isInFront)
         return false;
 
+    // if doesn't have stealth detection (Shadow Sight), then check how stealthy the unit is, otherwise just check los
     // if doesn't have stealth detection (Shadow Sight), then check how stealthy the unit is, otherwise just check los
     if(!u->HasAuraType(SPELL_AURA_DETECT_STEALTH))
     {
