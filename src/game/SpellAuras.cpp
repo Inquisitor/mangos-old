@@ -4697,17 +4697,6 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
             target->SendMessageToSet(&data, true);
         }
 
-        // Seduction (Succubus spell)
-        if (m_spellProto->Id == 6358)
-        {
-            Unit* pCaster = GetCaster();
-            if(!pCaster)
-                return;
-
-            pCaster->InterruptSpell(CURRENT_CHANNELED_SPELL,false);
-            return;
-        }
-
         // Wyvern Sting
         if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_HUNTER && GetSpellProto()->SpellFamilyFlags & UI64LIT(0x0000100000000000))
         {
@@ -4737,6 +4726,26 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
 
             caster->CastSpell(target,spellInfo,true,NULL,this);
             return;
+        }
+    }
+
+    // Seduction (Succubus spell)
+    if (m_spellProto->Id == 6358)
+    {
+        Unit* pCaster = GetCaster();
+        if (!pCaster)
+            return;
+        
+        if (!apply)
+            pCaster->InterruptSpell(CURRENT_CHANNELED_SPELL, false);
+        else
+        {
+            if(pCaster->GetOwner() && target->isAlive())
+                if(pCaster->GetOwner()->HasAura(56250, EFFECT_INDEX_0))
+                {
+                    target->RemoveSpellsCausingAura(SPELL_AURA_PERIODIC_DAMAGE);
+                    target->RemoveSpellsCausingAura(SPELL_AURA_PERIODIC_DAMAGE_PERCENT);
+                }
         }
     }
 }
