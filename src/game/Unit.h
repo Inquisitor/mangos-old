@@ -1504,10 +1504,10 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         Unit* GetCharmerOrOwner() const { return GetCharmerGUID() ? GetCharmer() : GetOwner(); }
         Unit* GetCharmerOrOwnerOrSelf() const
         {
-            if(Unit const * u = GetCharmerOrOwner())
+            if(Unit * u = GetCharmerOrOwner())
                 return u;
 
-            return (Unit const *)this;
+            return (Unit*)this;
         }
         bool IsCharmerOrOwnerPlayerOrPlayerItself() const;
         Player* GetCharmerOrOwnerPlayerOrPlayerItself();
