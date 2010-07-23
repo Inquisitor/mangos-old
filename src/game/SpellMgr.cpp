@@ -3723,7 +3723,7 @@ SpellCastResult SpellMgr::GetSpellAllowedInLocationError(SpellEntry const *spell
         {
             return player && player->InArena() ? SPELL_CAST_OK : SPELL_FAILED_ONLY_IN_ARENA;
         }
-        case 32727:                                         // Arena Preparation
+        case SPELL_ARENA_PREPARATION:                       // Arena Preparation
         {
             if (!player)
                 return SPELL_FAILED_REQUIRES_AREA;
