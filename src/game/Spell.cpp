@@ -4676,7 +4676,7 @@ SpellCastResult Spell::CheckCast(bool strict)
             }
             // TODO: this check can be applied and for player to prevent cheating when IsPositiveSpell will return always correct result.
             // check target for pet/charmed casts (not self targeted), self targeted cast used for area effects and etc
-            if (!explicit_target_mode && m_caster->GetTypeId() == TYPEID_UNIT && m_caster->GetCharmerOrOwnerGUID())
+            if (!explicit_target_mode && m_caster->GetTypeId() == TYPEID_UNIT && m_caster->GetCharmerOrOwnerGUID()  && !IsDispelSpell(m_spellInfo))
             {
                 // check correctness positive/negative cast target (pet cast real check and cheating check)
                 if(IsPositiveSpell(m_spellInfo->Id))
@@ -5606,7 +5606,7 @@ bool Spell::IsValidSingleTargetEffect(Unit const* target, Targets type) const
         case TARGET_SINGLE_FRIEND:
         case TARGET_AREAEFFECT_PARTY:
             return m_caster->IsFriendlyTo(target);
-       case TARGET_SINGLE_PARTY:
+        case TARGET_SINGLE_PARTY:
             return m_caster != target && m_caster->IsInPartyWith(target);
         case TARGET_SINGLE_FRIEND_2:
             return m_caster->IsInRaidWith(target);
