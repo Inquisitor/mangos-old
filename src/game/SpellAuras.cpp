@@ -4765,7 +4765,10 @@ void Aura::HandleModStealth(bool apply, bool Real)
             target->SetStandFlags(UNIT_STAND_FLAGS_CREEP);
 
             if (target->GetTypeId()==TYPEID_PLAYER)
+            {
+                ((Player*)target)->m_grid_update_timer = 0;
                 target->SetFlag(PLAYER_FIELD_BYTES2, 0x2000);
+            }
 
             // apply only if not in GM invisibility (and overwrite invisibility state)
             if (target->GetVisibility()!=VISIBILITY_OFF)
