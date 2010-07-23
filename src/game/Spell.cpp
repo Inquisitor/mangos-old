@@ -3716,7 +3716,7 @@ void Spell::SendSpellGo()
     data << m_targets;
 
     if ( castFlags & CAST_FLAG_UNKNOWN6 )                   // predicted power?
-        data << uint32(m_caster->GetPower(m_caster->getPowerType()))
+        data << uint32(m_caster->GetPower(m_caster->getPowerType()));
 
     if ( castFlags & CAST_FLAG_UNKNOWN7 )                   // rune cooldowns list
     {
