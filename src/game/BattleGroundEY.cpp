@@ -123,6 +123,8 @@ void BattleGroundEY::AddPoints(uint32 Team, uint32 Points)
     BattleGroundTeamId team_index = GetTeamIndexByTeamId(Team);
     m_TeamScores[team_index] += Points;
     m_HonorScoreTics[team_index] += Points;
+    m_ExperienceTics[team_index] += Points;
+
     if (m_HonorScoreTics[team_index] >= m_HonorTics )
     {
         RewardHonorToTeam(GetBonusHonorFromKill(1), Team);
@@ -131,7 +133,7 @@ void BattleGroundEY::AddPoints(uint32 Team, uint32 Points)
     if (m_ExperienceTics[team_index] >= BG_EY_ExperienceTicks )
     {
         RewardXpToTeam(0, 0.8f, Team);
-        m_ExperienceTics[team_index] -= m_HonorTics;
+        m_ExperienceTics[team_index] -= BG_EY_ExperienceTicks;
     }
     UpdateTeamScore(Team);
 }
