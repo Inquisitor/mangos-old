@@ -1536,7 +1536,17 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
 
                         if(miscvalue2 == 1)
                             continue;
-                        break;
+
+                        switch(achievementCriteria->referredAchievement)
+                        {
+                            case 204:					// WS, capture 3 flags without dying
+                            {
+                                if(bg->GetPlayerScore(GetPlayer(),SCORE_DEATHS) != 0)
+                                    continue;
+                                break;
+                            }
+                        }
+			break;
                     }
                     case 44:                           // WS, return a flag
                     {
@@ -1587,10 +1597,45 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                         break;
                     }
                     case 61:							// AV, assault a tower
+                    {
+                        if(bg->GetTypeID(true) != BATTLEGROUND_AV)
+                            continue;
+                        
+                        if(miscvalue2 == 1)
+                            continue;
+
+                        break;
+                    }
                     case 63:	                        // AV, take a graveyard
+                    {
+                        if(bg->GetTypeID(true) != BATTLEGROUND_AV)
+                            continue;
+                        
+                        if(miscvalue2 == 1)
+                            continue;
+
+                        break;
+                    }
                     case 64:	                        // AV, defend a tower
+                    {
+                        if(bg->GetTypeID(true) != BATTLEGROUND_AV)
+                            continue;
+                        
+                        if(miscvalue2 == 0)
+                            continue;
+
+                        break;
+                    }
                     case 65:	                        // AV, defend a graveyard
-                        continue;
+                    {
+                        if(bg->GetTypeID(true) != BATTLEGROUND_AV)
+                            continue;
+                        
+                        if(miscvalue2 == 0)
+                            continue;
+
+                        break;
+                    }
 
                 }
                 SetCriteriaProgress(achievementCriteria, miscvalue1, PROGRESS_ACCUMULATE);
