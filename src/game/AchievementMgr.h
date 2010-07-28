@@ -237,7 +237,7 @@ class Unit;
 class Player;
 class WorldPacket;
 
-class AchievementMgr
+class MANGOS_DLL_SPEC AchievementMgr
 {
     public:
         AchievementMgr(Player* pl);
@@ -252,6 +252,7 @@ class AchievementMgr
         void CompletedAchievement(AchievementEntry const* entry);
         void CheckAllAchievementCriteria();
         void SendAllAchievementData();
+        bool IsCompletedAchievement(AchievementEntry const* entry);
         void SendRespondInspectAchievements(Player* player);
         Player* GetPlayer() { return m_player;}
 
@@ -262,7 +263,6 @@ class AchievementMgr
         void SetCriteriaProgress(AchievementCriteriaEntry const* entry, uint32 changeValue, ProgressType ptype = PROGRESS_SET);
         void CompletedCriteriaFor(AchievementEntry const* achievement);
         bool IsCompletedCriteria(AchievementCriteriaEntry const* criteria, AchievementEntry const* achievement);
-        bool IsCompletedAchievement(AchievementEntry const* entry);
         void CompleteAchievementsWithRefs(AchievementEntry const* entry);
         void BuildAllDataPacket(WorldPacket *data);
 
