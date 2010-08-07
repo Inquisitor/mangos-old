@@ -22586,6 +22586,9 @@ void Player::ActivateSpec(uint8 specNum)
         return;
 
     UnsummonPetTemporaryIfAny();
+    UnsummonAllTotems();
+    ClearComboPointHolders(); 	
+    ClearAllReactives();
     RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
     
     SendActionButtons(2);
