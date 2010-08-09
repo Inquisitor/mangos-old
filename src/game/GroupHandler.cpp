@@ -880,7 +880,6 @@ void WorldSession::HandleRequestPartyMemberStatsOpcode( WorldPacket &recv_data )
             }
         }
         data.put<uint64>(petMaskPos, petauramask);          // GROUP_UPDATE_FLAG_PET_AURAS
-        data << (uint32) player->m_movementInfo.GetTransportDBCSeat();
     }
     else
     {
