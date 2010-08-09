@@ -265,6 +265,7 @@ class ChatHandler
         bool HandleModifyRageCommand(const char* args);
         bool HandleModifyRunicPowerCommand(const char* args);
         bool HandleModifyEnergyCommand(const char* args);
+        bool HandleModifyPowerTypeCommand(const char* args);
         bool HandleModifyMoneyCommand(const char* args);
         bool HandleModifyASpeedCommand(const char* args);
         bool HandleModifySpeedCommand(const char* args);

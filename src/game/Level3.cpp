@@ -76,8 +76,6 @@ bool ChatHandler::HandleReloadAllCommand(const char*)
     HandleReloadMangosStringCommand("");
     HandleReloadGameTeleCommand("");
 
-    HandleReloadVehicleDataCommand("");
-    HandleReloadVehicleSeatDataCommand("");
     return true;
 }
 
