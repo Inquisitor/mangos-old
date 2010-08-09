@@ -435,20 +435,6 @@ MANGOS_DLL_SPEC LanguageDesc const* GetLanguageDescByID(uint32 lang);
 
 class PlayerDumpReader;
 
-
-// vehicle system
-#define MAX_VEHICLE_SPELLS 10
-
-struct VehicleDataStructure
-{
-    uint32 v_flags;                                         // vehicle flags, see enum CustomVehicleFLags
-    uint32 v_spells[MAX_VEHICLE_SPELLS];                    // spells
-    uint32 req_aura;                                        // requieres aura on player to enter (eg. in wintergrasp)
-};
-
-typedef UNORDERED_MAP<uint32, VehicleDataStructure> VehicleDataMap;
-typedef std::map<uint32,uint32> VehicleSeatDataMap;
-
 template<typename T>
 class IdGenerator
 {
@@ -994,26 +980,8 @@ class ObjectMgr
 
         int GetOrNewIndexForLocale(LocaleConstant loc);
 
-        VehicleDataMap mVehicleData;
-        VehicleSeatDataMap mVehicleSeatData;
-
         GCNewsMap mGCNewsMap;
         ItemRefundableMap mItemRefundableMap;
-
-        uint32 GetSeatFlags(uint32 seatid)
-        {
-            VehicleSeatDataMap::iterator i = mVehicleSeatData.find(seatid);
-            if(i == mVehicleSeatData.end())
-                return NULL;
-            else
-                return i->second;
-        }
-        VehicleDataStructure const* GetVehicleData(uint32 entry) const
-        {
-            VehicleDataMap::const_iterator itr = mVehicleData.find(entry);
-            if(itr==mVehicleData.end()) return NULL;
-            return &itr->second;
-        }
 
         SpellClickInfoMapBounds GetSpellClickInfoMapBounds(uint32 creature_id) const
         {
