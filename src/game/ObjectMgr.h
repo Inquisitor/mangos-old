@@ -732,9 +732,6 @@ class ObjectMgr
         void LoadVendors();
         void LoadTrainerSpell();
 
-        void LoadVehicleData();
-        void LoadVehicleSeatData();
-
         void LoadGCNews();
 
         std::string GeneratePetName(uint32 entry);

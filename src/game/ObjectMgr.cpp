@@ -733,6 +733,17 @@ void ObjectMgr::LoadCreatureTemplates()
             }
         }
 
+        if (cInfo->VehicleId)
+        {
+            VehicleEntry const* pVehicleEntry = sVehicleStore.LookupEntry(cInfo->VehicleId);
+
+            if (!pVehicleEntry)
+            {
+                sLog.outErrorDb("Creature (Entry: %u) has non-existing VehicleId (%u)", cInfo->Entry, cInfo->VehicleId);
+                const_cast<CreatureInfo*>(cInfo)->VehicleId = 0;
+            }
+        }
+
         if(cInfo->MovementType >= MAX_DB_MOTION_TYPE)
         {
             sLog.outErrorDb("Creature (Entry: %u) has wrong movement generator type (%u), ignore and set to IDLE.",cInfo->Entry,cInfo->MovementType);
@@ -9012,126 +9023,6 @@ CreatureInfo const* GetCreatureTemplateStore(uint32 entry)
 Quest const* GetQuestTemplateStore(uint32 entry)
 {
     return sObjectMgr.GetQuestTemplate(entry);
-}
-
-void ObjectMgr::LoadVehicleData()
-{
-    mVehicleData.clear();
-
-    QueryResult *result = WorldDatabase.Query("SELECT entry, flags, Spell1, Spell2, Spell3, Spell4, Spell5, Spell6, Spell7, Spell8, Spell9, Spell10, req_aura FROM vehicle_data");
-    if(!result)
-    {
-        barGoLink bar( 1 );
-        bar.step();
-
-        sLog.outString();
-        sLog.outString( ">> Loaded 0 vehicle data" );
-        sLog.outErrorDb("`vehicle_data` table is empty!");
-        return;
-    }
-
-    uint32 count = 0;
-
-    barGoLink bar( result->GetRowCount() );
-    do
-    {
-        bar.step();
-
-        Field* fields = result->Fetch();
-
-        VehicleDataStructure VDS;
-        // NOTE : we can use spellid or creature id
-        uint32 v_entry      = fields[0].GetUInt32();
-        VDS.v_flags         = fields[1].GetUInt32();
-        for(uint8 j = 0; j < MAX_VEHICLE_SPELLS; j++)
-        {
-            VDS.v_spells[j] = fields[j+2].GetUInt32();
-        }
-        VDS.req_aura        = fields[12].GetUInt32();
-
-        VehicleEntry const *vehicleInfo = sVehicleStore.LookupEntry(v_entry);
-        if(!vehicleInfo)
-        {
-            sLog.outErrorDb("Vehicle id %u listed in `vehicle_data` does not exist",v_entry);
-            continue;
-        }
-        for(uint8 j = 0; j < MAX_VEHICLE_SPELLS; j++)
-        {
-            if(VDS.v_spells[j])
-            {
-                SpellEntry const* j_spell = sSpellStore.LookupEntry(VDS.v_spells[j]);
-                if(!j_spell)
-                {
-                    sLog.outErrorDb("Spell %u listed in `vehicle_data` does not exist, skipped",VDS.v_spells[j]);
-                    VDS.v_spells[j] = 0;
-                }
-            }
-        }
-        if(VDS.req_aura)
-        {
-            SpellEntry const* i_spell = sSpellStore.LookupEntry(VDS.req_aura);
-            if(!i_spell)
-            {
-                sLog.outErrorDb("Spell %u listed in `vehicle_data` does not exist, skipped",VDS.req_aura);
-                VDS.req_aura = 0;
-            }
-        }
-
-        mVehicleData[v_entry] = VDS;
-        ++count;
-    }
-    while (result->NextRow());
-
-    delete result;
-
-    sLog.outString();
-    sLog.outString( ">> Loaded %u vehicle data", count );
-}
-
-void ObjectMgr::LoadVehicleSeatData()
-{
-    mVehicleSeatData.clear();
-
-    QueryResult *result = WorldDatabase.Query("SELECT seat,flags FROM vehicle_seat_data");
-
-    if( !result )
-    {
-        barGoLink bar( 1 );
-
-        bar.step();
-
-        sLog.outString();
-        sLog.outString( ">> Loaded 0 vehicle seat data" );
-        sLog.outErrorDb("`vehicle_seat_data` table is empty!");
-        return;
-    }
-    uint32 count = 0;
-
-    barGoLink bar( result->GetRowCount() );
-    do
-    {
-        bar.step();
-
-        Field *fields = result->Fetch();
-        uint32 entry  = fields[0].GetUInt32();
-        uint32 flag   = fields[1].GetUInt32();
-
-        VehicleSeatEntry const *vsInfo = sVehicleSeatStore.LookupEntry(entry);
-        if(!vsInfo)
-        {
-            sLog.outErrorDb("Vehicle seat %u listed in `vehicle_seat_data` does not exist",entry);
-            continue;
-        }
-
-        mVehicleSeatData[entry] = flag;
-        ++count;
-    }
-    while (result->NextRow());
-
-    delete result;
-
-    sLog.outString();
-    sLog.outString( ">> Loaded %u vehicle seat data", count );
 }
 
 void ObjectMgr::LoadGCNews()
