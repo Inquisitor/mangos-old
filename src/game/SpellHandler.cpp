@@ -318,10 +318,11 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
         return;
     }
 
-    // vehicle spells are handled by CMSG_PET_CAST_SPELL,
+    // Feanor - Check Vehicle casting
+    /*// vehicle spells are handled by CMSG_PET_CAST_SPELL,
     // but player is still able to cast own spells
     if(_player->GetCharmGUID() && _player->GetCharmGUID() == _player->GetVehicleGUID())
-        mover = _player;
+        mover = _player;*/
 
     DEBUG_LOG("WORLD: got cast spell packet, spellId - %u, cast_count: %u, unk_flags %u, data length = %i",
         spellId, cast_count, unk_flags, (uint32)recvPacket.size());

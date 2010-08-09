@@ -9391,20 +9391,49 @@ void Aura::HandleArenaPreparation(bool apply, bool Real)
         GetTarget()->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PREPARATION);
 }
 
+
+
 /**
  * Such auras are applied from a caster(=player) to a vehicle.
  * This has been verified using spell #49256
  */
+
 void Aura::HandleAuraControlVehicle(bool apply, bool Real)
 {
     if(!Real)
         return;
 
-    /*=======
+    Unit* target = GetTarget();
+    if (target->GetTypeId() != TYPEID_UNIT || !((Creature*)target)->isVehicle())
+        return;
+    Vehicle* vehicle = (Vehicle*)target;
+
     Unit *player = GetCaster();
-    Vehicle *vehicle = dynamic_cast<Vehicle*>(GetTarget());
-    if(!player || player->GetTypeId() != TYPEID_PLAYER || !vehicle)
-    =======*/
+    if(!player || player->GetTypeId() != TYPEID_PLAYER)
+        return;
+
+    if (apply)
+    {
+        if(Pet *pet = player->GetPet())
+            pet->Remove(PET_SAVE_AS_CURRENT);
+        //((Player*)player)->EnterVehicle(vehicle);
+    }
+    else
+    {
+        SpellEntry const *spell = GetSpellProto();
+
+        // some SPELL_AURA_CONTROL_VEHICLE auras have a dummy effect on the player - remove them
+        player->RemoveAurasDueToSpell(spell->Id);
+
+        //((Player*)player)->ExitVehicle(vehicle);
+    }
+}
+
+/*
+void Aura::HandleAuraControlVehicle(bool apply, bool Real)
+{
+    if(!Real)
+        return;
 
     Unit *caster = GetCaster();
     if(!caster || caster->GetVehicleGUID())
@@ -9424,7 +9453,7 @@ void Aura::HandleAuraControlVehicle(bool apply, bool Real)
             {
                 WorldPacket data(SMSG_ON_CANCEL_EXPECTED_RIDE_VEHICLE_AURA, 0);
                 ((Player*)caster)->GetSession()->SendPacket(&data);
-                caster->EnterVehicle( vehicle, /*this->GetModifier()->m_amount*/ 0, true );
+                caster->EnterVehicle( vehicle,*/ /*this->GetModifier()->m_amount*/ /* 0, true );
             }
             // if we leave and enter again, this will refresh
             int32 duration = GetSpellMaxDuration(GetSpellProto());
@@ -9439,6 +9468,7 @@ void Aura::HandleAuraControlVehicle(bool apply, bool Real)
         caster->RemoveAurasDueToSpell(GetId());
     }
 }
+*/
 
 void Aura::HandleAuraConvertRune(bool apply, bool Real)
 {
