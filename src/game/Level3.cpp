@@ -921,22 +921,6 @@ bool ChatHandler::HandleReloadMailLevelRewardCommand(const char* /*arg*/)
     return true;
 }
 
-bool ChatHandler::HandleReloadVehicleDataCommand(const char*)
-{
-    sLog.outString( "Re-Loading `vehicle_data` Table!" );
-    sObjectMgr.LoadVehicleData();
-    SendGlobalSysMessage("DB table `vehicle_data` reloaded.");
-    return true;
-}
-
-bool ChatHandler::HandleReloadVehicleSeatDataCommand(const char*)
-{
-    sLog.outString( "Re-Loading `vehicle_seat_data` Table!" );
-    sObjectMgr.LoadVehicleSeatData();
-    SendGlobalSysMessage("DB table `vehicle_seat_data` reloaded.");
-    return true;
-}
-
 bool ChatHandler::HandleLoadScriptsCommand(const char* args)
 {
     if(!LoadScriptingModule(args)) return true;

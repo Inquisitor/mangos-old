@@ -44,6 +44,9 @@ void WorldSession::HandleMoveWorldportAckOpcode()
     if(!GetPlayer()->IsBeingTeleportedFar())
         return;
 
+    if (_player->GetVehicleKit())
+        _player->GetVehicleKit()->RemoveAllPassengers();
+
     // get the teleport destination
     float currx,curry,currz;
     uint32 currmap = GetPlayer()->GetMapId();
@@ -290,6 +293,10 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
                 {
                     plMover->m_transport = (*iter);
                     (*iter)->AddPassenger(plMover);
+
+                    if (plMover->GetVehicleKit())
+                        plMover->GetVehicleKit()->RemoveAllPassengers();
+
                     break;
                 }
             }
@@ -375,6 +382,9 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     data.appendPackGUID(mover->GetGUID());                  // write guid
     movementInfo.Write(data);                               // write data
     mover->SendMessageToSetExcept(&data, _player);
+
+    mover->m_movementInfo = movementInfo;
+    mover->SetPosition(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z, movementInfo.GetPos()->o);
 
     if(plMover)                                             // nothing is charmed, or player charmed
     {
