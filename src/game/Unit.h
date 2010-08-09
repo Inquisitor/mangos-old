@@ -302,7 +302,7 @@ class Item;
 class Pet;
 class PetAura;
 class Totem;
-class Vehicle;
+class VehicleKit;
 
 struct SpellImmune
 {
@@ -621,6 +621,7 @@ enum NPCFlags
     UNIT_NPC_FLAG_STABLEMASTER          = 0x00400000,       // 100%
     UNIT_NPC_FLAG_GUILD_BANKER          = 0x00800000,       // cause client to send 997 opcode
     UNIT_NPC_FLAG_SPELLCLICK            = 0x01000000,       // cause client to send 1015 opcode (spell click), dynamic, set at loading and don't must be set in DB
+    UNIT_NPC_FLAG_PLAYER_VEHICLE        = 0x02000000,       // players with mounts that have vehicle data should have it set
     UNIT_NPC_FLAG_GUARD                 = 0x10000000,       // custom flag for guards
     UNIT_NPC_FLAG_OUTDOORPVP            = 0x20000000        // custom flag for outdoor pvp creatures
 };
@@ -781,7 +782,7 @@ class MovementInfo
 
         // Position manipulations
         Position const *GetPos() const { return &pos; }
-        void SetTransportData(ObjectGuid guid, float x, float y, float z, float o, uint32 time, int8 seat)
+        void SetTransportData(ObjectGuid guid, float x, float y, float z, float o, uint32 time, int8 seat, VehicleSeatEntry const* seatInfo = NULL)
         {
             t_guid = guid;
             t_pos.x = x;
@@ -790,6 +791,7 @@ class MovementInfo
             t_pos.o = o;
             t_time = time;
             t_seat = seat;
+            t_seatInfo = seatInfo;
         }
         void ClearTransportData()
         {
@@ -800,10 +802,13 @@ class MovementInfo
             t_pos.o = 0.0f;
             t_time = 0;
             t_seat = -1;
+            t_seatInfo = NULL;
         }
         ObjectGuid const& GetTransportGuid() const { return t_guid; }
         Position const *GetTransportPos() const { return &t_pos; }
         int8 GetTransportSeat() const { return t_seat; }
+        uint32 GetTransportDBCSeat() const { return t_seatInfo ? t_seatInfo->m_ID : 0; }
+        uint32 GetVehicleSeatFlags() const { return t_seatInfo ? t_seatInfo->m_flags : 0; }
         uint32 GetTransportTime() const { return t_time; }
         uint32 GetFallTime() const { return fallTime; }
         void ChangePosition(float x, float y, float z, float o) { pos.x = x; pos.y = y; pos.z = z; pos.o = o; }
@@ -820,6 +825,7 @@ class MovementInfo
         Position t_pos;
         uint32   t_time;
         int8     t_seat;
+        VehicleSeatEntry const* t_seatInfo;
         uint32   t_time2;
         // swimming and flying
         float    s_pitch;
@@ -1303,7 +1309,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         bool IsMounted() const { return HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_MOUNT ); }
         uint32 GetMountID() const { return GetUInt32Value(UNIT_FIELD_MOUNTDISPLAYID); }
-        void Mount(uint32 mount, uint32 spellId = 0);
+        void Mount(uint32 mount, uint32 spellId = 0, uint32 vehicleId = 0);
         void Unmount();
 
         uint16 GetMaxSkillValueForLevel(Unit const* target = NULL) const { return (target ? getLevelForTarget(target) : getLevel()) * 5; }
@@ -1903,14 +1909,14 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         Unit *GetMisdirectionTarget() { return m_misdirectionTargetGUID ? GetUnit(*this, m_misdirectionTargetGUID) : NULL; }
 
         // vehicle system
-        void EnterVehicle(Vehicle *vehicle, int8 seat_id, bool force = false);
+        void EnterVehicle(VehicleKit *vehicle, int8 seatId = -1);
         void ExitVehicle();
-        uint64 GetVehicleGUID() { return m_vehicleGUID; }
-        void SetVehicleGUID(uint64 guid) { m_vehicleGUID = guid; }
-        // using extra variables to favoid problems with transports
-        SeatData m_SeatData;
-        void BuildVehicleInfo(Unit *target = NULL);
-        void ChangeSeat(int8 seatId, bool next);
+        void ChangeSeat(int8 seatId, bool next = true);
+        VehicleKit* GetVehicle() { return m_pVehicle; }
+        VehicleKit* GetVehicleKit() { return m_pVehicleKit; }
+        Unit* GetVehicleBase();
+        bool CreateVehicleKit(uint32 vehicleId);
+        void RemoveVehicleKit();
 
         // Movement info
         MovementInfo m_movementInfo;
@@ -1963,7 +1969,9 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         uint32 m_reactiveTimer[MAX_REACTIVE];
         uint32 m_regenTimer;
         uint32 m_lastManaUseTimer;
-        uint64 m_vehicleGUID;
+        
+        VehicleKit* m_pVehicle;
+        VehicleKit* m_pVehicleKit;
 
     private:
         void CleanupDeletedAuras();
