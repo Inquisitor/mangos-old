@@ -1306,7 +1306,7 @@ void Player::Update( uint32 p_time )
                     }
                 }
                 //120 degrees of radiant range
-                else if( !HasInArc( 2*M_PI_F/3, pVictim ) && !GetVehicleGUID()) // - on vehicles is wrong facing set?
+                else if( !HasInArc( 2*M_PI_F/3, pVictim ) && !GetVehicle()) // - on vehicles is wrong facing set?
                 {
                     setAttackTimer(BASE_ATTACK,100);
                     if(m_swingErrorMsg != 2)                // send single time (client auto repeat)
@@ -2593,10 +2593,15 @@ void Player::GiveXP(uint32 xp, Unit* victim)
     if(!isAlive() && !GetBattleGroundId())
         return;
 
-    if(GetVehicleGUID() && !(m_SeatData.v_flags & VF_GIVE_EXP))
-        return;
+    // Feanor: Add NO_XP vehicle flag
+    /*if(GetVehicleGUID() && !(m_SeatData.v_flags & VF_GIVE_EXP))
+        return;*/
 
     uint32 level = getLevel();
+
+    // Northrend leveling hack
+    if(level < 66 && GetMapId() == 571)
+        return;
 
     // XP to money conversion processed in Player::RewardQuest
     if(level >= sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
@@ -18839,7 +18844,7 @@ bool Player::ActivateTaxiPathTo(std::vector<uint32> const& nodes, Creature* npc 
     if(npc)
     {
         // not let cheating with start flight mounted
-        if(IsMounted() || GetVehicleGUID())
+        if(IsMounted() || GetVehicle())
         {
             WorldPacket data(SMSG_ACTIVATETAXIREPLY, 4);
             data << uint32(ERR_TAXIPLAYERALREADYMOUNTED);
@@ -19996,8 +20001,11 @@ void Player::UpdateVisibilityOf(WorldObject const* viewPoint, WorldObject* targe
             if(target!=this && target->isType(TYPEMASK_UNIT))
             {
                 SendAurasForTarget((Unit*)target);
-                BuildVehicleInfo((Unit*)target);
+                WorldPacket data;
+                ((Unit*)target)->BuildHeartBeatMsg(&data);
+                GetSession()->SendPacket(&data);
             }
+
 
             if(target->GetTypeId()==TYPEID_UNIT && ((Creature*)target)->isAlive())
                 ((Creature*)target)->SendMonsterMoveWithSpeedToCurrentDestination(this);
@@ -20066,10 +20074,10 @@ void Player::SendComboPoints()
         return;
 
     WorldPacket data;
-    if(!GetVehicleGUID())
+    if(!GetVehicle())
         data.Initialize(SMSG_UPDATE_COMBO_POINTS, combotarget->GetPackGUID().size()+1);
     else{
-       if(Unit *vehicle = ObjectAccessor::GetUnit(*this, GetVehicleGUID()))
+        if(Unit *vehicle = ObjectAccessor::GetUnit(*this, GetVehicle()->GetBase()->GetGUID()))
        {
            data.Initialize(SMSG_PET_UPDATE_COMBO_POINTS, vehicle->GetPackGUID().size()+combotarget->GetPackGUID().size()+1);
            data << vehicle->GetPackGUID();
@@ -20247,11 +20255,11 @@ void Player::SendInitialPacketsAfterAddToMap()
         SendMessageToSet(&data2,true);
     }
 
-    if(GetVehicleGUID())
+    if(GetVehicle())
     {
         WorldPacket data3(SMSG_FORCE_MOVE_ROOT, 10);
         data3 << GetPackGUID();
-        data3 << (uint32)((m_SeatData.s_flags & SF_CAN_CAST) ? 2 : 0);
+        data3 << uint32((m_movementInfo.GetVehicleSeatFlags() & SEAT_FLAG_CAN_CAST) ? 2 : 0);
         SendMessageToSet(&data3,true);
     }
 

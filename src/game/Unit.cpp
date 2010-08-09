@@ -50,6 +50,7 @@
 #include "Vehicle.h"
 #include "MovementGenerator.h"
 #include "VMapFactory.h"
+#include "Transports.h"
 
 #include <math.h>
 #include <stdarg.h>
@@ -4189,7 +4190,7 @@ bool Unit::AddAura(Aura *Aur)
                 Aura* aur2 = i2->second;
                 bool vehicle = false;
                 if(Unit *caster = Aur->GetCaster())
-                    if(caster->GetVehicleGUID())
+                    if(caster->GetVehicle())
                         vehicle = true;
                 if(aur2->GetCasterGUID()==Aur->GetCasterGUID() || vehicle)
                 {
@@ -14012,7 +14013,7 @@ void Unit::SetFeared(bool apply, uint64 const& casterGUID, uint32 spellID, uint3
         }
     }
 
-    if (GetTypeId() == TYPEID_PLAYER && !GetVehicleGUID())
+    if (GetTypeId() == TYPEID_PLAYER && !GetVehicle())
         ((Player*)this)->SetClientControl(this, !apply);
 }
 
@@ -14042,7 +14043,7 @@ void Unit::SetConfused(bool apply, uint64 const& casterGUID, uint32 spellID)
         }
     }
 
-    if(GetTypeId() == TYPEID_PLAYER && !GetVehicleGUID())
+    if(GetTypeId() == TYPEID_PLAYER && !GetVehicle())
         ((Player*)this)->SetClientControl(this, !apply);
 }
 

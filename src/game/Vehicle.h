@@ -78,6 +78,8 @@ class Vehicle : public Creature
 
         void Dismiss();
 
+        uint8 m_comboPointsForCast;
+
     protected:
         uint32 m_vehicleId;
 

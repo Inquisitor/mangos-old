@@ -686,18 +686,16 @@ bool ChatHandler::HandleDebugSpawnVehicle(const char* args)
     uint32 id = (uint32)atoi(i);
 
     CreatureInfo const *ci = ObjectMgr::GetCreatureTemplate(entry);
-
     if (!ci)
         return false;
 
     VehicleEntry const *ve = sVehicleStore.LookupEntry(id);
-
     if (!ve)
         return false;
 
     Vehicle *v = new Vehicle;
     Map *map = m_session->GetPlayer()->GetMap();
-    if (!v->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_VEHICLE), map, m_session->GetPlayer()->GetPhaseMaskForSpawn(), entry, id, m_session->GetPlayer()->GetTeam()))
+    if (!v->Create(map->GenerateLocalLowGuid(HIGHGUID_VEHICLE), map, entry, id, m_session->GetPlayer()->GetTeam()))
     {
         delete v;
         return false;
@@ -717,7 +715,6 @@ bool ChatHandler::HandleDebugSpawnVehicle(const char* args)
     }
 
     map->Add((Creature*)v);
-    v->AIM_Initialize();
 
     return true;
 }
@@ -734,7 +731,8 @@ bool ChatHandler::HandleDebugEnterVehicle(const char* args)
         return false;
     }
 
-    m_session->GetPlayer()->EnterVehicle((Vehicle*)target, -1);
+    // Feanor: fix this
+    //m_session->GetPlayer()->EnterVehicle((Vehicle*)target, -1);
 
     return true;
 }

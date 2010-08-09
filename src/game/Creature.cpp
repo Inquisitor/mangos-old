@@ -1477,9 +1477,10 @@ bool Creature::IsImmunedToSpellEffect(SpellEntry const* spellInfo, SpellEffectIn
             return true;
     }
 
+    // Feanor: Add canbehealed flag ?
     // Heal immunity
-    if (isVehicle() && !(((Vehicle*)this)->GetVehicleFlags() & VF_CAN_BE_HEALED))
-    {
+    //if (isVehicle() && !(((Vehicle*)this)->GetVehicleFlags() & VF_CAN_BE_HEALED))
+    //{
         switch(spellInfo->Effect[index])
         {
             case SPELL_EFFECT_APPLY_AURA:
@@ -1501,7 +1502,7 @@ bool Creature::IsImmunedToSpellEffect(SpellEntry const* spellInfo, SpellEffectIn
                 return true;
             default : break;
         }
-    }
+    //}
 
     return Unit::IsImmunedToSpellEffect(spellInfo, index);
 }
