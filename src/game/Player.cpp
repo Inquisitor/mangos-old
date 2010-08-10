@@ -1794,6 +1794,9 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
         m_movementInfo.ClearTransportData();
     }
 
+    if (GetVehicleKit())
+        GetVehicleKit()->RemoveAllPassengers();
+
     ExitVehicle();
 
     // The player was ported to another map and looses the duel immediately.
@@ -4075,6 +4078,7 @@ void Player::InitVisibleBits()
     updateVisualBits.SetBit(PLAYER_BYTES_3);
     updateVisualBits.SetBit(PLAYER_DUEL_TEAM);
     updateVisualBits.SetBit(PLAYER_GUILD_TIMESTAMP);
+    updateVisualBits.SetBit(UNIT_NPC_FLAGS);
 
     // PLAYER_QUEST_LOG_x also visible bit on official (but only on party/raid)...
     for(uint16 i = PLAYER_QUEST_LOG_1_1; i < PLAYER_QUEST_LOG_25_2; i += MAX_QUEST_OFFSET)
@@ -6140,7 +6144,9 @@ ActionButton const* Player::GetActionButton(uint8 button)
 
 bool Player::SetPosition(float x, float y, float z, float orientation, bool teleport)
 {
-    // prevent crash when a bad coord is sent by the client
+    if(!Unit::SetPosition(x, y, z, orientation, teleport))
+        return false;
+
     if(!MaNGOS::IsValidMapCoord(x,y,z,orientation))
     {
         DEBUG_LOG("Player::SetPosition(%f, %f, %f, %f, %d) .. bad coordinates for player %d!",x,y,z,orientation,teleport,GetGUIDLow());
@@ -20247,7 +20253,7 @@ void Player::SendInitialPacketsAfterAddToMap()
         SendMessageToSet(&data2,true);
     }
 
-    if(GetVehicleGUID())
+    if(GetVehicle() || GetVehicleGUID())
     {
         WorldPacket data3(SMSG_FORCE_MOVE_ROOT, 10);
         data3 << GetPackGUID();

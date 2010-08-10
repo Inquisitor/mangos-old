@@ -292,6 +292,9 @@ void Object::BuildMovementUpdate(ByteBuffer * data, uint16 updateFlags) const
                             unit->m_movementInfo.AddMovementFlag(MOVEFLAG_FLYING);
                         }
                     }
+
+                    if (unit->GetVehicle() || unit->GetVehicleGUID())
+                       unit->m_movementInfo.AddMovementFlag(MOVEFLAG_ONTRANSPORT);
                 }
             }
             break;
@@ -299,7 +302,7 @@ void Object::BuildMovementUpdate(ByteBuffer * data, uint16 updateFlags) const
             {
                 Player *player = ((Player*)unit);
 
-                if(player->GetTransport())
+                if(player->GetTransport() || player->GetVehicle())
                     player->m_movementInfo.AddMovementFlag(MOVEFLAG_ONTRANSPORT);
                 else
                     player->m_movementInfo.RemoveMovementFlag(MOVEFLAG_ONTRANSPORT);
