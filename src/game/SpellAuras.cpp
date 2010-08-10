@@ -3553,7 +3553,7 @@ void Aura::HandleAuraMounted(bool apply, bool Real)
         if (minfo)
             display_id = minfo->modelid;
 
-        target->Mount(display_id, GetId(), ci->VehicleId);
+        target->Mount(display_id, GetId());
     }
     else
     {
@@ -4290,7 +4290,7 @@ void Aura::HandleModPossess(bool apply, bool Real)
         {
             ((Creature*)target)->AIM_Initialize();
         }
-        else if(target->GetTypeId() == TYPEID_PLAYER && !target->GetVehicle())
+        else if(target->GetTypeId() == TYPEID_PLAYER)
         {
             ((Player*)target)->SetClientControl(target, 0);
         }
@@ -4321,7 +4321,7 @@ void Aura::HandleModPossess(bool apply, bool Real)
 
         target->SetCharmerGUID(0);
 
-        if(target->GetTypeId() == TYPEID_PLAYER && !target->GetVehicle())
+        if(target->GetTypeId() == TYPEID_PLAYER)
         {
             ((Player*)target)->setFactionForRace(target->getRace());
             ((Player*)target)->SetClientControl(target, 1);
@@ -4937,13 +4937,10 @@ void Aura::HandleAuraModRoot(bool apply, bool Real)
 
         if(target->GetTypeId() == TYPEID_PLAYER)
         {
-            if(!target->hasUnitState(UNIT_STAT_ON_VEHICLE))
-            {
-                WorldPacket data(SMSG_FORCE_MOVE_ROOT, 10);
-                data << target->GetPackGUID();
-                data << uint32(2);
-                target->SendMessageToSet(&data, true);
-            }
+            WorldPacket data(SMSG_FORCE_MOVE_ROOT, 10);
+            data << target->GetPackGUID();
+            data << (uint32)2;
+            target->SendMessageToSet(&data, true);
 
             //Clear unit movement flags
             ((Player*)target)->m_movementInfo.SetMovementFlags(MOVEFLAG_NONE);
@@ -4982,7 +4979,7 @@ void Aura::HandleAuraModRoot(bool apply, bool Real)
 
         target->clearUnitState(UNIT_STAT_ROOT);
 
-        if(!target->hasUnitState(UNIT_STAT_STUNNED | UNIT_STAT_ON_VEHICLE)) // prevent allow move if have also stun effect
+        if(!target->hasUnitState(UNIT_STAT_STUNNED))      // prevent allow move if have also stun effect
         {
             if(target->getVictim() && target->isAlive())
                 target->SetTargetGUID(target->getVictim()->GetGUID());
@@ -7934,7 +7931,7 @@ void Aura::HandleModRatingFromStat(bool apply, bool Real)
 
 void Aura::HandleForceMoveForward(bool apply, bool Real)
 {
-    if(!Real)
+    if(!Real || GetTarget()->GetTypeId() != TYPEID_PLAYER)
         return;
     if(apply)
         GetTarget()->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FORCE_MOVE);
@@ -9394,49 +9391,20 @@ void Aura::HandleArenaPreparation(bool apply, bool Real)
         GetTarget()->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PREPARATION);
 }
 
-
-
 /**
  * Such auras are applied from a caster(=player) to a vehicle.
  * This has been verified using spell #49256
  */
-
 void Aura::HandleAuraControlVehicle(bool apply, bool Real)
 {
     if(!Real)
         return;
 
-    Unit* target = GetTarget();
-    if (target->GetTypeId() != TYPEID_UNIT || !((Creature*)target)->isVehicle())
-        return;
-    Vehicle* vehicle = (Vehicle*)target;
-
+    /*=======
     Unit *player = GetCaster();
-    if(!player || player->GetTypeId() != TYPEID_PLAYER)
-        return;
-
-    if (apply)
-    {
-        if(Pet *pet = player->GetPet())
-            pet->Remove(PET_SAVE_AS_CURRENT);
-        //((Player*)player)->EnterVehicle(vehicle);
-    }
-    else
-    {
-        SpellEntry const *spell = GetSpellProto();
-
-        // some SPELL_AURA_CONTROL_VEHICLE auras have a dummy effect on the player - remove them
-        player->RemoveAurasDueToSpell(spell->Id);
-
-        //((Player*)player)->ExitVehicle(vehicle);
-    }
-}
-
-/*
-void Aura::HandleAuraControlVehicle(bool apply, bool Real)
-{
-    if(!Real)
-        return;
+    Vehicle *vehicle = dynamic_cast<Vehicle*>(GetTarget());
+    if(!player || player->GetTypeId() != TYPEID_PLAYER || !vehicle)
+    =======*/
 
     Unit *caster = GetCaster();
     if(!caster || caster->GetVehicleGUID())
@@ -9456,7 +9424,7 @@ void Aura::HandleAuraControlVehicle(bool apply, bool Real)
             {
                 WorldPacket data(SMSG_ON_CANCEL_EXPECTED_RIDE_VEHICLE_AURA, 0);
                 ((Player*)caster)->GetSession()->SendPacket(&data);
-                caster->EnterVehicle( vehicle,*/ /*this->GetModifier()->m_amount*/ /* 0, true );
+                caster->EnterVehicle( vehicle, /*this->GetModifier()->m_amount*/ 0, true );
             }
             // if we leave and enter again, this will refresh
             int32 duration = GetSpellMaxDuration(GetSpellProto());
@@ -9471,7 +9439,6 @@ void Aura::HandleAuraControlVehicle(bool apply, bool Real)
         caster->RemoveAurasDueToSpell(GetId());
     }
 }
-*/
 
 void Aura::HandleAuraConvertRune(bool apply, bool Real)
 {

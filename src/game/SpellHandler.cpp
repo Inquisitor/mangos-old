@@ -318,11 +318,10 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
         return;
     }
 
-    // Feanor - Check Vehicle casting
-    /*// vehicle spells are handled by CMSG_PET_CAST_SPELL,
+    // vehicle spells are handled by CMSG_PET_CAST_SPELL,
     // but player is still able to cast own spells
     if(_player->GetCharmGUID() && _player->GetCharmGUID() == _player->GetVehicleGUID())
-        mover = _player;*/
+        mover = _player;
 
     DEBUG_LOG("WORLD: got cast spell packet, spellId - %u, cast_count: %u, unk_flags %u, data length = %i",
         spellId, cast_count, unk_flags, (uint32)recvPacket.size());
@@ -569,7 +568,6 @@ void WorldSession::HandleSelfResOpcode( WorldPacket & /*recv_data*/ )
     }
 }
 
-/*
 void WorldSession::HandleSpellClick( WorldPacket & recv_data )
 {
     uint64 guid;
@@ -645,38 +643,6 @@ void WorldSession::HandleSpellClick( WorldPacket & recv_data )
 
                 caster->CastSpell(target, itr->second.spellId, true);
             }
-        }
-    }
-}
-*/
-
-void WorldSession::HandleSpellClick( WorldPacket & recv_data )
-{
-    uint64 guid;
-    recv_data >> guid;
-
-    if (_player->isInCombat())                              // client prevent click and set different icon at combat state
-        return;
-
-    Creature *unit = _player->GetMap()->GetCreatureOrPetOrVehicle(guid);
-    if (!unit || unit->isInCombat())                        // client prevent click and set different icon at combat state
-        return;
-
-    SpellClickInfoMapBounds clickPair = sObjectMgr.GetSpellClickInfoMapBounds(unit->GetEntry());
-    for(SpellClickInfoMap::const_iterator itr = clickPair.first; itr != clickPair.second; ++itr)
-    {
-        if (itr->second.IsFitToRequirements(_player))
-        {
-            Unit *caster = (itr->second.castFlags & 0x1) ? (Unit*)_player : (Unit*)unit;
-            Unit *target = (itr->second.castFlags & 0x2) ? (Unit*)_player : (Unit*)unit;
-            if(itr->second.castFlags & 0x4)
-            {
-                unit->setDeathState(JUST_DIED);
-                unit->RemoveCorpse();
-                unit->SetHealth(0);
-            }
-
-            caster->CastSpell(target, itr->second.spellId, true);
         }
     }
 }

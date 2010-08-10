@@ -1306,7 +1306,7 @@ void Player::Update( uint32 p_time )
                     }
                 }
                 //120 degrees of radiant range
-                else if( !HasInArc( 2*M_PI_F/3, pVictim ) && !GetVehicle()) // - on vehicles is wrong facing set?
+                else if( !HasInArc( 2*M_PI_F/3, pVictim ) && !GetVehicleGUID()) // - on vehicles is wrong facing set?
                 {
                     setAttackTimer(BASE_ATTACK,100);
                     if(m_swingErrorMsg != 2)                // send single time (client auto repeat)
@@ -1793,9 +1793,6 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
         m_transport = NULL;
         m_movementInfo.ClearTransportData();
     }
-
-    if (GetVehicleKit())
-        GetVehicleKit()->RemoveAllPassengers();
 
     ExitVehicle();
 
@@ -2596,15 +2593,10 @@ void Player::GiveXP(uint32 xp, Unit* victim)
     if(!isAlive() && !GetBattleGroundId())
         return;
 
-    // Feanor: Add NO_XP vehicle flag
-    /*if(GetVehicleGUID() && !(m_SeatData.v_flags & VF_GIVE_EXP))
-        return;*/
+    if(GetVehicleGUID() && !(m_SeatData.v_flags & VF_GIVE_EXP))
+        return;
 
     uint32 level = getLevel();
-
-    // Northrend leveling hack
-    if(level < 66 && GetMapId() == 571)
-        return;
 
     // XP to money conversion processed in Player::RewardQuest
     if(level >= sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
@@ -4083,7 +4075,6 @@ void Player::InitVisibleBits()
     updateVisualBits.SetBit(PLAYER_BYTES_3);
     updateVisualBits.SetBit(PLAYER_DUEL_TEAM);
     updateVisualBits.SetBit(PLAYER_GUILD_TIMESTAMP);
-    updateVisualBits.SetBit(UNIT_NPC_FLAGS);
 
     // PLAYER_QUEST_LOG_x also visible bit on official (but only on party/raid)...
     for(uint16 i = PLAYER_QUEST_LOG_1_1; i < PLAYER_QUEST_LOG_25_2; i += MAX_QUEST_OFFSET)
@@ -6149,14 +6140,47 @@ ActionButton const* Player::GetActionButton(uint8 button)
 
 bool Player::SetPosition(float x, float y, float z, float orientation, bool teleport)
 {
-    if(!Unit::SetPosition(x, y, z, orientation, teleport))
+    // prevent crash when a bad coord is sent by the client
+    if(!MaNGOS::IsValidMapCoord(x,y,z,orientation))
+    {
+        DEBUG_LOG("Player::SetPosition(%f, %f, %f, %f, %d) .. bad coordinates for player %d!",x,y,z,orientation,teleport,GetGUIDLow());
         return false;
+    }
 
     Map *m = GetMap();
 
-    // group update
-    if(GetGroup())
-        SetGroupUpdateFlag(GROUP_UPDATE_FLAG_POSITION);
+    const float old_x = GetPositionX();
+    const float old_y = GetPositionY();
+    const float old_z = GetPositionZ();
+    const float old_r = GetOrientation();
+
+    if( teleport || old_x != x || old_y != y || old_z != z || old_r != orientation )
+    {
+        if (teleport || old_x != x || old_y != y || old_z != z)
+            RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_MOVE | AURA_INTERRUPT_FLAG_TURNING);
+        else
+            RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TURNING);
+
+        // move and update visible state if need
+        m->PlayerRelocation(this, x, y, z, orientation);
+
+        // reread after Map::Relocation
+        m = GetMap();
+        x = GetPositionX();
+        y = GetPositionY();
+        z = GetPositionZ();
+
+        if(!m_movementInfo.HasMovementFlag(MovementFlags(MOVEFLAG_FALLING | MOVEFLAG_FALLINGFAR)))
+        {
+            m_safeposition.x = x;
+            m_safeposition.y = y;
+            m_safeposition.z = z;
+        }
+
+        // group update
+        if(GetGroup() && (old_x != x || old_y != y))
+            SetGroupUpdateFlag(GROUP_UPDATE_FLAG_POSITION);
+    }
 
     // code block for underwater state update
     UpdateUnderwaterState(m, x, y, z);
@@ -18815,7 +18839,7 @@ bool Player::ActivateTaxiPathTo(std::vector<uint32> const& nodes, Creature* npc 
     if(npc)
     {
         // not let cheating with start flight mounted
-        if(IsMounted() || GetVehicle())
+        if(IsMounted() || GetVehicleGUID())
         {
             WorldPacket data(SMSG_ACTIVATETAXIREPLY, 4);
             data << uint32(ERR_TAXIPLAYERALREADYMOUNTED);
@@ -19972,11 +19996,8 @@ void Player::UpdateVisibilityOf(WorldObject const* viewPoint, WorldObject* targe
             if(target!=this && target->isType(TYPEMASK_UNIT))
             {
                 SendAurasForTarget((Unit*)target);
-                WorldPacket data;
-                ((Unit*)target)->BuildHeartBeatMsg(&data);
-                GetSession()->SendPacket(&data);
+                BuildVehicleInfo((Unit*)target);
             }
-
 
             if(target->GetTypeId()==TYPEID_UNIT && ((Creature*)target)->isAlive())
                 ((Creature*)target)->SendMonsterMoveWithSpeedToCurrentDestination(this);
@@ -20045,10 +20066,10 @@ void Player::SendComboPoints()
         return;
 
     WorldPacket data;
-    if(!GetVehicle())
+    if(!GetVehicleGUID())
         data.Initialize(SMSG_UPDATE_COMBO_POINTS, combotarget->GetPackGUID().size()+1);
     else{
-        if(Unit *vehicle = ObjectAccessor::GetUnit(*this, GetVehicle()->GetBase()->GetGUID()))
+       if(Unit *vehicle = ObjectAccessor::GetUnit(*this, GetVehicleGUID()))
        {
            data.Initialize(SMSG_PET_UPDATE_COMBO_POINTS, vehicle->GetPackGUID().size()+combotarget->GetPackGUID().size()+1);
            data << vehicle->GetPackGUID();
@@ -20226,11 +20247,11 @@ void Player::SendInitialPacketsAfterAddToMap()
         SendMessageToSet(&data2,true);
     }
 
-    if(GetVehicle())
+    if(GetVehicleGUID())
     {
         WorldPacket data3(SMSG_FORCE_MOVE_ROOT, 10);
         data3 << GetPackGUID();
-        data3 << uint32((m_movementInfo.GetVehicleSeatFlags() & SEAT_FLAG_CAN_CAST) ? 2 : 0);
+        data3 << (uint32)((m_SeatData.s_flags & SF_CAN_CAST) ? 2 : 0);
         SendMessageToSet(&data3,true);
     }
 

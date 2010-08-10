@@ -265,7 +265,6 @@ class ChatHandler
         bool HandleModifyRageCommand(const char* args);
         bool HandleModifyRunicPowerCommand(const char* args);
         bool HandleModifyEnergyCommand(const char* args);
-        bool HandleModifyPowerTypeCommand(const char* args);
         bool HandleModifyMoneyCommand(const char* args);
         bool HandleModifyASpeedCommand(const char* args);
         bool HandleModifySpeedCommand(const char* args);
@@ -417,6 +416,8 @@ class ChatHandler
         bool HandleReloadSpellStacksCommand(const char* args);
         bool HandleReloadSpellPetAurasCommand(const char* args);
         bool HandleReloadSpellDisabledCommand(const char* args);
+        bool HandleReloadVehicleDataCommand(const char* args);
+        bool HandleReloadVehicleSeatDataCommand(const char* args);
 
         bool HandleResetAchievementsCommand(const char * args);
         //bool HandleResetAllCommand(const char * args);

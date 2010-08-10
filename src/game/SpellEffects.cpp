@@ -2127,14 +2127,13 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 case 48610:                                 // Q:Shredder Repair
                 {
                     if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->isVehicle())
-                        if (m_caster->GetVehicleKit())
-                            m_caster->GetVehicleKit()->RemoveAllPassengers();
+                        ((Vehicle*)m_caster)->RemoveAllPassengers();
 
                     return;
                 }
                 case 45877:                                 // Q:Bring 'Em Back Alive
                 {
-                    if (m_caster->GetVehicle())
+                    if (m_caster->GetVehicleGUID() != 0)
                         m_caster->ExitVehicle();
 
                     return;
@@ -9219,13 +9218,11 @@ void Spell::DoSummonVehicle(SpellEffectIndex eff_idx)
     if(damage)
     {
         m_caster->CastSpell(v, damage, true);
-        m_caster->EnterVehicle(v->GetVehicleKit(), 0);
+        m_caster->EnterVehicle(v, 0);
     }
     int32 duration = GetSpellMaxDuration(m_spellInfo);
-
-    // Feanor: RespawnTime is proper ?
     if(duration > 0)
-        v->SetRespawnTime(duration);
+        v->SetSpawnDuration(duration);
 }
 
 void Spell::EffectSpecCount(SpellEffectIndex /*eff_idx*/)

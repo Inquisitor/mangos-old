@@ -76,7 +76,6 @@ struct CreatureInfo
     uint32  maxlevel;
     uint32  minhealth;
     uint32  maxhealth;
-    uint8   powerType;
     uint32  minmana;
     uint32  maxmana;
     uint32  armor;
@@ -118,14 +117,13 @@ struct CreatureInfo
     int32   resistance6;
     uint32  spells[CREATURE_MAX_SPELLS];
     uint32  PetSpellDataId;
-    uint32  VehicleId;
     uint32  mingold;
     uint32  maxgold;
     char const* AIName;
     uint32  MovementType;
     uint32  InhabitType;
     float   unk16;
-    float   power_mod;
+    float   unk17;
     bool    RacialLeader;
     uint32  questItems[6];
     uint32  movementId;
@@ -216,6 +214,16 @@ struct CreatureDataAddonAura
     SpellEffectIndex effect_idx;
 };
 
+struct CreatureDataAddonPassengers
+{
+    CreatureDataAddonPassengers() : entry(0), guid(0), seat_idx(-1) {}
+
+    uint32 entry;
+    uint32 guid;
+    int8 seat_idx;
+};
+
+
 // from `creature_addon` table
 struct CreatureDataAddon
 {
@@ -225,6 +233,8 @@ struct CreatureDataAddon
     uint32 bytes2;
     uint32 emote;
     uint32 splineFlags;
+    uint32 vehicle_id;
+    CreatureDataAddonPassengers const* passengers;          // loaded as char* "entry1 seatid1 entry2 seatid2 ... "
     CreatureDataAddonAura const* auras;                     // loaded as char* "spell1 eff1 spell2 eff2 ... "
 };
 
