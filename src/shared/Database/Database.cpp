@@ -193,7 +193,6 @@ bool Database::DirectPExecute(const char * format,...)
 
 bool Database::CheckRequiredField( char const* table_name, char const* required_name )
 {
-    return true;
     // check required field
     QueryResult* result = PQuery("SELECT %s FROM %s LIMIT 1",required_name,table_name);
     if(result)
