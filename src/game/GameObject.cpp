@@ -1120,11 +1120,11 @@ void GameObject::Use(Unit* user)
                 TriggeringLinkedGameObject(trapEntry, user);
 
             // Not sure if its proper but fixes some disappearing portals etc
-            if(info->goober.autoCloseTime != 0)
+            /*if(info->goober.autoCloseTime != 0)
             {
                 SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE);
                 SetLootState(GO_ACTIVATED);
-            }
+            }*/
 
             uint32 time_to_restore = info->GetAutoCloseTime();
 
