@@ -1694,8 +1694,11 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     if (!m_caster || !m_caster->isAlive())
                         return;
 
-                    ((Player*)m_originalCaster->GetCharmer())->KilledMonsterCredit(m_caster->GetEntry(), m_caster->GetGUID());
-                        return;
+                    if(m_originalCaster && m_originalCaster->GetCharmer())
+                        if(m_originalCaster->GetCharmer()->GetTypeId() == TYPEID_PLAYER)
+                            ((Player*)m_originalCaster->GetCharmer())->KilledMonsterCredit(m_caster->GetEntry(), 0);
+                    
+                    return;
                 }
                 case 51866:                                 // Kick Nass
                 {
