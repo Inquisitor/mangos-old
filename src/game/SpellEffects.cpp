@@ -2142,6 +2142,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     return;
                 }
+                case 52264:                                 // Q:Grand Theft Palomino
                 case 45877:                                 // Q:Bring 'Em Back Alive
                 {
                     if (m_caster->GetVehicleGUID() != 0)
