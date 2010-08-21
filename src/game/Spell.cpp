@@ -3141,8 +3141,11 @@ void Spell::cast(bool skipCheck)
     // Cache combo points used for spell and clear real one to prevent mutlti-casting delayed spells
     if(m_caster->GetTypeId() != TYPEID_PLAYER && ((Creature*)m_caster)->isVehicle() && NeedsComboPoints(m_spellInfo))
     {
-        ((Vehicle*)m_caster)->m_comboPointsForCast = ((Player*)m_caster->GetCharmer())->GetComboPoints();
-        ((Player*)m_caster->GetCharmer())->ClearComboPoints();
+        if(Player *driver = (Player*)m_caster->GetCharmer())
+        {
+            ((Vehicle*)m_caster)->m_comboPointsForCast = driver->GetComboPoints();
+            driver->ClearComboPoints();
+        }
     }
 
     // Okay, everything is prepared. Now we need to distinguish between immediate and evented delayed spells
@@ -3529,8 +3532,9 @@ void Spell::finish(bool ok)
         {
             if(m_caster->GetTypeId() == TYPEID_PLAYER)
                 ((Player*)m_caster)->ClearComboPoints();
-            else
-                ((Player*)m_caster->GetCharmer())->ClearComboPoints();
+            else if(Unit *driver = m_caster->GetCharmer())
+                if(driver->GetTypeId() == TYPEID_PLAYER)
+                    ((Player*)driver)->ClearComboPoints();
         }
     }
 
