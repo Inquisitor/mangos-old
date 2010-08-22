@@ -1811,9 +1811,9 @@ void BattleGroundMgr::BuildBattleGroundListPacket(WorldPacket *data, const uint6
     if (!plr)
         return;
 
-    uint32 win = MaNGOS::Honor::hk_honor_at_level(plr->getLevel(), plr->RandomBGDone() ? 15 : 30);
+    uint32 win = MaNGOS::Honor::hk_honor_at_level(plr->getLevel(), plr->RandomBGDone() ? 15 : 30) * sWorld.getConfig(CONFIG_FLOAT_RATE_HONOR);
     uint32 ap = plr->RandomBGDone() ? 0 : 25;
-    uint32 loss = MaNGOS::Honor::hk_honor_at_level(plr->getLevel(), 5);
+    uint32 loss = MaNGOS::Honor::hk_honor_at_level(plr->getLevel(), 5) * sWorld.getConfig(CONFIG_FLOAT_RATE_HONOR);
 
     data->Initialize(SMSG_BATTLEFIELD_LIST);
     *data << uint64(guid);                                  // battlemaster guid
