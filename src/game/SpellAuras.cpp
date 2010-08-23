@@ -9421,6 +9421,8 @@ void Aura::HandleAuraControlVehicle(bool apply, bool Real)
             float x,y,z;
             target->GetPosition(x,y,z);
             vehicle = caster->SummonVehicle(target->GetEntry(), x,y,z, target->GetOrientation());
+	    if(!vehicle)
+	        return;
             caster->EnterVehicle(vehicle, 0);
             if(caster->GetTypeId() == TYPEID_PLAYER)
             {
