@@ -14818,6 +14818,9 @@ void Unit::EnterVehicle(Vehicle *vehicle, int8 seat_id, bool force)
 
     RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
 
+    if(!vehicle)
+        return;
+
     Vehicle *v = vehicle->FindFreeSeat(&seat_id, force);
     if(!v)
         return;
