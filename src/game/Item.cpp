@@ -754,7 +754,7 @@ bool Item::CanBeTraded(bool mail) const
             return false;
     }
 
-    if (IsBoundByEnchant())
+    if ((!mail || !IsBoundAccountWide()) && IsBoundByEnchant())
         return false;
 
     return true;
