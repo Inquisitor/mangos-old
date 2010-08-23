@@ -9411,7 +9411,7 @@ void Aura::HandleAuraControlVehicle(bool apply, bool Real)
 
     if (!((Creature*)target)->isVehicle()) // Target is not vehicle, we need to spawn new
     {
-        if(caster->GetTypeId() != TYPEID_PLAYER) // We want non-vehicle target being processed only by players
+        if(!caster || caster->GetTypeId() != TYPEID_PLAYER) // We want non-vehicle target being processed only by players
             return;
 
         if(!apply)
