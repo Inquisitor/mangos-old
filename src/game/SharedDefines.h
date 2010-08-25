@@ -112,6 +112,8 @@ enum ReputationRank
 #define MIN_REPUTATION_RANK (REP_HATED)
 #define MAX_REPUTATION_RANK 8
 
+#define MAX_SPILLOVER_FACTIONS 4
+
 enum MoneyConstants
 {
     COPPER = 1,
@@ -263,14 +265,14 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX_NEGATIVE                    0x00000080            // 7
 #define SPELL_ATTR_EX_NOT_IN_COMBAT_TARGET        0x00000100            // 8 Spell req target not to be in combat state
 #define SPELL_ATTR_EX_UNK9                        0x00000200            // 9
-#define SPELL_ATTR_EX_NO_INITIAL_AGGRO            0x00000400            // 10 no generates threat on cast 100% (UNUSED changed to SPELL_ATTR_EX3_NO_INITIAL_AGGRO)
+#define SPELL_ATTR_EX_NO_INITIAL_AGGRO            0x00000400            // 10 no generates threat on cast 100%
 #define SPELL_ATTR_EX_UNK11                       0x00000800            // 11
 #define SPELL_ATTR_EX_UNK12                       0x00001000            // 12
 #define SPELL_ATTR_EX_UNK13                       0x00002000            // 13
 #define SPELL_ATTR_EX_UNK14                       0x00004000            // 14
 #define SPELL_ATTR_EX_DISPEL_AURAS_ON_IMMUNITY    0x00008000            // 15 remove auras on immunity
 #define SPELL_ATTR_EX_UNAFFECTED_BY_SCHOOL_IMMUNE 0x00010000            // 16 unaffected by school immunity
-#define SPELL_ATTR_EX_UNK17                       0x00020000            // 17
+#define SPELL_ATTR_EX_UNK17                       0x00020000            // 17 for auras SPELL_AURA_TRACK_CREATURES, SPELL_AURA_TRACK_RESOURCES and SPELL_AURA_TRACK_STEALTHED select non-stacking tracking spells
 #define SPELL_ATTR_EX_UNK18                       0x00040000            // 18
 #define SPELL_ATTR_EX_UNK19                       0x00080000            // 19
 #define SPELL_ATTR_EX_REQ_COMBO_POINTS1           0x00100000            // 20 Req combo points on target
@@ -303,7 +305,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX2_UNK14                      0x00004000            // 14
 #define SPELL_ATTR_EX2_UNK15                      0x00008000            // 15 not set in 3.0.3
 #define SPELL_ATTR_EX2_UNK16                      0x00010000            // 16
-#define SPELL_ATTR_EX2_NOT_RESET_AUTOSHOT         0x00020000            // 17 Hunters Shot and Stings only have this flag
+#define SPELL_ATTR_EX2_UNK17                      0x00020000            // 17 suspend weapon timer instead of resetting it, (?Hunters Shot and Stings only have this flag?)
 #define SPELL_ATTR_EX2_UNK18                      0x00040000            // 18 Only Revive pet - possible req dead pet
 #define SPELL_ATTR_EX2_NOT_NEED_SHAPESHIFT        0x00080000            // 19 does not necessarly need shapeshift
 #define SPELL_ATTR_EX2_UNK20                      0x00100000            // 20
@@ -336,7 +338,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX3_UNK14                      0x00004000            // 14 "Honorless Target" only this spells have this flag
 #define SPELL_ATTR_EX3_UNK15                      0x00008000            // 15 Auto Shoot, Shoot, Throw,  - this is autoshot flag
 #define SPELL_ATTR_EX3_UNK16                      0x00010000            // 16 no triggers effects that trigger on casting a spell??
-#define SPELL_ATTR_EX3_NO_INITIAL_AGGRO           0x00020000            // 17 Soothe Animal, 39758, Mind Soothe
+#define SPELL_ATTR_EX3_UNK17                      0x00020000            // 17 no triggers effects that trigger on casting a spell??
 #define SPELL_ATTR_EX3_UNK18                      0x00040000            // 18
 #define SPELL_ATTR_EX3_UNK19                      0x00080000            // 19
 #define SPELL_ATTR_EX3_DEATH_PERSISTENT           0x00100000            // 20 Death persistent spells
@@ -398,7 +400,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX5_UNK10                      0x00000400            // 10
 #define SPELL_ATTR_EX5_UNK11                      0x00000800            // 11
 #define SPELL_ATTR_EX5_UNK12                      0x00001000            // 12
-#define SPELL_ATTR_EX5_AFFECTED_BY_HASTE          0x00002000            // 13 haste affects duration (e.g. 8050 since 3.3.3)
+#define SPELL_ATTR_EX5_UNK13                      0x00002000            // 13 haste affects duration (e.g. 8050 since 3.3.3)
 #define SPELL_ATTR_EX5_UNK14                      0x00004000            // 14
 #define SPELL_ATTR_EX5_UNK15                      0x00008000            // 15
 #define SPELL_ATTR_EX5_UNK16                      0x00010000            // 16
@@ -430,7 +432,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX6_UNK9                       0x00000200            // 9
 #define SPELL_ATTR_EX6_UNK10                      0x00000400            // 10
 #define SPELL_ATTR_EX6_NOT_IN_RAID_INSTANCE       0x00000800            // 11 not usable in raid instance
-#define SPELL_ATTR_EX6_UNK12                      0x00001000            // 12
+#define SPELL_ATTR_EX6_UNK12                      0x00001000            // 12 for auras SPELL_AURA_TRACK_CREATURES, SPELL_AURA_TRACK_RESOURCES and SPELL_AURA_TRACK_STEALTHED select non-stacking tracking spells
 #define SPELL_ATTR_EX6_UNK13                      0x00002000            // 13
 #define SPELL_ATTR_EX6_UNK14                      0x00004000            // 14
 #define SPELL_ATTR_EX6_UNK15                      0x00008000            // 15 not set in 3.0.3
@@ -453,7 +455,6 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 
 #define MAX_TALENT_SPEC_COUNT   2
 #define MAX_GLYPH_SLOT_INDEX    6
-#define MIN_DUALSPEC_LEVEL      40
 
 enum SheathTypes
 {
@@ -518,13 +519,6 @@ enum Language
 
 #define LANGUAGES_COUNT   19
 
-enum TeamId
-{
-    TEAM_ALLIANCE = 0,
-    TEAM_HORDE,
-    TEAM_NEUTRAL,
-};
-
 enum Team
 {
     HORDE               = 67,
@@ -534,9 +528,8 @@ enum Team
     //TEAM_HORDE_FORCES        = 892,
     //TEAM_SANCTUARY           = 936,
     //TEAM_OUTLAND             = 980,
-    TEAM_OTHER               = 0,                         // if ReputationListId > 0 && Flags != FACTION_FLAG_TEAM_HEADER
+    //TEAM_OTHER               = 0,                         // if ReputationListId > 0 && Flags != FACTION_FLAG_TEAM_HEADER
 };
-const Team TeamId2Team[3] = {ALLIANCE, HORDE, TEAM_OTHER};
 
 enum SpellEffects
 {
@@ -689,7 +682,7 @@ enum SpellEffects
     SPELL_EFFECT_QUEST_FAIL                = 147,
     SPELL_EFFECT_148                       = 148,
     SPELL_EFFECT_149                       = 149,
-    SPELL_EFFECT_QUEST_START               = 150,
+    SPELL_EFFECT_150                       = 150,
     SPELL_EFFECT_TRIGGER_SPELL_2           = 151,
     SPELL_EFFECT_152                       = 152,
     SPELL_EFFECT_153                       = 153,
@@ -703,7 +696,7 @@ enum SpellEffects
     SPELL_EFFECT_TALENT_SPEC_COUNT         = 161,
     SPELL_EFFECT_TALENT_SPEC_SELECT        = 162,
     SPELL_EFFECT_163                       = 163,
-    SPELL_EFFECT_REMOVE_AURA               = 164,
+    SPELL_EFFECT_164                       = 164,
     TOTAL_SPELL_EFFECTS                    = 165
 };
 
@@ -924,7 +917,7 @@ enum AuraState
     AURA_STATE_SWIFTMEND                    = 15,           //   T |
     AURA_STATE_DEADLY_POISON                = 16,           //   T |
     AURA_STATE_ENRAGE                       = 17,           // C   |
-    AURA_STATE_BLEEDING                     = 18,           // C  T|
+    //AURA_STATE_UNKNOWN18                  = 18,           // C  t|
     //AURA_STATE_UNKNOWN19                  = 19,           //     | not used
     //AURA_STATE_UNKNOWN20                  = 20,           //  c  | only (45317 Suicide)
     //AURA_STATE_UNKNOWN21                  = 21,           //     | not used
@@ -979,7 +972,7 @@ enum Mechanics
     (1<<(MECHANIC_DAZE    -1))|(1<<(MECHANIC_SAPPED     -1)))
 
 #define IMMUNE_TO_ROOT_AND_SNARE_MASK ( \
-    (1<<(MECHANIC_ROOT-1))|(1<<(MECHANIC_SNARE-1))|(1<<(MECHANIC_FREEZE-1)))
+    (1<<(MECHANIC_ROOT-1))|(1<<(MECHANIC_SNARE-1)))
 
 #define IMMUNE_TO_ROOT_AND_STUN_MASK ( \
     (1<<(MECHANIC_ROOT-1))|(1<<(MECHANIC_STUN-1)))
@@ -1036,11 +1029,7 @@ enum WeaponAttackType
 {
     BASE_ATTACK   = 0,
     OFF_ATTACK    = 1,
-    RANGED_ATTACK = 2,
-
-    // leave these greater than or equal to MAX_ATTACK
-    NONSTACKING_MOD_MELEE = 3,
-    NONSTACKING_MOD_ALL = 4
+    RANGED_ATTACK = 2
 };
 
 #define MAX_ATTACK  3
@@ -1117,7 +1106,7 @@ enum Targets
     TARGET_SELF2                       = 87,
     TARGET_DIRECTLY_FORWARD            = 89,
     TARGET_NONCOMBAT_PET               = 90,
-    TARGET_IN_FRONT_OF_CASTER_90       = 104,
+    TARGET_IN_FRONT_OF_CASTER_30       = 104,
 };
 
 enum SpellMissInfo
@@ -1226,8 +1215,8 @@ enum GameObjectFlags
     GO_FLAG_TRIGGERED       = 0x00000040,                   //typically, summoned objects. Triggered by spell or other events
     GO_FLAG_UNK_8           = 0x00000080,
     GO_FLAG_UNK_9           = 0x00000100,                   //? Seen on type 33, possible meaning "destruct in progress"
-    GO_FLAG_DAMAGED         = 0x00000200,
-    GO_FLAG_DESTROYED       = 0x00000400
+    GO_FLAG_UNK_10          = 0x00000200,                   //? Seen on type 33
+    GO_FLAG_UNK_11          = 0x00000400                    //? Seen on type 33, possibly meaning "destructed"
 };
 
 enum TextEmotes
@@ -1926,30 +1915,35 @@ enum CreatureFamily
 
 enum CreatureTypeFlags
 {
-    CREATURE_TYPEFLAGS_TAMEABLE         = 0x000001,         // Tameable by any hunter
-    CREATURE_TYPEFLAGS_GHOST_VISIBLE    = 0x000002,         // Creatures which can _also_ be seen when player is a ghost
-    CREATURE_TYPEFLAGS_UNK3             = 0x000004,
-    CREATURE_TYPEFLAGS_UNK4             = 0x000008,
-    CREATURE_TYPEFLAGS_UNK5             = 0x000010,
-    CREATURE_TYPEFLAGS_UNK6             = 0x000020,
-    CREATURE_TYPEFLAGS_UNK7             = 0x000040,
-    CREATURE_TYPEFLAGS_UNK8             = 0x000080,
-    CREATURE_TYPEFLAGS_HERBLOOT         = 0x000100,         // Can be looted by herbalist
-    CREATURE_TYPEFLAGS_MININGLOOT       = 0x000200,         // Can be looted by miner
-    CREATURE_TYPEFLAGS_UNK11            = 0x000400,
-    CREATURE_TYPEFLAGS_UNK12            = 0x000800,         // ? Related to mounts in some way. If mounted, fight mounted, mount appear as independant when rider dies?
-    CREATURE_TYPEFLAGS_UNK13            = 0x001000,         // ? Can aid any player in combat if in range?
-    CREATURE_TYPEFLAGS_UNK14            = 0x002000,
-    CREATURE_TYPEFLAGS_UNK15            = 0x004000,         // ? Possibly not in use
-    CREATURE_TYPEFLAGS_ENGINEERLOOT     = 0x008000,         // Can be looted by engineer
-    CREATURE_TYPEFLAGS_EXOTIC           = 0x010000,         // Can be tamed by hunter as exotic pet
-    CREATURE_TYPEFLAGS_UNK18            = 0x020000,         // ? Related to vehicles/pvp?
-    CREATURE_TYPEFLAGS_UNK19            = 0x040000,         // ? Related to vehicle/siege weapons?
-    CREATURE_TYPEFLAGS_UNK20            = 0x080000,
-    CREATURE_TYPEFLAGS_UNK21            = 0x100000,
-    CREATURE_TYPEFLAGS_UNK22            = 0x200000,
-    CREATURE_TYPEFLAGS_UNK23            = 0x400000,
-    CREATURE_TYPEFLAGS_UNK24            = 0x800000          // ? First seen in 3.2.2. Related to banner/backpack of creature/companion?
+    CREATURE_TYPEFLAGS_TAMEABLE         = 0x00000001,       // Tameable by any hunter
+    CREATURE_TYPEFLAGS_GHOST_VISIBLE    = 0x00000002,       // Creatures which can _also_ be seen when player is a ghost, used in CanInteract function by client, can't be attacked
+    CREATURE_TYPEFLAGS_UNK3             = 0x00000004,       // "BOSS" flag for tooltips
+    CREATURE_TYPEFLAGS_UNK4             = 0x00000008,
+    CREATURE_TYPEFLAGS_UNK5             = 0x00000010,       // controls something in client tooltip related to creature faction
+    CREATURE_TYPEFLAGS_UNK6             = 0x00000020,       // may be sound related
+    CREATURE_TYPEFLAGS_UNK7             = 0x00000040,       // may be related to attackable / not attackable creatures with spells, used together with lua_IsHelpfulSpell/lua_IsHarmfulSpell
+    CREATURE_TYPEFLAGS_UNK8             = 0x00000080,       // has something to do with unit interaction / quest status requests
+    CREATURE_TYPEFLAGS_HERBLOOT         = 0x00000100,       // Can be looted by herbalist
+    CREATURE_TYPEFLAGS_MININGLOOT       = 0x00000200,       // Can be looted by miner
+    CREATURE_TYPEFLAGS_UNK11            = 0x00000400,       // no idea, but it used by client
+    CREATURE_TYPEFLAGS_UNK12            = 0x00000800,       // related to possibility to cast spells while mounted
+    CREATURE_TYPEFLAGS_CAN_ASSIST       = 0x00001000,       // Can aid any player (and group) in combat. Typically seen for escorting NPC's
+    CREATURE_TYPEFLAGS_UNK14            = 0x00002000,       // checked from calls in Lua_PetHasActionBar
+    CREATURE_TYPEFLAGS_UNK15            = 0x00004000,       // Lua_UnitGUID, client does guid_low &= 0xFF000000 if this flag is set
+    CREATURE_TYPEFLAGS_ENGINEERLOOT     = 0x00008000,       // Can be looted by engineer
+    CREATURE_TYPEFLAGS_EXOTIC           = 0x00010000,       // Can be tamed by hunter as exotic pet
+    CREATURE_TYPEFLAGS_UNK18            = 0x00020000,       // related to CreatureDisplayInfo and scaling in some way 
+    CREATURE_TYPEFLAGS_UNK19            = 0x00040000,       // ? Related to vehicle/siege weapons?
+    CREATURE_TYPEFLAGS_UNK20            = 0x00080000,       // may be has something to do with missiles
+    CREATURE_TYPEFLAGS_UNK21            = 0x00100000,       // no idea, but it used by client, may be related to rendering
+    CREATURE_TYPEFLAGS_UNK22            = 0x00200000,       // may be has something to do with animation (disable animation?)
+    CREATURE_TYPEFLAGS_UNK23            = 0x00400000,       // this one probably controls some creature visual
+    CREATURE_TYPEFLAGS_UNK24            = 0x00800000,       // ? First seen in 3.2.2. Related to banner/backpack of creature/companion, used in CanInteract function by client
+    CREATURE_TYPEFLAGS_UNK25            = 0x01000000,       // pet sounds related?
+    CREATURE_TYPEFLAGS_UNK26            = 0x02000000,       // this one probably controls some creature visual
+    CREATURE_TYPEFLAGS_UNK27            = 0x04000000,       // creature has no type, or forces creature to be considered as in party, may be related to creature assistance
+    CREATURE_TYPEFLAGS_UNK28            = 0x08000000,       // used in Lua_ForceGossip
+    CREATURE_TYPEFLAGS_UNK29            = 0x10000000,       // no idea, but it used by client
 };
 
 enum CreatureEliteType
@@ -2470,30 +2464,6 @@ enum DiminishingGroup
     DIMINISHING_LIMITONLY
 };
 
-/* NOTE : vehicles and seats has their own flags in DBC,
-but for now, they are too unknown for us, to use them */
-enum CustomVehicleFLags
-{
-    VF_CANT_MOVE                    = 0x0001,                   // vehicle cant move, only turn, maybe handle by some auras?
-    VF_FACTION                      = 0x0002,                   // vehicle retain its own faction
-    VF_DESPAWN_NPC                  = 0x0004,                   // vehicle will delete npc on spellclick
-    VF_DESPAWN_AT_LEAVE             = 0x0008,                   // vehicle will be deleted when rider leaves
-    VF_CAN_BE_HEALED                = 0x0010,                   // vehicle can be healed
-    VF_GIVE_EXP                     = 0x0020,                   // vehicle will give exp for killing enemies
-    VF_MOVEMENT                     = 0x0040,                   // vehicle will move on its own, not depending on rider, however rider can cast spells
-    VF_NON_SELECTABLE               = 0x0080,                    // vehicle will be not selectable after rider enter
-    VF_ALLOW_MELEE                  = 0x0100                    // Allow melee for players on vehicle   
-    //VF_HAS_FUEL                     = 0x0200,                   // TODO : find out what energy type is fuel and implement this
-};
-
-enum CustomVehicleSeatFLags
-{
-    SF_MAIN_RIDER                   = 0x0001,                   // the one who controlls vehicle, can also cast spells
-    SF_UNATTACKABLE                 = 0x0002,                   // hided inside, and unatackable until vehicle is destroyed
-    SF_CAN_CAST                     = 0x0004,                   // player/npc can rotate, and cast OWN spells
-    SF_UNACCESSIBLE                 = 0x0008                    // player cant enter this seat by normal way (only by script)
-};
-
 enum ResponseCodes
 {
     RESPONSE_SUCCESS                                       = 0x00,
@@ -2647,49 +2617,6 @@ enum BattleGroundTypeId
 };
 #define MAX_BATTLEGROUND_TYPE_ID 33
 
-
-// Daily Quests defines
-// Count of all possible events
-#define MAX_DAILY_EVENTS 20
-
-// Battleground dailies
-enum BattlegroundDailyEvent
-{
-    BG_DAILY_AV                 = 50,
-    BG_DAILY_AB                 = 51,
-    BG_DAILY_WSG                = 52,
-    BG_DAILY_EOTS               = 53,
-};
-#define MAX_BG_DAILY_EVENT        4
-
-// Heroic dungeon dailies
-enum RandomDungeon
-{
-    DUNGEON_DAILY_INGVAR        = 54,
-    DUNGEON_DAILY_KERISTRASZA   = 55,
-    DUNGEON_DAILY_LEYGUARD      = 56,
-    DUNGEON_DAILY_KINGYMIRON    = 57,
-    DUNGEON_DAILY_THARONJA      = 58,
-    DUNGEON_DAILY_GALDRAH       = 59,
-    DUNGEON_DAILY_MALGANIS      = 60,
-    DUNGEON_DAILY_SJONNIR       = 61,
-    DUNGEON_DAILY_LOKEN         = 62,
-    DUNGEON_DAILY_ANUBARAK      = 63,
-    DUNGEON_DAILY_VOLAZJ        = 64,
-    DUNGEON_DAILY_CYANIGOSA     = 65,
-};
-#define MAX_DUNGEON_DAILY_EVENT   12
-
-// Heroic dungeon trash dailies
-enum RandomTimearForesees
-{
-    TF_DAILY_CENTRIFUGE         = 66,
-    TF_DAILY_YMIRON             = 67,
-    TF_DAILY_INFINITE           = 68,
-    TF_DAILY_TITANIUM           = 69,
-};
-#define MAX_TF_DAILY_EVENT        4
-
 enum MailResponseType
 {
     MAIL_SEND               = 0,
@@ -2779,9 +2706,9 @@ enum TradeStatus
 
 // we need to stick to 1 version or half of the stuff will work for someone
 // others will not and opposite
-// will only support WoW, WoW:TBC and WoW:WotLK 3.3.3 client build 11723...
+// will only support WoW, WoW:TBC and WoW:WotLK 3.3.5a client build 12340...
 
-#define EXPECTED_MANGOSD_CLIENT_BUILD        {11723, 0}
+#define EXPECTED_MANGOSD_CLIENT_BUILD        {12340, 0}
 
 // max supported expansion level in mangosd
 // NOTE: not set it more that supported by targeted client version with all expansions installed

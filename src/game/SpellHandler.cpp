@@ -28,7 +28,6 @@
 #include "ScriptCalls.h"
 #include "Totem.h"
 #include "SpellAuras.h"
-#include "Vehicle.h"
 
 void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
 {
@@ -318,11 +317,6 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
         return;
     }
 
-    // vehicle spells are handled by CMSG_PET_CAST_SPELL,
-    // but player is still able to cast own spells
-    if(_player->GetCharmGUID() && _player->GetCharmGUID() == _player->GetVehicleGUID())
-        mover = _player;
-
     DEBUG_LOG("WORLD: got cast spell packet, spellId - %u, cast_count: %u, unk_flags %u, data length = %i",
         spellId, cast_count, unk_flags, (uint32)recvPacket.size());
 
@@ -423,7 +417,7 @@ void WorldSession::HandleCancelAuraOpcode( WorldPacket& recvPacket)
     if (!spellInfo)
         return;
 
-    if (spellInfo->Attributes & SPELL_ATTR_CANT_CANCEL || spellId == 56266)
+    if (spellInfo->Attributes & SPELL_ATTR_CANT_CANCEL)
         return;
 
     if (IsPassiveSpell(spellInfo))
@@ -463,6 +457,12 @@ void WorldSession::HandleCancelAuraOpcode( WorldPacket& recvPacket)
         return;
     }
 
+    SpellAuraHolder *holder = _player->GetSpellAuraHolder(spellId);
+
+    // not own area auras can't be cancelled (note: maybe need to check for aura on holder and not general on spell)
+    if (holder && holder->GetCasterGUID() != _player->GetGUID() && HasAreaAuraEffect(holder->GetSpellProto()))
+        return;
+
     // non channeled case
     _player->RemoveAurasDueToSpellByCancel(spellId);
 }
@@ -486,7 +486,7 @@ void WorldSession::HandlePetCancelAuraOpcode( WorldPacket& recvPacket)
         return;
     }
 
-    Creature* pet = GetPlayer()->GetMap()->GetCreatureOrPetOrVehicle(guid);
+    Creature* pet = GetPlayer()->GetMap()->GetAnyTypeCreature(guid);
 
     if(!pet)
     {
@@ -548,10 +548,8 @@ void WorldSession::HandleTotemDestroyed( WorldPacket& recvPacket)
     if (int(slotId) >= MAX_TOTEM_SLOT)
         return;
 
-    Totem* totem = GetPlayer()->GetTotem(TotemSlot(slotId));
-    if(totem && totem->GetEntry() != SENTRY_TOTEM_ENTRY)
-        ((Totem*)totem)->UnSummon();
-
+    if (Totem* totem = GetPlayer()->GetTotem(TotemSlot(slotId)))
+        totem->UnSummon();
 }
 
 void WorldSession::HandleSelfResOpcode( WorldPacket & /*recv_data*/ )
@@ -573,161 +571,22 @@ void WorldSession::HandleSpellClick( WorldPacket & recv_data )
     uint64 guid;
     recv_data >> guid;
 
-    Creature *unit = _player->GetMap()->GetCreatureOrPetOrVehicle(guid);
+    if (_player->isInCombat())                              // client prevent click and set different icon at combat state
+        return;
+
+    Creature *unit = _player->GetMap()->GetAnyTypeCreature(guid);
     if (!unit || unit->isInCombat())                        // client prevent click and set different icon at combat state
         return;
 
-    uint32 vehicleId = 0;
-    CreatureDataAddon const *cainfo = unit->GetCreatureAddon();
-    if(cainfo)
-        vehicleId = cainfo->vehicle_id;
-
-    if (_player->isInCombat() && !unit->isVehicle() && !vehicleId)                              // client prevent click and set different icon at combat state
-        return;
-
-    if(!_player->IsWithinDistInMap(unit, 10))
-        return;
-
-    // cheater?
-    if(!unit->HasFlag(UNIT_NPC_FLAGS,UNIT_NPC_FLAG_SPELLCLICK))
-        return;
-
-    // handled other (hacky) way to avoid overwriting auras
-    if(vehicleId || unit->isVehicle())
+    SpellClickInfoMapBounds clickPair = sObjectMgr.GetSpellClickInfoMapBounds(unit->GetEntry());
+    for(SpellClickInfoMap::const_iterator itr = clickPair.first; itr != clickPair.second; ++itr)
     {
-        if(!unit->isAlive())
-            return;
-
-        if(_player->GetVehicleGUID())
-            return;
-
-        // create vehicle if no one present and kill the original creature to avoid double, triple etc spawns
-        if(!unit->isVehicle())
+        if (itr->second.IsFitToRequirements(_player))
         {
-            Vehicle *v = _player->SummonVehicle(unit->GetEntry(), unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ(), unit->GetOrientation(), vehicleId);
-            if(!v)
-                return;
+            Unit *caster = (itr->second.castFlags & 0x1) ? (Unit*)_player : (Unit*)unit;
+            Unit *target = (itr->second.castFlags & 0x2) ? (Unit*)_player : (Unit*)unit;
 
-            if(v->GetVehicleFlags() & VF_DESPAWN_NPC)
-            {
-                v->SetSpawnDuration(unit->GetRespawnDelay()*IN_MILLISECONDS);
-                unit->setDeathState(JUST_DIED);
-                unit->RemoveCorpse();
-                unit->SetHealth(0);
-            }
-            unit = v;
-        }
-
-        if(((Vehicle*)unit)->GetVehicleData())
-            if(uint32 r_aura = ((Vehicle*)unit)->GetVehicleData()->req_aura)
-                if(!_player->HasAura(r_aura))
-                    return;
-
-        _player->EnterVehicle((Vehicle*)unit, 0);
-    }
-    else
-    {
-        SpellClickInfoMapBounds clickPair = sObjectMgr.GetSpellClickInfoMapBounds(unit->GetEntry());
-        for(SpellClickInfoMap::const_iterator itr = clickPair.first; itr != clickPair.second; ++itr)
-        {
-            if (itr->second.IsFitToRequirements(_player))
-            {
-                Unit *caster = (itr->second.castFlags & 0x1) ? (Unit*)_player : (Unit*)unit;
-                Unit *target = (itr->second.castFlags & 0x2) ? (Unit*)_player : (Unit*)unit;
-                if(itr->second.castFlags & 0x4)
-                {
-                    unit->setDeathState(JUST_DIED);
-                    unit->RemoveCorpse();
-                    unit->SetHealth(0);
-                }
-
-                caster->CastSpell(target, itr->second.spellId, true);
-            }
+            caster->CastSpell(target, itr->second.spellId, true);
         }
     }
-}
-
-void WorldSession::HandleMirrorImageDataRequest( WorldPacket & recv_data )
-{
-    uint64 guid;
-    recv_data >> guid;
-
-    DEBUG_LOG("WORLD: CMSG_GET_MIRRORIMAGE_DATA");
-
-    // Get unit for which data is needed by client
-    Unit *unit = ObjectAccessor::GetUnit(*_player, guid);
-    if (!unit)
-        return;
-
-    // Get creator of the unit
-    Unit *creator = unit;
-
-    // Get SPELL_AURA_247 caster
-    if (!unit->GetAurasByType(SPELL_AURA_CLONE_CASTER).empty())
-        creator = unit->GetAurasByType(SPELL_AURA_CLONE_CASTER).front()->GetCaster();
-
-    WorldPacket data(SMSG_MIRRORIMAGE_DATA, 68);
-    data << (uint64)guid;
-    data << (uint32)creator->GetDisplayId();
-    if (creator->GetTypeId()==TYPEID_PLAYER)
-    {
-        Player * pCreator = (Player *)creator;
-        data << (uint8)pCreator->getRace();
-        data << (uint8)pCreator->getGender();
-        data << (uint8)pCreator->getClass();
-        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 0); // skin
-
-        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 1); // face
-        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 2); // hair
-        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 3); // haircolor
-        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES_2, 0); // facialhair
-
-        data << (uint32)pCreator->GetGuildId();  // unk
-        static const EquipmentSlots ItemSlots[] =
-        {
-            EQUIPMENT_SLOT_HEAD,
-            EQUIPMENT_SLOT_SHOULDERS,
-            EQUIPMENT_SLOT_BODY,
-            EQUIPMENT_SLOT_CHEST,
-            EQUIPMENT_SLOT_WAIST,
-            EQUIPMENT_SLOT_LEGS,
-            EQUIPMENT_SLOT_FEET,
-            EQUIPMENT_SLOT_WRISTS,
-            EQUIPMENT_SLOT_HANDS,
-            EQUIPMENT_SLOT_BACK,
-            EQUIPMENT_SLOT_TABARD,
-            EQUIPMENT_SLOT_END
-        };
-        // Display items in visible slots
-        for (EquipmentSlots const* itr = &ItemSlots[0];*itr!=EQUIPMENT_SLOT_END;++itr)
-        {
-            if (*itr == EQUIPMENT_SLOT_HEAD && pCreator->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM))
-                data << (uint32)0;
-            else if (*itr == EQUIPMENT_SLOT_BACK && pCreator->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_CLOAK))
-                data << (uint32)0;
-            else if (Item const *item = pCreator->GetItemByPos(INVENTORY_SLOT_BAG_0, *itr))
-                data << (uint32)item->GetProto()->DisplayInfoID;
-            else
-                data << (uint32)0;
-        }
-    }
-    else
-    {
-        // Skip player data for creatures
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-    }
-    SendPacket( &data );
 }

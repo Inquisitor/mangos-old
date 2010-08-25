@@ -219,16 +219,17 @@ bool MapManager::CanPlayerEnter(uint32 mapid, Player* player)
             }
         }
 
-        player->Unmount();
-        player->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
+        // TODO: move this to a map dependent location
+        /*if(i_data && i_data->IsEncounterInProgress())
+        {
+            DEBUG_LOG("MAP: Player '%s' can't enter instance '%s' while an encounter is in progress.", player->GetName(), GetMapName());
+            player->SendTransferAborted(GetId(), TRANSFER_ABORT_ZONE_IN_COMBAT);
+            return(false);
+        }*/
         return true;
     }
     else
-    {
-        player->Unmount();
-        player->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
         return true;
-    }
 }
 
 void MapManager::DeleteInstance(uint32 mapid, uint32 instanceId)
@@ -249,7 +250,7 @@ MapManager::Update(uint32 diff)
         iter->second->Update((uint32)i_timer.GetCurrent());
 
     for (TransportSet::iterator iter = m_Transports.begin(); iter != m_Transports.end(); ++iter)
-        (*iter)->Update(i_timer.GetCurrent());
+        (*iter)->Update((uint32)i_timer.GetCurrent());
 
     i_timer.SetCurrent(0);
 }

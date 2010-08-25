@@ -189,6 +189,8 @@ enum eConfigUInt32Values
 enum eConfigInt32Values
 {
     CONFIG_INT32_DEATH_SICKNESS_LEVEL = 0,
+    CONFIG_INT32_ARENA_STARTRATING,
+    CONFIG_INT32_ARENA_STARTPERSONALRATING,
     CONFIG_INT32_VALUE_COUNT
 };
 
@@ -202,6 +204,7 @@ enum eConfigFloatValues
     CONFIG_FLOAT_RATE_POWER_RUNICPOWER_INCOME,
     CONFIG_FLOAT_RATE_POWER_RUNICPOWER_LOSS,
     CONFIG_FLOAT_RATE_POWER_FOCUS,
+    CONFIG_FLOAT_RATE_POWER_ENERGY,
     CONFIG_FLOAT_RATE_SKILL_DISCOVERY,
     CONFIG_FLOAT_RATE_DROP_ITEM_POOR,
     CONFIG_FLOAT_RATE_DROP_ITEM_NORMAL,
@@ -290,6 +293,7 @@ enum eConfigBoolValues
     CONFIG_BOOL_ALWAYS_MAX_SKILL_FOR_LEVEL,
     CONFIG_BOOL_WEATHER,
     CONFIG_BOOL_EVENT_ANNOUNCE,
+    CONFIG_BOOL_QUEST_IGNORE_RAID,
     CONFIG_BOOL_DETECT_POS_COLLISION,
     CONFIG_BOOL_RESTRICTED_LFG_CHANNEL,
     CONFIG_BOOL_SILENTLY_GM_JOIN_TO_CHANNEL,
@@ -314,6 +318,7 @@ enum eConfigBoolValues
     CONFIG_BOOL_KICK_PLAYER_ON_BAD_PACKET,
     CONFIG_BOOL_STATS_SAVE_ONLY_ON_LOGOUT,
     CONFIG_BOOL_CLEAN_CHARACTER_DB,
+    CONFIG_BOOL_VMAP_INDOOR_CHECK,
     CONFIG_BOOL_VALUE_COUNT
 };
 
@@ -411,9 +416,7 @@ enum RealmZone
 #define SCRIPT_COMMAND_PLAY_SOUND           16              // source = any object, target=any/player, datalong (sound_id), datalong2 (bitmask: 0/1=anyone/target, 0/2=with distance dependent, so 1|2 = 3 is target with distance dependent)
 #define SCRIPT_COMMAND_CREATE_ITEM          17              // source or target must be player, datalong = item entry, datalong2 = amount
 #define SCRIPT_COMMAND_DESPAWN_SELF         18              // source or target must be creature, datalong = despawn delay
-#define SCRIPT_COMMAND_ADD_QUEST_COUNT      19              // source = any, target = any, datalong = quest_id, datalong2 = quest_field, dataint = increment value
-#define SCRIPT_COMMAND_TEMP_SUMMON_OBJECT   20              // source = any (summoner), datalong=gameobject entry, datalong2=despawn_delay
-#define SCRIPT_COMMAND_SET_ENTRY            21              // source = any target = creature only, datalong = entry to transform datalong2 = bool (preserve HP and MP)
+#define SCRIPT_COMMAND_PLAY_MOVIE           19              // target can only be a player, datalog = movie id
 
 /// Storage class for commands issued for delayed execution
 struct CliCommandHolder
@@ -421,7 +424,6 @@ struct CliCommandHolder
     typedef void Print(void*, const char*);
     typedef void CommandFinished(void*, bool success);
 
-    uint32 guid;
     uint32 m_cliAccountId;                                  // 0 for console and real account id for RA/soap
     AccountTypes m_cliAccessLevel;
     void* m_callbackArg;
@@ -431,30 +433,11 @@ struct CliCommandHolder
 
     CliCommandHolder(uint32 accountId, AccountTypes cliAccessLevel, void* callbackArg, const char *command, Print* zprint, CommandFinished* commandFinished)
         : m_cliAccountId(accountId), m_cliAccessLevel(cliAccessLevel), m_callbackArg(callbackArg), m_print(zprint), m_commandFinished(commandFinished)
-     {
-        char* command_clean = NULL;
-        sscanf (command, "%d|", &guid);
-        if(guid)
-        {
-            for(uint32 x = 0; command[x]; ++x)
-                if(command[x] == '|' && command[x+1])
-                {
-                    command_clean = (char*)command + x + 1;
-                    break;
-                }
-        }
-
-        if(!command_clean)
-        {
-            command_clean = (char*)command;
-            guid = 0;
-        }
-
-        size_t len = strlen(command_clean)+1;
-
+    {
+        size_t len = strlen(command)+1;
         m_command = new char[len];
-        memcpy(m_command, command_clean, len);
-     }
+        memcpy(m_command, command, len);
+    }
 
     ~CliCommandHolder() { delete[] m_command; }
 };
@@ -521,7 +504,6 @@ class World
         time_t const& GetGameTime() const { return m_gameTime; }
         /// Uptime (in secs)
         uint32 GetUptime() const { return uint32(m_gameTime - m_startTime); }
-        uint32 GetDiffTime() const { return world_diff_time; }
         /// Next daily quests reset time
         time_t GetNextDailyQuestsResetTime() const { return m_NextDailyQuestReset; }
         time_t GetNextWeeklyQuestsResetTime() const { return m_NextWeeklyQuestReset; }
@@ -556,7 +538,7 @@ class World
 
         void UpdateSessions( uint32 diff );
 
-        /// et a server configuration element (see #eConfigFloatValues)
+        /// Get a server configuration element (see #eConfigFloatValues)
         void setConfig(eConfigFloatValues index,float value) { m_configFloatValues[index]=value; }
         /// Get a server configuration element (see #eConfigFloatValues)
         float getConfig(eConfigFloatValues rate) const { return m_configFloatValues[rate]; }
@@ -582,7 +564,7 @@ class World
 
         void KickAll();
         void KickAllLess(AccountTypes sec);
-        BanReturn BanAccount(BanMode mode, std::string nameOrIP, std::string duration, std::string reason, std::string author);
+        BanReturn BanAccount(BanMode mode, std::string nameOrIP, uint32 duration_secs, std::string reason, std::string author);
         bool RemoveBanAccount(BanMode mode, std::string nameOrIP);
 
         uint32 IncreaseScheduledScriptsCount() { return (uint32)++m_scheduledScripts; }
@@ -624,14 +606,10 @@ class World
         // callback for UpdateRealmCharacters
         void _UpdateRealmCharCount(QueryResult *resultCharCount, uint32 accountId);
 
-        // Daily initializers
         void InitDailyQuestResetTime();
         void InitWeeklyQuestResetTime();
         void ResetDailyQuests();
         void ResetWeeklyQuests();
-        void ResetBGDaily();
-        void SelectRandomDailyQuest();
-
     private:
         void setConfig(eConfigUInt32Values index, char const* fieldname, uint32 defvalue);
         void setConfig(eConfigInt32Values index, char const* fieldname, int32 defvalue);
@@ -663,8 +641,6 @@ class World
         IntervalTimer m_timers[WUPDATE_COUNT];
         uint32 mail_timer;
         uint32 mail_timer_expires;
-
-        uint32 world_diff_time;
 
         typedef UNORDERED_MAP<uint32, Weather*> WeatherMap;
         WeatherMap m_weathers;

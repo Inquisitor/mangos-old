@@ -24,7 +24,6 @@
 #include "Object.h"
 #include "LootMgr.h"
 #include "Database/DatabaseEnv.h"
-#include "Utilities/EventProcessor.h"
 
 // GCC have alternative #pragma pack(N) syntax and old gcc version not support pack(push,N), also any gcc version not support it at some platform
 #if defined( __GNUC__ )
@@ -282,7 +281,7 @@ struct GameObjectInfo
             uint32 openTextID;                              //6
             uint32 losOK;                                   //7
         } flagstand;
-        //25 GAMEOBJECT_TYPE_FISHINGHOLE                    // not implemented yet
+        //25 GAMEOBJECT_TYPE_FISHINGHOLE
         struct
         {
             uint32 radius;                                  //0 how close bobber must land for sending loot
@@ -359,15 +358,15 @@ struct GameObjectInfo
         {
             uint32 intactNumHits;                           //0
             uint32 creditProxyCreature;                     //1
-            uint32 state1Name;                              //2
+            uint32 empty1;                                  //2
             uint32 intactEvent;                             //3
-            uint32 damagedDisplayId;                        //4
+            uint32 empty2;                                  //4
             uint32 damagedNumHits;                          //5
             uint32 empty3;                                  //6
             uint32 empty4;                                  //7
             uint32 empty5;                                  //8
             uint32 damagedEvent;                            //9
-            uint32 destroyedDisplayId;                      //10
+            uint32 empty6;                                  //10
             uint32 empty7;                                  //11
             uint32 empty8;                                  //12
             uint32 empty9;                                  //13
@@ -517,15 +516,6 @@ struct GameObjectInfo
     }
 };
 
-union GameObjectValue
-{
-    //33 GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING
-    struct
-    {
-        uint32 health;
-    }destructibleBuilding;
-};
-
 // GCC have alternative #pragma pack() syntax and old gcc version not support pack(pop), also any gcc version not support it at some platform
 #if defined( __GNUC__ )
 #pragma pack()
@@ -552,7 +542,6 @@ enum GOState
 // from `gameobject`
 struct GameObjectData
 {
-    explicit GameObjectData() : dbData(true) {}
     uint32 id;                                              // entry in gamobject_template
     uint16 mapid;
     uint16 phaseMask;
@@ -568,8 +557,6 @@ struct GameObjectData
     uint32 animprogress;
     GOState go_state;
     uint8 spawnMask;
-    uint8 artKit;
-    bool dbData;
 };
 
 // For containers:  [GO_NOT_READY]->GO_READY (close)->GO_ACTIVATED (open) ->GO_JUST_DEACTIVATED->GO_READY        -> ...
@@ -598,11 +585,9 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         void AddToWorld();
         void RemoveFromWorld();
 
-        bool Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint32 animprogress, GOState go_state, uint32 artKit = 0);
+        bool Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint32 animprogress, GOState go_state);
         void Update(uint32 p_time);
-        GameObjectInfo const* GetGOInfo() const { return m_goInfo; }
-        GameObjectData const* GetGOData() const { return m_goData; }
-        GameObjectValue * GetGOValue() const { return m_goValue; }
+        GameObjectInfo const* GetGOInfo() const;
 
         bool IsTransport() const;
 
@@ -618,9 +603,6 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         // overwrite WorldObject function for proper name localization
         const char* GetNameForLocaleIdx(int32 locale_idx) const;
-
-        // Event handler
-        EventProcessor m_ObjectEvents;
 
         void SaveToDB();
         void SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask);
@@ -667,44 +649,44 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         bool isSpawnedByDefault() const { return m_spawnedByDefault; }
         uint32 GetRespawnDelay() const { return m_respawnDelayTime; }
         void Refresh();
-        void Delete(uint32 timeMSToDelete = 0);
+        void Delete();
         void getFishLoot(Loot *loot, Player* loot_owner);
         GameobjectTypes GetGoType() const { return GameobjectTypes(GetByteValue(GAMEOBJECT_BYTES_1, 1)); }
         void SetGoType(GameobjectTypes type) { SetByteValue(GAMEOBJECT_BYTES_1, 1, type); }
         GOState GetGoState() const { return GOState(GetByteValue(GAMEOBJECT_BYTES_1, 0)); }
         void SetGoState(GOState state) { SetByteValue(GAMEOBJECT_BYTES_1, 0, state); }
         uint8 GetGoArtKit() const { return GetByteValue(GAMEOBJECT_BYTES_1, 2); }
-        //void SetGoArtKit(uint8 artkit) { SetByteValue(GAMEOBJECT_BYTES_1, 2, artkit); }
-        void SetGoArtKit(uint8 artkit);
-        static void SetGoArtKit(uint8 artkit, GameObject *go, uint32 lowguid = 0);
+        void SetGoArtKit(uint8 artkit) { SetByteValue(GAMEOBJECT_BYTES_1, 2, artkit); }
         uint8 GetGoAnimProgress() const { return GetByteValue(GAMEOBJECT_BYTES_1, 3); }
         void SetGoAnimProgress(uint8 animprogress) { SetByteValue(GAMEOBJECT_BYTES_1, 3, animprogress); }
+
+        float GetObjectBoundingRadius() const;              // overwrite WorldObject version
 
         void Use(Unit* user);
 
         LootState getLootState() const { return m_lootState; }
         void SetLootState(LootState s) { m_lootState = s; }
 
-        void AddToSkillupList(uint32 PlayerGuidLow) { m_SkillupList.push_back(PlayerGuidLow); }
-        bool IsInSkillupList(uint32 PlayerGuidLow) const
+        void AddToSkillupList(Player* player);
+        bool IsInSkillupList(Player* player) const;
+        void ClearSkillupList() { m_SkillupSet.clear(); }
+        void ClearAllUsesData()
         {
-            for (std::list<uint32>::const_iterator i = m_SkillupList.begin(); i != m_SkillupList.end(); ++i)
-                if (*i == PlayerGuidLow) return true;
-            return false;
+            ClearSkillupList();
+            m_useTimes = 0;
+            m_firstUser.Clear();
+            m_UniqueUsers.clear();
         }
-        void ClearSkillupList() { m_SkillupList.clear(); }
 
         void AddUniqueUse(Player* player);
-        void AddUse() { ++m_usetimes; }
+        void AddUse() { ++m_useTimes; }
 
-        uint32 GetUseCount() const { return m_usetimes; }
-        uint32 GetUniqueUseCount() const { return m_unique_users.size(); }
+        uint32 GetUseCount() const { return m_useTimes; }
+        uint32 GetUniqueUseCount() const { return m_UniqueUsers.size(); }
 
         void SaveRespawnTime();
 
         Loot        loot;
-        uint32 m_groupLootTimer;                            // (msecs)timer used for group loot
-        uint32 m_groupLootId;                               // used to find group which is looting corpse
 
         bool hasQuest(uint32 quest_id) const;
         bool hasInvolvedQuest(uint32 quest_id) const;
@@ -723,9 +705,6 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         GameObject* LookupFishingHoleAround(float range);
 
-        void TakenDamage(uint32 damage, Unit* who = NULL);
-        void Rebuild();
-
         GridReference<GameObject> &GetGridRef() { return m_gridRef; }
 
         uint64 GetRotation() const { return m_rotation; }
@@ -737,30 +716,23 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         bool        m_spawnedByDefault;
         time_t      m_cooldownTime;                         // used as internal reaction delay time store (not state change reaction).
                                                             // For traps this: spell casting cooldown, for doors/buttons: reset time.
-        std::list<uint32> m_SkillupList;
 
-        std::set<uint32> m_unique_users;
-        uint32 m_usetimes;
+        typedef std::set<ObjectGuid> GuidsSet;
+
+        GuidsSet m_SkillupSet;                              // players that already have skill-up at GO use
+
+        uint32 m_useTimes;                                  // amount uses/charges triggered
+
+        // collected only for GAMEOBJECT_TYPE_SUMMONING_RITUAL
+        ObjectGuid m_firstUser;                             // first GO user, in most used cases owner, but in some cases no, for example non-summoned multi-use GAMEOBJECT_TYPE_SUMMONING_RITUAL
+        GuidsSet m_UniqueUsers;                             // all players who use item, some items activated after specific amount unique uses
 
         uint32 m_DBTableGuid;                               ///< For new or temporary gameobjects is 0 for saved it is lowguid
         GameObjectInfo const* m_goInfo;
-        GameObjectData const* m_goData;
-        GameObjectValue * const m_goValue;
         uint64 m_rotation;
     private:
         void SwitchDoorOrButton(bool activate, bool alternative = false);
 
         GridReference<GameObject> m_gridRef;
 };
-
-class ForcedDeleteDelayEvent : public BasicEvent
-{
-    public:
-        ForcedDeleteDelayEvent(GameObject& owner) : BasicEvent(), m_owner(owner) { }
-        bool Execute(uint64 e_time, uint32 p_time);
-
-    private:
-        GameObject& m_owner;
-};
-
 #endif

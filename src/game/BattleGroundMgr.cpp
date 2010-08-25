@@ -43,7 +43,6 @@
 #include "World.h"
 #include "WorldPacket.h"
 #include "GameEventMgr.h"
-#include "Formulas.h"
 
 #include "Policies/SingletonImp.h"
 
@@ -1230,8 +1229,8 @@ void BattleGroundMgr::BuildBattleGroundStatusPacket(WorldPacket *data, BattleGro
     *data << uint32(QueueSlot);                             // queue id (0...1) - player can be in 2 queues in time
     // uint64 in client
     *data << uint64( uint64(arenatype) | (uint64(0x0D) << 8) | (uint64(bg->GetTypeID()) << 16) | (uint64(0x1F90) << 48) );
-    *data << uint8(0);                                      // 3.3.0
-    *data << uint8(0);                                      // 3.3.0
+    *data << uint8(0);                                      // 3.3.0, some level, only saw 80...
+    *data << uint8(0);                                      // 3.3.0, some level, only saw 80...
     *data << uint32(bg->GetClientInstanceID());
     // alliance/horde for BG and skirmish/rated for Arenas
     // following displays the minimap-icon 0 = faction icon 1 = arenaicon
@@ -1245,13 +1244,15 @@ void BattleGroundMgr::BuildBattleGroundStatusPacket(WorldPacket *data, BattleGro
             break;
         case STATUS_WAIT_JOIN:                              // status_invite
             *data << uint32(bg->GetMapId());                // map id
+            *data << uint64(0);                             // 3.3.5, unknown
             *data << uint32(Time1);                         // time to remove from queue, milliseconds
             break;
         case STATUS_IN_PROGRESS:                            // status_in_progress
             *data << uint32(bg->GetMapId());                // map id
+            *data << uint64(0);                             // 3.3.5, unknown
             *data << uint32(Time1);                         // time to bg auto leave, 0 at bg start, 120000 after bg end, milliseconds
             *data << uint32(Time2);                         // time from bg start, milliseconds
-            *data << uint8(bg->isArena() ? 0 : 1);          // 0 - arena , 1 - bg
+            *data << uint8(0x1);                            // Lua_GetBattlefieldArenaFaction (bool)
             break;
         default:
             sLog.outError("Unknown BG status!");
@@ -1271,12 +1272,6 @@ void BattleGroundMgr::BuildPvpLogDataPacket(WorldPacket *data, BattleGround *bg)
         // it seems this must be according to BG_WINNER_A/H and _NOT_ BG_TEAM_A/H
         for(int i = 1; i >= 0; --i)
         {
-            /*uint32 pointsLost = (bg->m_ArenaTeamRatingChanges[i] < 0) ? abs(bg->m_ArenaTeamRatingChanges[i]) : 0;
-            uint32 pointsGained = (bg->m_ArenaTeamRatingChanges[i] > 0) ? bg->m_ArenaTeamRatingChanges[i] : 0;
-            *data << uint32(pointsLost);                        // Rating Lost
-            *data << uint32(pointsGained);                      // Rating gained
-            *data << uint32(0);                                 // Matchmaking Value
-            sLog.outDebug("rating change: %d", bg->m_ArenaTeamRatingChanges[i]);*/
             *data << uint32(bg->m_ArenaTeamRatingChanges[i]);
             *data << uint32(3999);                          // huge thanks for TOM_RUS for this!
             *data << uint32(0);                             // added again in 3.1
@@ -1328,7 +1323,7 @@ void BattleGroundMgr::BuildPvpLogDataPacket(WorldPacket *data, BattleGround *bg)
         }
         *data << (int32)itr->second->DamageDone;             // damage done
         *data << (int32)itr->second->HealingDone;            // healing done
-        switch(bg->GetTypeID(true))                          // battleground specific things
+        switch(bg->GetTypeID())                              // battleground specific things
         {
             case BATTLEGROUND_AV:
                 *data << (uint32)0x00000005;                // count of next fields
@@ -1364,7 +1359,7 @@ void BattleGroundMgr::BuildPvpLogDataPacket(WorldPacket *data, BattleGround *bg)
                 *data << (int32)0;                          // 0
                 break;
             default:
-                DEBUG_LOG("Unhandled MSG_PVP_LOG_DATA for BG id %u", bg->GetTypeID(true));
+                DEBUG_LOG("Unhandled MSG_PVP_LOG_DATA for BG id %u", bg->GetTypeID());
                 *data << (int32)0;
                 break;
         }
@@ -1401,7 +1396,7 @@ void BattleGroundMgr::BuildPlayerLeftBattleGroundPacket(WorldPacket *data, const
 void BattleGroundMgr::BuildPlayerJoinedBattleGroundPacket(WorldPacket *data, Player *plr)
 {
     data->Initialize(SMSG_BATTLEGROUND_PLAYER_JOINED, 8);
-    *data << uint64(plr->GetGUID());
+    *data << plr->GetObjectGuid();
 }
 
 BattleGround * BattleGroundMgr::GetBattleGroundThroughClientInstance(uint32 instanceId, BattleGroundTypeId bgTypeId)
@@ -1483,8 +1478,8 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
     //for arenas there is random map used
     if (bg_template->isArena())
     {
-        BattleGroundTypeId arenas[] = {BATTLEGROUND_NA, BATTLEGROUND_BE, BATTLEGROUND_RL, BATTLEGROUND_DS, BATTLEGROUND_RV};
-        uint32 arena_num = urand(0,3); // CHANGE ME : to enable two other arenas
+        BattleGroundTypeId arenas[] = {BATTLEGROUND_NA, BATTLEGROUND_BE, BATTLEGROUND_RL};
+        uint32 arena_num = urand(0,2);
         bgTypeId = arenas[arena_num];
         bg_template = GetBattleGroundTemplate(bgTypeId);
         if (!bg_template)
@@ -1492,22 +1487,6 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
             sLog.outError("BattleGround: CreateNewBattleGround - bg template not found for %u", bgTypeId);
             return NULL;
         }
-    }
-
-    bool isRandom = false;
-
-    if(bgTypeId==BATTLEGROUND_RB)
-    {
-        BattleGroundTypeId rand_bgs[] = {BATTLEGROUND_WS, BATTLEGROUND_AB, BATTLEGROUND_EY, BATTLEGROUND_AV/*, BATTLEGROUND_SA, BATTLEGROUND_IC*/};
-        uint32 bg_num = urand(0,3/*5*/);
-        bgTypeId = rand_bgs[bg_num];
-        bg_template = GetBattleGroundTemplate(bgTypeId);
-        if (!bg_template)
-        {
-            sLog.outError("BattleGround: CreateNewBattleGround - bg template not found for %u", bgTypeId);
-            return NULL;
-        }
-        isRandom = true;
     }
 
     BattleGround *bg = NULL;
@@ -1564,7 +1543,7 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
     // will also set m_bgMap, instanceid
     sMapMgr.CreateBgMap(bg->GetMapId(), bg);
 
-    bg->SetClientInstanceID(CreateClientVisibleInstanceId(isRandom ? BATTLEGROUND_RB : bgTypeId, bracketEntry->GetBracketId()));
+    bg->SetClientInstanceID(CreateClientVisibleInstanceId(bgTypeId, bracketEntry->GetBracketId()));
 
     // reset the new bg (set status to status_wait_queue from status_none)
     bg->Reset();
@@ -1573,9 +1552,6 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
     bg->SetStatus(STATUS_WAIT_JOIN);
     bg->SetArenaType(arenaType);
     bg->SetRated(isRated);
-    bg->SetRandom(isRandom);
-    bg->SetTypeID(isRandom ? BATTLEGROUND_RB : bgTypeId);
-    bg->SetRandomTypeID(bgTypeId);
 
     return bg;
 }
@@ -1695,7 +1671,7 @@ void BattleGroundMgr::CreateInitialBattleGrounds()
         }
         else
         {
-            sLog.outErrorDb("Table `battleground_template` for id %u have non-existed WorldSafeLocs.dbc id %u in field `AllianceStartLoc`. BG not created.", bgTypeID, start1);
+            sLog.outErrorDb("Table `battleground_template` for id %u have nonexistent WorldSafeLocs.dbc id %u in field `AllianceStartLoc`. BG not created.", bgTypeID, start1);
             continue;
         }
 
@@ -1718,7 +1694,7 @@ void BattleGroundMgr::CreateInitialBattleGrounds()
         }
         else
         {
-            sLog.outErrorDb("Table `battleground_template` for id %u have non-existed WorldSafeLocs.dbc id %u in field `HordeStartLoc`. BG not created.", bgTypeID, start2);
+            sLog.outErrorDb("Table `battleground_template` for id %u have nonexistent WorldSafeLocs.dbc id %u in field `HordeStartLoc`. BG not created.", bgTypeID, start2);
             continue;
         }
 
@@ -1781,8 +1757,7 @@ void BattleGroundMgr::DistributeArenaPoints()
         //update to database
         CharacterDatabase.PExecute("UPDATE characters SET arenaPoints = arenaPoints + '%u' WHERE guid = '%u'", plr_itr->second, plr_itr->first);
         //add points if player is online
-        Player* pl = sObjectMgr.GetPlayer(plr_itr->first);
-        if (pl)
+        if (Player* pl = sObjectMgr.GetPlayer(ObjectGuid(HIGHGUID_PLAYER, plr_itr->first)))
             pl->ModifyArenaPoints(plr_itr->second);
     }
 
@@ -1806,37 +1781,33 @@ void BattleGroundMgr::DistributeArenaPoints()
     sWorld.SendWorldText(LANG_DIST_ARENA_POINTS_END);
 }
 
-void BattleGroundMgr::BuildBattleGroundListPacket(WorldPacket *data, const uint64& guid, Player* plr, BattleGroundTypeId bgTypeId, uint8 fromWhere)
+void BattleGroundMgr::BuildBattleGroundListPacket(WorldPacket *data, ObjectGuid guid, Player* plr, BattleGroundTypeId bgTypeId, uint8 fromWhere)
 {
     if (!plr)
         return;
 
-    uint32 win = MaNGOS::Honor::hk_honor_at_level(plr->getLevel(), plr->RandomBGDone() ? 15 : 30) * sWorld.getConfig(CONFIG_FLOAT_RATE_HONOR);
-    uint32 ap = plr->RandomBGDone() ? 0 : 25;
-    uint32 loss = MaNGOS::Honor::hk_honor_at_level(plr->getLevel(), 5) * sWorld.getConfig(CONFIG_FLOAT_RATE_HONOR);
-
     data->Initialize(SMSG_BATTLEFIELD_LIST);
-    *data << uint64(guid);                                  // battlemaster guid
+    *data << guid;                                          // battlemaster guid
     *data << uint8(fromWhere);                              // from where you joined
     *data << uint32(bgTypeId);                              // battleground id
     *data << uint8(0);                                      // unk
     *data << uint8(0);                                      // unk
 
     // Rewards
-    *data << uint8(plr->RandomBGDone());                    // 3.3.3 hasWin
-    *data << uint32(win);                                   // 3.3.3 winHonor
-    *data << uint32(ap);                                    // 3.3.3 winArena
-    *data << uint32(loss);                                  // 3.3.3 lossHonor
+    *data << uint8(0);                                      // 3.3.3 hasWin
+    *data << uint32(0);                                     // 3.3.3 winHonor
+    *data << uint32(0);                                     // 3.3.3 winArena
+    *data << uint32(0);                                     // 3.3.3 lossHonor
 
-    uint8 isRandom = (bgTypeId == BATTLEGROUND_RB ? 1 : 0);
+    uint8 isRandom = 0;
     *data << uint8(isRandom);                               // 3.3.3 isRandom
     if(isRandom)
     {
         // Rewards (random)
-        *data << uint8(plr->RandomBGDone());                // 3.3.3 hasWin_Random
-        *data << uint32(win);                               // 3.3.3 winHonor_Random
-        *data << uint32(ap);                                // 3.3.3 winArena_Random
-        *data << uint32(loss);                              // 3.3.3 lossHonor_Random
+        *data << uint8(0);                                  // 3.3.3 hasWin_Random
+        *data << uint32(0);                                 // 3.3.3 winHonor_Random
+        *data << uint32(0);                                 // 3.3.3 winArena_Random
+        *data << uint32(0);                                 // 3.3.3 lossHonor_Random
     }
 
     if(bgTypeId == BATTLEGROUND_AA)                         // arena
@@ -1883,7 +1854,7 @@ void BattleGroundMgr::SendToBattleGround(Player *pl, uint32 instanceId, BattleGr
     }
     else
     {
-        sLog.outError("player %u trying to port to non-existent bg instance %u",pl->GetGUIDLow(), instanceId);
+        sLog.outError("player %u trying to port to nonexistent bg instance %u",pl->GetGUIDLow(), instanceId);
     }
 }
 
@@ -1892,9 +1863,7 @@ bool BattleGroundMgr::IsArenaType(BattleGroundTypeId bgTypeId)
     return ( bgTypeId == BATTLEGROUND_AA ||
         bgTypeId == BATTLEGROUND_BE ||
         bgTypeId == BATTLEGROUND_NA ||
-        bgTypeId == BATTLEGROUND_RL ||
-        bgTypeId == BATTLEGROUND_DS ||
-        bgTypeId == BATTLEGROUND_RV);
+        bgTypeId == BATTLEGROUND_RL );
 }
 
 BattleGroundQueueTypeId BattleGroundMgr::BGQueueTypeId(BattleGroundTypeId bgTypeId, uint8 arenaType)
@@ -1914,7 +1883,7 @@ BattleGroundQueueTypeId BattleGroundMgr::BGQueueTypeId(BattleGroundTypeId bgType
         case BATTLEGROUND_IC:
             return BATTLEGROUND_QUEUE_IC;
         case BATTLEGROUND_RB:
-            return BATTLEGROUND_QUEUE_RB;
+            return BATTLEGROUND_QUEUE_NONE;
         case BATTLEGROUND_AA:
         case BATTLEGROUND_NA:
         case BATTLEGROUND_RL:
@@ -1953,14 +1922,12 @@ BattleGroundTypeId BattleGroundMgr::BGTemplateId(BattleGroundQueueTypeId bgQueue
             return BATTLEGROUND_SA;
         case BATTLEGROUND_QUEUE_IC:
             return BATTLEGROUND_IC;
-        case BATTLEGROUND_QUEUE_RB:
-            return BATTLEGROUND_RB;
         case BATTLEGROUND_QUEUE_2v2:
         case BATTLEGROUND_QUEUE_3v3:
         case BATTLEGROUND_QUEUE_5v5:
             return BATTLEGROUND_AA;
         default:
-            return BattleGroundTypeId(0);                   // used for unknown template (it existed and do nothing)
+            return BattleGroundTypeId(0);                   // used for unknown template (it exist and do nothing)
     }
 }
 
@@ -2065,7 +2032,7 @@ void BattleGroundMgr::LoadBattleMastersEntry()
         uint32 bgTypeId  = fields[1].GetUInt32();
         if (!sBattlemasterListStore.LookupEntry(bgTypeId))
         {
-            sLog.outErrorDb("Table `battlemaster_entry` contain entry %u for not existed battleground type %u, ignored.",entry,bgTypeId);
+            sLog.outErrorDb("Table `battlemaster_entry` contain entry %u for nonexistent battleground type %u, ignored.",entry,bgTypeId);
             continue;
         }
 
@@ -2087,6 +2054,7 @@ HolidayIds BattleGroundMgr::BGTypeToWeekendHolidayId(BattleGroundTypeId bgTypeId
         case BATTLEGROUND_EY: return HOLIDAY_CALL_TO_ARMS_EY;
         case BATTLEGROUND_WS: return HOLIDAY_CALL_TO_ARMS_WS;
         case BATTLEGROUND_SA: return HOLIDAY_CALL_TO_ARMS_SA;
+        case BATTLEGROUND_AB: return HOLIDAY_CALL_TO_ARMS_AB;
         default: return HOLIDAY_NONE;
     }
 }
@@ -2099,6 +2067,7 @@ BattleGroundTypeId BattleGroundMgr::WeekendHolidayIdToBGType(HolidayIds holiday)
         case HOLIDAY_CALL_TO_ARMS_EY: return BATTLEGROUND_EY;
         case HOLIDAY_CALL_TO_ARMS_WS: return BATTLEGROUND_WS;
         case HOLIDAY_CALL_TO_ARMS_SA: return BATTLEGROUND_SA;
+        case HOLIDAY_CALL_TO_ARMS_AB: return BATTLEGROUND_AB;
         default: return BATTLEGROUND_TYPE_NONE;
     }
 }
@@ -2185,7 +2154,7 @@ void BattleGroundMgr::LoadBattleEventIndexes()
         // checking for NULL - through right outer join this will mean following:
         if (fields[5].GetUInt32() != dbTableGuidLow)
         {
-            sLog.outErrorDb("BattleGroundEvent: %s with nonexistant guid %u for event: map:%u, event1:%u, event2:%u (\"%s\")",
+            sLog.outErrorDb("BattleGroundEvent: %s with nonexistent guid %u for event: map:%u, event1:%u, event2:%u (\"%s\")",
                 (gameobject) ? "gameobject" : "creature", dbTableGuidLow, map, events.event1, events.event2, description);
             continue;
         }
@@ -2202,7 +2171,7 @@ void BattleGroundMgr::LoadBattleEventIndexes()
             // we have an event which shouldn't exist
             else
             {
-                sLog.outErrorDb("BattleGroundEvent: %s with guid %u is registered, for a nonexistant event: map:%u, event1:%u, event2:%u",
+                sLog.outErrorDb("BattleGroundEvent: %s with guid %u is registered, for a nonexistent event: map:%u, event1:%u, event2:%u",
                     (gameobject) ? "gameobject" : "creature", dbTableGuidLow, map, events.event1, events.event2);
                 continue;
             }

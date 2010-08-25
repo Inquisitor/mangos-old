@@ -16,13 +16,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "Object.h"
 #include "Player.h"
 #include "BattleGround.h"
 #include "BattleGroundRV.h"
-#include "ObjectMgr.h"
 #include "Language.h"
-#include "WorldPacket.h"
 
 BattleGroundRV::BattleGroundRV()
 {
@@ -54,7 +51,6 @@ void BattleGroundRV::StartingEventCloseDoors()
 
 void BattleGroundRV::StartingEventOpenDoors()
 {
-    OpenDoorEvent(BG_EVENT_DOOR);
 }
 
 void BattleGroundRV::AddPlayer(Player *plr)
@@ -64,77 +60,19 @@ void BattleGroundRV::AddPlayer(Player *plr)
     BattleGroundRVScore* sc = new BattleGroundRVScore;
 
     m_PlayerScores[plr->GetGUID()] = sc;
-
-    UpdateWorldState(0xe11, GetAlivePlayersCountByTeam(ALLIANCE));
-    UpdateWorldState(0xe10, GetAlivePlayersCountByTeam(HORDE));
 }
 
-void BattleGroundRV::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
+void BattleGroundRV::RemovePlayer(Player * /*plr*/, uint64 /*guid*/)
 {
-    if (GetStatus() == STATUS_WAIT_LEAVE)
-        return;
-
-    UpdateWorldState(0xe11, GetAlivePlayersCountByTeam(ALLIANCE));
-    UpdateWorldState(0xe10, GetAlivePlayersCountByTeam(HORDE));
-
-    CheckArenaWinConditions();
-}
- 
-void BattleGroundRV::HandleKillPlayer(Player *player, Player *killer)
-{
-    if (GetStatus() != STATUS_IN_PROGRESS)
-        return;
-
-    if (!killer)
-    {
-        sLog.outError("Killer player not found");
-        return;
-    }
-
-    BattleGround::HandleKillPlayer(player,killer);
-
-    UpdateWorldState(0xe11, GetAlivePlayersCountByTeam(ALLIANCE));
-    UpdateWorldState(0xe10, GetAlivePlayersCountByTeam(HORDE));
-
-    CheckArenaWinConditions();
-}
- 
-bool BattleGroundRV::HandlePlayerUnderMap(Player *player)
-{
-    player->TeleportTo(GetMapId(),763.5f, -284.0f, 28.276f, player->GetOrientation(), false);
-    return true;
 }
 
-void BattleGroundRV::HandleAreaTrigger(Player *Source, uint32 Trigger)
+void BattleGroundRV::HandleKillPlayer(Player* player, Player* killer)
 {
-    if (GetStatus() != STATUS_IN_PROGRESS)
-        return;
-
-    switch(Trigger)
-    {
-        case 5224:
-        case 5226:
-            break;
-        case 5473:  // firewall
-        case 5474:  // firewall
-            break;
-        default:
-            sLog.outError("WARNING: Unhandled AreaTrigger in Battleground: %u", Trigger);
-            Source->GetSession()->SendAreaTriggerMessage("Warning: Unhandled AreaTrigger in Battleground: %u", Trigger);
-            break;
-    }
+    BattleGround::HandleKillPlayer(player, killer);
 }
 
-void BattleGroundRV::FillInitialWorldStates(WorldPacket &data)
+void BattleGroundRV::HandleAreaTrigger(Player * /*Source*/, uint32 /*Trigger*/)
 {
-    data << uint32(0xe11) << uint32(GetAlivePlayersCountByTeam(ALLIANCE));        // 7
-    data << uint32(0xe10) << uint32(GetAlivePlayersCountByTeam(HORDE));           // 8
-    data << uint32(0xe1a) << uint32(1);           // 9
-}
-
-void BattleGroundRV::Reset()
-{
-    BattleGround::Reset();
 }
 
 bool BattleGroundRV::SetupBattleGround()

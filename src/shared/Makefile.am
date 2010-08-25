@@ -17,7 +17,7 @@
 ## Process this file with automake to produce Makefile.in
 
 ## Sub-directories to parse
-SUBDIRS = Auth Config Database vmap pathfinding
+SUBDIRS = Auth Config Database vmap
 
 ## CPP flags for includes, defines, etc.
 AM_CPPFLAGS = $(MANGOS_INCLUDES) -I$(top_builddir)/src/shared -I$(srcdir) -I$(srcdir)/../../dep/include -I$(srcdir)/../framework -I$(srcdir)/../shared -I$(srcdir)/../../dep/include/g3dlite  -DSYSCONFDIR=\"$(sysconfdir)/\"
@@ -63,13 +63,8 @@ $(REVISION_FILE) : $(top_builddir)/src/tools/genrevision/genrevision FORCE
 	$(top_builddir)/src/tools/genrevision/genrevision $(top_srcdir)
 
 ## Additional files to include when running 'make dist'
-#  Disabled packet logger
-EXTRA_DIST = \
-	PacketLog.cpp \
-	PacketLog.h
-
 # System configuration
-EXTRA_DIST += \
+EXTRA_DIST = \
 	SystemConfig.h
 
 # System Win32 files

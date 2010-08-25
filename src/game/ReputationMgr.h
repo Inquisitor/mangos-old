@@ -53,7 +53,7 @@ typedef std::map<uint32,ReputationRank> ForcedReactions;
 class Player;
 class QueryResult;
 
-class MANGOS_DLL_SPEC ReputationMgr
+class ReputationMgr
 {
     public:                                                 // constructors and global modifiers
         explicit ReputationMgr(Player* owner) : m_player(owner),
@@ -121,7 +121,6 @@ class MANGOS_DLL_SPEC ReputationMgr
         void SendInitialReputations();
         void SendForceReactions();
         void SendState(FactionState const* faction) const;
-        void SendStates() const;
 
     private:                                                // internal helper functions
         void Initialize();

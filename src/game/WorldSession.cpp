@@ -142,7 +142,7 @@ void WorldSession::QueuePacket(WorldPacket* new_packet)
 /// Logging helper for unexpected opcodes
 void WorldSession::LogUnexpectedOpcode(WorldPacket* packet, const char *reason)
 {
-    sLog.outDebug( "SESSION: received unexpected opcode %s (0x%.4X) %s",
+    sLog.outError( "SESSION: received unexpected opcode %s (0x%.4X) %s",
         LookupOpcodeName(packet->GetOpcode()),
         packet->GetOpcode(),
         reason);
@@ -151,7 +151,7 @@ void WorldSession::LogUnexpectedOpcode(WorldPacket* packet, const char *reason)
 /// Logging helper for unexpected opcodes
 void WorldSession::LogUnprocessedTail(WorldPacket *packet)
 {
-    sLog.outDebug( "SESSION: opcode %s (0x%.4X) have unprocessed tail data (read stop at " SIZEFMTD " from " SIZEFMTD ")",
+    sLog.outError( "SESSION: opcode %s (0x%.4X) have unprocessed tail data (read stop at " SIZEFMTD " from " SIZEFMTD ")",
         LookupOpcodeName(packet->GetOpcode()),
         packet->GetOpcode(),
         packet->rpos(),packet->wpos());
@@ -221,7 +221,7 @@ bool WorldSession::Update(uint32 /*diff*/)
                     ExecuteOpcode(opHandle, packet);
                     break;
                 case STATUS_NEVER:
-                    sLog.outDebug( "SESSION: received not allowed opcode %s (0x%.4X)",
+                    sLog.outError( "SESSION: received not allowed opcode %s (0x%.4X)",
                         LookupOpcodeName(packet->GetOpcode()),
                         packet->GetOpcode());
                     break;
@@ -231,7 +231,7 @@ bool WorldSession::Update(uint32 /*diff*/)
                         packet->GetOpcode());
                     break;
                 default:
-                    sLog.outDebug("SESSION: received wrong-status-req opcode %s (0x%.4X)",
+                    sLog.outError("SESSION: received wrong-status-req opcode %s (0x%.4X)",
                         LookupOpcodeName(packet->GetOpcode()),
                         packet->GetOpcode());
                     break;
@@ -351,10 +351,6 @@ void WorldSession::LogoutPlayer(bool Save)
         if(BattleGround *bg = _player->GetBattleGround())
             bg->EventPlayerLoggedOut(_player);
 
-        //remove Demonic Circle aura
-        if( _player->HasAura(48018, EFFECT_INDEX_0) )
-            _player->RemoveAura(48018, EFFECT_INDEX_0);
-
         ///- Teleport to home if the player is in an invalid instance
         if(!_player->m_InstanceValid && !_player->isGameMaster())
         {
@@ -374,15 +370,6 @@ void WorldSession::LogoutPlayer(bool Save)
             {
                 _player->RemoveBattleGroundQueueId(bgQueueTypeId);
                 sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(_player->GetGUID(), true);
-                if( bgQueueTypeId == BATTLEGROUND_QUEUE_2v2 || bgQueueTypeId == BATTLEGROUND_QUEUE_3v3 || bgQueueTypeId == BATTLEGROUND_QUEUE_5v5 )
-                    if (Group* group = ((Player*)_player)->GetGroup())
-                        for(GroupReference *itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
-                            if (Player* member = itr->getSource())
-                                if(BattleGroundQueueTypeId bgQueueTypeId = member->GetBattleGroundQueueTypeId(i))
-                                {
-                                    member->RemoveBattleGroundQueueId(bgQueueTypeId);
-                                    sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(member->GetGUID(), true);
-                                }
             }
         }
 
@@ -392,19 +379,19 @@ void WorldSession::LogoutPlayer(bool Save)
         LoginDatabase.PExecute("UPDATE account SET active_realm_id = 0 WHERE id = '%u'", GetAccountId());
 
         ///- If the player is in a guild, update the guild roster and broadcast a logout message to other guild members
-        Guild *guild = sObjectMgr.GetGuildById(_player->GetGuildId());
-        if(guild)
+        if (Guild *guild = sObjectMgr.GetGuildById(_player->GetGuildId()))
         {
-            guild->SetMemberStats(_player->GetGUID());
-            guild->UpdateLogoutTime(_player->GetGUID());
+            if (MemberSlot* slot = guild->GetMemberSlot(_player->GetObjectGuid()))
+            {
+                slot->SetMemberStats(_player);
+                slot->UpdateLogoutTime();
+            }
 
-            guild->BroadcastEvent(GE_SIGNED_OFF, _player->GetGUID(), 1, _player->GetName(), "", "");
+            guild->BroadcastEvent(GE_SIGNED_OFF, _player->GetGUID(), _player->GetName());
         }
 
         ///- Remove pet
         _player->RemovePet(NULL, PET_SAVE_AS_CURRENT, true);
-        ///- Remove non melee spells
-        _player->InterruptNonMeleeSpells(true);
 
         ///- empty buyback items and save the player in the database
         // some save parts only correctly work in case player present in map/player_lists (pets, etc)
@@ -620,7 +607,7 @@ void WorldSession::LoadAccountData(QueryResult* result, uint32 mask)
             continue;
         }
 
-        m_accountData[type].Time = fields[1].GetUInt32();
+        m_accountData[type].Time = time_t(fields[1].GetUInt64());
         m_accountData[type].Data = fields[2].GetCppString();
 
     } while (result->NextRow());
@@ -638,7 +625,7 @@ void WorldSession::SetAccountData(AccountDataType type, time_t time_, std::strin
         CharacterDatabase.PExecute("DELETE FROM account_data WHERE account='%u' AND type='%u'", acc, type);
         std::string safe_data = data;
         CharacterDatabase.escape_string(safe_data);
-        CharacterDatabase.PExecute("INSERT INTO account_data VALUES ('%u','%u','%u','%s')", acc, type, (uint32)time_, safe_data.c_str());
+        CharacterDatabase.PExecute("INSERT INTO account_data VALUES ('%u','%u','" UI64FMTD "','%s')", acc, type, uint64(time_), safe_data.c_str());
         CharacterDatabase.CommitTransaction ();
     }
     else
@@ -651,7 +638,7 @@ void WorldSession::SetAccountData(AccountDataType type, time_t time_, std::strin
         CharacterDatabase.PExecute("DELETE FROM character_account_data WHERE guid='%u' AND type='%u'", m_GUIDLow, type);
         std::string safe_data = data;
         CharacterDatabase.escape_string(safe_data);
-        CharacterDatabase.PExecute("INSERT INTO character_account_data VALUES ('%u','%u','%u','%s')", m_GUIDLow, type, (uint32)time_, safe_data.c_str());
+        CharacterDatabase.PExecute("INSERT INTO character_account_data VALUES ('%u','%u','" UI64FMTD "','%s')", m_GUIDLow, type, uint64(time_), safe_data.c_str());
         CharacterDatabase.CommitTransaction ();
     }
 

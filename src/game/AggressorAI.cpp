@@ -78,7 +78,7 @@ void AggressorAI::EnterEvadeMode()
         return;
     }
 
-    Unit* victim = ObjectAccessor::GetUnit(*m_creature, i_victimGuid );
+    Unit* victim = m_creature->GetMap()->GetUnit(i_victimGuid);
 
     if (!victim)
     {
@@ -92,7 +92,7 @@ void AggressorAI::EnterEvadeMode()
     {
         DEBUG_FILTER_LOG(LOG_FILTER_AI_AND_MOVEGENSS, "Creature stopped attacking, victim is in stealth [guid=%u]", m_creature->GetGUIDLow());
     }
-    else if (victim->isInFlight())
+    else if (victim->IsTaxiFlying())
     {
         DEBUG_FILTER_LOG(LOG_FILTER_AI_AND_MOVEGENSS, "Creature stopped attacking, victim is in flight [guid=%u]", m_creature->GetGUIDLow());
     }
@@ -103,7 +103,7 @@ void AggressorAI::EnterEvadeMode()
         //i_tracker.Reset(TIME_INTERVAL_LOOK);
     }
 
-    if (!m_creature->isCharmed() && !m_creature->GetVehicleGUID())
+    if (!m_creature->isCharmed())
     {
         m_creature->RemoveAllAuras();
 

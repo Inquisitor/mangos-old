@@ -30,8 +30,8 @@
 #include <string>
 
 #define CONTACT_DISTANCE            0.5f
-#define INTERACTION_DISTANCE        5.7f //5.0f
-#define ATTACK_DISTANCE             4.1f //5.0f
+#define INTERACTION_DISTANCE        5.0f
+#define ATTACK_DISTANCE             5.0f
 #define MAX_VISIBILITY_DISTANCE     333.0f      // max distance for visible object show, limited in 333 yards
 #define DEFAULT_VISIBILITY_DISTANCE 90.0f       // default visible distance, 90 yards on continents
 #define DEFAULT_VISIBILITY_INSTANCE 120.0f      // default visible distance in instances, 120 yards
@@ -67,13 +67,10 @@ class UpdateData;
 class WorldSession;
 class Creature;
 class Player;
-class GameObject;
 class Unit;
 class Map;
 class UpdateMask;
 class InstanceData;
-class ZoneScript;
-class Vehicle;
 
 typedef UNORDERED_MAP<Player*, UpdateData> UpdateDataMapType;
 
@@ -278,7 +275,7 @@ class MANGOS_DLL_SPEC Object
 
         void ApplyModFlag64( uint16 index, uint64 flag, bool apply)
         {
-            if(apply) SetFlag64(index,flag); else RemoveFlag64(index,flag);
+            if(apply) SetFlag64(index,flag); else RemoveFlag64(index, flag);
         }
 
         void ClearUpdateMask(bool remove);
@@ -374,14 +371,10 @@ class MANGOS_DLL_SPEC WorldObject : public Object
             GetNearPoint(obj, x, y, z, obj->GetObjectBoundingRadius(), distance2d, GetAngle(obj));
         }
 
-        float GetObjectBoundingRadius() const
-        {
-            return ( m_valuesCount > UNIT_FIELD_BOUNDINGRADIUS ) ? m_floatValues[UNIT_FIELD_BOUNDINGRADIUS] : DEFAULT_WORLD_OBJECT_SIZE;
-        }
+        virtual float GetObjectBoundingRadius() const { return DEFAULT_WORLD_OBJECT_SIZE; }
 
         bool IsPositionValid() const;
         void UpdateGroundPositionZ(float x, float y, float &z) const;
-        bool IsAtGroundLevel(float x, float y, float z) const;
 
         void GetRandomPoint( float x, float y, float z, float distance, float &rand_x, float &rand_y, float &rand_z ) const;
 
@@ -404,7 +397,6 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 
         virtual const char* GetNameForLocaleIdx(int32 /*locale_idx*/) const { return GetName(); }
 
-        float GetDistance(const float x, const float y, const float z, const float sx, const float sy, const float sz) const;
         float GetDistance( const WorldObject* obj ) const;
         float GetDistance(float x, float y, float z) const;
         float GetDistance2d(const WorldObject* obj) const;
@@ -412,10 +404,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         float GetDistanceZ(const WorldObject* obj) const;
         bool IsInMap(const WorldObject* obj) const
         {
-            if(obj)
-                return IsInWorld() && obj->IsInWorld() && (GetMap() == obj->GetMap()) && InSamePhase(obj);
-            else
-                return false;
+            return IsInWorld() && obj->IsInWorld() && (GetMap() == obj->GetMap()) && InSamePhase(obj);
         }
         bool IsWithinDist3d(float x, float y, float z, float dist2compare) const;
         bool IsWithinDist2d(float x, float y, float dist2compare) const;
@@ -437,12 +426,6 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         bool IsInRange(WorldObject const* obj, float minRange, float maxRange, bool is3D = true) const;
         bool IsInRange2d(float x, float y, float minRange, float maxRange) const;
         bool IsInRange3d(float x, float y, float z, float minRange, float maxRange) const;
-
-        bool IsInBetween(const WorldObject *obj1, const WorldObject *obj2, float size = 0) const;
-        float GetExactDist2dSq(float x, float y) const
-        { float dx = m_positionX - x; float dy = m_positionY - y; return dx*dx + dy*dy; }
-        float GetExactDist2d(const float x, const float y) const
-        { return sqrt(GetExactDist2dSq(x, y)); }
 
         float GetAngle( const WorldObject* obj ) const;
         float GetAngle( const float x, const float y ) const;
@@ -492,33 +475,21 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 
         void SetMap(Map * map);
         Map * GetMap() const { ASSERT(m_currMap); return m_currMap; }
-        Map * FindMap() const { return m_currMap; }
         //used to check all object's GetMap() calls when object is not in world!
         void ResetMap() { m_currMap = NULL; }
 
         //this function should be removed in nearest time...
         Map const* GetBaseMap() const;
 
-        void SetZoneScript();
-        ZoneScript * GetZoneScript() const { return m_zoneScript; }
-
         void AddToClientUpdateList();
         void RemoveFromClientUpdateList();
         void BuildUpdateData(UpdateDataMapType &);
 
         Creature* SummonCreature(uint32 id, float x, float y, float z, float ang,TempSummonType spwtype,uint32 despwtime);
-        GameObject* SummonGameObject(uint32 id, float x, float y, float z, float ang, uint32 despwtime);
-        Vehicle* SummonVehicle(uint32 id, float x, float y, float z, float ang, uint32 vehicleId = NULL);
-
-        Creature* GetClosestCreatureWithEntry(WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange);
-        GameObject* GetClosestGameObjectWithEntry(WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange);
-        void GetGameObjectListWithEntryInGrid(std::list<GameObject*>& lList, uint32 uiEntry, float fMaxSearchRange);
-        void GetCreatureListWithEntryInGrid(std::list<Creature*>& lList, uint32 uiEntry, float fMaxSearchRange);
 
         bool isActiveObject() const { return m_isActiveObject || m_viewPoint.hasViewers(); }
 
         ViewPoint& GetViewPoint() { return m_viewPoint; }
-
     protected:
         explicit WorldObject();
 
@@ -528,7 +499,6 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         void SetLocationMapId(uint32 _mapId) { m_mapId = _mapId; }
         void SetLocationInstanceId(uint32 _instanceId) { m_InstanceId = _instanceId; }
 
-        ZoneScript *m_zoneScript;
         std::string m_name;
 
         bool m_isActiveObject;

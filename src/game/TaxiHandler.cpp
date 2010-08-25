@@ -103,7 +103,7 @@ void WorldSession::SendTaxiMenu( Creature* unit )
 
     WorldPacket data( SMSG_SHOWTAXINODES, (4+8+4+8*4) );
     data << uint32( 1 );
-    data << uint64( unit->GetGUID() );
+    data << unit->GetObjectGuid();
     data << uint32( curloc );
     GetPlayer()->m_taxi.AppendTaximaskTo(data,GetPlayer()->isTaxiCheater());
     SendPacket( &data );
@@ -196,8 +196,8 @@ void WorldSession::HandleMoveSplineDoneOpcode(WorldPacket& recv_data)
 
     // in taxi flight packet received in 2 case:
     // 1) end taxi path in far (multi-node) flight
-    // 2) switch from one map to other in case multim-map taxi path
-    // we need proccess only (1)
+    // 2) switch from one map to other in case multi-map taxi path
+    // we need process only (1)
     uint32 curDest = GetPlayer()->m_taxi.GetTaxiDestination();
     if(!curDest)
         return;

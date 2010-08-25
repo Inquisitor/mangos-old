@@ -159,14 +159,14 @@ typedef struct AuthHandler
 
 const AuthHandler table[] =
 {
-    { AUTH_LOGON_CHALLENGE,     STATUS_CONNECTED, &AuthSocket::_HandleLogonChallenge    },
-    { AUTH_LOGON_PROOF,         STATUS_CONNECTED, &AuthSocket::_HandleLogonProof        },
-    { AUTH_RECONNECT_CHALLENGE, STATUS_CONNECTED, &AuthSocket::_HandleReconnectChallenge},
-    { AUTH_RECONNECT_PROOF,     STATUS_CONNECTED, &AuthSocket::_HandleReconnectProof    },
-    { REALM_LIST,               STATUS_AUTHED,    &AuthSocket::_HandleRealmList         },
-    { XFER_ACCEPT,              STATUS_CONNECTED, &AuthSocket::_HandleXferAccept        },
-    { XFER_RESUME,              STATUS_CONNECTED, &AuthSocket::_HandleXferResume        },
-    { XFER_CANCEL,              STATUS_CONNECTED, &AuthSocket::_HandleXferCancel        }
+    { CMD_AUTH_LOGON_CHALLENGE,     STATUS_CONNECTED, &AuthSocket::_HandleLogonChallenge    },
+    { CMD_AUTH_LOGON_PROOF,         STATUS_CONNECTED, &AuthSocket::_HandleLogonProof        },
+    { CMD_AUTH_RECONNECT_CHALLENGE, STATUS_CONNECTED, &AuthSocket::_HandleReconnectChallenge},
+    { CMD_AUTH_RECONNECT_PROOF,     STATUS_CONNECTED, &AuthSocket::_HandleReconnectProof    },
+    { CMD_REALM_LIST,               STATUS_AUTHED,    &AuthSocket::_HandleRealmList         },
+    { CMD_XFER_ACCEPT,              STATUS_CONNECTED, &AuthSocket::_HandleXferAccept        },
+    { CMD_XFER_RESUME,              STATUS_CONNECTED, &AuthSocket::_HandleXferResume        },
+    { CMD_XFER_CANCEL,              STATUS_CONNECTED, &AuthSocket::_HandleXferCancel        }
 };
 
 #define AUTH_TOTAL_COMMANDS sizeof(table)/sizeof(AuthHandler)
@@ -279,7 +279,7 @@ void AuthSocket::SendProof(Sha1Hash sha)
         {
             sAuthLogonProof_S_BUILD_6005 proof;
             memcpy(proof.M2, sha.GetDigest(), 20);
-            proof.cmd = AUTH_LOGON_PROOF;
+            proof.cmd = CMD_AUTH_LOGON_PROOF;
             proof.error = 0;
             proof.unk2 = 0x00;
 
@@ -291,11 +291,12 @@ void AuthSocket::SendProof(Sha1Hash sha)
         case 11159:                                         // 3.3.0a
         case 11403:                                         // 3.3.2
         case 11723:                                         // 3.3.3a
+        case 12340:                                         // 3.3.5a
         default:                                            // or later
         {
             sAuthLogonProof_S proof;
             memcpy(proof.M2, sha.GetDigest(), 20);
-            proof.cmd = AUTH_LOGON_PROOF;
+            proof.cmd = CMD_AUTH_LOGON_PROOF;
             proof.error = 0;
             proof.unk1 = 0x00800000;
             proof.unk2 = 0x00;
@@ -360,7 +361,7 @@ bool AuthSocket::_HandleLogonChallenge()
     _safelogin = _login;
     LoginDatabase.escape_string(_safelogin);
 
-    pkt << (uint8) AUTH_LOGON_CHALLENGE;
+    pkt << (uint8) CMD_AUTH_LOGON_CHALLENGE;
     pkt << (uint8) 0x00;
 
     ///- Verify that this IP is not in the ip_banned table
@@ -544,7 +545,7 @@ bool AuthSocket::_HandleLogonProof()
         {
             // no patch found
             ByteBuffer pkt;
-            pkt << (uint8) AUTH_LOGON_CHALLENGE;
+            pkt << (uint8) CMD_AUTH_LOGON_CHALLENGE;
             pkt << (uint8) 0x00;
             pkt << (uint8) WOW_FAIL_VERSION_INVALID;
             DEBUG_LOG("[AuthChallenge] %u is not a valid client version!", _build);
@@ -570,11 +571,11 @@ bool AuthSocket::_HandleLogonProof()
             PatchCache::instance()->GetHash(tmp, (uint8*)&xferh.md5);
         }
 
-        uint8 data[2] = { AUTH_LOGON_PROOF, WOW_FAIL_VERSION_UPDATE};
+        uint8 data[2] = { CMD_AUTH_LOGON_PROOF, WOW_FAIL_VERSION_UPDATE};
         send((const char*)data, sizeof(data));
 
         memcpy(&xferh, "0\x05Patch", 7);
-        xferh.cmd = XFER_INITIATE;
+        xferh.cmd = CMD_XFER_INITIATE;
         xferh.file_size = file_size;
 
         send((const char*)&xferh, sizeof(xferh));
@@ -679,8 +680,17 @@ bool AuthSocket::_HandleLogonProof()
     }
     else
     {
-        char data[4]= { AUTH_LOGON_PROOF, WOW_FAIL_UNKNOWN_ACCOUNT, 3, 0};
-        send(data, sizeof(data));
+        if (_build > 6005)                                  // > 1.12.2
+        {
+            char data[4]= { CMD_AUTH_LOGON_PROOF, WOW_FAIL_INCORRECT_PASSWORD, 3, 0};
+            send(data, sizeof(data));
+        }
+        else
+        {
+            // 1.x not react incorrectly at 4-byte message use 3 as real error
+            char data[2]= { CMD_AUTH_LOGON_PROOF, WOW_FAIL_INCORRECT_PASSWORD};
+            send(data, sizeof(data));
+        }
         BASIC_LOG("[AuthChallenge] account %s tried to login with wrong password!",_login.c_str ());
 
         uint32 MaxWrongPassCount = sConfig.GetIntDefault("WrongPass.MaxCount", 0);
@@ -778,7 +788,7 @@ bool AuthSocket::_HandleReconnectChallenge()
 
     ///- Sending response
     ByteBuffer pkt;
-    pkt << (uint8)  AUTH_RECONNECT_CHALLENGE;
+    pkt << (uint8)  CMD_AUTH_RECONNECT_CHALLENGE;
     pkt << (uint8)  0x00;
     _reconnectProof.SetRand(16 * 8);
     pkt.append(_reconnectProof.AsByteArray(16),16);         // 16 bytes random
@@ -812,7 +822,7 @@ bool AuthSocket::_HandleReconnectProof()
     {
         ///- Sending response
         ByteBuffer pkt;
-        pkt << (uint8)  AUTH_RECONNECT_PROOF;
+        pkt << (uint8)  CMD_AUTH_RECONNECT_PROOF;
         pkt << (uint8)  0x00;
         pkt << (uint16) 0x00;                               // 2 bytes zeros
         send((char const*)pkt.contents(), pkt.size());
@@ -862,7 +872,7 @@ bool AuthSocket::_HandleRealmList()
     LoadRealmlist(pkt, id);
 
     ByteBuffer hdr;
-    hdr << (uint8) REALM_LIST;
+    hdr << (uint8) CMD_REALM_LIST;
     hdr << (uint16)pkt.size();
     hdr.append(pkt);
 
@@ -937,6 +947,7 @@ void AuthSocket::LoadRealmlist(ByteBuffer &pkt, uint32 acctid)
         case 11159:                                         // 3.3.0a
         case 11403:                                         // 3.3.2
         case 11723:                                         // 3.3.3a
+        case 12340:                                         // 3.3.5a
         default:                                            // and later
         {
             pkt << uint32(0);

@@ -83,7 +83,7 @@ inline float Traveller<Creature>::Speed()
 template<>
 inline void Traveller<Creature>::Relocation(float x, float y, float z, float orientation)
 {
-    i_traveller.SetPosition(x, y, z, orientation);
+    i_traveller.GetMap()->CreatureRelocation(&i_traveller, x, y, z, orientation);
 }
 
 template<>
@@ -91,10 +91,12 @@ inline float Traveller<Creature>::GetMoveDestinationTo(float x, float y, float z
 {
     float dx = x - GetPositionX();
     float dy = y - GetPositionY();
-    float dz = z - GetPositionZ();
 
-    if(i_traveller.hasUnitState(UNIT_STAT_IN_FLIGHT))
+    if(i_traveller.hasUnitState(UNIT_STAT_TAXI_FLIGHT))
+    {
+        float dz = z - GetPositionZ();
         return sqrt((dx*dx) + (dy*dy) + (dz*dz));
+    }
     else                                                    //Walking on the ground
         return sqrt((dx*dx) + (dy*dy));
 }
@@ -116,7 +118,7 @@ inline void Traveller<Creature>::Stop()
 template<>
 inline float Traveller<Player>::Speed()
 {
-    if (i_traveller.isInFlight())
+    if (i_traveller.IsTaxiFlying())
         return PLAYER_FLIGHT_SPEED;
     else
         return i_traveller.GetSpeed(i_traveller.m_movementInfo.HasMovementFlag(MOVEFLAG_WALK_MODE) ? MOVE_WALK : MOVE_RUN);
@@ -129,7 +131,7 @@ inline float Traveller<Player>::GetMoveDestinationTo(float x, float y, float z)
     float dy = y - GetPositionY();
     float dz = z - GetPositionZ();
 
-    if (i_traveller.isInFlight())
+    if (i_traveller.IsTaxiFlying())
         return sqrt((dx*dx) + (dy*dy) + (dz*dz));
     else                                                    //Walking on the ground
         return sqrt((dx*dx) + (dy*dy));
@@ -138,7 +140,7 @@ inline float Traveller<Player>::GetMoveDestinationTo(float x, float y, float z)
 template<>
 inline void Traveller<Player>::Relocation(float x, float y, float z, float orientation)
 {
-    i_traveller.SetPosition(x, y, z, orientation);
+    i_traveller.GetMap()->PlayerRelocation(&i_traveller, x, y, z, orientation);
 }
 
 template<>

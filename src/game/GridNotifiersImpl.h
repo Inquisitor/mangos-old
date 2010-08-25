@@ -91,7 +91,7 @@ inline void CreatureCreatureRelocationWorker(Creature* c1, Creature* c2)
 
 inline void MaNGOS::PlayerRelocationNotifier::Visit(CreatureMapType &m)
 {
-    if (!i_player.isAlive() || i_player.isInFlight())
+    if (!i_player.isAlive() || i_player.IsTaxiFlying())
         return;
 
     WorldObject const* viewPoint = i_player.GetCamera().GetBody();
@@ -109,7 +109,7 @@ inline void MaNGOS::CreatureRelocationNotifier::Visit(PlayerMapType &m)
 
     for(PlayerMapType::iterator iter=m.begin(); iter != m.end(); ++iter)
         if (Player* player = iter->getSource())
-            if (player->isAlive() && !player->isInFlight())
+            if (player->isAlive() && !player->IsTaxiFlying())
                 PlayerCreatureRelocationWorker(player, player->GetCamera().GetBody(), &i_creature);
 }
 
@@ -129,7 +129,7 @@ inline void MaNGOS::CreatureRelocationNotifier::Visit(CreatureMapType &m)
 
 inline void MaNGOS::DynamicObjectUpdater::VisitHelper(Unit* target)
 {
-    if (!target->isAlive() || target->isInFlight() )
+    if (!target->isAlive() || target->IsTaxiFlying() )
         return;
 
     if (target->GetTypeId() == TYPEID_UNIT && ((Creature*)target)->isTotem())
@@ -172,8 +172,38 @@ inline void MaNGOS::DynamicObjectUpdater::VisitHelper(Unit* target)
         return;
 
     // Apply PersistentAreaAura on target
-    PersistentAreaAura* Aur = new PersistentAreaAura(spellInfo, eff_index, NULL, target, i_dynobject.GetCaster());
-    target->AddAura(Aur);
+    // in case 2 dynobject overlap areas for same spell, same holder is selected, so dynobjects share holder
+    SpellAuraHolder *holder = target->GetSpellAuraHolder(spellInfo->Id, i_dynobject.GetCaster()->GetGUID());
+
+    if (holder)
+    {
+        if (Aura* aura = holder->GetAuraByEffectIndex(eff_index))
+        {
+            // already exists, refresh duration
+            if (aura->GetAuraDuration() >=0 && uint32(aura->GetAuraDuration()) < i_dynobject.GetDuration())
+            {
+                aura->SetAuraDuration(i_dynobject.GetDuration());
+                holder->SendAuraUpdate(false);
+            }
+        }
+        else
+        {
+            PersistentAreaAura* Aur = new PersistentAreaAura(spellInfo, eff_index, NULL, holder, target, i_dynobject.GetCaster());
+            holder->AddAura(Aur, eff_index);
+            target->AddAuraToModList(Aur);
+            holder->SetInUse(true);
+            Aur->ApplyModifier(true,true);
+            holder->SetInUse(false);
+        }
+    }
+    else
+    {
+        holder = CreateSpellAuraHolder(spellInfo, target, i_dynobject.GetCaster());
+        PersistentAreaAura* Aur = new PersistentAreaAura(spellInfo, eff_index, NULL, holder, target, i_dynobject.GetCaster());
+        holder->AddAura(Aur, eff_index);
+        target->AddSpellAuraHolder(holder);
+    }
+
     i_dynobject.AddAffected(target);
 }
 

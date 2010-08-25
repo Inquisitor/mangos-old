@@ -21,7 +21,6 @@
 #include "Log.h"
 #include "ProgressBar.h"
 #include "SharedDefines.h"
-#include "SpellMgr.h"
 #include "ObjectGuid.h"
 
 #include "DBCfmt.h"
@@ -31,11 +30,31 @@
 typedef std::map<uint16,uint32> AreaFlagByAreaID;
 typedef std::map<uint32,uint32> AreaFlagByMapID;
 
+struct WMOAreaTableTripple
+{
+    WMOAreaTableTripple(int32 r, int32 a, int32 g) : rootId(r), adtId(a), groupId(g)
+    {
+    }
+
+    bool operator <(const WMOAreaTableTripple& b) const
+    {
+        return memcmp(this, &b, sizeof(WMOAreaTableTripple))<0;
+    }
+
+    // ordered by entropy; that way memcmp will have a minimal medium runtime
+    int32 groupId;
+    int32 rootId;
+    int32 adtId;
+};
+
+typedef std::map<WMOAreaTableTripple, WMOAreaTableEntry const *> WMOAreaInfoByTripple;
+
 DBCStorage <AreaTableEntry> sAreaStore(AreaTableEntryfmt);
 DBCStorage <AreaGroupEntry> sAreaGroupStore(AreaGroupEntryfmt);
-DBCStorage <AreaPOIEntry> sAreaPOIStore(AreaPOIEntryfmt);
 static AreaFlagByAreaID sAreaFlagByAreaID;
 static AreaFlagByMapID  sAreaFlagByMapID;                   // for instances without generated *.map files
+
+static WMOAreaInfoByTripple sWMOAreaInfoByTripple;
 
 DBCStorage <AchievementEntry> sAchievementStore(Achievementfmt);
 DBCStorage <AchievementCriteriaEntry> sAchievementCriteriaStore(AchievementCriteriafmt);
@@ -159,6 +178,7 @@ static DBCStorage <TaxiPathNodeEntry> sTaxiPathNodeStore(TaxiPathNodeEntryfmt);
 DBCStorage <TotemCategoryEntry> sTotemCategoryStore(TotemCategoryEntryfmt);
 DBCStorage <VehicleEntry> sVehicleStore(VehicleEntryfmt);
 DBCStorage <VehicleSeatEntry> sVehicleSeatStore(VehicleSeatEntryfmt);
+DBCStorage <WMOAreaTableEntry>  sWMOAreaTableStore(WMOAreaTableEntryfmt);
 DBCStorage <WorldMapAreaEntry>  sWorldMapAreaStore(WorldMapAreaEntryfmt);
 DBCStorage <WorldMapOverlayEntry> sWorldMapOverlayStore(WorldMapOverlayEntryfmt);
 DBCStorage <WorldSafeLocsEntry> sWorldSafeLocsStore(WorldSafeLocsEntryfmt);
@@ -258,18 +278,13 @@ struct LocalData
 };
 
 template<class T>
-inline void LoadDBC(LocalData& localeData,barGoLink& bar, StoreProblemList& errlist, DBCStorage<T>& storage, const std::string& dbc_path, const std::string& filename, const std::string * custom_entries = NULL, const std::string * idname = NULL)
+inline void LoadDBC(LocalData& localeData,barGoLink& bar, StoreProblemList& errlist, DBCStorage<T>& storage, const std::string& dbc_path, const std::string& filename)
 {
     // compatibility format and C++ structure sizes
     ASSERT(DBCFileLoader::GetFormatRecordSize(storage.GetFormat()) == sizeof(T) || LoadDBC_assert_print(DBCFileLoader::GetFormatRecordSize(storage.GetFormat()),sizeof(T),filename));
 
     std::string dbc_filename = dbc_path + filename;
-
-    SqlDbc * sql = NULL; 	
-    if (custom_entries)
-        sql = new SqlDbc(&filename,custom_entries,idname,storage.GetFormat());	
-
-    if(storage.Load(dbc_filename.c_str(),sql))
+    if(storage.Load(dbc_filename.c_str()))
     {
         bar.step();
         for(uint8 i = 0; fullLocaleNameList[i].name; ++i)
@@ -311,7 +326,7 @@ inline void LoadDBC(LocalData& localeData,barGoLink& bar, StoreProblemList& errl
     }
     else
     {
-        // sort problematic dbc to (1) non compatible and (2) non-existed
+        // sort problematic dbc to (1) non compatible and (2) nonexistent
         FILE * f=fopen(dbc_filename.c_str(),"rb");
         if(f)
         {
@@ -322,9 +337,6 @@ inline void LoadDBC(LocalData& localeData,barGoLink& bar, StoreProblemList& errl
         }
         else
             errlist.push_back(dbc_filename);
-
-        if (sql)
-            delete sql;
     }
 }
 
@@ -341,6 +353,7 @@ void LoadDBCStores(const std::string& dataPath)
             sLog.outError("Found DBC files for build %u but mangosd expected DBC for one from builds: %s Please extract correct DBC files.", build, AcceptableClientBuildsListStr().c_str());
         else
             sLog.outError("Incorrect DataDir value in mangosd.conf or not found build info (outdated DBC files). Required one from builds: %s Please extract correct DBC files.",AcceptableClientBuildsListStr().c_str());
+        Log::WaitBeforeContinueIfNeed();
         exit(1);
     }
 
@@ -372,7 +385,6 @@ void LoadDBCStores(const std::string& dataPath)
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sAchievementCriteriaStore, dbcPath,"Achievement_Criteria.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sAreaTriggerStore,         dbcPath,"AreaTrigger.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sAreaGroupStore,           dbcPath,"AreaGroup.dbc");
-    LoadDBC(availableDbcLocales,bar,bad_dbc_files,sAreaPOIStore,             dbcPath,"AreaPOI.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sAuctionHouseStore,        dbcPath,"AuctionHouse.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sBankBagSlotPricesStore,   dbcPath,"BankBagSlotPrices.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sBattlemasterListStore,    dbcPath,"BattlemasterList.dbc");
@@ -459,7 +471,7 @@ void LoadDBCStores(const std::string& dataPath)
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSkillLineStore,           dbcPath,"SkillLine.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSkillLineAbilityStore,    dbcPath,"SkillLineAbility.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSoundEntriesStore,        dbcPath,"SoundEntries.dbc");
-    LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSpellStore,               dbcPath,"Spell.dbc", &CustomSpellEntryfmt, &CustomSpellEntryIndex);
+    LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSpellStore,               dbcPath,"Spell.dbc");
     for(uint32 i = 1; i < sSpellStore.GetNumRows(); ++i)
     {
         SpellEntry const * spell = sSpellStore.LookupEntry(i);
@@ -472,69 +484,6 @@ void LoadDBCStores(const std::string& dataPath)
         std::swap(*((uint32*)(&spell->SpellFamilyFlags)),*(((uint32*)(&spell->SpellFamilyFlags))+1));
         #endif
     }
-
-    //Surge of power spells should be longer
-    SpellEntry *sfix1 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(57407));
-    sfix1->DurationIndex = 28;
-    SpellEntry *sfix2 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(60936));
-    sfix2->DurationIndex = 28;
-
-    //Lifebloom final heal
-    SpellEntry *sfix3 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(33778));
-    sfix3->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
-
-    //Twilight Torment - relly dunno what blizzard intended to do
-    SpellEntry *sfix4 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(57935));
-    sfix4->AttributesEx = 0;
-    sfix4->AttributesEx4 = SPELL_ATTR_EX4_NOT_STEALABLE;
-    sfix4->CastingTimeIndex = 1;
-    sfix4->RecoveryTime = 0;
-    sfix4->procFlags = (PROC_FLAG_TAKEN_MELEE_HIT | PROC_FLAG_TAKEN_MELEE_SPELL_HIT | PROC_FLAG_TAKEN_RANGED_HIT | PROC_FLAG_TAKEN_RANGED_SPELL_HIT | PROC_FLAG_TAKEN_NEGATIVE_SPELL_HIT);
-    sfix4->procChance = 100;
-    sfix4->procCharges = 0;
-    sfix4->rangeIndex = 1;
-    sfix4->StackAmount = 0;
-    sfix4->Effect[EFFECT_INDEX_1] = 0;
-    sfix4->EffectDieSides[EFFECT_INDEX_1] = 0;
-    sfix4->EffectBasePoints[EFFECT_INDEX_0] = -1;
-    sfix4->EffectImplicitTargetA[EFFECT_INDEX_0] = 6;
-    sfix4->EffectImplicitTargetA[EFFECT_INDEX_1] = 0;
-    sfix4->EffectImplicitTargetB[EFFECT_INDEX_0] = 0;
-    sfix4->EffectImplicitTargetB[EFFECT_INDEX_1] = 0;
-    sfix4->EffectRadiusIndex[EFFECT_INDEX_0] = 0;
-    sfix4->EffectRadiusIndex[EFFECT_INDEX_1] = 0;
-    sfix4->EffectApplyAuraName[EFFECT_INDEX_0] = SPELL_AURA_PROC_TRIGGER_SPELL;
-    sfix4->EffectApplyAuraName[EFFECT_INDEX_1] = 0;
-    sfix4->EffectAmplitude[EFFECT_INDEX_0] = 0;
-    sfix4->EffectAmplitude[EFFECT_INDEX_1] = 0;
-    sfix4->EffectMiscValue[EFFECT_INDEX_0] = 0;
-    sfix4->EffectMiscValue[EFFECT_INDEX_1] = 0;
-    sfix4->EffectMiscValueB[EFFECT_INDEX_0] = 0;
-    sfix4->EffectMiscValueB[EFFECT_INDEX_1] = 0;
-    sfix4->EffectTriggerSpell[EFFECT_INDEX_0] = 57988;
-    sfix4->EffectTriggerSpell[EFFECT_INDEX_1] = 0;
-
-    // Rune Strike
-    SpellEntry *sfix5 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(56817));
-    sfix5->Id = 56817;
-    sfix5->Attributes = 384;
-    sfix5->CastingTimeIndex = 1;
-    sfix5->procFlags = 16;
-    sfix5->procChance = 100;
-    sfix5->procCharges = 1;
-    sfix5->baseLevel = 67;
-    sfix5->spellLevel = 67;
-    sfix5->DurationIndex = 1;
-    sfix5->powerType = 6;
-    sfix5->rangeIndex = 2;
-    sfix5->EquippedItemClass = -1;
-    sfix5->Effect[EFFECT_INDEX_0] = 6;
-    sfix5->EffectImplicitTargetA[EFFECT_INDEX_0] = 1;
-    sfix5->EffectApplyAuraName[EFFECT_INDEX_0] = 4;
-    sfix5->SpellName[0] = "Rune Strike";
-    sfix5->SpellFamilyName = SPELLFAMILY_DEATHKNIGHT;
-    sfix5->SchoolMask = 1;
-
 
     for (uint32 j = 0; j < sSkillLineAbilityStore.GetNumRows(); ++j)
     {
@@ -637,7 +586,7 @@ void LoadDBCStores(const std::string& dataPath)
             sTaxiPathNodesByPath[entry->path].set(entry->index, entry);
 
     // Initialize global taxinodes mask
-    // include existed nodes that have at least single not spell base (scripted) path
+    // include existing nodes that have at least single not spell base (scripted) path
     {
         std::set<uint32> spellPaths;
         for(uint32 i = 1; i < sSpellStore.GetNumRows (); ++i)
@@ -687,35 +636,46 @@ void LoadDBCStores(const std::string& dataPath)
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sVehicleStore,             dbcPath,"Vehicle.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sVehicleSeatStore,         dbcPath,"VehicleSeat.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sWorldMapAreaStore,        dbcPath,"WorldMapArea.dbc");
+    LoadDBC(availableDbcLocales,bar,bad_dbc_files,sWMOAreaTableStore,        dbcPath,"WMOAreaTable.dbc");
+    for(uint32 i = 0; i < sWMOAreaTableStore.GetNumRows(); ++i)
+    {
+        if(WMOAreaTableEntry const* entry = sWMOAreaTableStore.LookupEntry(i))
+        {
+            sWMOAreaInfoByTripple.insert(WMOAreaInfoByTripple::value_type(WMOAreaTableTripple(entry->rootId, entry->adtId, entry->groupId), entry));
+        }
+    }
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sWorldMapOverlayStore,     dbcPath,"WorldMapOverlay.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sWorldSafeLocsStore,       dbcPath,"WorldSafeLocs.dbc");
 
     // error checks
-    if(bad_dbc_files.size() >= DBCFilesCount )
+    if (bad_dbc_files.size() >= DBCFilesCount )
     {
         sLog.outError("\nIncorrect DataDir value in mangosd.conf or ALL required *.dbc files (%d) not found by path: %sdbc",DBCFilesCount,dataPath.c_str());
+        Log::WaitBeforeContinueIfNeed();
         exit(1);
     }
-    else if(!bad_dbc_files.empty() )
+    else if (!bad_dbc_files.empty() )
     {
         std::string str;
         for(std::list<std::string>::iterator i = bad_dbc_files.begin(); i != bad_dbc_files.end(); ++i)
             str += *i + "\n";
 
         sLog.outError("\nSome required *.dbc files (%u from %d) not found or not compatible:\n%s",(uint32)bad_dbc_files.size(),DBCFilesCount,str.c_str());
+        Log::WaitBeforeContinueIfNeed();
         exit(1);
     }
 
     // Check loaded DBC files proper version
-    if( !sAreaStore.LookupEntry(3617)              ||       // last area (areaflag) added in 3.3.3a
-        !sCharTitlesStore.LookupEntry(177)         ||       // last char title added in 3.3.3a
-        !sGemPropertiesStore.LookupEntry(1629)     ||       // last gem property added in 3.3.3a
-        !sItemStore.LookupEntry(54860)             ||       // last client known item added in 3.3.3a
-        !sItemExtendedCostStore.LookupEntry(2997)  ||       // last item extended cost added in 3.3.3a
-        !sMapStore.LookupEntry(724)                ||       // last map added in 3.3.3a
-        !sSpellStore.LookupEntry(76567)            )        // last added spell in 3.3.3a
+    if (!sAreaStore.LookupEntry(3617)              ||       // last area (areaflag) added in 3.3.5a
+        !sCharTitlesStore.LookupEntry(177)         ||       // last char title added in 3.3.5a
+        !sGemPropertiesStore.LookupEntry(1629)     ||       // last gem property added in 3.3.5a
+        !sItemStore.LookupEntry(56806)             ||       // last client known item added in 3.3.5a
+        !sItemExtendedCostStore.LookupEntry(2997)  ||       // last item extended cost added in 3.3.5a
+        !sMapStore.LookupEntry(724)                ||       // last map added in 3.3.5a
+        !sSpellStore.LookupEntry(80864)            )        // last added spell in 3.3.5a
     {
         sLog.outError("\nYou have mixed version DBC files. Please re-extract DBC files for one from client build: %s",AcceptableClientBuildsListStr().c_str());
+        Log::WaitBeforeContinueIfNeed();
         exit(1);
     }
 
@@ -770,6 +730,15 @@ int32 GetAreaFlagByAreaID(uint32 area_id)
         return -1;
 
     return i->second;
+}
+
+WMOAreaTableEntry const* GetWMOAreaTableEntryByTripple(int32 rootid, int32 adtid, int32 groupid)
+{
+        WMOAreaInfoByTripple::iterator i = sWMOAreaInfoByTripple.find(WMOAreaTableTripple(rootid, adtid, groupid));
+            if(i == sWMOAreaInfoByTripple.end())
+                        return NULL;
+                return i->second;
+
 }
 
 AreaTableEntry const* GetAreaEntryByAreaID(uint32 area_id)
@@ -900,16 +869,26 @@ MapDifficulty const* GetMapDifficultyData(uint32 mapId, Difficulty difficulty)
 
 PvPDifficultyEntry const* GetBattlegroundBracketByLevel( uint32 mapid, uint32 level )
 {
-    // prevent out-of-range levels for dbc data
-    if (level > DEFAULT_MAX_LEVEL)
-        level = DEFAULT_MAX_LEVEL;
-
+    PvPDifficultyEntry const* maxEntry = NULL;              // used for level > max listed level case
     for(uint32 i = 0; i < sPvPDifficultyStore.GetNumRows(); ++i)
+    {
         if (PvPDifficultyEntry const* entry = sPvPDifficultyStore.LookupEntry(i))
-            if (entry->mapId == mapid && entry->minLevel <= level && entry->maxLevel >= level)
+        {
+            // skip unrelated and too-high brackets
+            if (entry->mapId != mapid || entry->minLevel > level)
+                continue;
+
+            // exactly fit
+            if (entry->maxLevel >= level)
                 return entry;
 
-    return NULL;
+            // remember for possible out-of-range case (search higher from existed)
+            if (!maxEntry || maxEntry->maxLevel < entry->maxLevel)
+                maxEntry = entry;
+        }
+    }
+
+    return maxEntry;
 }
 
 PvPDifficultyEntry const* GetBattlegroundBracketById(uint32 mapid, BattleGroundBracketId id)
@@ -981,4 +960,3 @@ MANGOS_DLL_SPEC DBCStorage <ItemEntry>          const* GetItemDisplayStore()    
 MANGOS_DLL_SPEC DBCStorage <CreatureDisplayInfoEntry> const* GetCreatureDisplayStore() { return &sCreatureDisplayInfoStore; }
 MANGOS_DLL_SPEC DBCStorage <EmotesEntry>        const* GetEmotesStore()         { return &sEmotesStore;         }
 MANGOS_DLL_SPEC DBCStorage <EmotesTextEntry>    const* GetEmotesTextStore()     { return &sEmotesTextStore;     }
-MANGOS_DLL_SPEC DBCStorage <AchievementEntry>   const* GetAchievementStore()    { return &sAchievementStore;    }

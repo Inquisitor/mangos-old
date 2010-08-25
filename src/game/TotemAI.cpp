@@ -68,10 +68,10 @@ TotemAI::UpdateAI(const uint32 /*diff*/)
     SpellRangeEntry const* srange = sSpellRangeStore.LookupEntry(spellInfo->rangeIndex);
     float max_range = GetSpellMaxRange(srange);
 
-    // SPELLMOD_RANGE not applied in this place just because not existence range mods for attacking totems
+    // SPELLMOD_RANGE not applied in this place just because nonexistent range mods for attacking totems
 
     // pointer to appropriate target if found any
-    Unit* victim = i_victimGuid ? ObjectAccessor::GetUnit(*m_creature, i_victimGuid) : NULL;
+    Unit* victim = i_victimGuid ? m_creature->GetMap()->GetUnit(i_victimGuid) : NULL;
 
     // Search victim if no, not attackable, or out of range, or friendly (possible in case duel end)
     if( !victim ||
@@ -108,15 +108,6 @@ TotemAI::IsVisible(Unit *) const
 void
 TotemAI::AttackStart(Unit *)
 {
-    // Sentry totem sends ping on attack
-    if (m_creature->GetEntry() == SENTRY_TOTEM_ENTRY && m_creature->GetOwner()->GetTypeId() == TYPEID_PLAYER)
-    {
-        WorldPacket data(MSG_MINIMAP_PING, (8+4+4));
-        data << m_creature->GetGUID();
-        data << m_creature->GetPositionX();
-        data << m_creature->GetPositionY();
-        ((Player*)m_creature->GetOwner())->GetSession()->SendPacket(&data);
-    }
 }
 
 Totem& TotemAI::getTotem()

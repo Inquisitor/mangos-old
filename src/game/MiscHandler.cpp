@@ -26,7 +26,6 @@
 #include "Player.h"
 #include "World.h"
 #include "ObjectMgr.h"
-#include "ObjectGuid.h"
 #include "WorldSession.h"
 #include "Auth/BigNumber.h"
 #include "Auth/Sha1.h"
@@ -38,7 +37,6 @@
 #include "ObjectAccessor.h"
 #include "Object.h"
 #include "BattleGround.h"
-#include "OutdoorPvP.h"
 #include "Pet.h"
 #include "SocialMgr.h"
 #include "DBCEnums.h"
@@ -182,6 +180,7 @@ void WorldSession::HandleWhoOpcode( WorldPacket & recv_data )
             continue;
 
         uint32 pzoneid = itr->second->GetZoneId();
+        uint8 gender = itr->second->getGender();
 
         bool z_show = true;
         for(uint32 i = 0; i < zones_count; ++i)
@@ -239,11 +238,11 @@ void WorldSession::HandleWhoOpcode( WorldPacket & recv_data )
 
         data << pname;                                      // player name
         data << gname;                                      // guild name
-        data << uint32( lvl );                              // player level
-        data << uint32( class_ );                           // player class
-        data << uint32( race );                             // player race
-        data << uint8(0);                                   // new 2.4.0
-        data << uint32( pzoneid );                          // player zone id
+        data << uint32(lvl);                                // player level
+        data << uint32(class_);                             // player class
+        data << uint32(race);                               // player race
+        data << uint8(gender);                              // player gender
+        data << uint32(pzoneid);                            // player zone id
 
         // 50 is maximum player count sent to client
         if ((++clientcount) == 50)
@@ -266,16 +265,13 @@ void WorldSession::HandleLogoutRequestOpcode( WorldPacket & /*recv_data*/ )
         DoLootRelease(lguid);
 
     //Can not logout if...
-    if( GetPlayer()->isInCombat() ||                        //...is in Combat
+    if( GetPlayer()->isInCombat() ||                        //...is in combat
         GetPlayer()->duel         ||                        //...is in Duel
-        GetPlayer()->GetVehicleGUID() ||                    //...is in Vehicle
-        GetPlayer()->GetVehicleKit()  ||                    //...is in Vehicle Kit
                                                             //...is jumping ...is falling
         GetPlayer()->m_movementInfo.HasMovementFlag(MovementFlags(MOVEFLAG_FALLING | MOVEFLAG_FALLINGFAR)))
     {
-        WorldPacket data( SMSG_LOGOUT_RESPONSE, (2+4) ) ;
-        data << (uint8)0xC;
-        data << uint32(0);
+        WorldPacket data( SMSG_LOGOUT_RESPONSE, 5 );
+        data << uint32(1);
         data << uint8(0);
         SendPacket( &data );
         LogoutRequest(0);
@@ -283,7 +279,7 @@ void WorldSession::HandleLogoutRequestOpcode( WorldPacket & /*recv_data*/ )
     }
 
     //instant logout in taverns/cities or on taxi or for admins, gm's, mod's if its enabled in mangosd.conf
-    if (GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING) || GetPlayer()->isInFlight() ||
+    if (GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING) || GetPlayer()->IsTaxiFlying() ||
         GetSecurity() >= (AccountTypes)sWorld.getConfig(CONFIG_UINT32_INSTANT_LOGOUT))
     {
         LogoutPlayer(true);
@@ -461,7 +457,8 @@ void WorldSession::HandleAddFriendOpcodeCallBack(QueryResult *result, uint32 acc
     if(!result)
         return;
 
-    uint64 friendGuid = MAKE_NEW_GUID((*result)[0].GetUInt32(), 0, HIGHGUID_PLAYER);
+    uint32 friendLowGuid = (*result)[0].GetUInt32();
+    ObjectGuid friendGuid = ObjectGuid(HIGHGUID_PLAYER, friendLowGuid);
     uint32 team = Player::TeamForRace((*result)[1].GetUInt8());
 
     delete result;
@@ -471,13 +468,13 @@ void WorldSession::HandleAddFriendOpcodeCallBack(QueryResult *result, uint32 acc
         return;
 
     FriendsResult friendResult = FRIEND_NOT_FOUND;
-    if(friendGuid)
+    if (!friendGuid.IsEmpty())
     {
-        if(friendGuid==session->GetPlayer()->GetGUID())
+        if (friendGuid == session->GetPlayer()->GetObjectGuid())
             friendResult = FRIEND_SELF;
         else if(session->GetPlayer()->GetTeam() != team && !sWorld.getConfig(CONFIG_BOOL_ALLOW_TWO_SIDE_ADD_FRIEND) && session->GetSecurity() < SEC_MODERATOR)
             friendResult = FRIEND_ENEMY;
-        else if(session->GetPlayer()->GetSocial()->HasFriend(GUID_LOPART(friendGuid)))
+        else if(session->GetPlayer()->GetSocial()->HasFriend(friendLowGuid))
             friendResult = FRIEND_ALREADY;
         else
         {
@@ -487,17 +484,17 @@ void WorldSession::HandleAddFriendOpcodeCallBack(QueryResult *result, uint32 acc
             else
                 friendResult = FRIEND_ADDED_OFFLINE;
 
-            if(!session->GetPlayer()->GetSocial()->AddToSocialList(GUID_LOPART(friendGuid), false))
+            if(!session->GetPlayer()->GetSocial()->AddToSocialList(friendLowGuid, false))
             {
                 friendResult = FRIEND_LIST_FULL;
                 DEBUG_LOG( "WORLD: %s's friend list is full.", session->GetPlayer()->GetName());
             }
 
-            session->GetPlayer()->GetSocial()->SetFriendNote(GUID_LOPART(friendGuid), friendNote);
+            session->GetPlayer()->GetSocial()->SetFriendNote(friendLowGuid, friendNote);
         }
     }
 
-    sSocialMgr.SendFriendStatus(session->GetPlayer(), friendResult, GUID_LOPART(friendGuid), false);
+    sSocialMgr.SendFriendStatus(session->GetPlayer(), friendResult, friendLowGuid, false);
 
     DEBUG_LOG( "WORLD: Sent (SMSG_FRIEND_STATUS)" );
 }
@@ -541,7 +538,8 @@ void WorldSession::HandleAddIgnoreOpcodeCallBack(QueryResult *result, uint32 acc
     if(!result)
         return;
 
-    uint64 IgnoreGuid = MAKE_NEW_GUID((*result)[0].GetUInt32(), 0, HIGHGUID_PLAYER);
+    uint32 ignoreLowGuid = (*result)[0].GetUInt32();
+    ObjectGuid ignoreGuid = ObjectGuid(HIGHGUID_PLAYER, ignoreLowGuid);
 
     delete result;
 
@@ -550,23 +548,23 @@ void WorldSession::HandleAddIgnoreOpcodeCallBack(QueryResult *result, uint32 acc
         return;
 
     FriendsResult ignoreResult = FRIEND_IGNORE_NOT_FOUND;
-    if(IgnoreGuid)
+    if (!ignoreGuid.IsEmpty())
     {
-        if(IgnoreGuid == session->GetPlayer()->GetGUID())   //not add yourself
+        if (ignoreGuid == session->GetPlayer()->GetObjectGuid())
             ignoreResult = FRIEND_IGNORE_SELF;
-        else if( session->GetPlayer()->GetSocial()->HasIgnore(GUID_LOPART(IgnoreGuid)) )
+        else if (session->GetPlayer()->GetSocial()->HasIgnore(ignoreLowGuid))
             ignoreResult = FRIEND_IGNORE_ALREADY;
         else
         {
             ignoreResult = FRIEND_IGNORE_ADDED;
 
             // ignore list full
-            if(!session->GetPlayer()->GetSocial()->AddToSocialList(GUID_LOPART(IgnoreGuid), true))
+            if(!session->GetPlayer()->GetSocial()->AddToSocialList(ignoreLowGuid, true))
                 ignoreResult = FRIEND_IGNORE_FULL;
         }
     }
 
-    sSocialMgr.SendFriendStatus(session->GetPlayer(), ignoreResult, GUID_LOPART(IgnoreGuid), false);
+    sSocialMgr.SendFriendStatus(session->GetPlayer(), ignoreResult, ignoreLowGuid, false);
 
     DEBUG_LOG( "WORLD: Sent (SMSG_FRIEND_STATUS)" );
 }
@@ -687,10 +685,7 @@ void WorldSession::HandleAreaTriggerOpcode(WorldPacket & recv_data)
     recv_data >> Trigger_ID;
     DEBUG_LOG("Trigger ID: %u", Trigger_ID);
 
-    if(GetPlayer()->isGameMaster())
-        SendAreaTriggerMessage("Entered %u areatrigger.", Trigger_ID);
-
-    if(GetPlayer()->isInFlight())
+    if(GetPlayer()->IsTaxiFlying())
     {
         DEBUG_LOG("Player '%s' (GUID: %u) in flight, ignore Area Trigger ID: %u", GetPlayer()->GetName(), GetPlayer()->GetGUIDLow(), Trigger_ID);
         return;
@@ -729,10 +724,11 @@ void WorldSession::HandleAreaTriggerOpcode(WorldPacket & recv_data)
     }
 
     // enter to tavern, not overwrite city rest
-    if(sObjectMgr.IsTavernAreaTrigger(Trigger_ID) && pl->GetRestType() != REST_TYPE_IN_CITY)
+    if(sObjectMgr.IsTavernAreaTrigger(Trigger_ID))
     {
         // set resting flag we are in the inn
-        pl->SetRestType(REST_TYPE_IN_TAVERN, Trigger_ID);
+        if (pl->GetRestType() != REST_TYPE_IN_CITY)
+            pl->SetRestType(REST_TYPE_IN_TAVERN, Trigger_ID);
         return;
     }
 
@@ -741,12 +737,6 @@ void WorldSession::HandleAreaTriggerOpcode(WorldPacket & recv_data)
         if (BattleGround* bg = pl->GetBattleGround())
             bg->HandleAreaTrigger(pl, Trigger_ID);
         return;
-    }
-
-    if(OutdoorPvP * pvp = GetPlayer()->GetOutdoorPvP())
-    {
-        if(pvp->HandleAreaTrigger(_player, Trigger_ID))
-            return;
     }
 
     // NULL if all values default (non teleport trigger)
@@ -905,7 +895,7 @@ void WorldSession::HandleRequestAccountData(WorldPacket& recv_data)
     dest.resize(destSize);
 
     WorldPacket data(SMSG_UPDATE_ACCOUNT_DATA, 8+4+4+4+destSize);
-    data << uint64(_player ? _player->GetGUID() : 0);       // player guid
+    data << (_player ? _player->GetObjectGuid() : ObjectGuid());// player guid
     data << uint32(type);                                   // type (0-7)
     data << uint32(adata->Time);                            // unix time
     data << uint32(size);                                   // decompressed length
@@ -1128,7 +1118,7 @@ void WorldSession::HandleInspectHonorStatsOpcode(WorldPacket& recv_data)
     }
 
     WorldPacket data(MSG_INSPECT_HONOR_STATS, 8+1+4*4);
-    data << uint64(player->GetGUID());
+    data << player->GetObjectGuid();
     data << uint8(player->GetUInt32Value(PLAYER_FIELD_HONOR_CURRENCY));
     data << uint32(player->GetUInt32Value(PLAYER_FIELD_KILLS));
     data << uint32(player->GetUInt32Value(PLAYER_FIELD_TODAY_CONTRIBUTION));
@@ -1159,7 +1149,7 @@ void WorldSession::HandleWorldTeleportOpcode(WorldPacket& recv_data)
 
     //DEBUG_LOG("Received opcode CMSG_WORLD_TELEPORT");
 
-    if(GetPlayer()->isInFlight())
+    if(GetPlayer()->IsTaxiFlying())
     {
         DEBUG_LOG("Player '%s' (GUID: %u) in flight, ignore worldport command.",GetPlayer()->GetName(),GetPlayer()->GetGUIDLow());
         return;
@@ -1357,9 +1347,9 @@ void WorldSession::HandleResetInstancesOpcode( WorldPacket & /*recv_data*/ )
 {
     DEBUG_LOG("WORLD: CMSG_RESET_INSTANCES");
 
-    if(Group *pGroup = _player->GetGroup())
+    if (Group *pGroup = _player->GetGroup())
     {
-        if(pGroup->IsLeader(_player->GetGUID()))
+        if (pGroup->IsLeader(_player->GetObjectGuid()))
         {
             pGroup->ResetInstances(INSTANCE_RESET_ALL, false, _player);
             pGroup->ResetInstances(INSTANCE_RESET_ALL, true,_player);
@@ -1396,21 +1386,13 @@ void WorldSession::HandleSetDungeonDifficultyOpcode( WorldPacket & recv_data )
         return;
     }
 
-    if(_player->getLevel() < LEVELREQUIREMENT_HEROIC)
+    if (_player->getLevel() < LEVELREQUIREMENT_HEROIC)
         return;
 
-    if(Group *pGroup = _player->GetGroup())
+    if (Group *pGroup = _player->GetGroup())
     {
-        if(pGroup->IsLeader(_player->GetGUID()))
+        if (pGroup->IsLeader(_player->GetObjectGuid()))
         {
-            //do not let set dungeon difficulty if any one in this group in dungeon
-            Group::MemberSlotList g_members = pGroup->GetMemberSlots();
-            for (Group::member_citerator itr = g_members.begin(); itr != g_members.end(); itr++)
-            {
-                Player *gm_member = sObjectMgr.GetPlayer(itr->guid);
-                if (gm_member && gm_member->GetMap() && gm_member->GetMap()->IsDungeon())
-                    return;
-            }
             // the difficulty is set even if the instances can't be reset
             //_player->SendDungeonDifficulty(true);
             pGroup->ResetInstances(INSTANCE_RESET_CHANGE_DIFFICULTY, false, _player);
@@ -1448,21 +1430,13 @@ void WorldSession::HandleSetRaidDifficultyOpcode( WorldPacket & recv_data )
         return;
     }
 
-    if(_player->getLevel() < LEVELREQUIREMENT_HEROIC)
+    if (_player->getLevel() < LEVELREQUIREMENT_HEROIC)
         return;
 
-    if(Group *pGroup = _player->GetGroup())
+    if (Group *pGroup = _player->GetGroup())
     {
-        if(pGroup->IsLeader(_player->GetGUID()))
+        if (pGroup->IsLeader(_player->GetObjectGuid()))
         {
-            //do not let set dungeon difficulty if any one in this group in dungeon
-            Group::MemberSlotList g_members = pGroup->GetMemberSlots();
-            for (Group::member_citerator itr = g_members.begin(); itr != g_members.end(); itr++)
-            {
-                Player *gm_member = sObjectMgr.GetPlayer(itr->guid);
-                if (gm_member && gm_member->GetMap() && gm_member->GetMap()->IsDungeon())
-                    return;
-            }
             // the difficulty is set even if the instances can't be reset
             //_player->SendDungeonDifficulty(true);
             pGroup->ResetInstances(INSTANCE_RESET_CHANGE_DIFFICULTY, true, _player);
@@ -1487,7 +1461,7 @@ void WorldSession::HandleCancelMountAuraOpcode( WorldPacket & /*recv_data*/ )
         return;
     }
 
-    if(_player->isInFlight())                               // not blizz like; no any messages on blizz
+    if(_player->IsTaxiFlying())                             // not blizz like; no any messages on blizz
     {
         ChatHandler(this).SendSysMessage(LANG_YOU_IN_FLIGHT);
         return;
@@ -1567,7 +1541,7 @@ void WorldSession::HandleHearthandResurrect(WorldPacket & /*recv_data*/)
         return;
 
     // Can't use in flight
-    if (_player->isInFlight())
+    if (_player->IsTaxiFlying())
         return;
 
     // Send Everytime

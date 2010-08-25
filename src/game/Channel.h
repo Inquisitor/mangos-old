@@ -198,6 +198,7 @@ class Channel
         void MakeVoiceOn(WorldPacket *data, uint64 guid);                       //+ 0x22
         void MakeVoiceOff(WorldPacket *data, uint64 guid);                      //+ 0x23
 
+        void SendToAll(WorldPacket *data, uint64 p = 0);
         void SendToAllButOne(WorldPacket *data, uint64 who);
         void SendToOne(WorldPacket *data, uint64 who);
 
@@ -240,7 +241,6 @@ class Channel
         }
 
     public:
-        void SendToAll(WorldPacket *data, uint64 p = 0);
         Channel(const std::string& name, uint32 channel_id);
         std::string GetName() const { return m_name; }
         uint32 GetChannelId() const { return m_channelId; }

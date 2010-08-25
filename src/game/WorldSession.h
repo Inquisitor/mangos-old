@@ -28,6 +28,7 @@
 
 struct ItemPrototype;
 struct AuctionEntry;
+struct AuctionHouseEntry;
 struct DeclinedName;
 
 class ObjectGuid;
@@ -217,22 +218,24 @@ class MANGOS_DLL_SPEC WorldSession
         void SendTabardVendorActivate( uint64 guid );
         void SendSpiritResurrect();
         void SendBindPoint(Creature* npc);
-        void SendGMTicketGetTicket(uint32 status, char const* text);
+        void SendGMTicketGetTicket(uint32 status, GMTicket *ticket = NULL);
         void SendGMResponse(GMTicket *ticket);
 
         void SendAttackStop(Unit const* enemy);
 
-        void SendBattlegGroundList( uint64 guid, BattleGroundTypeId bgTypeId );
+        void SendBattlegGroundList(ObjectGuid guid, BattleGroundTypeId bgTypeId);
 
         void SendTradeStatus(TradeStatus status);
+        void SendUpdateTrade(bool trader_state = true);
         void SendCancelTrade();
 
-        void SendStablePet(uint64 guid );
-        void SendPetitionQueryOpcode( uint64 petitionguid);
-        void SendUpdateTrade(bool trader_state = true);
+        void SendPetitionQueryOpcode(ObjectGuid petitionguid);
 
         //pet
         void SendPetNameQuery(uint64 guid, uint32 petnumber);
+        void SendStablePet(ObjectGuid guid);
+        void SendStableResult(uint8 res);
+        bool CheckStableMaster(ObjectGuid guid);
 
         // Account Data
         AccountData *GetAccountData(AccountDataType type) { return &m_accountData[type]; }
@@ -261,12 +264,13 @@ class MANGOS_DLL_SPEC WorldSession
         bool SendItemInfo( uint32 itemid, WorldPacket data );
 
         //auction
-        void SendAuctionHello( uint64 guid, Creature * unit );
+        void SendAuctionHello(Unit * unit);
         void SendAuctionCommandResult( uint32 auctionId, uint32 Action, uint32 ErrorCode, uint32 bidError = 0);
-        void SendAuctionBidderNotification( uint32 location, uint32 auctionId, uint64 bidder, uint32 bidSum, uint32 diff, uint32 item_template);
+        void SendAuctionBidderNotification( uint32 location, uint32 auctionId, ObjectGuid bidderGuid, uint32 bidSum, uint32 diff, uint32 item_template);
         void SendAuctionOwnerNotification( AuctionEntry * auction );
         void SendAuctionOutbiddedMail( AuctionEntry * auction, uint32 newPrice );
         void SendAuctionCancelledToBidderMail( AuctionEntry* auction );
+        AuctionHouseEntry const* GetCheckedAuctionHouseForAuctioneer(ObjectGuid guid);
 
         //Item Enchantment
         void SendEnchantmentLog(uint64 Target, uint64 Caster,uint32 ItemID,uint32 SpellID);
@@ -398,7 +402,6 @@ class MANGOS_DLL_SPEC WorldSession
         void HandleAreaTriggerOpcode(WorldPacket& recvPacket);
 
         void HandleSetFactionAtWar( WorldPacket & recv_data );
-        void HandleSetFactionCheat( WorldPacket & recv_data );
         void HandleSetWatchedFactionOpcode(WorldPacket & recv_data);
         void HandleSetFactionInactiveOpcode(WorldPacket & recv_data);
 
@@ -425,14 +428,6 @@ class MANGOS_DLL_SPEC WorldSession
         void HandleSetActiveMoverOpcode(WorldPacket &recv_data);
         void HandleMoveNotActiveMover(WorldPacket &recv_data);
         void HandleDismissControlledVehicle(WorldPacket &recv_data);
-        void HandleRequestVehicleExit(WorldPacket &recv_data);
-        void HandleRequestVehiclePrevSeat(WorldPacket &recv_data);
-        void HandleRequestVehicleNextSeat(WorldPacket &recv_data);
-        void HandleRequestVehicleSwitchSeat(WorldPacket &recv_data);
-        void HandleChangeSeatsOnControlledVehicle(WorldPacket &recv_data);
-        void HandleEnterPlayerVehicle(WorldPacket &recv_data);
-        void HandleEjectPasenger(WorldPacket &recv_data);
-
         void HandleMoveTimeSkippedOpcode(WorldPacket &recv_data);
 
         void HandleRequestRaidInfoOpcode( WorldPacket & recv_data );
@@ -728,11 +723,7 @@ class MANGOS_DLL_SPEC WorldSession
         void HandleSocketOpcode(WorldPacket& recv_data);
 
         void HandleCancelTempEnchantmentOpcode(WorldPacket& recv_data);
-
-        // Refund 
         void HandleItemRefundInfoRequest(WorldPacket& recv_data);
-        void HandleItemRefundRequest(WorldPacket& recv_data);
-        void SendRefundInfo( uint64 GUID );
 
         void HandleChannelVoiceOnOpcode(WorldPacket & recv_data);
         void HandleVoiceSessionEnableOpcode(WorldPacket& recv_data);
@@ -772,7 +763,6 @@ class MANGOS_DLL_SPEC WorldSession
         void HandleCalendarGetNumPending(WorldPacket& recv_data);
 
         void HandleSpellClick(WorldPacket& recv_data);
-        void HandleMirrorImageDataRequest(WorldPacket & recv_data);
         void HandleAlterAppearance(WorldPacket& recv_data);
         void HandleRemoveGlyph(WorldPacket& recv_data);
         void HandleCharCustomize(WorldPacket& recv_data);

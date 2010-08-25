@@ -59,6 +59,7 @@ enum CreatureFlagsExtra
 #endif
 
 #define MAX_KILL_CREDIT 2
+#define MAX_CREATURE_MODEL 4
 
 // from `creature_template` table
 struct CreatureInfo
@@ -66,8 +67,7 @@ struct CreatureInfo
     uint32  Entry;
     uint32  DifficultyEntry[MAX_DIFFICULTY - 1];
     uint32  KillCredit[MAX_KILL_CREDIT];
-    uint32  DisplayID_A[2];
-    uint32  DisplayID_H[2];
+    uint32  ModelId[MAX_CREATURE_MODEL];
     char*   Name;
     char*   SubName;
     char*   IconName;
@@ -117,7 +117,6 @@ struct CreatureInfo
     int32   resistance6;
     uint32  spells[CREATURE_MAX_SPELLS];
     uint32  PetSpellDataId;
-    uint32  VehicleEntry;
     uint32  mingold;
     uint32  maxgold;
     char const* AIName;
@@ -188,11 +187,10 @@ struct EquipmentInfo
 // from `creature` table
 struct CreatureData
 {
-    explicit CreatureData() : dbData(true) {}
     uint32 id;                                              // entry in creature_template
     uint16 mapid;
     uint16 phaseMask;
-    uint32 displayid;
+    uint32 modelid_override;                                // overrides any model defined in creature_template
     int32 equipmentId;
     float posX;
     float posY;
@@ -206,7 +204,6 @@ struct CreatureData
     bool  is_dead;
     uint8 movementType;
     uint8 spawnMask;
-    bool dbData;
 };
 
 struct CreatureDataAddonAura
@@ -214,16 +211,6 @@ struct CreatureDataAddonAura
     uint32 spell_id;
     SpellEffectIndex effect_idx;
 };
-
-struct CreatureDataAddonPassengers
-{
-    CreatureDataAddonPassengers() : entry(0), guid(0), seat_idx(-1) {}
-
-    uint32 entry;
-    uint32 guid;
-    int8 seat_idx;
-};
-
 
 // from `creature_addon` table
 struct CreatureDataAddon
@@ -234,8 +221,6 @@ struct CreatureDataAddon
     uint32 bytes2;
     uint32 emote;
     uint32 splineFlags;
-    uint32 vehicle_id;
-    CreatureDataAddonPassengers const* passengers;          // loaded as char* "entry1 seatid1 entry2 seatid2 ... "
     CreatureDataAddonAura const* auras;                     // loaded as char* "spell1 eff1 spell2 eff2 ... "
 };
 
@@ -245,7 +230,16 @@ struct CreatureModelInfo
     float bounding_radius;
     float combat_reach;
     uint8 gender;
-    uint32 modelid_other_gender;
+    uint32 modelid_other_gender;                            // The oposite gender for this modelid (male/female)
+    uint32 modelid_alternative;                             // An alternative model. Generally same gender(2)
+};
+
+struct CreatureModelRace
+{
+    uint32 modelid;                                         // Native model/base model the selection is for
+    uint32 racemask;                                        // Races it applies to (and then a player source must exist for selection)
+    uint32 creature_entry;                                  // Modelid from creature_template.entry will be selected
+    uint32 modelid_racial;                                  // Explicit modelid. Used if creature_template entry is not defined
 };
 
 enum InhabitTypeValues
@@ -291,17 +285,13 @@ enum AttackingTarget
 // Vendors
 struct VendorItem
 {
-    VendorItem(uint32 _item, uint32 _maxcount, uint32 _incrtime, int32 _ExtendedCost)
+    VendorItem(uint32 _item, uint32 _maxcount, uint32 _incrtime, uint32 _ExtendedCost)
         : item(_item), maxcount(_maxcount), incrtime(_incrtime), ExtendedCost(_ExtendedCost) {}
 
     uint32 item;
     uint32 maxcount;                                        // 0 for infinity item amount
     uint32 incrtime;                                        // time for restore items amount if maxcount != 0
-    int32  ExtendedCost;                                    // negative if need exclude normal item money cost
-
-    // helpers
-    uint32 IsExcludeMoneyPrice() const { return ExtendedCost < 0; }
-    uint32 GetExtendedCostId() const { return std::abs(ExtendedCost); }
+    uint32 ExtendedCost;                                    // index in ItemExtendedCost.dbc
 };
 typedef std::vector<VendorItem*> VendorItemList;
 
@@ -316,12 +306,12 @@ struct VendorItemData
     }
     bool Empty() const { return m_items.empty(); }
     uint8 GetItemCount() const { return m_items.size(); }
-    void AddItem( uint32 item, uint32 maxcount, uint32 ptime, int32 ExtendedCost)
+    void AddItem( uint32 item, uint32 maxcount, uint32 ptime, uint32 ExtendedCost)
     {
         m_items.push_back(new VendorItem(item, maxcount, ptime, ExtendedCost));
     }
     bool RemoveItem( uint32 item_id );
-    VendorItem const* FindItemCostPair(uint32 item_id, int32 extendedCost) const;
+    VendorItem const* FindItemCostPair(uint32 item_id, uint32 extendedCost) const;
 
     void Clear()
     {
@@ -524,6 +514,8 @@ class MANGOS_DLL_SPEC Creature : public Unit
         CreatureInfo const *GetCreatureInfo() const { return m_creatureInfo; }
         CreatureDataAddon const* GetCreatureAddon() const;
 
+        static uint32 ChooseDisplayId(const CreatureInfo *cinfo, const CreatureData *data = NULL);
+
         std::string GetAIName() const;
         std::string GetScriptName() const;
         uint32 GetScriptId() const;
@@ -634,7 +626,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         void SetCombatStartPosition(float x, float y, float z) { CombatStartX = x; CombatStartY = y; CombatStartZ = z; }
         void GetCombatStartPosition(float &x, float &y, float &z) { x = CombatStartX; y = CombatStartY; z = CombatStartZ; }
 
-        void SetSummonPoint(float fX, float fY, float fZ, float fOrient) { ASSERT(fX==fX); m_summonXpoint = fX; m_summonYpoint = fY; m_summonZpoint = fZ; m_summonOrientation = fOrient; }
+        void SetSummonPoint(float fX, float fY, float fZ, float fOrient) { m_summonXpoint = fX; m_summonYpoint = fY; m_summonZpoint = fZ; m_summonOrientation = fOrient; }
         void GetSummonPoint(float &fX, float &fY, float &fZ, float &fOrient) const { fX = m_summonXpoint; fY = m_summonYpoint; fZ = m_summonZpoint; fOrient = m_summonOrientation; }
 
         uint32 GetGlobalCooldown() const { return m_GlobalCooldown; }
@@ -711,16 +703,15 @@ class MANGOS_DLL_SPEC Creature : public Unit
 class AssistDelayEvent : public BasicEvent
 {
     public:
-        AssistDelayEvent(const uint64& victim, Unit& owner) : BasicEvent(), m_victim(victim), m_owner(owner) { }
+        AssistDelayEvent(ObjectGuid victim, Unit& owner, std::list<Creature*> const& assistants);
 
         bool Execute(uint64 e_time, uint32 p_time);
-        void AddAssistant(const uint64& guid) { m_assistants.push_back(guid); }
     private:
         AssistDelayEvent();
 
-        uint64            m_victim;
-        std::list<uint64> m_assistants;
-        Unit&             m_owner;
+        ObjectGuid              m_victimGuid;
+        std::vector<ObjectGuid> m_assistantGuids;
+        Unit&                   m_owner;
 };
 
 class ForcedDespawnDelayEvent : public BasicEvent

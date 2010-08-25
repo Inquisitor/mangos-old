@@ -1226,7 +1226,7 @@ enum Opcodes
     UMSG_UNKNOWN_1189                               = 0x4A5, // not found, old SMSG_PET_GUIDS
     SMSG_BATTLEGROUND_INFO_THROTTLED                = 0x4A6, // empty, "You can't do that yet"
     SMSG_PLAYER_VEHICLE_DATA                        = 0x4A7, // smsg guid+uint32 (vehicle) EVENT_PLAYER_GAINS_VEHICLE_DATA/EVENT_PLAYER_LOSES_VEHICLE_DATA
-    CMSG_PLAYER_VEHICLE_ENTER                       = 0x4A8, // cmsg uint64
+    CMSG_UNKNOWN_1192                               = 0x4A8, // cmsg uint64
     CMSG_EJECT_PASSENGER                            = 0x4A9, // cmsg uint64
     SMSG_PET_GUIDS                                  = 0x4AA, // shifted+5
     SMSG_CLIENTCACHE_VERSION                        = 0x4AB, // shifted+5
@@ -1242,7 +1242,7 @@ enum Opcodes
     SMSG_ITEM_REFUND_RESULT                         = 0x4B5, // refund item result
     CMSG_CORPSE_MAP_POSITION_QUERY                  = 0x4B6, // CMSG, uint32
     SMSG_CORPSE_MAP_POSITION_QUERY_RESPONSE         = 0x4B7, // SMSG, 3*float+float
-    CMSG_LFG_SET_ROLES_2                            = 0x4B8, // not found
+    UMSG_UNKNOWN_1208                               = 0x4B8, // not found
     UMSG_UNKNOWN_1209                               = 0x4B9, // not found
     CMSG_CALENDAR_CONTEXT_EVENT_SIGNUP              = 0x4BA, // CMSG, uint64, lua: CalendarContextEventSignUp
     SMSG_CALENDAR_ACTION_PENDING                    = 0x4BB, // SMSG, calendar related EVENT_CALENDAR_ACTION_PENDING
@@ -1336,12 +1336,16 @@ enum Opcodes
     UMSG_UNKNOWN_1299                               = 0x513, // not found
     SMSG_COMBAT_LOG_MULTIPLE                        = 0x514, // SMSG, multi combatlog
     SMSG_LFG_OPEN_FROM_GOSSIP                       = 0x515, // event EVENT_LFG_OPEN_FROM_GOSSIP (opens dungeon finder, probably for outdoor bosses)
-    SMSG_UNKNOWN_1302                               = 0x516, // something with player movement (move event 58?)
-    CMSG_UNKNOWN_1303                               = 0x517, // something with player movement (move event 58?)
-    SMSG_UNKNOWN_1304                               = 0x518, // something with player movement (move event 58?), speed packet
+    SMSG_UNKNOWN_1302                               = 0x516, // something with player movement (move event 58)
+    CMSG_UNKNOWN_1303                               = 0x517, // something with player movement (move event 58)
+    SMSG_UNKNOWN_1304                               = 0x518, // something with player movement (move event 58), speed packet
     UMSG_UNKNOWN_1305                               = 0x519, // not found
     UMSG_UNKNOWN_1306                               = 0x51A, // not found
-    NUM_MSG_TYPES                                   = 0x51B
+    CMSG_COMMENTATOR_SKIRMISH_QUEUE_COMMAND         = 0x51B, // lua: CommentatorSetSkirmishMatchmakingMode/CommentatorRequestSkirmishQueueData/CommentatorRequestSkirmishMode/CommentatorStartSkirmishMatch
+    SMSG_UNKNOWN_1308                               = 0x51C, // event EVENT_COMMENTATOR_SKIRMISH_QUEUE_REQUEST, CGCommentator::QueueNode
+    SMSG_UNKNOWN_1309                               = 0x51D, // event EVENT_COMMENTATOR_SKIRMISH_QUEUE_REQUEST
+    SMSG_UNKNOWN_1310                               = 0x51E, // some compressed packet?
+    NUM_MSG_TYPES                                   = 0x51F
 };
 
 /// Player state

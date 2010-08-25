@@ -33,6 +33,17 @@
 #include "Creature.h"
 #include "Pet.h"
 #include "Guild.h"
+#include "Chat.h"
+
+enum StableResultCode
+{
+    STABLE_ERR_MONEY        = 0x01,                         // "you don't have enough money"
+    STABLE_ERR_STABLE       = 0x06,                         // currently used in most fail cases
+    STABLE_SUCCESS_STABLE   = 0x08,                         // stable success
+    STABLE_SUCCESS_UNSTABLE = 0x09,                         // unstable/swap success
+    STABLE_SUCCESS_BUY_SLOT = 0x0A,                         // buy slot success
+    STABLE_ERR_EXOTIC       = 0x0C,                         // "you are unable to control exotic creatures"
+};
 
 void WorldSession::HandleTabardVendorActivateOpcode( WorldPacket & recv_data )
 {
@@ -235,7 +246,7 @@ void WorldSession::HandleTrainerBuySpellOpcode( WorldPacket & recv_data )
     SendPacket(&data);
 
     data.Initialize(SMSG_PLAY_SPELL_IMPACT, 12);            // visual effect on player
-    data << uint64(_player->GetGUID());
+    data << _player->GetObjectGuid();
     data << uint32(0x016A);                                 // index from SpellVisualKit.dbc
     SendPacket(&data);
 
@@ -303,57 +314,6 @@ void WorldSession::HandleGossipSelectOptionOpcode( WorldPacket & recv_data )
     // remove fake death
     if (GetPlayer()->hasUnitState(UNIT_STAT_DIED))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
-
-    // TODO: determine if scriptCall is needed for GO and also if scriptCall can be same as current, with modified argument WorldObject*
-    // This is a special news GossipWindow.
-    if (guid.IsPlayer())
-    {
-        uint32 gossipOptionId = _player->PlayerTalkClass->GetGossipMenu().GetItem(gossipListId).m_gOptionId;
-        uint32 textId = 110001;
-        bool isSentToMain = false;
-        _player->PlayerTalkClass->ClearMenus();
-        sLog.outDetail("WORLD: HandleGossipSelectOptionOpcode - Sent from player (GC News handler) menuId %i gossip list %i and id is %i ", menuId, gossipListId, gossipOptionId);
-        //we loop through list..
-        for( std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.begin(); itr != sObjectMgr.mGCNewsMap.end(); ++itr )
-        {
-            GCNewsData const& news = (*itr).second;
-            // is this the level we currently look at?
-            if( news.parent == gossipOptionId )
-            {
-                switch (news.type)
-                {
-                    case 3:
-                    {
-                        // we add a level up item for that we need to know the parents parent.
-                        std::multimap<uint32,GCNewsData>::iterator itr2 = sObjectMgr.mGCNewsMap.find(gossipOptionId);
-                        // if there actually is a parent
-                        if( itr2 != sObjectMgr.mGCNewsMap.end() )
-                            _player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_BATTLE,news.textstring,1,(*itr2).second.parent,"",0);
-                        break;
-                    }
-                    case 2:
-                        // we add a icon that can be clicked
-                        _player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_INTERACT_1,news.textstring,1,(*itr).first,"",0);
-                        break;
-                    case 1:
-                        // we add normal text, on click it will lead to same menu.
-                        _player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_DOT,news.textstring,1,gossipOptionId,"",0);
-                        break;
-                    case 0:
-                        // we set the correct text
-                        textId = atoi(news.textstring.c_str());
-                        break;
-                }
-            }
-        }
-        if (_player->PlayerTalkClass->GetGossipMenu().Empty())
-        {
-            _player->PlayerTalkClass->CloseGossip();
-        } else {
-            _player->PlayerTalkClass->SendTalking(textId);
-            _player->PlayerTalkClass->SendGossipMenu(textId, guid.GetRawValue());
-        }
-    }
 
     // can vehicle have gossip? If so, need check for this also.
     if (guid.IsCreatureOrPet())
@@ -493,7 +453,7 @@ void WorldSession::SendBindPoint(Creature *npc)
     npc->CastSpell(_player, 3286, true);                    // Bind
 
     WorldPacket data( SMSG_TRAINER_BUY_SUCCEEDED, (8+4));
-    data << uint64(npc->GetGUID());
+    data << npc->GetObjectGuid();
     data << uint32(3286);                                   // Bind
     SendPacket( &data );
 
@@ -503,14 +463,14 @@ void WorldSession::SendBindPoint(Creature *npc)
 void WorldSession::HandleListStabledPetsOpcode( WorldPacket & recv_data )
 {
     DEBUG_LOG("WORLD: Recv MSG_LIST_STABLED_PETS");
-    uint64 npcGUID;
+    ObjectGuid npcGUID;
 
     recv_data >> npcGUID;
 
     Creature *unit = GetPlayer()->GetNPCIfCanInteractWith(npcGUID, UNIT_NPC_FLAG_STABLEMASTER);
     if (!unit)
     {
-        DEBUG_LOG( "WORLD: HandleListStabledPetsOpcode - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(npcGUID)) );
+        DEBUG_LOG( "WORLD: HandleListStabledPetsOpcode - %s not found or you can't interact with him.", npcGUID.GetString().c_str());
         return;
     }
 
@@ -521,12 +481,12 @@ void WorldSession::HandleListStabledPetsOpcode( WorldPacket & recv_data )
     SendStablePet(npcGUID);
 }
 
-void WorldSession::SendStablePet(uint64 guid )
+void WorldSession::SendStablePet( ObjectGuid guid )
 {
     DEBUG_LOG("WORLD: Recv MSG_LIST_STABLED_PETS Send.");
 
     WorldPacket data(MSG_LIST_STABLED_PETS, 200);           // guess size
-    data << uint64 ( guid );
+    data << guid;
 
     Pet *pet = _player->GetPet();
 
@@ -574,20 +534,54 @@ void WorldSession::SendStablePet(uint64 guid )
     SendPacket(&data);
 }
 
+void WorldSession::SendStableResult(uint8 res)
+{
+    WorldPacket data(SMSG_STABLE_RESULT, 1);
+    data << uint8(res);
+    SendPacket(&data);
+}
+
+bool WorldSession::CheckStableMaster(ObjectGuid guid)
+{
+    // spell case or GM
+    if (guid == GetPlayer()->GetObjectGuid())
+    {
+        // command case will return only if player have real access to command
+        if (!GetPlayer()->HasAuraType(SPELL_AURA_OPEN_STABLE) && !ChatHandler(GetPlayer()).FindCommand("stable"))
+        {
+            DEBUG_LOG("%s attempt open stable in cheating way.", guid.GetString().c_str());
+            return false;
+        }
+    }
+    // stable master case
+    else
+    {
+        if (!GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_STABLEMASTER))
+        {
+            DEBUG_LOG("Stablemaster %s not found or you can't interact with him.", guid.GetString().c_str());
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void WorldSession::HandleStablePet( WorldPacket & recv_data )
 {
     DEBUG_LOG("WORLD: Recv CMSG_STABLE_PET");
-    uint64 npcGUID;
+    ObjectGuid npcGUID;
 
     recv_data >> npcGUID;
 
     if(!GetPlayer()->isAlive())
-        return;
-
-    Creature *unit = GetPlayer()->GetNPCIfCanInteractWith(npcGUID, UNIT_NPC_FLAG_STABLEMASTER);
-    if (!unit)
     {
-        DEBUG_LOG( "WORLD: HandleStablePet - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(npcGUID)) );
+        SendStableResult(STABLE_ERR_STABLE);
+        return;
+    }
+
+    if (!CheckStableMaster(npcGUID))
+    {
+        SendStableResult(STABLE_ERR_STABLE);
         return;
     }
 
@@ -600,9 +594,7 @@ void WorldSession::HandleStablePet( WorldPacket & recv_data )
     // can't place in stable dead pet
     if(!pet||!pet->isAlive()||pet->getPetType()!=HUNTER_PET)
     {
-        WorldPacket data(SMSG_STABLE_RESULT, 1);
-        data << uint8(0x06);
-        SendPacket(&data);
+        SendStableResult(STABLE_ERR_STABLE);
         return;
     }
 
@@ -629,30 +621,26 @@ void WorldSession::HandleStablePet( WorldPacket & recv_data )
         delete result;
     }
 
-    WorldPacket data(SMSG_STABLE_RESULT, 1);
     if( free_slot > 0 && free_slot <= GetPlayer()->m_stableSlots)
     {
         _player->RemovePet(pet,PetSaveMode(free_slot));
-        data << uint8(0x08);
+        SendStableResult(STABLE_SUCCESS_STABLE);
     }
     else
-        data << uint8(0x06);
-
-    SendPacket(&data);
+        SendStableResult(STABLE_ERR_STABLE);
 }
 
 void WorldSession::HandleUnstablePet( WorldPacket & recv_data )
 {
     DEBUG_LOG("WORLD: Recv CMSG_UNSTABLE_PET.");
-    uint64 npcGUID;
+    ObjectGuid npcGUID;
     uint32 petnumber;
 
     recv_data >> npcGUID >> petnumber;
 
-    Creature *unit = GetPlayer()->GetNPCIfCanInteractWith(npcGUID, UNIT_NPC_FLAG_STABLEMASTER);
-    if (!unit)
+    if (!CheckStableMaster(npcGUID))
     {
-        DEBUG_LOG( "WORLD: HandleUnstablePet - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(npcGUID)) );
+        SendStableResult(STABLE_ERR_STABLE);
         return;
     }
 
@@ -675,27 +663,25 @@ void WorldSession::HandleUnstablePet( WorldPacket & recv_data )
 
     if(!creature_id)
     {
-        WorldPacket data(SMSG_STABLE_RESULT, 1);
-        data << uint8(0x06);
-        SendPacket(&data);
+        SendStableResult(STABLE_ERR_STABLE);
         return;
     }
 
     CreatureInfo const* creatureInfo = ObjectMgr::GetCreatureTemplate(creature_id);
     if(!creatureInfo || !creatureInfo->isTameable(_player->CanTameExoticPets()))
     {
-        WorldPacket data(SMSG_STABLE_RESULT, 1);
-        data << uint8(0x06);
-        SendPacket(&data);
+        // if problem in exotic pet
+        if (creatureInfo && creatureInfo->isTameable(true))
+            SendStableResult(STABLE_ERR_EXOTIC);
+        else
+            SendStableResult(STABLE_ERR_STABLE);
         return;
     }
 
     Pet* pet = _player->GetPet();
     if(pet && pet->isAlive())
     {
-        WorldPacket data(SMSG_STABLE_RESULT, 1);
-        data << uint8(0x06);
-        SendPacket(&data);
+        SendStableResult(STABLE_ERR_STABLE);
         return;
     }
 
@@ -708,36 +694,29 @@ void WorldSession::HandleUnstablePet( WorldPacket & recv_data )
     {
         delete newpet;
         newpet = NULL;
-        WorldPacket data(SMSG_STABLE_RESULT, 1);
-        data << uint8(0x06);
-        SendPacket(&data);
+        SendStableResult(STABLE_ERR_STABLE);
         return;
     }
 
-    WorldPacket data(SMSG_STABLE_RESULT, 1);
-    data << uint8(0x09);
-    SendPacket(&data);
+    SendStableResult(STABLE_SUCCESS_UNSTABLE);
 }
 
 void WorldSession::HandleBuyStableSlot( WorldPacket & recv_data )
 {
     DEBUG_LOG("WORLD: Recv CMSG_BUY_STABLE_SLOT.");
-    uint64 npcGUID;
+    ObjectGuid npcGUID;
 
     recv_data >> npcGUID;
 
-    Creature *unit = GetPlayer()->GetNPCIfCanInteractWith(npcGUID, UNIT_NPC_FLAG_STABLEMASTER);
-    if (!unit)
+    if (!CheckStableMaster(npcGUID))
     {
-        DEBUG_LOG( "WORLD: HandleBuyStableSlot - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(npcGUID)) );
+        SendStableResult(STABLE_ERR_STABLE);
         return;
     }
 
     // remove fake death
     if(GetPlayer()->hasUnitState(UNIT_STAT_DIED))
         GetPlayer()->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
-
-    WorldPacket data(SMSG_STABLE_RESULT, 200);
 
     if(GetPlayer()->m_stableSlots < MAX_PET_STABLES)
     {
@@ -746,15 +725,13 @@ void WorldSession::HandleBuyStableSlot( WorldPacket & recv_data )
         {
             ++GetPlayer()->m_stableSlots;
             _player->ModifyMoney(-int32(SlotPrice->Price));
-            data << uint8(0x0A);                            // success buy
+            SendStableResult(STABLE_SUCCESS_BUY_SLOT);
         }
         else
-            data << uint8(0x06);
+            SendStableResult(STABLE_ERR_MONEY);
     }
     else
-        data << uint8(0x06);
-
-    SendPacket(&data);
+        SendStableResult(STABLE_ERR_STABLE);
 }
 
 void WorldSession::HandleStableRevivePet( WorldPacket &/* recv_data */)
@@ -765,15 +742,14 @@ void WorldSession::HandleStableRevivePet( WorldPacket &/* recv_data */)
 void WorldSession::HandleStableSwapPet( WorldPacket & recv_data )
 {
     DEBUG_LOG("WORLD: Recv CMSG_STABLE_SWAP_PET.");
-    uint64 npcGUID;
+    ObjectGuid npcGUID;
     uint32 pet_number;
 
     recv_data >> npcGUID >> pet_number;
 
-    Creature *unit = GetPlayer()->GetNPCIfCanInteractWith(npcGUID, UNIT_NPC_FLAG_STABLEMASTER);
-    if (!unit)
+    if (!CheckStableMaster(npcGUID))
     {
-        DEBUG_LOG( "WORLD: HandleStableSwapPet - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(npcGUID)) );
+        SendStableResult(STABLE_ERR_STABLE);
         return;
     }
 
@@ -785,13 +761,19 @@ void WorldSession::HandleStableSwapPet( WorldPacket & recv_data )
     Pet* pet = _player->GetPet();
 
     if(!pet || pet->getPetType()!=HUNTER_PET)
+    {
+        SendStableResult(STABLE_ERR_STABLE);
         return;
+    }
 
     // find swapped pet slot in stable
     QueryResult *result = CharacterDatabase.PQuery("SELECT slot,entry FROM character_pet WHERE owner = '%u' AND id = '%u'",
         _player->GetGUIDLow(),pet_number);
     if(!result)
+    {
+        SendStableResult(STABLE_ERR_STABLE);
         return;
+    }
 
     Field *fields = result->Fetch();
 
@@ -801,37 +783,33 @@ void WorldSession::HandleStableSwapPet( WorldPacket & recv_data )
 
     if(!creature_id)
     {
-        WorldPacket data(SMSG_STABLE_RESULT, 1);
-        data << uint8(0x06);
-        SendPacket(&data);
+        SendStableResult(STABLE_ERR_STABLE);
         return;
     }
 
     CreatureInfo const* creatureInfo = ObjectMgr::GetCreatureTemplate(creature_id);
     if(!creatureInfo || !creatureInfo->isTameable(_player->CanTameExoticPets()))
     {
-        WorldPacket data(SMSG_STABLE_RESULT, 1);
-        data << uint8(0x06);
-        SendPacket(&data);
+        // if problem in exotic pet
+        if (creatureInfo && creatureInfo->isTameable(true))
+            SendStableResult(STABLE_ERR_EXOTIC);
+        else
+            SendStableResult(STABLE_ERR_STABLE);
         return;
     }
 
     // move alive pet to slot or delete dead pet
     _player->RemovePet(pet,pet->isAlive() ? PetSaveMode(slot) : PET_SAVE_AS_DELETED);
 
-    WorldPacket data(SMSG_STABLE_RESULT, 1);                // guess size
-
     // summon unstabled pet
     Pet *newpet = new Pet;
     if(!newpet->LoadPetFromDB(_player,creature_id,pet_number))
     {
         delete newpet;
-        data << uint8(0x06);
+        SendStableResult(STABLE_ERR_STABLE);
     }
     else
-        data << uint8(0x09);
-
-    SendPacket(&data);
+        SendStableResult(STABLE_SUCCESS_UNSTABLE);
 }
 
 void WorldSession::HandleRepairItemOpcode( WorldPacket & recv_data )

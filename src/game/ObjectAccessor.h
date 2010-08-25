@@ -23,7 +23,7 @@
 #include "Policies/Singleton.h"
 #include <ace/Thread_Mutex.h>
 #include <ace/RW_Thread_Mutex.h>
-#include "Utilities/UnorderedMap.h"
+#include "Utilities/UnorderedMapSet.h"
 #include "Policies/ThreadingModel.h"
 
 #include "UpdateData.h"
@@ -38,7 +38,6 @@
 
 class Creature;
 class Unit;
-class Vehicle;
 class GameObject;
 class WorldObject;
 class Map;
@@ -103,16 +102,15 @@ class MANGOS_DLL_DECL ObjectAccessor : public MaNGOS::Singleton<ObjectAccessor, 
         // FIXME: map local object with global search
         static Creature*   GetCreatureInWorld(ObjectGuid guid)   { return FindHelper<Creature>(guid); }
         static GameObject* GetGameObjectInWorld(ObjectGuid guid) { return FindHelper<GameObject>(guid); }
-        static Vehicle*    GetGameObjectInWorld(uint64 guid, Vehicle*    /*fake*/) { return FindHelper<Vehicle>(guid); }
 
-        // possible local search for specific object map
-        static Unit* GetUnit(WorldObject const &, ObjectGuid guid);
-        static Vehicle* GetVehicle(uint64 guid) { return GetGameObjectInWorld(guid, (Vehicle*)NULL); }
+        // Search player at any map in world and other objects at same map with `obj`
+        // Note: recommended use Map::GetUnit version if player also expected at same map only
+        static Unit* GetUnit(WorldObject const& obj, ObjectGuid guid);
 
         // Player access
-        static Player* FindPlayer(ObjectGuid guid);
+        static Player* FindPlayer(ObjectGuid guid);         // if need player at specific map better use Map::GetPlayer
         static Player* FindPlayerByName(const char *name);
-        static void KickPlayer(uint64 guid);
+        static void KickPlayer(ObjectGuid guid);
 
         HashMapHolder<Player>::MapType& GetPlayers()
         {
@@ -175,9 +173,6 @@ inline Unit* ObjectAccessor::GetUnitInWorld(WorldObject const& obj, ObjectGuid g
 
     if (guid.IsPet())
         return obj.IsInWorld() ? obj.GetMap()->GetPet(guid) : NULL;
-
-    if (guid.IsVehicle())
-        return obj.IsInWorld() ? ((Unit*)obj.GetMap()->GetVehicle(guid)) : NULL;
 
     return GetCreatureInWorld(guid);
 }

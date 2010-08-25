@@ -57,7 +57,7 @@ enum AchievementFactionFlags
 enum AchievementFlags
 {
     ACHIEVEMENT_FLAG_COUNTER           = 0x00000001,        // Just count statistic (never stop and complete)
-    ACHIEVEMENT_FLAG_HIDDEN            = 0x00000002,        // not show in client
+    ACHIEVEMENT_FLAG_UNK2              = 0x00000002,        // not used
     ACHIEVEMENT_FLAG_STORE_MAX_VALUE   = 0x00000004,        // Store only max value? used only in "Reach level xx"
     ACHIEVEMENT_FLAG_SUMM              = 0x00000008,        // Use summ criteria value from all reqirements (and calculate max value)
     ACHIEVEMENT_FLAG_MAX_USED          = 0x00000010,        // Show max criteria (and calculate max value ??)
@@ -87,12 +87,6 @@ enum AchievementCriteriaCompletionFlags
     ACHIEVEMENT_CRITERIA_FLAG_UNK4              = 0x00000008,         //
     ACHIEVEMENT_CRITERIA_FLAG_UNK5              = 0x00000010,         // not used
     ACHIEVEMENT_CRITERIA_FLAG_MONEY_COUNTER     = 0x00000020,         // Displays counter as money
-};
-
-enum AchievementCriteriaGroupFlags
-{
-    // you mustn't be in a group while fulfilling this achievement
-    ACHIEVEMENT_CRITERIA_GROUP_NOT_IN_GROUP = 2,
 };
 
 enum AchievementCriteriaTypes
@@ -242,10 +236,10 @@ enum AreaFlags
     AREA_FLAG_UNK7                  = 0x00400000,           // Warsong Hold, Acherus: The Ebon Hold, New Agamand Inn, Vengeance Landing Inn
     AREA_FLAG_UNK8                  = 0x00800000,           // Westguard Inn, Acherus: The Ebon Hold, Valgarde
     AREA_FLAG_OUTDOOR_PVP           = 0x01000000,           // Wintergrasp and it's subzones
-    AREA_FLAG_UNK9                  = 0x02000000,           // unknown
-    AREA_FLAG_UNK10                 = 0x04000000,           // unknown
-    AREA_FLAG_CAN_HEARTH_AND_RES    = 0x08000000            // Wintergrasp and it's subzones
-    // 0x20000000 not flyable?
+    AREA_FLAG_INSIDE                = 0x02000000,           // used for determinating spell related inside/outside questions in Map::IsOutdoors
+    AREA_FLAG_OUTSIDE               = 0x04000000,           // used for determinating spell related inside/outside questions in Map::IsOutdoors
+    AREA_FLAG_CAN_HEARTH_AND_RES    = 0x08000000,           // Wintergrasp and it's subzones
+    AREA_FLAG_CANNOT_FLY            = 0x20000000            // not allowed to fly, only used in Dalaran areas (zone 4395)
 };
 
 enum Difficulty
@@ -433,18 +427,5 @@ enum SpellEffectIndex
 };
 
 #define MAX_EFFECT_INDEX 3
-
-enum VehicleSeatFlags
-{
-    SEAT_FREE                   = 0x01,                     // free seat
-    SEAT_FULL                   = 0x02,                     // seat occupied by player/creature
-    // special cases
-    SEAT_VEHICLE_FREE           = 0x04,                     // seat occupied by vehicle, but that vehicle is free
-    SEAT_VEHICLE_FULL           = 0x08,                     // seat occupied by vehicle and that vehicle is full too
-    SEAT_FLAG_HIDE_PASSENGER    = 0x00000200,               // Passenger is hidden
-    SEAT_FLAG_MAIN_RIDER        = 0x00000800,               // Can control vehicle
-    SEAT_FLAG_USABLE            = 0x02000000,
-    SEAT_FLAG_CAN_CAST          = 0x20000000,
-};
 
 #endif

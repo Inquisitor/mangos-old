@@ -20,7 +20,6 @@
 #define MANGOS_INSTANCE_DATA_H
 
 #include "Common.h"
-#include "ZoneScript.h"
 
 class Map;
 class Unit;
@@ -58,11 +57,26 @@ class MANGOS_DLL_SPEC InstanceData
         //Called when a player successfully enters the instance (after really added to map)
         virtual void OnPlayerEnter(Player *) {}
 
+        //Called when a player dies inside instance
+        virtual void OnPlayerDeath(Player *) {}
+
+        //Called when a player leaves the instance (before really removed from map (or possibly world))
+        virtual void OnPlayerLeave(Player *) {}
+
         //Called when a gameobject is created
         virtual void OnObjectCreate(GameObject *) {}
 
         //called on creature creation
         virtual void OnCreatureCreate(Creature * /*creature*/) {}
+
+        //called on creature enter combat
+        virtual void OnCreatureEnterCombat(Creature * /*creature*/) {}
+
+        //called on creature evade
+        virtual void OnCreatureEvade(Creature * /*creature*/) {}
+
+        //called on creature death
+        virtual void OnCreatureDeath(Creature * /*creature*/) {}
 
         //All-purpose data storage 64 bit
         virtual uint64 GetData64(uint32 /*Data*/) { return 0; }
@@ -73,7 +87,7 @@ class MANGOS_DLL_SPEC InstanceData
         virtual void SetData(uint32 /*Type*/, uint32 /*Data*/) {}
 
         // Achievement criteria additional requirements check
-        // NOTE: not use this if same can be checked existed requirement types from AchievementCriteriaRequirementType
+        // NOTE: not use this if same can be checked existing requirement types from AchievementCriteriaRequirementType
         virtual bool CheckAchievementCriteriaMeet(uint32 criteria_id, Player const* source, Unit const* target = NULL, uint32 miscvalue1 = 0);
 
         // Condition criteria additional requirements check

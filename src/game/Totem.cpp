@@ -53,25 +53,7 @@ void Totem::Update( uint32 time )
 
 void Totem::Summon(Unit* owner)
 {
-    // Mana Tide Totem should have 10% of caster's health
-    if(GetSpell() == 16191)
-    {
-        SetMaxHealth(owner->GetMaxHealth()*10/100);
-        SetHealth(GetMaxHealth());
-    }
-
     owner->GetMap()->Add((Creature*)this);
-
-    // select totem model in dependent from owner team
-    CreatureInfo const *cinfo = GetCreatureInfo();
-    if(owner->GetTypeId() == TYPEID_PLAYER && cinfo)
-    {
-        uint32 display_id = sObjectMgr.ChooseDisplayId(((Player*)owner)->GetTeam(), cinfo);
-        CreatureModelInfo const *minfo = sObjectMgr.GetCreatureModelRandomGender(display_id);
-        if (minfo)
-            display_id = minfo->modelid;
-        SetDisplayId(display_id);
-    }
 
     AIM_Initialize();
 
@@ -85,9 +67,7 @@ void Totem::Summon(Unit* owner)
     switch(m_type)
     {
         case TOTEM_PASSIVE:
-            for (int i = 0; i < MAX_CREATURE_SPELL_DATA_SLOT; ++i)
-                if(m_spells[i])
-                    CastSpell(this, m_spells[i], true);
+            CastSpell(this, GetSpell(), true);
             break;
         case TOTEM_STATUE:
             CastSpell(GetOwner(), GetSpell(), true);

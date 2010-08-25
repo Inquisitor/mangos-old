@@ -282,22 +282,7 @@ void Item::UpdateDuration(Player* owner, uint32 diff)
 
     if (GetUInt32Value(ITEM_FIELD_DURATION)<=diff)
     {
-        uint32 itemId = this->GetEntry();
-
         owner->DestroyItem(GetBagSlot(), GetSlot(), true);
-
-        if (itemId == 39878) //Mysterious Egg
-        {
-            if (Item* Item = owner->StoreNewItemInInventorySlot(39883, 1))
-                owner->SendNewItem(Item, 1, true, false);
-        }
-
-        if (itemId == 44717) //Disgusting Jar
-        {
-            if (Item* Item = owner->StoreNewItemInInventorySlot(44718, 1))
-                owner->SendNewItem(Item, 1, true, false);
-        }
-
         return;
     }
 
@@ -352,30 +337,30 @@ void Item::SaveToDB()
     SetState(ITEM_UNCHANGED);
 }
 
-bool Item::LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult *result)
+bool Item::LoadFromDB(uint32 guidLow, uint64 owner_guid, QueryResult *result)
 {
     // create item before any checks for store correct guid
     // and allow use "FSetState(ITEM_REMOVED); SaveToDB();" for deleting item from DB
-    Object::_Create(guid, 0, HIGHGUID_ITEM);
+    Object::_Create(guidLow, 0, HIGHGUID_ITEM);
 
     bool delete_result = false;
     if(!result)
     {
-        result = CharacterDatabase.PQuery("SELECT data FROM item_instance WHERE guid = '%u'", guid);
+        result = CharacterDatabase.PQuery("SELECT data FROM item_instance WHERE guid = '%u'", guidLow);
         delete_result = true;
     }
 
     if (!result)
     {
-        sLog.outError("Item (GUID: %u owner: %u) not found in table `item_instance`, can't load. ",guid,GUID_LOPART(owner_guid));
+        sLog.outError("Item (GUID: %u owner: %u) not found in table `item_instance`, can't load. ", guidLow, GUID_LOPART(owner_guid));
         return false;
     }
 
     Field *fields = result->Fetch();
 
-    if(!LoadValues(fields[0].GetString()))
+    if (!LoadValues(fields[0].GetString()))
     {
-        sLog.outError("Item #%d have broken data in `data` field. Can't be loaded.",guid);
+        sLog.outError("Item #%d have broken data in `data` field. Can't be loaded.", guidLow);
         if (delete_result) delete result;
         return false;
     }
@@ -383,14 +368,15 @@ bool Item::LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult *result)
     bool need_save = false;                                 // need explicit save data at load fixes
 
     // overwrite possible wrong/corrupted guid
-    uint64 new_item_guid = MAKE_NEW_GUID(guid,0, HIGHGUID_ITEM);
-    if(GetUInt64Value(OBJECT_FIELD_GUID) != new_item_guid)
+    ObjectGuid new_item_guid = ObjectGuid(HIGHGUID_ITEM, guidLow);
+    if (GetGuidValue(OBJECT_FIELD_GUID) != new_item_guid)
     {
-        SetUInt64Value(OBJECT_FIELD_GUID, MAKE_NEW_GUID(guid,0, HIGHGUID_ITEM));
+        SetGuidValue(OBJECT_FIELD_GUID, new_item_guid);
         need_save = true;
     }
 
-    if (delete_result) delete result;
+    if (delete_result)
+        delete result;
 
     ItemPrototype const* proto = GetProto();
     if(!proto)
@@ -434,23 +420,13 @@ bool Item::LoadFromDB(uint32 guid, uint64 owner_guid, QueryResult *result)
         need_save = true;
     }
 
-    // Insert to Refundable map
-    if(GetPlayedtimeField())
-    {
-        std::pair< uint64, uint32 > insertpair;
-        insertpair.first = GetGUID();
-        insertpair.second = 0;
-
-        sObjectMgr.mItemRefundableMap.insert(insertpair);
-    }
-
     if (need_save)                                          // normal item changed state set not work at loading
     {
         std::ostringstream ss;
         ss << "UPDATE item_instance SET data = '";
         for(uint16 i = 0; i < m_valuesCount; ++i )
             ss << GetUInt32Value(i) << " ";
-        ss << "', owner_guid = '" << GUID_LOPART(GetOwnerGUID()) << "' WHERE guid = '" << guid << "'";
+        ss << "', owner_guid = '" << GUID_LOPART(GetOwnerGUID()) << "' WHERE guid = '" << guidLow << "'";
 
         CharacterDatabase.Execute( ss.str().c_str() );
     }
@@ -754,7 +730,7 @@ bool Item::CanBeTraded(bool mail) const
             return false;
     }
 
-    if ((!mail || !IsBoundAccountWide()) && IsBoundByEnchant())
+    if (IsBoundByEnchant())
         return false;
 
     return true;
@@ -782,19 +758,6 @@ bool Item::IsBoundByEnchant() const
 bool Item::IsFitToSpellRequirements(SpellEntry const* spellInfo) const
 {
     ItemPrototype const* proto = GetProto();
-
-    //Lava Lash
-    if (spellInfo->Id == 60103 && spellInfo->EquippedItemClass == ITEM_CLASS_WEAPON)
-         return true;
-
-    // Enchant spells have only effect[0]
-    if(proto->IsVellum() && spellInfo->Effect[0] == SPELL_EFFECT_ENCHANT_ITEM && spellInfo->EffectItemType[0])
-    {
-        if ((proto->SubClass == ITEM_SUBCLASS_WEAPON_ENCHANTMENT && spellInfo->EquippedItemClass == ITEM_CLASS_WEAPON) ||
-            (proto->SubClass == ITEM_SUBCLASS_ARMOR_ENCHANTMENT && spellInfo->EquippedItemClass == ITEM_CLASS_ARMOR))
-            return true;
-    }
-    // Vellum enchant case should ignore everything below
 
     if (spellInfo->EquippedItemClass != -1)                 // -1 == any item class
     {
@@ -1098,32 +1061,6 @@ bool ItemRequiredTarget::IsFitToRequirements( Unit* pUnitTarget ) const
         default:
             return false;
     }
-}
-
-// "Stackable items (such as Frozen Orbs and gems) and 
-// charged items that can be purchased with an alternate currency are not eligible. "
-bool Item::IsEligibleForRefund()
-{
-    ItemPrototype const*proto = GetProto();
-
-    if( proto == NULL)
-        return false;
-
-    if( !(proto->Flags & ITEM_FLAGS_REFUNDABLE) )
-        return false;
-
-    if( proto->MaxCount > 1 )
-        return false;
-
-    for( int i = 0; i < 5; ++i )
-    {
-        _Spell spell = proto->Spells[i];
-
-        if( spell.SpellCharges != -1  && spell.SpellCharges != 0)
-            return false;
-    }
-
-    return true;
 }
 
 bool Item::HasMaxCharges() const

@@ -86,7 +86,9 @@ enum MangosStrings
     //LANG_RA_BUSY                      = 60, not used
     LANG_RA_USER                        = 61,
     LANG_RA_PASS                        = 62,
-    // Room for more level 0              63-99 not used
+    LANG_GM_ACCEPTS_WHISPER             = 63,
+    LANG_GM_NO_WHISPER                  = 64,
+    // Room for more level 0              65-99 not used
 
     // level 1 chat
     LANG_GLOBAL_NOTIFY                  = 100,
@@ -122,8 +124,8 @@ enum MangosStrings
     LANG_CURRENT_FACTION                = 128,
     LANG_WRONG_FACTION                  = 129,
     LANG_YOU_CHANGE_FACTION             = 130,
-    LANG_YOU_CHANGE_SPELLFLATID         = 131,
-    LANG_YOURS_SPELLFLATID_CHANGED      = 132,
+    LANG_YOU_CHANGE_SPELLMODS           = 131,
+    LANG_YOURS_SPELLMODS_CHANGED        = 132,
     LANG_YOU_GIVE_TAXIS                 = 133,
     LANG_YOU_REMOVE_TAXIS               = 134,
     LANG_YOURS_TAXIS_ADDED              = 135,
@@ -343,7 +345,26 @@ enum MangosStrings
     LANG_TITLE_REMOVE_RES               = 354,
     LANG_TITLE_CURRENT_RES              = 355,
     LANG_CURRENT_TITLE_RESET            = 356,
-    // Room for more level 2              357-399 not used
+    LANG_AREATRIGER_NOT_HAS_TARGET      = 357,
+    LANG_COMMAND_NOTRIGGERFOUND         = 358,
+    LANG_TRIGGER_TARGET_LIST_CHAT       = 359,
+    LANG_TRIGGER_TARGET_LIST_CONSOLE    = 360,
+    LANG_TRIGGER_LIST_CHAT              = 361,
+    LANG_TRIGGER_LIST_CONSOLE           = 362,
+    LANG_TRIGGER_DIST                   = 363,
+    LANG_TRIGGER_TAVERN                 = 364,
+    LANG_TRIGGER_QUEST                  = 365,
+    LANG_TRIGGER_EXPLORE_QUEST          = 366,
+    LANG_TRIGGER_REQ_LEVEL              = 367,
+    LANG_TRIGGER_REQ_ITEMS              = 368,
+    LANG_TRIGGER_REQ_QUEST_NORMAL       = 369,
+    LANG_TRIGGER_REQ_KEYS_HEROIC        = 370,
+    LANG_TRIGGER_REQ_QUEST_HEROIC       = 371,
+    LANG_COMMAND_ACHIEVEMENT_NOTFOUND   = 372,
+    LANG_COMMAND_TICKETRESPONSE         = 373,
+    LANG_COMMAND_TICKETCOUNT_CONSOLE    = 374,
+    LANG_COMMAND_TICKETNOTEXIST_NAME    = 375,
+    // Room for more level 2              376-399 not used
 
     // level 3 chat
     LANG_SCRIPTS_RELOADED               = 400,
@@ -533,8 +554,8 @@ enum MangosStrings
     LANG_EXPLORE_AREA                   = 560,
     LANG_UNEXPLORE_AREA                 = 561,
 
-    LANG_UPDATE                         = 562,
-    LANG_UPDATE_CHANGE                  = 563,
+    //                                    562,              // not used
+    //                                    563,              // not used
     LANG_TOO_BIG_INDEX                  = 564,
     LANG_SET_UINT                       = 565,              //log
     LANG_SET_UINT_FIELD                 = 566,
@@ -546,8 +567,8 @@ enum MangosStrings
     LANG_GET_FLOAT_FIELD                = 572,
     //                                    573,              //not used
     //                                    574,              //not used
-    LANG_CHANGE_32BIT                   = 575,              //log
-    LANG_CHANGE_32BIT_FIELD             = 576,
+    LANG_CHANGE_INT32                   = 575,              //log
+    LANG_CHANGE_INT32_FIELD             = 576,
 
     LANG_INVISIBLE_INVISIBLE            = 577,
     LANG_INVISIBLE_VISIBLE              = 578,
@@ -742,12 +763,8 @@ enum MangosStrings
     LANG_BG_AV_H_GENERAL_DEAD           = 789,
     LANG_BG_AV_A_GENERAL_DEAD           = 790,
 
-    LANG_BG_SA_START_TWO_MINUTES        = 792,
-    LANG_BG_SA_START_ONE_MINUTE         = 793,
-    LANG_BG_SA_START_HALF_MINUTE        = 794,
-    LANG_BG_SA_HAS_BEGUN                = 795,
-    LANG_BG_SA_IS_UNDER_ATTACK          = 796,
-    LANG_BG_SA_IS_DESTROYED             = 797,
+
+    // Room for batleground/arena strings 791-799 not used
 
     // in game strings
     //                                  = 800, not used
@@ -798,7 +815,8 @@ enum MangosStrings
     LANG_CHARACTER_DELETED_LIST_LINE_CHAT = 1026,
     LANG_LOG_FILTERS_STATE_HEADER       = 1027,
     LANG_ALL_LOG_FILTERS_SET_TO_S       = 1028,
-    // Room for more level 4              1029-1099 not used
+    LANG_RA_ONLY_COMMAND                = 1029,
+    // Room for more level 4              1030-1099 not used
 
     // Level 3 (continue)
     LANG_ACCOUNT_SETADDON               = 1100,
@@ -850,98 +868,38 @@ enum MangosStrings
     LANG_NPC_GO_INFO_TOP_POOL           = 1146,
     LANG_NPC_GO_INFO_POOL_GAME_EVENT_S  = 1147,
     LANG_NPC_GO_INFO_POOL_GAME_EVENT_D  = 1148,
-    // Room for more level 3              1149-1199 not used
+    LANG_NPC_GO_INFO_POOL_STRING        = 1149,
+    LANG_NPC_GO_INFO_EVENT_STRING       = 1150,
+    LANG_NPC_GO_INFO_POOL_EVENT_STRING  = 1151,
+    LANG_COMMAND_ITEM_USABLE            = 1152,
+    LANG_GET_BITSTR                     = 1153,             //log
+    LANG_GET_BITSTR_FIELD               = 1154,
+    LANG_GET_HEX                        = 1155,             //log
+    LANG_GET_HEX_FIELD                  = 1156,
+    LANG_CHANGE_HEX                     = 1157,             //log
+    LANG_CHANGE_HEX_FIELD               = 1158,
+    LANG_CHANGE_FLOAT                   = 1159,             //log
+    LANG_CHANGE_FLOAT_FIELD             = 1160,
+    LANG_COMMAND_ACHIEVEMENT_CRITERIA   = 1161,
+    LANG_COUNTER                        = 1162,
+    LANG_ACHIEVEMENT_NOT_EXIST          = 1163,
+    LANG_ACHIEVEMENT_CRITERIA_NOT_EXIST = 1164,
+    LANG_SPELL_NO_HAVE_AURAS            = 1165,
+    // Room for more level 3              1166-1199 not used
 
     // Debug commands
     LANG_CINEMATIC_NOT_EXIST            = 1200,
     LANG_MOVIE_NOT_EXIST                = 1201,
     // Room for more debug                1202-1299 not used
 
-    // FREE IDS                           1300-9999
+    // Reserved for old client release branches specific strings
+    // Room for old clients 2.x           1300-1399 not used
+    // Room for old clients 1.x           1400-1499 not used
+
+    // FREE IDS                           1500-9999
 
     // Use for not-in-offcial-sources patches
     //                                    10000-10999
-    // opvp hp
-    LANG_OPVP_HP_CAPTURE_OVERLOOK_H     = 10001,
-    LANG_OPVP_HP_CAPTURE_OVERLOOK_A     = 10002,
-    LANG_OPVP_HP_CAPTURE_STADIUM_H      = 10003,
-    LANG_OPVP_HP_CAPTURE_STADIUM_A      = 10004,
-    LANG_OPVP_HP_CAPTURE_BROKENHILL_H   = 10005,
-    LANG_OPVP_HP_CAPTURE_BROKENHILL_A   = 10006,
-    LANG_OPVP_HP_LOOSE_OVERLOOK_H       = 10007,
-    LANG_OPVP_HP_LOOSE_OVERLOOK_A       = 10008,
-    LANG_OPVP_HP_LOOSE_STADIUM_H        = 10009,
-    LANG_OPVP_HP_LOOSE_STADIUM_A        = 10010,
-    LANG_OPVP_HP_LOOSE_BROKENHILL_H     = 10011,
-    LANG_OPVP_HP_LOOSE_BROKENHILL_A     = 10012,
-    // opvp zm
-    LANG_OPVP_ZM_CAPTURE_WEST_H         = 10013,
-    LANG_OPVP_ZM_CAPTURE_WEST_A         = 10014,
-    LANG_OPVP_ZM_CAPTURE_EAST_H         = 10015,
-    LANG_OPVP_ZM_CAPTURE_EAST_A         = 10016,
-    LANG_OPVP_ZM_CAPTURE_GY_H           = 10017,
-    LANG_OPVP_ZM_CAPTURE_GY_A           = 10018,
-    LANG_OPVP_ZM_LOOSE_WEST_H           = 10019,
-    LANG_OPVP_ZM_LOOSE_WEST_A           = 10020,
-    LANG_OPVP_ZM_LOOSE_EAST_H           = 10021,
-    LANG_OPVP_ZM_LOOSE_EAST_A           = 10022,
-    LANG_OPVP_ZM_LOOSE_GY_H             = 10023,
-    LANG_OPVP_ZM_LOOSE_GY_A             = 10024,
-    // opvp na
-    LANG_OPVP_NA_CAPTURE_H              = 10025,
-    LANG_OPVP_NA_CAPTURE_A              = 10026,
-    LANG_OPVP_NA_LOOSE_H                = 10027,
-    LANG_OPVP_NA_LOOSE_A                = 10028,
-    // opvp tf
-    LANG_OPVP_TF_CAPTURE_H              = 10029,
-    LANG_OPVP_TF_CAPTURE_A              = 10030,
-    LANG_OPVP_TF_LOOSE_H                = 10031,
-    LANG_OPVP_TF_LOOSE_A                = 10032,
-    // opvp ep
-    LANG_OPVP_EP_CAPTURE_NPT_H          = 10033,
-    LANG_OPVP_EP_CAPTURE_NPT_A          = 10034,
-    LANG_OPVP_EP_CAPTURE_EWT_H          = 10035,
-    LANG_OPVP_EP_CAPTURE_EWT_A          = 10036,
-    LANG_OPVP_EP_CAPTURE_CGT_H          = 10037,
-    LANG_OPVP_EP_CAPTURE_CGT_A          = 10038,
-    LANG_OPVP_EP_CAPTURE_PWT_H          = 10039,
-    LANG_OPVP_EP_CAPTURE_PWT_A          = 10040,
-    LANG_OPVP_EP_LOOSE_NPT_H            = 10041,
-    LANG_OPVP_EP_LOOSE_NPT_A            = 10042,
-    LANG_OPVP_EP_LOOSE_EWT_H            = 10043,
-    LANG_OPVP_EP_LOOSE_EWT_A            = 10044,
-    LANG_OPVP_EP_LOOSE_CGT_H            = 10045,
-    LANG_OPVP_EP_LOOSE_CGT_A            = 10046,
-    LANG_OPVP_EP_LOOSE_PWT_H            = 10047,
-    LANG_OPVP_EP_LOOSE_PWT_A            = 10048,
-    // opvp si
-    LANG_OPVP_SI_CAPTURE_H              = 10049,
-    LANG_OPVP_SI_CAPTURE_A              = 10050,
-    // opvp gossips
-    LANG_OPVP_EP_FLIGHT_NPT             = 10051,
-    LANG_OPVP_EP_FLIGHT_EWT             = 10052,
-    LANG_OPVP_EP_FLIGHT_CGT             = 10053,
-    LANG_OPVP_ZM_GOSSIP_ALLIANCE        = 10054,
-    LANG_OPVP_ZM_GOSSIP_HORDE           = 10055,
-
-    LANG_BG_WG_BATTLE_STARTS            = 10100,
-    LANG_BG_WG_DEFENDED                 = 10101,
-    LANG_BG_WG_CAPTURED                 = 10102,
-    LANG_BG_WG_WORKSHOP_DAMAGED         = 10103,
-    LANG_BG_WG_WORKSHOP_DESTROYED       = 10104,
-    LANG_BG_WG_TOWER_DAMAGED            = 10105,
-    LANG_BG_WG_TOWER_DESTROYED          = 10106,
-    LANG_BG_WG_FORTRESS_UNDER_ATTACK    = 10107,
-    LANG_BG_WG_SWITCH_FACTION           = 10108,
-    LANG_BG_WG_CHANGE_TIMER             = 10109,
-    LANG_BG_WG_BATTLE_FORCE_START       = 10110,
-    LANG_BG_WG_BATTLE_FORCE_STOP        = 10111,
-    LANG_BG_WG_STATUS                   = 10112,
-    LANG_BG_WG_DISABLE                  = 10113,
-    LANG_BG_WG_ENABLE                   = 10114,
-    LANG_BG_WG_RANK1                    = 10115,
-    LANG_BG_WG_RANK2                    = 10116,
-
 
     // Use for custom patches             11000-11999
 

@@ -137,7 +137,7 @@ void HostileReference::updateOnlineStatus()
     // target is not in flight
     if(isValid() &&
         ((getTarget()->GetTypeId() != TYPEID_PLAYER || !((Player*)getTarget())->isGameMaster()) ||
-        !getTarget()->hasUnitState(UNIT_STAT_IN_FLIGHT)))
+        !getTarget()->IsTaxiFlying()))
     {
         Creature* creature = (Creature* ) getSourceUnit();
         online = getTarget()->isInAccessablePlaceFor(creature);
@@ -220,9 +220,6 @@ void ThreatContainer::clearReferences()
 // Return the HostileReference of NULL, if not found
 HostileReference* ThreatContainer::getReferenceByTarget(Unit* pVictim)
 {
-   if(!pVictim)
-        return NULL;
-
     HostileReference* result = NULL;
     uint64 guid = pVictim->GetGUID();
     for(ThreatList::const_iterator i = iThreatList.begin(); i != iThreatList.end(); ++i)
@@ -391,20 +388,9 @@ void ThreatManager::addThreat(Unit* pVictim, float pThreat, bool crit, SpellScho
     if(!pVictim->isAlive() || !getOwner()->isAlive() )
         return;
 
-    if (!getOwner()->IsHostileTo(pVictim))
-        return;
-
     ASSERT(getOwner()->GetTypeId()== TYPEID_UNIT);
 
     float threat = ThreatCalcHelper::calcThreat(pVictim, iOwner, pThreat, crit, schoolMask, pThreatSpell);
-
-    if( pVictim->GetThreatRedirectionPercent() && threat > 0.0f )
-    {
-        float redirectedThreat = threat * pVictim->GetThreatRedirectionPercent() / 100;
-        threat -= redirectedThreat;
-        if(Unit *unit = pVictim->GetMisdirectionTarget())
-            iThreatContainer.addThreat(unit, redirectedThreat);
-    }
 
     HostileReference* ref = iThreatContainer.addThreat(pVictim, threat);
     // Ref is online

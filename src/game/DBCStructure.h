@@ -207,17 +207,6 @@ struct AchievementCriteriaEntry
             uint32  castCount;                              // 4
         } cast_spell;
 
-        // ACHIEVEMENT_CRITERIA_TYPE_BG_OBJECTIVE_CAPTURE   = 30
-        struct
-        {
-            uint32  captureID;                              // 3
-            uint32  captureCount;                           // 4
-            //uint32  additionalRequirement1_type;          // 5 
-            //uint32  additionalRequirement1_value;         // 6 
-            //uint32  additionalRequirement2_type;          // 7 
-            //uint32  additionalRequirement2_value;         // 8 
-        } objective_capture;
-
         // ACHIEVEMENT_CRITERIA_TYPE_HONORABLE_KILL_AT_AREA = 31
         struct
         {
@@ -422,8 +411,6 @@ struct AchievementCriteriaEntry
         {
             uint32  unused;                                 // 3
             uint32  killCount;                              // 4
-            uint32  flag;                                   // 5
-            uint32  mapid;                                  // 6
         } special_pvp_kill;
 
         // ACHIEVEMENT_CRITERIA_TYPE_FISH_IN_GAMEOBJECT     = 72
@@ -494,7 +481,7 @@ struct AchievementCriteriaEntry
 
         struct
         {
-            uint32  field3;                                 // 3 main requirement
+            uint32  value;                                  // 3 main requirement
             uint32  count;                                  // 4 main requirement count
             uint32  additionalRequirement1_type;            // 5 additional requirement 1 type
             uint32  additionalRequirement1_value;           // 6 additional requirement 1 value
@@ -502,15 +489,26 @@ struct AchievementCriteriaEntry
             uint32  additionalRequirement2_value;           // 8 additional requirement 1 value
         } raw;
     };
-    //char*  name[16];                                      // 9-24
+    char*  name[16];                                        // 9-24
     //uint32 name_flags;                                    // 25
     uint32  completionFlag;                                 // 26
-    uint32  groupFlag;                                      // 27
-    //uint32 unk1;                                          // 28 Alway appears with timed events
-                                                            // for timed spells it is spell id for
-                                                            // timed kills it is creature id
+    //uint32  timedCriteriaStartType;                       // 27 Only appears with timed achievements, seems to be the type of starting a timed Achievement, only type 1 and some of type 6 need manual starting
+                                                            // 1: ByEventId(?) (serverside IDs),    2: ByQuestId,   5: ByCastSpellId(?)
+                                                            // 6: BySpellIdTarget(some of these are unknown spells, some not, some maybe spells)
+                                                            // 7: ByKillNpcId,  9: ByUseItemId
+    uint32  timedCriteriaMiscId;                            // 28 Alway appears with timed events, used internally to start the achievement, store 
     uint32  timeLimit;                                      // 29 time limit in seconds
-    //uint32 showOrder;                                     // 30 show order
+    uint32  showOrder;                                      // 30 show order, also used in achievement shift-links as index in state bitmask
+
+    // helpers
+    bool IsExplicitlyStartedTimedCriteria() const
+    {
+        if (!timeLimit)
+            return false;
+
+        // in case raw.value == timedCriteriaMiscId in timedCriteriaMiscId stored spellid/itemids for cast/use, so repeating aura start at first cast/use until fails
+        return requiredType == ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_QUEST || raw.value != timedCriteriaMiscId;
+    }
 };
 
 struct AreaTableEntry
@@ -532,24 +530,6 @@ struct AreaGroupEntry
     uint32  AreaGroupId;                                    // 0
     uint32  AreaId[6];                                      // 1-6
     uint32  nextGroup;                                      // 7 index of next group
-};
-
-struct AreaPOIEntry
-{
-    uint32 id;              //0
-    uint32 icon[11];        //1-11
-    float x;                //12
-    float y;                //13
-    float z;                //14
-    uint32 mapId;           //15
-    //uint32 val1;          //16
-    uint32 zoneId;          //17
-    //char* name[16];       //18-33
-    //uint32 name_flag;     //34
-    //char* name2[16];      //35-50
-    //uint32 name_flag2;    //51
-    uint32 worldState;      //52
-    //uint32 val2;          //53
 };
 
 struct AreaTriggerEntry
@@ -833,10 +813,10 @@ struct FactionEntry
     int32       BaseRepValue[4];                            // 10-13    m_reputationBase
     uint32      ReputationFlags[4];                         // 14-17    m_reputationFlags
     uint32      team;                                       // 18       m_parentFactionID
-    //float     unk1;                                       // 19
-    //float     unk2;                                       // 20
-    //uint32    unk3                                        // 21
-    //uint32    unk4;                                       // 22
+    //float     spilloverRate1;                             // 19       Members of the team gain (received_rep*rate). If spilloverRate1 is (0.0 || 1.0), spilloverRate2 are used instead...
+    //float     spilloverRate2;                             // 20       ...but only if spilloverRate2 is not (1.0 || 0.0). Faction must be member of a team before spillover are given.
+    //uint32    spilloverMaxRank;                           // 21       The highest rank player will receive spillover at (the cap). Above this rank will not give any spillover for this faction
+    //uint32    spilloverRank_unk;                          // 22
     char*       name[16];                                   // 23-38    m_name_lang
                                                             // 39 string flags
     //char*     description[16];                            // 40-55    m_description_lang
@@ -898,7 +878,8 @@ struct GameObjectDisplayInfoEntry
     uint32      Displayid;                                  // 0        m_ID
     // char* filename;                                      // 1
     // uint32 unknown2[10];                                 // 2-11     unknown data
-    // float  unknown12[6];                                 // 12-17    unknown data
+    float  unknown12;                                       // 12-17    unknown size data, use first value as interact dist, mostly in hacks way
+    // float  unknown13[5];                                 // 12-17    unknown size data
     // uint32 unknown18;                                    // 18       unknown data
 };
 
@@ -1166,8 +1147,7 @@ struct MapEntry
             MapID==209 || MapID==269 || MapID==309 ||       // TanarisInstance, CavernsOfTime, Zul'gurub
             MapID==509 || MapID==534 || MapID==560 ||       // AhnQiraj, HyjalPast, HillsbradPast
             MapID==568 || MapID==580 || MapID==595 ||       // ZulAman, Sunwell Plateau, Culling of Stratholme
-            MapID==615 || MapID==616 || MapID==603 ||       // Obsidian Sanctum, Eye Of Eternity, Ulduar
-            MapID==595;                                     // Culling Of Stratholme
+            MapID==615 || MapID==616;                       // Obsidian Sanctum, Eye Of Eternity
     }
 
     bool IsContinent() const
@@ -1183,8 +1163,8 @@ struct MapDifficultyEntry
     uint32      Difficulty;                                 // 2 (for arenas: arena slot)
     //char*       areaTriggerText[16];                      // 3-18 text showed when transfer to map failed (missing requirements)
     //uint32      textFlags;                                // 19
-    uint32      resetTime;                                  // 20
-    uint32      maxPlayers;                                 // 21
+    uint32      resetTime;                                  // 20, in secs, 0 if no fixed reset time
+    uint32      maxPlayers;                                 // 21, some heroic versions have 0 when expected same amount as in normal version
     //char*       difficultyString;                         // 22
 };
 
@@ -1550,11 +1530,16 @@ struct SpellRadiusEntry
 
 struct SpellRangeEntry
 {
-    uint32    ID;
-    float     minRange;
-    float     minRangeFriendly;
-    float     maxRange;
-    float     maxRangeFriendly;
+    uint32    ID;                                           // 0
+    float     minRange;                                     // 1
+    float     minRangeFriendly;                             // 2
+    float     maxRange;                                     // 3
+    float     maxRangeFriendly;                             // 4
+    //uint32  Flags;                                        // 5
+    //char*   Name[16];                                     // 6-21 unused
+    //uint32  NameFlags;                                    // 22 unused
+    //char*   ShortName[16];                                // 23-38 unused
+    //uint32  NameFlags;                                    // 39 unused
 };
 
 struct SpellRuneCostEntry
@@ -1719,8 +1704,6 @@ struct TotemCategoryEntry
     uint32    categoryMask;                                 // 19 (compatibility mask for same type: different for totems, compatible from high to low for rods)
 };
 
-#define MAX_VEHICLE_SEAT 8
-
 struct VehicleEntry
 {
     uint32  m_ID;                                           // 0
@@ -1729,7 +1712,7 @@ struct VehicleEntry
     float   m_pitchSpeed;                                   // 3
     float   m_pitchMin;                                     // 4
     float   m_pitchMax;                                     // 5
-    uint32  m_seatID[MAX_VEHICLE_SEAT];                     // 6-13
+    uint32  m_seatID[8];                                    // 6-13
     float   m_mouseLookOffsetPitch;                         // 14
     float   m_cameraFadeDistScalarMin;                      // 15
     float   m_cameraFadeDistScalarMax;                      // 16
@@ -1753,10 +1736,9 @@ struct VehicleEntry
     uint32  m_uiLocomotionType;                             // 34
     float   m_msslTrgtImpactTexRadius;                      // 35
     uint32  m_uiSeatIndicatorType;                          // 36
-    uint32  m_powerType;                                    // 37, new in 3.1
+                                                            // 37, new in 3.1
                                                             // 38, new in 3.1
                                                             // 39, new in 3.1
-
 };
 
 struct VehicleSeatEntry
@@ -1808,8 +1790,23 @@ struct VehicleSeatEntry
     int32   m_uiSkin;                                       // 44
     uint32  m_flagsB;                                       // 45
                                                             // 46-57 added in 3.1, floats mostly
+};
 
-    bool IsUsable() const { return m_flags & SEAT_FLAG_USABLE; }
+struct WMOAreaTableEntry
+{
+    uint32 Id;                                              // 0 index
+    int32 rootId;                                           // 1 used in root WMO
+    int32 adtId;                                            // 2 used in adt file
+    int32 groupId;                                          // 3 used in group WMO
+    //uint32 field4;
+    //uint32 field5;
+    //uint32 field6;
+    //uint32 field7;
+    //uint32 field8;
+    uint32 Flags;                                           // 9 used for indoor/outdoor determination
+    uint32 areaId;                                          // 10 link to AreaTableEntry.ID
+    //char *Name[16];
+    //uint32 nameFlags;
 };
 
 struct WorldMapAreaEntry
@@ -1863,7 +1860,7 @@ struct MapDifficulty
     MapDifficulty() : resetTime(0), maxPlayers(0) {}
     MapDifficulty(uint32 _resetTime, uint32 _maxPlayers) : resetTime(_resetTime), maxPlayers(_maxPlayers) {}
 
-    uint32 resetTime;
+    uint32 resetTime;                                       // in secs, 0 if no fixed reset time
     uint32 maxPlayers;                                      // some heroic dungeons have 0 when expect same value as in normal dificulty case
 };
 

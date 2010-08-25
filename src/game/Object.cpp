@@ -25,7 +25,6 @@
 #include "Object.h"
 #include "Creature.h"
 #include "Player.h"
-#include "GameObject.h"
 #include "Vehicle.h"
 #include "ObjectMgr.h"
 #include "ObjectGuid.h"
@@ -45,7 +44,6 @@
 #include "ObjectPosSelector.h"
 
 #include "TemporarySummon.h"
-#include "OutdoorPvPMgr.h"
 
 uint32 GuidHigh2TypeId(uint32 guid_hi)
 {
@@ -113,13 +111,13 @@ void Object::_InitValues()
     m_objectUpdated = false;
 }
 
-void Object::_Create( uint32 guidlow, uint32 entry, HighGuid guidhigh )
+void Object::_Create(uint32 guidlow, uint32 entry, HighGuid guidhigh)
 {
     if(!m_uint32Values)
         _InitValues();
 
-    uint64 guid = MAKE_NEW_GUID(guidlow, entry, guidhigh);
-    SetUInt64Value(OBJECT_FIELD_GUID, guid);
+    ObjectGuid guid = ObjectGuid(guidhigh, entry, guidlow);
+    SetGuidValue(OBJECT_FIELD_GUID, guid);
     SetUInt32Value(OBJECT_FIELD_TYPE, m_objectType);
     m_PackGUID.Set(guid);
 }
@@ -242,7 +240,7 @@ void Object::DestroyForPlayer( Player *target, bool anim ) const
     ASSERT(target);
 
     WorldPacket data(SMSG_DESTROY_OBJECT, 8);
-    data << uint64(GetGUID());
+    data << GetObjectGuid();
     data << uint8(anim ? 1 : 0);                            // WotLK (bool), may be despawn animation
     target->GetSession()->SendPacket(&data);
 }
@@ -272,18 +270,15 @@ void Object::BuildMovementUpdate(ByteBuffer * data, uint16 updateFlags) const
                 /*if (((Creature*)unit)->hasUnitState(UNIT_STAT_MOVING))
                     unit->m_movementInfo.SetMovementFlags(MOVEFLAG_FORWARD);*/
 
-                if (((Creature*)unit)->canFly() && !(((Creature*)unit)->canWalk()
-                    && unit->IsAtGroundLevel(unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ())))
+                if (((Creature*)unit)->canFly())
                 {
                     // (ok) most seem to have this
                     unit->m_movementInfo.AddMovementFlag(MOVEFLAG_LEVITATING);
 
                     if (!((Creature*)unit)->hasUnitState(UNIT_STAT_MOVING))
                     {
-                        // Feanor: Disabled - It bugs possesed flying creatures movement (Charms / Vehicles etc)
-                       /* // (ok) possibly some "hover" mode
-                        if( !((Creature*)unit)->isVehicle() )
-                            unit->m_movementInfo.AddMovementFlag(MOVEFLAG_ROOT);*/
+                        // (ok) possibly some "hover" mode
+                        unit->m_movementInfo.AddMovementFlag(MOVEFLAG_ROOT);
                     }
                     else
                     {
@@ -293,9 +288,6 @@ void Object::BuildMovementUpdate(ByteBuffer * data, uint16 updateFlags) const
                             unit->m_movementInfo.AddMovementFlag(MOVEFLAG_FLYING);
                         }
                     }
-
-                    if (unit->GetVehicle() || unit->GetVehicleGUID())
-                       unit->m_movementInfo.AddMovementFlag(MOVEFLAG_ONTRANSPORT);
                 }
             }
             break;
@@ -303,7 +295,7 @@ void Object::BuildMovementUpdate(ByteBuffer * data, uint16 updateFlags) const
             {
                 Player *player = ((Player*)unit);
 
-                if(player->GetTransport() || player->GetVehicle())
+                if(player->GetTransport())
                     player->m_movementInfo.AddMovementFlag(MOVEFLAG_ONTRANSPORT);
                 else
                     player->m_movementInfo.RemoveMovementFlag(MOVEFLAG_ONTRANSPORT);
@@ -311,7 +303,7 @@ void Object::BuildMovementUpdate(ByteBuffer * data, uint16 updateFlags) const
                 // remove unknown, unused etc flags for now
                 player->m_movementInfo.RemoveMovementFlag(MOVEFLAG_SPLINE_ENABLED);
 
-                if(player->isInFlight())
+                if(player->IsTaxiFlying())
                 {
                     ASSERT(player->GetMotionMaster()->GetCurrentMovementGeneratorType() == FLIGHT_MOTION_TYPE);
                     player->m_movementInfo.AddMovementFlag(MOVEFLAG_FORWARD);
@@ -348,7 +340,7 @@ void Object::BuildMovementUpdate(ByteBuffer * data, uint16 updateFlags) const
 
             Player *player = ((Player*)unit);
 
-            if(!player->isInFlight())
+            if(!player->IsTaxiFlying())
             {
                 DEBUG_LOG("_BuildMovementUpdate: MOVEFLAG_SPLINE_ENABLED but not in flight");
                 return;
@@ -545,7 +537,6 @@ void Object::BuildMovementUpdate(ByteBuffer * data, uint16 updateFlags) const
     }
 }
 
-
 void Object::BuildValuesUpdate(uint8 updatetype, ByteBuffer * data, UpdateMask *updateMask, Player *target) const
 {
     if(!target)
@@ -607,7 +598,7 @@ void Object::BuildValuesUpdate(uint8 updatetype, ByteBuffer * data, UpdateMask *
                 if( index == UNIT_NPC_FLAGS )
                 {
                     // remove custom flag before sending
-                    uint32 appendValue = m_uint32Values[ index ] & ~(UNIT_NPC_FLAG_GUARD + UNIT_NPC_FLAG_OUTDOORPVP);
+                    uint32 appendValue = m_uint32Values[ index ] & ~UNIT_NPC_FLAG_GUARD;
 
                     if (GetTypeId() == TYPEID_UNIT)
                     {
@@ -1059,7 +1050,7 @@ void Object::RemoveByteFlag( uint16 index, uint8 offset, uint8 oldFlag )
 
 bool Object::PrintIndexError(uint32 index, bool set) const
 {
-    sLog.outError("Attempt %s non-existed value field: %u (count: %u) for object typeid: %u type mask: %u",(set ? "set value to" : "get value from"),index,m_valuesCount,GetTypeId(),m_objectType);
+    sLog.outError("Attempt %s nonexistent value field: %u (count: %u) for object typeid: %u type mask: %u",(set ? "set value to" : "get value from"),index,m_valuesCount,GetTypeId(),m_objectType);
 
     // ASSERT must fail after function call
     return false;
@@ -1098,7 +1089,7 @@ void Object::BuildUpdateData( UpdateDataMapType& /*update_players */)
 }
 
 WorldObject::WorldObject()
-    : m_isActiveObject(false), m_currMap(NULL), m_zoneScript(NULL), m_mapId(0), m_InstanceId(0), m_phaseMask(PHASEMASK_NORMAL),
+    : m_isActiveObject(false), m_currMap(NULL), m_mapId(0), m_InstanceId(0), m_phaseMask(PHASEMASK_NORMAL),
     m_positionX(0.0f), m_positionY(0.0f), m_positionZ(0.0f), m_orientation(0.0f)
 {
 }
@@ -1164,15 +1155,6 @@ float WorldObject::GetDistance(const WorldObject* obj) const
     float dz = GetPositionZ() - obj->GetPositionZ();
     float sizefactor = GetObjectBoundingRadius() + obj->GetObjectBoundingRadius();
     float dist = sqrt((dx*dx) + (dy*dy) + (dz*dz)) - sizefactor;
-    return ( dist > 0 ? dist : 0);
-}
-
-float WorldObject::GetDistance(const float x, const float y, const float z, const float sx, const float sy, const float sz) const
-{
-    float dx =  x - sx;
-    float dy =  y - sy;
-    float dz =  z - sz;
-    float dist = sqrt((dx*dx) + (dy*dy) + (dz*dz));
     return ( dist > 0 ? dist : 0);
 }
 
@@ -1265,32 +1247,8 @@ bool WorldObject::IsWithinLOS(float ox, float oy, float oz) const
 {
     float x,y,z;
     GetPosition(x,y,z);
-    z += 2.5f;
-    oz += 2.5f;
-
-    // check for line of sight because of terrain height differences
-    Map const *map = GetBaseMap();
-    float dx = ox - x, dy = oy - y, dz = oz - z;
-    float dist = sqrt(dx*dx + dy*dy + dz*dz);
-    if (dist > ATTACK_DISTANCE && dist < MAX_VISIBILITY_DISTANCE)
-    {
-        uint32 steps = uint32(dist / 4.0f);
-        float step_dist = dist / steps;  // to make sampling intervals symmetric in both directions
-        float inc_factor = step_dist / dist;
-        float incx = dx*inc_factor, incy = dy*inc_factor, incz = dz*inc_factor;
-        float px = x, py = y, pz = z;
-        for (; steps; --steps)
-        {
-            if (map->GetHeight(px, py, pz, false) > pz)
-                return false;  // found intersection with ground
-            px += incx;
-            py += incy;
-            pz += incz;
-        }
-    }
-
     VMAP::IVMapManager *vMapManager = VMAP::VMapFactory::createOrGetVMapManager();
-    return vMapManager->isInLineOfSight(GetMapId(), x, y, z, ox, oy, oz);
+    return vMapManager->isInLineOfSight(GetMapId(), x, y, z+2.0f, ox, oy, oz+2.0f);
 }
 
 bool WorldObject::GetDistanceOrder(WorldObject const* obj1, WorldObject const* obj2, bool is3D /* = true */) const
@@ -1380,21 +1338,6 @@ bool WorldObject::IsInRange3d(float x, float y, float z, float minRange, float m
 
     float maxdist = maxRange + sizefactor;
     return distsq < maxdist * maxdist;
-}
-
-bool WorldObject::IsInBetween(const WorldObject *obj1, const WorldObject *obj2, float size) const
-{
-    if(GetPositionX() > std::max(obj1->GetPositionX(), obj2->GetPositionX())
-        || GetPositionX() < std::min(obj1->GetPositionX(), obj2->GetPositionX())
-        || GetPositionY() > std::max(obj1->GetPositionY(), obj2->GetPositionY())
-        || GetPositionY() < std::min(obj1->GetPositionY(), obj2->GetPositionY()))
-        return false;
-
-    if(!size)
-        size = GetObjectBoundingRadius() / 2;
-
-    float angle = obj1->GetAngle(this) - obj1->GetAngle(obj2);
-    return abs(sin(angle)) * GetExactDist2d(obj1->GetPositionX(), obj1->GetPositionY()) < size;
 }
 
 float WorldObject::GetAngle(const WorldObject* obj) const
@@ -1491,14 +1434,6 @@ void WorldObject::UpdateGroundPositionZ(float x, float y, float &z) const
 bool WorldObject::IsPositionValid() const
 {
     return MaNGOS::IsValidMapCoord(m_positionX,m_positionY,m_positionZ,m_orientation);
-}
-
-bool WorldObject::IsAtGroundLevel(float x, float y, float z) const
-{
-    float groundZ = GetBaseMap()->GetHeight(x, y, z, true);
-    if(groundZ <= INVALID_HEIGHT || fabs(groundZ-z) > 0.5f)
-        return false;
-    return true;
 }
 
 void WorldObject::MonsterSay(const char* text, uint32 language, uint64 TargetGuid)
@@ -1637,25 +1572,24 @@ void WorldObject::BuildMonsterChat(WorldPacket *data, uint8 msgtype, char const*
 void WorldObject::SendMessageToSet(WorldPacket *data, bool /*bToSelf*/)
 {
     //if object is in world, map for it already created!
-    Map * _map = IsInWorld() ? GetMap() : sMapMgr.FindMap(GetMapId(), GetInstanceId());
-    if(_map)
-        _map->MessageBroadcast(this, data);
+    if (IsInWorld())
+        GetMap()->MessageBroadcast(this, data);
 }
 
 void WorldObject::SendMessageToSetInRange(WorldPacket *data, float dist, bool /*bToSelf*/)
 {
     //if object is in world, map for it already created!
-    if (Map * _map = IsInWorld() ? GetMap() : sMapMgr.FindMap(GetMapId(), GetInstanceId()))
-        _map->MessageDistBroadcast(this, data, dist);
+    if (IsInWorld())
+        GetMap()->MessageDistBroadcast(this, data, dist);
 }
 
 void WorldObject::SendMessageToSetExcept(WorldPacket *data, Player const* skipped_receiver)
 {
     //if object is in world, map for it already created!
-    if (Map * _map = IsInWorld() ? GetMap() : sMapMgr.FindMap(GetMapId(), GetInstanceId()))
+    if (IsInWorld())
     {
         MaNGOS::MessageDelivererExcept notifier(this, data, skipped_receiver);
-        Cell::VisitWorldObjects(this, notifier, _map->GetVisibilityDistance());
+        Cell::VisitWorldObjects(this, notifier, GetMap()->GetVisibilityDistance());
     }
 }
 
@@ -1694,16 +1628,6 @@ void WorldObject::AddObjectToRemoveList()
     GetMap()->AddObjectToRemoveList(this);
 }
 
-void WorldObject::SetZoneScript()
-{
-    if(Map *map = FindMap())
-    {
-        if(!map->IsBattleGroundOrArena() && !map->IsDungeon())
-            m_zoneScript = sOutdoorPvPMgr.GetZoneScript(GetZoneId());
-    }
-}
-
-
 Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, float ang,TempSummonType spwtype,uint32 despwtime)
 {
     TemporarySummon* pCreature = new TemporarySummon(GetObjectGuid());
@@ -1720,7 +1644,7 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
 
     if (x == 0.0f && y == 0.0f && z == 0.0f)
         GetClosePoint(x, y, z, pCreature->GetObjectBoundingRadius());
-    ASSERT(x==x);
+
     pCreature->Relocate(x, y, z, ang);
     pCreature->SetSummonPoint(x, y, z, ang);
 
@@ -1733,69 +1657,11 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
 
     pCreature->Summon(spwtype, despwtime);
 
-    if (GetTypeId() == TYPEID_UNIT)
-        pCreature->SetCreatorGUID(GetGUID());
-
     if(GetTypeId()==TYPEID_UNIT && ((Creature*)this)->AI())
         ((Creature*)this)->AI()->JustSummoned(pCreature);
 
     // return the creature therewith the summoner has access to it
     return pCreature;
-}
-
-GameObject* WorldObject::SummonGameObject(uint32 id, float x, float y, float z, float ang, uint32 despwtime)
-{
-    GameObject* pGameObj = new GameObject;
-
-    if(!pGameObj->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), id, GetMap(),
-    GetPhaseMask(), x, y, z, ang, 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
-    {
-        delete pGameObj;
-        return NULL;
-    }
-
-    if(despwtime)
-        pGameObj->Delete(despwtime);
-
-    GetMap()->Add(pGameObj);
-
-    return pGameObj;
-}
-
-Vehicle* WorldObject::SummonVehicle(uint32 id, float x, float y, float z, float ang, uint32 vehicleId)
-{
-    Vehicle *v = new Vehicle();
-
-    uint32 team = 0;
-    if (GetTypeId()==TYPEID_PLAYER)
-        team = ((Player*)this)->GetTeam();
-
-    if(!v->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_VEHICLE), GetMap(), GetPhaseMask(), id, vehicleId, team))
-    {
-        delete v;
-        return NULL;
-    }
-
-    if (x == 0.0f && y == 0.0f && z == 0.0f)
-        GetClosePoint(x, y, z, v->GetObjectBoundingRadius());
-
-    v->Relocate(x, y, z, ang);
-
-    if(!v->IsPositionValid())
-    {
-        sLog.outError("ERROR: Vehicle (guidlow %d, entry %d) not created. Suggested coordinates isn't valid (X: %f Y: %f)",
-            v->GetGUIDLow(), v->GetEntry(), v->GetPositionX(), v->GetPositionY());
-        delete v;
-        return NULL;
-    }
-
-    GetMap()->Add((Creature*)v);
-    v->AIM_Initialize();
-
-    if(GetTypeId()==TYPEID_UNIT && ((Creature*)this)->AI())
-        ((Creature*)this)->AI()->JustSummoned((Creature*)v);
-
-    return v;
 }
 
 namespace MaNGOS
@@ -1935,9 +1801,6 @@ void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, 
     // set first used pos in lists
     selector.InitializeAngle();
 
-    uint32 localCounter = 0;
-    uint32 localCounter2 = 0;
-
     // select in positions after current nodes (selection one by one)
     while(selector.NextAngle(angle))                        // angle for free pos
     {
@@ -1947,9 +1810,6 @@ void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, 
 
         if(IsWithinLOS(x,y,z))
             return;
-
-        if(++localCounter > 100)
-            break;
     }
 
     // BAD NEWS: not free pos (or used or have LOS problems)
@@ -1990,9 +1850,6 @@ void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, 
 
         if(IsWithinLOS(x,y,z))
             return;
-
-        if(++localCounter2 > 100)
-            break;
     }
 
     // BAD BAD NEWS: all found pos (free and used) have LOS problem :(
@@ -2017,7 +1874,7 @@ void WorldObject::PlayDistanceSound( uint32 sound_id, Player* target /*= NULL*/ 
 {
     WorldPacket data(SMSG_PLAY_OBJECT_SOUND,4+8);
     data << uint32(sound_id);
-    data << uint64(GetGUID());
+    data << GetObjectGuid();
     if (target)
         target->SendDirectMessage( &data );
     else
@@ -2033,75 +1890,6 @@ void WorldObject::PlayDirectSound( uint32 sound_id, Player* target /*= NULL*/ )
     else
         SendMessageToSet( &data, true );
 }
-
-//return closest creature alive in grid, with range from pSource
-Creature* WorldObject::GetClosestCreatureWithEntry(WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange)
-{
-    Creature *p_Creature = NULL;
-
-    CellPair p(MaNGOS::ComputeCellPair(pSource->GetPositionX(), pSource->GetPositionY()));
-    Cell cell(p);
-    cell.data.Part.reserved = ALL_DISTRICT;
-    cell.SetNoCreate();
-
-    MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck u_check(*pSource,uiEntry,true,fMaxSearchRange);
-    MaNGOS::CreatureLastSearcher<MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck> searcher(pSource, p_Creature, u_check);
-
-    TypeContainerVisitor<MaNGOS::CreatureLastSearcher<MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck>, GridTypeMapContainer >  grid_creature_searcher(searcher);
-
-    cell.Visit(p, grid_creature_searcher, *pSource->GetMap(), *this, fMaxSearchRange);
-
-    return p_Creature;
-}
-
-//return closest gameobject in grid, with range from pSource
-GameObject* WorldObject::GetClosestGameObjectWithEntry(WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange)
-{
-    GameObject* pGameObject = NULL;
-
-    CellPair p(MaNGOS::ComputeCellPair(pSource->GetPositionX(), pSource->GetPositionY()));
-    Cell cell(p);
-    cell.data.Part.reserved = ALL_DISTRICT;
-    cell.SetNoCreate();
-
-    MaNGOS::NearestGameObjectEntryInObjectRangeCheck gobject_check(*pSource, uiEntry, fMaxSearchRange);
-    MaNGOS::GameObjectLastSearcher<MaNGOS::NearestGameObjectEntryInObjectRangeCheck> searcher(pSource, pGameObject, gobject_check);
-
-    TypeContainerVisitor<MaNGOS::GameObjectLastSearcher<MaNGOS::NearestGameObjectEntryInObjectRangeCheck>, GridTypeMapContainer> grid_gobject_searcher(searcher);
-
-    cell.Visit(p, grid_gobject_searcher,*(pSource->GetMap()), *this, fMaxSearchRange);
-
-    return pGameObject;
-}
-
-void WorldObject::GetGameObjectListWithEntryInGrid(std::list<GameObject*>& lList, uint32 uiEntry, float fMaxSearchRange)
-{
-    CellPair pair(MaNGOS::ComputeCellPair(this->GetPositionX(), this->GetPositionY()));
-    Cell cell(pair);
-    cell.data.Part.reserved = ALL_DISTRICT;
-    cell.SetNoCreate();
-
-    MaNGOS::AllGameObjectsWithEntryInRange check(this, uiEntry, fMaxSearchRange);
-    MaNGOS::GameObjectListSearcher<MaNGOS::AllGameObjectsWithEntryInRange> searcher(this, lList, check);
-    TypeContainerVisitor<MaNGOS::GameObjectListSearcher<MaNGOS::AllGameObjectsWithEntryInRange>, GridTypeMapContainer> visitor(searcher);
-
-    cell.Visit(pair, visitor, *(this->GetMap()));
-}
-
-void WorldObject::GetCreatureListWithEntryInGrid(std::list<Creature*>& lList, uint32 uiEntry, float fMaxSearchRange)
-{
-    CellPair pair(MaNGOS::ComputeCellPair(this->GetPositionX(), this->GetPositionY()));
-    Cell cell(pair);
-    cell.data.Part.reserved = ALL_DISTRICT;
-    cell.SetNoCreate();
-
-    MaNGOS::AllCreaturesOfEntryInRange check(this, uiEntry, fMaxSearchRange);
-    MaNGOS::CreatureListSearcher<MaNGOS::AllCreaturesOfEntryInRange> searcher(this, lList, check);
-    TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AllCreaturesOfEntryInRange>, GridTypeMapContainer> visitor(searcher);
-
-    cell.Visit(pair, visitor, *(this->GetMap()));
-}
-
 
 void WorldObject::UpdateObjectVisibility()
 {
