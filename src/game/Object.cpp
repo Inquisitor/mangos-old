@@ -1167,6 +1167,15 @@ float WorldObject::GetDistance2d(float x, float y) const
     return ( dist > 0 ? dist : 0);
 }
 
+float WorldObject::GetDistance(const float x, const float y, const float z, const float sx, const float sy, const float sz) const
+{
+    float dx =  x - sx;
+    float dy =  y - sy;
+    float dz =  z - sz;
+    float dist = sqrt((dx*dx) + (dy*dy) + (dz*dz));
+    return ( dist > 0 ? dist : 0);
+}
+
 float WorldObject::GetDistance(float x, float y, float z) const
 {
     float dx = GetPositionX() - x;
@@ -1338,6 +1347,21 @@ bool WorldObject::IsInRange3d(float x, float y, float z, float minRange, float m
 
     float maxdist = maxRange + sizefactor;
     return distsq < maxdist * maxdist;
+}
+
+bool WorldObject::IsInBetween(const WorldObject *obj1, const WorldObject *obj2, float size) const
+{
+    if(GetPositionX() > std::max(obj1->GetPositionX(), obj2->GetPositionX())
+        || GetPositionX() < std::min(obj1->GetPositionX(), obj2->GetPositionX())
+        || GetPositionY() > std::max(obj1->GetPositionY(), obj2->GetPositionY())
+        || GetPositionY() < std::min(obj1->GetPositionY(), obj2->GetPositionY()))
+        return false;
+
+    if(!size)
+        size = GetObjectBoundingRadius() / 2;
+
+    float angle = obj1->GetAngle(this) - obj1->GetAngle(obj2);
+    return abs(sin(angle)) * GetExactDist2d(obj1->GetPositionX(), obj1->GetPositionY()) < size;
 }
 
 float WorldObject::GetAngle(const WorldObject* obj) const

@@ -163,10 +163,10 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
     return true;
 }
 
-void GameObject::Update(uint32 /*p_time*/)
+void GameObject::Update(uint32 p_time)
 {
-    if(IsInWorld())
-        m_ObjectEvents.Update( p_time );
+    if (IsInWorld())
+        m_ObjectEvents.Update(p_time);
 
     if (GetObjectGuid().IsMOTransport())
     {

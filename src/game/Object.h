@@ -397,6 +397,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 
         virtual const char* GetNameForLocaleIdx(int32 /*locale_idx*/) const { return GetName(); }
 
+        float GetDistance(const float x, const float y, const float z, const float sx, const float sy, const float sz) const;
         float GetDistance( const WorldObject* obj ) const;
         float GetDistance(float x, float y, float z) const;
         float GetDistance2d(const WorldObject* obj) const;
@@ -426,6 +427,12 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         bool IsInRange(WorldObject const* obj, float minRange, float maxRange, bool is3D = true) const;
         bool IsInRange2d(float x, float y, float minRange, float maxRange) const;
         bool IsInRange3d(float x, float y, float z, float minRange, float maxRange) const;
+
+        bool IsInBetween(const WorldObject *obj1, const WorldObject *obj2, float size = 0) const;
+        float GetExactDist2dSq(float x, float y) const
+        { float dx = m_positionX - x; float dy = m_positionY - y; return dx*dx + dy*dy; }
+        float GetExactDist2d(const float x, const float y) const
+        { return sqrt(GetExactDist2dSq(x, y)); }
 
         float GetAngle( const WorldObject* obj ) const;
         float GetAngle( const float x, const float y ) const;
