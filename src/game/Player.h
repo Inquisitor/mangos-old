@@ -1496,6 +1496,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void MoneyChanged( uint32 value );
         void ReputationChanged(FactionEntry const* factionEntry );
         bool HasQuestForItem( uint32 itemid ) const;
+        bool HasQuest( uint32 questId ) const;
         bool HasQuestForGO(int32 GOId) const;
         void UpdateForQuestWorldObjects();
         bool CanShareQuest(uint32 quest_id) const;
@@ -1762,7 +1763,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         static bool IsActionButtonDataValid(uint8 button, uint32 action, uint8 type, Player* player, bool msg = true);
         ActionButton* addActionButton(uint8 spec, uint8 button, uint32 action, uint8 type);
         void removeActionButton(uint8 spec, uint8 button);
-        void SendInitialActionButtons() const;
+        void SendActionButtons(uint32 state) const;
         ActionButton const* GetActionButton(uint8 button);
 
         PvPInfo pvpInfo;
@@ -2394,7 +2395,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void UpdateAchievementCriteria(AchievementCriteriaTypes type, uint32 miscvalue1=0, uint32 miscvalue2=0, Unit *unit=NULL, uint32 time=0);
         void StartTimedAchievementCriteria(AchievementCriteriaTypes type, uint32 timedRequirementId, time_t startTime = 0);
 
-
+        void CompletedAchievement(AchievementEntry const* entry);
         bool HasTitle(uint32 bitIndex);
         bool HasTitle(CharTitlesEntry const* title) { return HasTitle(title->bit_index); }
         void SetTitle(CharTitlesEntry const* title, bool lost = false);

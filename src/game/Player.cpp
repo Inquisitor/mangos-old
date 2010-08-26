@@ -1406,6 +1406,10 @@ void Player::Update( uint32 p_time )
             RegenerateAll();
     }
 
+    // make dead players really dead
+    if (!isAlive() && !HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST))
+        SetHealth(0);
+
     if (m_deathState == JUST_DIED)
         KillPlayer();
 
@@ -2078,6 +2082,9 @@ void Player::RewardRage( uint32 damage, uint32 weaponSpeedHitFactor, bool attack
 
 void Player::RegenerateAll(uint32 diff)
 {
+    if (!isAlive())
+        return;
+
     // Not in combat or they have regeneration
     if (!isInCombat() || HasAuraType(SPELL_AURA_MOD_REGEN_DURING_COMBAT) ||
         HasAuraType(SPELL_AURA_MOD_HEALTH_REGEN_IN_COMBAT) || IsPolymorphed() )
@@ -2517,16 +2524,19 @@ void Player::SendLogXPGain(uint32 GivenXP, Unit* victim, uint32 RestXP)
 
 void Player::GiveXP(uint32 xp, Unit* victim)
 {
-    if ( xp < 1 )
+    if(xp < 1)
         return;
 
-    if(!isAlive())
+    if(!isAlive() && !GetBattleGroundId())
         return;
 
     uint32 level = getLevel();
 
     // XP to money conversion processed in Player::RewardQuest
     if(level >= sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL))
+        return;
+
+    if(HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED))
         return;
 
     if(victim)
@@ -5218,19 +5228,36 @@ void Player::ApplyRatingMod(CombatRating cr, int32 value, bool apply)
 {
     m_baseRatingValue[cr]+=(apply ? value : -value);
 
+    float hastePctMod = 1.0f; 
+
+    // After 3.1.3 there was bonus from haste rating increased for specific classes (only for ranged and melee) 
+    switch(getClass()) 
+    { 
+        case CLASS_PALADIN: 
+        case CLASS_DEATH_KNIGHT: 
+        case CLASS_SHAMAN:
+        case CLASS_DRUID:
+        { 
+            hastePctMod = 1.3f; 
+            break; 
+        } 
+        default: 
+            break; 
+    }
+
     // explicit affected values
     switch (cr)
     {
         case CR_HASTE_MELEE:
         {
-            float RatingChange = value / GetRatingCoefficient(cr);
+            float RatingChange = hastePctMod * value / GetRatingCoefficient(cr);
             ApplyAttackTimePercentMod(BASE_ATTACK,RatingChange,apply);
             ApplyAttackTimePercentMod(OFF_ATTACK,RatingChange,apply);
             break;
         }
         case CR_HASTE_RANGED:
         {
-            float RatingChange = value / GetRatingCoefficient(cr);
+            float RatingChange = hastePctMod * value / GetRatingCoefficient(cr);
             ApplyAttackTimePercentMod(RANGED_ATTACK, RatingChange, apply);
             break;
         }
@@ -5897,20 +5924,29 @@ int16 Player::GetSkillTempBonusValue(uint32 skill) const
     return SKILL_TEMP_BONUS(GetUInt32Value(PLAYER_SKILL_BONUS_INDEX(itr->second.pos)));
 }
 
-void Player::SendInitialActionButtons() const
+void Player::SendActionButtons(uint32 state) const
 {
     DETAIL_LOG( "Initializing Action Buttons for '%u' spec '%u'", GetGUIDLow(), m_activeSpec);
 
     WorldPacket data(SMSG_ACTION_BUTTONS, 1+(MAX_ACTION_BUTTONS*4));
-    data << uint8(1);                                       // talent spec amount (in packet)
-    ActionButtonList const& currentActionButtonList = m_actionButtons[m_activeSpec];
-    for(uint8 button = 0; button < MAX_ACTION_BUTTONS; ++button)
+    data << uint8(state);
+    /*
+        state can be 0, 1, 2
+        0 - Looks to be sent when initial action buttons get sent, however on Trinity we use 1 since 0 had some difficulties
+        1 - Used in any SMSG_ACTION_BUTTONS packet with button data on Trinity. Only used after spec swaps on retail.
+        2 - Clears the action bars client sided. This is sent during spec swap before unlearning and before sending the new buttons
+    */
+    if (state != 2)
     {
-        ActionButtonList::const_iterator itr = currentActionButtonList.find(button);
-        if(itr != currentActionButtonList.end() && itr->second.uState != ACTIONBUTTON_DELETED)
-            data << uint32(itr->second.packedData);
-        else
-            data << uint32(0);
+        ActionButtonList const& currentActionButtonList = m_actionButtons[m_activeSpec];
+        for(uint8 button = 0; button < MAX_ACTION_BUTTONS; ++button)
+        {
+            ActionButtonList::const_iterator itr = currentActionButtonList.find(button);
+            if(itr != currentActionButtonList.end() && itr->second.uState != ACTIONBUTTON_DELETED)
+                data << uint32(itr->second.packedData);
+            else
+                data << uint32(0);
+        }
     }
 
     GetSession()->SendPacket( &data );
@@ -6441,6 +6477,75 @@ void Player::UpdateHonorFields()
     }
 
     m_lastHonorUpdateTime = now;
+
+    uint32 HonorKills = GetUInt32Value(PLAYER_FIELD_LIFETIME_HONORBALE_KILLS);
+    uint32 victim_rank = 0;
+
+    if (HonorKills < 10)
+        return;
+
+    if (HonorKills >= 10 && HonorKills < 100)
+        victim_rank = 1;
+    else if (HonorKills >= 100 && HonorKills < 250)
+        victim_rank = 2;
+    else if (HonorKills >= 250 && HonorKills < 500)
+        victim_rank = 3;
+    else if (HonorKills >= 500 && HonorKills < 1500)
+        victim_rank = 4;
+    else if (HonorKills >= 1500 && HonorKills < 5000)
+        victim_rank = 5;
+    else if (HonorKills >= 5000 && HonorKills < 7500)
+        victim_rank = 6;
+    else if (HonorKills >= 7500 && HonorKills < 10000)
+       victim_rank = 7;
+    else if (HonorKills >= 10000 && HonorKills < 12500)
+        victim_rank = 8;
+    else if (HonorKills >= 12500 && HonorKills < 15000)
+        victim_rank = 9;
+    else if (HonorKills >= 15000 && HonorKills < 17500)
+        victim_rank = 10;
+    else if (HonorKills >= 17500 && HonorKills < 20000)
+        victim_rank = 11;
+    else if (HonorKills >= 20000 && HonorKills < 25000)
+        victim_rank = 12;
+    else if (HonorKills >= 25000 && HonorKills < 50000)
+        victim_rank = 13;
+    else if (HonorKills >= 50000)
+        victim_rank = 14;
+
+    if (victim_rank == 0)
+        return;
+
+    if (GetTeam() == HORDE && victim_rank != 0)
+        victim_rank += 14;
+
+    CharTitlesEntry const* titleEntry = sCharTitlesStore.LookupEntry(victim_rank);
+    if (!HasTitle(titleEntry))
+        SetTitle(titleEntry);
+    else
+        return;
+
+    SetUInt32Value(PLAYER_CHOSEN_TITLE,victim_rank);
+
+    uint32 startid = 1;
+    if (GetTeam() == HORDE)
+        startid = 15;
+
+    for(uint32 i = startid; i < victim_rank; ++i)
+    {
+        if (i == victim_rank)
+            break;
+        else
+        {
+            if (!HasTitle(titleEntry))
+                continue;
+            else
+            {
+                CharTitlesEntry const* titleEntry = sCharTitlesStore.LookupEntry(i);
+                SetTitle(titleEntry,true);
+            }
+        }
+    }
 }
 
 ///Calculate the amount of honor gained based on the victim
@@ -6448,6 +6553,10 @@ void Player::UpdateHonorFields()
 ///An exact honor value can also be given (overriding the calcs)
 bool Player::RewardHonor(Unit *uVictim, uint32 groupsize, float honor)
 {
+    // do not reward honor when player has inactive aura
+    if(HasAura(43681))
+        return false;
+
     // do not reward honor in arenas, but enable onkill spellproc
     if(InArena())
     {
@@ -7527,7 +7636,57 @@ void Player::CastItemCombatSpell(Unit* Target, WeaponAttackType attType)
                 if(IsPositiveSpell(pEnchant->spellid[s]))
                     CastSpell(this, pEnchant->spellid[s], true, item);
                 else
+                {
                     CastSpell(Target, pEnchant->spellid[s], true, item);
+
+                    // Deadly Poison effect of applying second item poison
+                    if(pEnchant->aura_id == 26)
+                    {
+                        SpellEntry const * pSpellEntry = sSpellStore.LookupEntry(pEnchant->spellid[s]);
+                        if(!pSpellEntry || pSpellEntry->EffectApplyAuraName[0] != SPELL_AURA_PERIODIC_DAMAGE)
+                            return;
+
+                        Aura *poison = 0;
+                        // Lookup for Deadly poison (only attacker applied)
+                        Unit::AuraList const& auras = Target->GetAurasByType(SPELL_AURA_PERIODIC_DAMAGE);
+                        for(Unit::AuraList::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
+                            if( (*itr)->GetSpellProto()->SpellFamilyName==SPELLFAMILY_ROGUE &&
+                                ((*itr)->GetSpellProto()->SpellFamilyFlags & UI64LIT(0x10000)) &&
+                                (*itr)->GetCasterGUID()== GetGUID() )
+                            {
+                                poison = *itr;
+                                break;
+                            }
+
+                        if(poison && poison->GetStackAmount() >= 5)
+                        {
+                            Item *item = GetWeaponForAttack(attType == BASE_ATTACK ? OFF_ATTACK : BASE_ATTACK );
+                            if (!item)
+                                return;
+
+                            // all poison enchantments is temporary
+                            uint32 enchant_id = item->GetEnchantmentId(TEMP_ENCHANTMENT_SLOT);
+                            if (!enchant_id)
+                                return;
+
+                            SpellItemEnchantmentEntry const *pSecondEnchant = sSpellItemEnchantmentStore.LookupEntry(enchant_id);
+                            if (!pSecondEnchant)
+                                return;
+
+                            for (uint8 s = 0; s < 3; ++s)
+                            {
+                                if (pSecondEnchant->type[s]!=ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL)
+                                    continue;
+
+                                SpellEntry const* combatEntry = sSpellStore.LookupEntry(pSecondEnchant->spellid[s]);
+                                if (!combatEntry || combatEntry->Dispel != DISPEL_POISON)
+                                    continue;
+
+                                    CastSpell(Target, combatEntry, true, item);
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -20107,6 +20266,21 @@ bool Player::IsSpellFitByClassAndRace( uint32 spell_id ) const
     return false;
 }
 
+bool Player::HasQuest(uint32 questId) const
+{
+    for (uint32 i = 0; i < MAX_QUEST_LOG_SIZE; ++i)
+    {
+        uint32 questid = GetQuestSlotQuestId(i);
+        if (questid == 0)
+            continue;
+        if (questid == questId)
+            return true;
+
+        return false;
+    }
+    return false;
+}
+
 bool Player::HasQuestForGO(int32 GOId) const
 {
     for( int i = 0; i < MAX_QUEST_LOG_SIZE; ++i )
@@ -21178,7 +21352,7 @@ uint32 Player::CalculateTalentsPoints() const
         return uint32(base_talent * sWorld.getConfig(CONFIG_FLOAT_RATE_TALENT));
 
     uint32 talentPointsForLevel = getLevel() < 56 ? 0 : getLevel() - 55;
-    talentPointsForLevel += m_questRewardTalentCount;
+    if(talentPointsForLevel > base_talent || getLevel() >= 60)
 
     if(talentPointsForLevel > base_talent)
         talentPointsForLevel = base_talent;
@@ -22076,13 +22250,22 @@ void Player::DeleteEquipmentSet(uint64 setGuid)
 
 void Player::ActivateSpec(uint8 specNum)
 {
-    if(GetActiveSpec() == specNum)
+    if (GetActiveSpec() == specNum)
         return;
 
-    if(specNum >= GetSpecsCount())
+    if (specNum >= GetSpecsCount())
+        return;
+
+    if (GetBattleGround() && GetBattleGround()->GetStatus() == STATUS_IN_PROGRESS)
         return;
 
     UnsummonPetTemporaryIfAny();
+    UnsummonAllTotems();
+    ClearComboPointHolders(); 	
+    ClearAllReactives();
+    RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
+    
+    SendActionButtons(2);
 
     ApplyGlyphs(false);
 
@@ -22398,6 +22581,11 @@ void Player::SetRestType( RestType n_r_type, uint32 areaTriggerId /*= 0*/)
         if(sWorld.IsFFAPvPRealm())
             SetFFAPvP(false);
     }
+}
+
+void Player::CompletedAchievement(AchievementEntry const* entry)
+{
+    GetAchievementMgr().CompletedAchievement(entry);
 }
 
 void Player::SetRandomWinner(bool isWinner)
