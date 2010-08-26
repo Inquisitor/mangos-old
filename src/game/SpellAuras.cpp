@@ -5805,8 +5805,7 @@ void Aura::HandleShapeshiftBoosts(bool apply)
             MasterShaperSpellId = 48420;
             break;
         case FORM_TREE:
-            spellId1 = 5420;
-            spellId2 = 34123;
+            spellId1 = 34123;
             MasterShaperSpellId = 48422;
             break;
         case FORM_TRAVEL:
@@ -7871,6 +7870,11 @@ void SpellAuraHolder::_AddSpellAuraHolder()
         if(m_spellProto->Dispel == DISPEL_ENRAGE)
             m_target->ModifyAuraState(AURA_STATE_ENRAGE, true);
 
+        // Bleeding aura state
+        for(int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
+            if(GetEffectMechanic(m_spellProto, SpellEffectIndex(i)) == MECHANIC_BLEED)
+                m_target->ModifyAuraState(AURA_STATE_BLEEDING, true);
+
     }
 }
 
@@ -7924,6 +7928,11 @@ void SpellAuraHolder::_RemoveSpellAuraHolder()
         // Enrage aura state
         if(m_spellProto->Dispel == DISPEL_ENRAGE)
             m_target->ModifyAuraState(AURA_STATE_ENRAGE, false);
+
+        // Bleeding aura state
+        for(int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
+            if(GetEffectMechanic(m_spellProto, SpellEffectIndex(i)) == MECHANIC_BLEED)
+                m_target->ModifyAuraState(AURA_STATE_BLEEDING, false);
 
         uint32 removeState = 0;
         uint64 removeFamilyFlag = m_spellProto->SpellFamilyFlags;

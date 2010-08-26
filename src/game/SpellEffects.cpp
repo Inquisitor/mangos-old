@@ -259,6 +259,10 @@ void Spell::EffectResurrectNew(SpellEffectIndex eff_idx)
         return;
 
     uint32 health = damage;
+    
+    if (m_caster->HasAura(54733, EFFECT_INDEX_0) && m_spellInfo->Category == 26) // Glyph of Rebirth
+        health = pTarget->GetMaxHealth();
+
     uint32 mana = m_spellInfo->EffectMiscValue[eff_idx];
     pTarget->setResurrectRequestData(m_caster->GetGUID(), m_caster->GetMapId(), m_caster->GetPositionX(), m_caster->GetPositionY(), m_caster->GetPositionZ(), health, mana);
     SendResurrectRequest(pTarget);
@@ -5045,6 +5049,26 @@ void Spell::EffectWeaponDmg(SpellEffectIndex eff_idx)
     int32 spell_bonus = 0;                                  // bonus specific for spell
     switch(m_spellInfo->SpellFamilyName)
     {
+        case SPELLFAMILY_DRUID:
+        {
+            // Rend and Tear ( on Maul / Shred )
+            if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000008800))
+            {
+                if(unitTarget->HasAuraState(AURA_STATE_BLEEDING))
+                {
+                    Unit::AuraList const& aura = m_caster->GetAurasByType(SPELL_AURA_DUMMY);
+                    for(Unit::AuraList::const_iterator itr = aura.begin(); itr != aura.end(); itr)
+                    {
+                        if ((*itr)->GetSpellProto()->SpellIconID == 2859 && (*itr)->GetEffIndex() == 0)
+                        {
+                            totalDamagePercentMod += (totalDamagePercentMod * (*itr)->GetModifier()->m_amount) / 100;
+                            break;
+                        }
+                    }
+                }
+            }
+            break;
+        }
         case SPELLFAMILY_GENERIC:
         {
             switch(m_spellInfo->Id)
@@ -5493,6 +5517,44 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                         return;
 
                     unitTarget->HandleEmoteCommand(EMOTE_STATE_DANCE);
+                    return;
+                }
+                // Glyph of Starfire
+                case 54846:
+                {
+                    if (Aura * aurEff = unitTarget->GetAura(SPELL_AURA_PERIODIC_DAMAGE,SPELLFAMILY_DRUID,0x00000002,0,m_caster->GetGUID()))
+                    {
+                        uint32 countMin = aurEff->GetAuraMaxDuration();
+                        uint32 countMax = 18000;
+                        countMax += m_caster->HasAura(38414) ? 3000 : 0;
+                        countMax += m_caster->HasAura(57865) ? 3000 : 0;
+
+                        if (countMin < countMax)
+                        {
+                            aurEff->SetAuraDuration(uint32(aurEff->GetAuraDuration()+3000));
+                            aurEff->SetAuraMaxDuration(countMin+3000);
+                            aurEff->GetHolder()->SendAuraUpdate(false);
+                        }
+                    }
+                    return;
+                }
+                // Glyph of Backstab
+                case 63975:
+                {
+                    if (Aura * aurEff = unitTarget->GetAura(SPELL_AURA_PERIODIC_DAMAGE,SPELLFAMILY_ROGUE,0x00100000,0,m_caster->GetGUID()))
+                    {
+                        uint32 countMin = aurEff->GetAuraMaxDuration();
+                        uint32 countMax = 12000;
+                        countMax += m_caster->HasAura(56801) ? 4000 : 0;
+
+                        if (countMin < countMax)
+                        {
+                            aurEff->SetAuraDuration(uint32(aurEff->GetAuraDuration()+3000));
+                            aurEff->SetAuraMaxDuration(countMin+2000);
+                            aurEff->GetHolder()->SendAuraUpdate(false);
+                        }
+
+                    }
                     return;
                 }
                 case 20589:                                 // Escape artist
