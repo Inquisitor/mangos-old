@@ -1664,6 +1664,25 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
     return pCreature;
 }
 
+GameObject* WorldObject::SummonGameObject(uint32 id, float x, float y, float z, float ang, uint32 despwtime)
+{
+    GameObject* pGameObj = new GameObject;
+
+    if(!pGameObj->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_GAMEOBJECT), id, GetMap(),
+    GetPhaseMask(), x, y, z, ang, 0.0f, 0.0f, 0.0f, 0.0f, 100, GO_STATE_READY))
+    {
+        delete pGameObj;
+        return NULL;
+    }
+
+    if(despwtime)
+        pGameObj->Delete(despwtime);
+
+    GetMap()->Add(pGameObj);
+
+    return pGameObj;
+}
+
 namespace MaNGOS
 {
     class NearUsedPosDo
