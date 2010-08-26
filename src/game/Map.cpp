@@ -38,6 +38,7 @@
 #include "InstanceSaveMgr.h"
 #include "VMapFactory.h"
 #include "BattleGroundMgr.h"
+#include "CreatureEventAI.h"
 
 struct ScriptAction
 {
@@ -2206,7 +2207,68 @@ void Map::ScriptsProcess()
         if (target && !target->IsInWorld())
             target = NULL;
 
-        switch(step.script->command)
+        bool requirement_passed = true;
+
+        if( source && (source->GetTypeId() == TYPEID_UNIT || source->GetTypeId() == TYPEID_PLAYER) )
+        {
+            Unit * uSource = static_cast<Unit*>(source);
+
+            switch(step.script->reqtype)
+            {
+                case REQUIREMENT_T_INVOKER_AURA:
+                    if( !uSource->HasAura( step.script->reqvalue ) )
+                        requirement_passed = false;
+                    break;
+                case REQUIREMENT_T_QUEST:
+                    if( uSource->GetTypeId() != TYPEID_PLAYER || ((Player*)uSource)->GetQuestStatus(step.script->reqvalue) != QUEST_STATUS_INCOMPLETE )
+                        requirement_passed = false;
+                    break;
+                case REQUIREMENT_T_INVOKER_HAS_NO_AURA:
+                    if( uSource->HasAura( step.script->reqvalue ) )
+                        requirement_passed = false;
+                    break;
+            }
+        }
+
+        if( target && (target->GetTypeId() == TYPEID_UNIT || target->GetTypeId() == TYPEID_PLAYER) )
+        {
+            Unit * uTarget = static_cast<Unit*>(target);
+
+            switch( step.script->reqtype )
+            {
+                case REQUIREMENT_T_HP_PERCENT:
+                    if( uTarget->GetHealth() * 100 / uTarget->GetMaxHealth() > step.script->reqvalue )
+                        requirement_passed = false;
+                    break;
+                case REQUIREMENT_T_MANA_PERCENT:
+                    if( uTarget->GetPower(POWER_MANA) * 100 / uTarget->GetMaxPower(POWER_MANA) > step.script->reqvalue )
+                        requirement_passed = false;
+                    break;
+                case REQUIREMENT_T_AURA:
+                    if( !uTarget->HasAura( step.script->reqvalue ) )
+                        requirement_passed = false;
+                    break;
+                case REQUIREMENT_T_ZONE:
+                    if( uTarget->GetZoneId() != step.script->reqvalue )
+                        requirement_passed = false;
+                    break;
+                case REQUIREMENT_T_ENTRY:
+                    if( uTarget->GetTypeId() != TYPEID_UNIT || uTarget->GetEntry() != step.script->reqvalue )
+                        requirement_passed = false;
+                    break;
+            }
+        }
+
+        if( !requirement_passed )
+        {
+            m_scriptSchedule.erase(iter);
+            sWorld.DecreaseScheduledScriptCount();
+
+            iter = m_scriptSchedule.begin();
+            return;
+        }
+
+        switch (step.script->command)
         {
             case SCRIPT_COMMAND_TALK:
             {
@@ -2882,6 +2944,92 @@ void Map::ScriptsProcess()
                 pReceiver->SendMovieStart(step.script->datalong);
 
                 break;
+            }
+            case SCRIPT_COMMAND_ADD_QUEST_COUNT:
+            {
+                if(!source)
+                {
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT call for NULL object.");
+                    break;
+                }
+
+                if(source->GetTypeId() != TYPEID_PLAYER) 
+                {
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT call for non-player (QuestId: %u TypeId is %u), skipping.",step.script->datalong, uint32(source->GetTypeId()));
+                    break;
+                }
+                Player * user = static_cast<Player*>(source);
+
+                uint32 QuestID = step.script->datalong;
+                uint32 x = step.script->datalong2;
+                uint32 increment = step.script->dataint;
+
+                if( increment < 1 ) // We havent anything to increment (it cant be either 0 nor minus value )
+                {
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT increment is lower than 0 for quest: %u",QuestID);
+                    break;
+                }
+
+                Quest const* pQuest = sObjectMgr.GetQuestTemplate(QuestID);
+                if (!pQuest)
+                {
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT Quest Template doesnt exist for quest: %u",QuestID);
+                    break;
+                }
+
+                uint16 log_slot = user->FindQuestSlot(pQuest->GetQuestId());
+                if (log_slot > MAX_QUEST_LOG_SIZE)
+                    break;
+
+                QuestStatusData& q_status = user->getQuestStatusMap()[QuestID];
+
+                if(q_status.m_creatureOrGOcount[x] + increment > pQuest->ReqCreatureOrGOCount[x]) // We shouldnt go above required count
+                    break;
+
+                uint32 oldCount = q_status.m_creatureOrGOcount[x];
+                q_status.m_creatureOrGOcount[x] = oldCount + increment;
+                if (q_status.uState != QUEST_NEW) 
+                    q_status.uState = QUEST_CHANGED;
+
+                user->SendQuestUpdateAddCreatureOrGo(pQuest, ObjectGuid(uint64(0)), x, oldCount, increment);
+                if (user->CanCompleteQuest(QuestID))
+                    user->CompleteQuest(QuestID);
+
+                break;
+            }
+            case SCRIPT_COMMAND_TEMP_SUMMON_OBJECT:
+            {
+                if(!source)
+                {
+                    sLog.outError("SCRIPT_COMMAND_TEMP_SUMMON_OBJECT call for NULL object.");
+                    break;
+                }
+
+                WorldObject * pSummoner = dynamic_cast<WorldObject*>(source);
+
+                float x = step.script->x;
+                float y = step.script->y;
+                float z = step.script->z;
+                float o = step.script->o;
+
+                if(!x && !y && !z)
+                    pSummoner->GetPosition(x,y,z);
+
+                if(GameObject * pGameObj = pSummoner->SummonGameObject(step.script->datalong, x,y,z, o, step.script->datalong2))
+                    if (pSummoner->GetTypeId() == TYPEID_UNIT)
+                        ((Unit*)pSummoner)->AddGameObject(pGameObj);
+                break;
+            }
+            case SCRIPT_COMMAND_SET_ENTRY:
+            {
+                if(!target || target->GetTypeId() != TYPEID_UNIT)
+                {
+                    sLog.outError("SCRIPT_COMMAND_SET_ENTRY (script id %u) call for NULL target or non-creature type.", step.script->id);
+                    break;
+                }
+
+                Creature *pCreature = (Creature*)target;
+                pCreature->UpdateEntry(step.script->datalong, ALLIANCE, 0, step.script->datalong2 ? true : false);
             }
             default:
                 sLog.outError("Unknown SCRIPT_COMMAND_ %u called for script id %u.",step.script->command, step.script->id);
