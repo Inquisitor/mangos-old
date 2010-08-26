@@ -45,6 +45,11 @@ class RASocket: protected RAHandler
 
         int sendf(const char*);
 
+        void OnAccept();
+        void OnRead();
+        static void zprint(void* callbackArg, const char * szText );
+        static void raprint(const char * szText );
+
     protected:
         /// things called by ACE framework.
         RASocket(void);
@@ -89,7 +94,8 @@ class RASocket: protected RAHandler
             OK,                                             //both login and pass were given, they were correct and user has enough priv.
         }stage;
 
-        static void zprint(void* callbackArg, const char * szText );
+        static ACE_Thread_Mutex listLock;
+        static std::set<RASocket*> connectedClients;
         static void commandFinished(void* callbackArg, bool success);
 };
 #endif

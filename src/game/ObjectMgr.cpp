@@ -9132,6 +9132,81 @@ bool LoadMangosStrings(DatabaseType& db, char const* table,int32 start_value, in
     return sObjectMgr.LoadMangosStrings(db,table,start_value,end_value);
 }
 
+void ObjectMgr::LoadSpellDisabledEntrys()
+{
+    m_spell_disabled.clear();                                // need for reload case
+    QueryResult *result = WorldDatabase.Query("SELECT entry FROM spell_disabled where active=1");
+
+    uint32 total_count = 0;
+
+    if(!result)
+    {
+        barGoLink bar( 1 );
+        bar.step();
+
+        sLog.outString();
+        sLog.outString( ">> Loaded %u disabled spells", total_count );
+        return;
+    }
+
+    barGoLink bar( result->GetRowCount() );
+
+    Field* fields;
+    do
+    {
+        bar.step();
+        fields = result->Fetch();
+        m_spell_disabled.insert(fields[0].GetUInt32());
+        ++total_count;
+    }
+    while ( result->NextRow() );
+
+    delete result;
+
+    sLog.outString();
+    sLog.outString( ">> Loaded %u disabled spells", total_count);
+}
+
+void ObjectMgr::LoadGCNews()
+{
+    mGCNewsMap.clear(); // For reloading possibility
+
+    QueryResult* result = WorldDatabase.Query("SELECT id, parent, type, text FROM gc_news");
+    if( !result )
+    {
+        barGoLink bar( 1 );
+
+        bar.step();
+
+        sLog.outString();
+        sLog.outErrorDb(">> Loaded `gc_news`, table is empty!");
+        return;
+    }
+
+    barGoLink bar( result->GetRowCount() );
+
+    uint32 count = 0;
+    do
+    {
+        bar.step();
+
+        Field* fields = result->Fetch();
+
+        GCNewsData data;
+        data.parent = fields[1].GetUInt16();
+        data.type = fields[2].GetUInt16();
+        data.textstring = fields[3].GetCppString();
+        mGCNewsMap.insert(GCNewsMap::value_type(fields[0].GetUInt32(), data));
+
+        ++count;
+
+    } while (result->NextRow());
+    delete result;
+
+    sLog.outString();
+    sLog.outString( ">> Loaded %d GC News Data ", count );
+}
+
 uint32 MANGOS_DLL_SPEC GetScriptId(const char *name)
 {
     return sObjectMgr.GetScriptId(name);

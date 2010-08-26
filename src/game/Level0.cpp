@@ -185,6 +185,7 @@ bool ChatHandler::HandleGMListIngameCommand(char* /*args*/)
 
 bool ChatHandler::HandleAccountPasswordCommand(char* args)
 {
+    /*
     // allow use from RA, but not from console (not have associated account id)
     if (!GetAccountId())
     {
@@ -235,7 +236,10 @@ bool ChatHandler::HandleAccountPasswordCommand(char* args)
             SendSysMessage(LANG_COMMAND_NOTCHANGEPASSWORD);
             SetSentErrorMessage(true);
             return false;
-    }
+    }*/
+
+    PSendSysMessage("Due to security reasons you can only change your password through the forum. Please visit http://gamingconsortium.org/ for more information.");
+    SetSentErrorMessage(true);
 
     return true;
 }

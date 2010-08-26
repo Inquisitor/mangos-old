@@ -355,6 +355,15 @@ struct GraveYardData
 };
 typedef std::multimap<uint32,GraveYardData> GraveYardMap;
 
+struct GCNewsData
+{
+    uint16 type;
+    uint16 parent;
+    std::string textstring;
+};
+
+typedef std::multimap<uint32, GCNewsData> GCNewsMap;
+
 enum ConditionType
 {                                                           // value1       value2  for the Condition enumed
     CONDITION_NONE                  = 0,                    // 0            0
@@ -748,6 +757,18 @@ class ObjectMgr
         void LoadVendors();
         void LoadTrainerSpell();
 
+        void LoadGCNews();
+
+        void LoadSpellDisabledEntrys();
+        bool IsSpellDisabled(uint32 spellid)
+        {
+            SpellDisabled::const_iterator itr = m_spell_disabled.find(spellid);
+            if(itr != m_spell_disabled.end())
+                return true;
+
+            return false;
+        }
+
         std::string GeneratePetName(uint32 entry);
         uint32 GetBaseXP(uint32 level) const;
         uint32 GetXPForLevel(uint32 level) const;
@@ -996,6 +1017,8 @@ class ObjectMgr
 
         int GetOrNewIndexForLocale(LocaleConstant loc);
 
+        GCNewsMap mGCNewsMap;
+
         SpellClickInfoMapBounds GetSpellClickInfoMapBounds(uint32 creature_id) const
         {
             return SpellClickInfoMapBounds(mSpellClickInfoMap.lower_bound(creature_id),mSpellClickInfoMap.upper_bound(creature_id));
@@ -1075,6 +1098,9 @@ class ObjectMgr
         ReservedNamesMap    m_ReservedNames;
 
         GraveYardMap        mGraveYardMap;
+
+        typedef std::set<uint32> SpellDisabled;
+        SpellDisabled  m_spell_disabled;
 
         GameTeleMap         m_GameTeleMap;
 
