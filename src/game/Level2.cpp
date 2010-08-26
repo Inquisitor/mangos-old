@@ -2318,7 +2318,7 @@ bool ChatHandler::HandleNpcSetDeathStateCommand(char* args)
     else
         pCreature->SetDeadByDefault(false);
 
-    pCreature->SaveToDB();
+    //pCreature->SaveToDB();
     pCreature->Respawn();
 
     return true;
