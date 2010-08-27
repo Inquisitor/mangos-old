@@ -6098,9 +6098,6 @@ void Aura::HandleAuraUntrackable(bool apply, bool /*Real*/)
 
 void Aura::HandleAuraModPacify(bool apply, bool /*Real*/)
 {
-    if(GetTarget()->GetTypeId() != TYPEID_PLAYER)
-        return;
-
     if(apply)
         GetTarget()->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED);
     else
@@ -8276,6 +8273,13 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
                 cast_at_remove = true;
                 spellId1 = 60242;                           // Darkmoon Card: Illusion
             }
+            // Deathbloom of Loatheb
+            else if( (GetId() == 29865 || GetId() == 55053) && !apply )
+            {
+                cast_at_remove = true;
+                // normal | heroic
+                spellId1 = ((GetId() == 29865) ? 55594 : 55601 );
+            }
             else
                 return;
             break;
@@ -8304,6 +8308,20 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
                 else
                     return;
                 break;
+            }
+            else if (m_spellProto->SpellFamilyFlags & 0x1LL && m_spellProto->SpellFamilyFlags2 & 0x8)
+            {
+                // Glyph of Fireball
+                if (Unit * caster = GetCaster())
+                    if (caster->HasAura(56368))
+                        m_target->RemoveAurasByCasterSpell(GetId(), caster->GetGUID());
+            }
+            else if (m_spellProto->SpellFamilyFlags & 0x20LL && GetSpellProto()->SpellVisual[0] == 13)
+            {
+                // Glyph of Frostbolt
+                if (Unit * caster = GetCaster())
+                    if (caster->HasAura(56370))
+                        m_target->RemoveAurasByCasterSpell(GetId(), caster->GetGUID());
             }
 
             switch(GetId())
