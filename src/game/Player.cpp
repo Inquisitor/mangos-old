@@ -22593,6 +22593,11 @@ void Player::CompletedAchievement(AchievementEntry const* entry)
     GetAchievementMgr().CompletedAchievement(entry);
 }
 
+void Player::CompletedAchievement(uint32 uiAchievementID)
+{
+  GetAchievementMgr().CompletedAchievement(sAchievementStore.LookupEntry(uiAchievementID));
+}
+
 void Player::SetRandomWinner(bool isWinner)
 {
     m_IsBGRandomWinner = isWinner;

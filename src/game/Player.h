@@ -2397,6 +2397,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void StartTimedAchievementCriteria(AchievementCriteriaTypes type, uint32 timedRequirementId, time_t startTime = 0);
 
         void CompletedAchievement(AchievementEntry const* entry);
+        void CompletedAchievement(uint32 uiAchievementID);
         bool HasTitle(uint32 bitIndex);
         bool HasTitle(CharTitlesEntry const* title) { return HasTitle(title->bit_index); }
         void SetTitle(CharTitlesEntry const* title, bool lost = false);
