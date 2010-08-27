@@ -10551,3 +10551,8 @@ SpellAuraHolder* Unit::GetSpellAuraHolder (uint32 spellid, uint64 casterGUID)
 
     return NULL;
 }
+
+Unit * Unit::GetMisdirectionTarget()
+{
+    return m_misdirectionTargetGUID ? ObjectAccessor::GetUnit(*this, m_misdirectionTargetGUID) : NULL;
+}

@@ -2238,6 +2238,13 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 target->CastSpell(target, 47287, true, NULL, this);
                 return;
             }
+            case 34477:                                     //Misdirection
+            case 57934:                                     //Tricks of Trade
+            {
+                if (Unit * caster = GetCaster())
+                    caster->SetThreatRedirectionTarget(0, 0);
+                return;
+            }
             case 51870:                                     // Collect Hair Sample
             {
                 if (Unit* pCaster = GetCaster())
