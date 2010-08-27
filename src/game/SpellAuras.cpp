@@ -5379,9 +5379,9 @@ void Aura::HandleAuraIncreaseBaseHealthPercent(bool apply, bool /*Real*/)
     if(apply)
     {
         if(GetId() == 61254) //Will of Sartharion must set max health
-            m_target->SetHealth(m_target->GetMaxHealth());
+            GetTarget()->SetHealth(GetTarget()->GetMaxHealth());
         else if(GetId() == 60430) // Molten Fury must increase current HP by gained value (200%)
-            m_target->SetHealth(m_target->GetHealth()*2);
+            GetTarget()->SetHealth(GetTarget()->GetHealth()*2);
     }
 }
 
