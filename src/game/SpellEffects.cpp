@@ -3599,6 +3599,9 @@ void Spell::EffectPowerBurn(SpellEffectIndex eff_idx)
 
     new_damage = int32(new_damage * multiplier);
     m_damage += new_damage;
+
+    unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_FEAR);
+    unitTarget->RemoveSpellsCausingAura(SPELL_AURA_TRANSFORM, true, false);
 }
 
 void Spell::EffectHeal(SpellEffectIndex /*eff_idx*/)

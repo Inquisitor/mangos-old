@@ -417,7 +417,7 @@ void WorldSession::HandleCancelAuraOpcode( WorldPacket& recvPacket)
     if (!spellInfo)
         return;
 
-    if (spellInfo->Attributes & SPELL_ATTR_CANT_CANCEL)
+    if (spellInfo->Attributes & SPELL_ATTR_CANT_CANCEL || spellId == 56266)
         return;
 
     if (IsPassiveSpell(spellInfo))
@@ -548,8 +548,9 @@ void WorldSession::HandleTotemDestroyed( WorldPacket& recvPacket)
     if (int(slotId) >= MAX_TOTEM_SLOT)
         return;
 
-    if (Totem* totem = GetPlayer()->GetTotem(TotemSlot(slotId)))
-        totem->UnSummon();
+    Totem* totem = GetPlayer()->GetTotem(TotemSlot(slotId));
+    if(totem && totem->GetEntry() != SENTRY_TOTEM_ENTRY)
+        ((Totem*)totem)->UnSummon();
 }
 
 void WorldSession::HandleSelfResOpcode( WorldPacket & /*recv_data*/ )
