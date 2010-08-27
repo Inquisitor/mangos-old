@@ -4809,6 +4809,9 @@ void Spell::DoSummonWild(SpellEffectIndex eff_idx, uint32 forceFaction)
 
             if(forceFaction)
                 summon->setFaction(forceFaction);
+
+            if(m_caster->GetTypeId() == TYPEID_PLAYER && summon->AI())
+                summon->AI()->SummonedBySpell((Player*)m_caster );
         }
     }
 }
@@ -5818,7 +5821,7 @@ void Spell::EffectHealMaxHealth(SpellEffectIndex /*eff_idx*/)
     m_healing += heal;
 }
 
-void Spell::EffectInterruptCast(SpellEffectIndex /*eff_idx*/)
+void Spell::EffectInterruptCast(SpellEffectIndex eff_idx)
 {
     if(!unitTarget)
         return;
@@ -5835,7 +5838,7 @@ void Spell::EffectInterruptCast(SpellEffectIndex /*eff_idx*/)
             // check if we can interrupt spell
             if ((curSpellInfo->InterruptFlags & SPELL_INTERRUPT_FLAG_INTERRUPT) && curSpellInfo->PreventionType == SPELL_PREVENTION_TYPE_SILENCE )
             {
-                unitTarget->ProhibitSpellSchool(GetSpellSchoolMask(curSpellInfo), GetSpellDuration(m_spellInfo));
+                unitTarget->ProhibitSpellSchool(GetSpellSchoolMask(curSpellInfo), unitTarget->CalculateSpellDuration(m_spellInfo, eff_idx, unitTarget));
                 unitTarget->InterruptSpell(CurrentSpellTypes(i),false);
             }
         }
@@ -5860,7 +5863,16 @@ void Spell::EffectSummonObjectWild(SpellEffectIndex eff_idx)
         z = m_targets.m_destZ;
     }
     else
-        m_caster->GetClosePoint(x, y, z, DEFAULT_WORLD_OBJECT_SIZE);
+    {
+        if(m_spellInfo->Id == 48018)
+        {
+            x = m_caster->GetPositionX();
+            y = m_caster->GetPositionY();
+            z = m_caster->GetPositionZ();
+        }
+        else
+            m_caster->GetClosePoint(x, y, z, DEFAULT_WORLD_OBJECT_SIZE);
+    }
 
     Map *map = target->GetMap();
 
@@ -6502,6 +6514,49 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, damage, false);
                     break;
                 }
+                // Q: The Denouncement
+                case 48724:
+                case 48726:
+                case 48728:
+                case 48730:
+                {
+                    if(!unitTarget)
+                        return;
+                    // triggered spell is stored in m_spellInfo->EffectBasePoints[0]
+                    unitTarget->CastSpell(unitTarget, damage, true);
+                    return;
+                }
+                // Q: In Service of Blood/Unholy/Frost
+                case 50252:
+                case 47724:
+                case 47703:
+                {
+                    Unit *caster = GetCaster();
+                    if( !caster || caster->GetTypeId() != TYPEID_PLAYER )
+                    {
+                        if(Unit *o_caster = GetAffectiveCaster())
+                        {
+                            caster = o_caster;
+                            if(caster->GetTypeId() != TYPEID_PLAYER )
+                                return;
+                        }
+                      else return;
+                    }
+
+                    // triggered spell is stored in m_spellInfo->EffectBasePoints[0]
+                    caster->CastSpell(caster, damage, true);
+                    return;
+                }
+                case 32580:
+                {
+                    uint32 toSummon = 0;
+                    if (unitTarget->GetClosestCreatureWithEntry(unitTarget, 21351, 10))
+                        toSummon = 21446;
+                    else if (unitTarget->GetClosestCreatureWithEntry(unitTarget, 21456, 10))
+                        toSummon = 21452;
+                    unitTarget->SummonCreature(toSummon, unitTarget->GetPositionX(), unitTarget->GetPositionY(), unitTarget->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 300000 );
+                    return;
+                }
                 case 52941:                                 // Song of Cleansing
                 {
                     uint32 spellId = 0;
@@ -6632,6 +6687,28 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
 
                     return;
                 }
+                case 45713:
+                {
+                    uint32 transformTo = m_caster->GetDisplayId();
+                    switch(m_caster->GetDisplayId())
+                    {
+                        case 23124 : transformTo = 23253; break;
+                        case 23125 : transformTo = 23254; break;
+                        case 23126 : transformTo = 23255; break;
+                        case 23246 : transformTo = 23245; break;
+                        case 23247 : transformTo = 23250; break;
+                        case 23248 : transformTo = 23251; break;
+                        case 23249 : transformTo = 23252; break;
+                    }
+                    m_caster->SetDisplayId(transformTo);
+                    return;
+                }
+                case 45923:                                // Q: Foolish Endeavors
+                {
+                    if (unitTarget->GetTypeId() == TYPEID_PLAYER)
+                        if (((Player*)unitTarget)->GetQuestStatus(11705) == QUEST_STATUS_INCOMPLETE)
+                            unitTarget->CastSpell(unitTarget, 45924, true);
+                }
                 case 66477:                                 // Bountiful Feast
                 {
                     if (!unitTarget)
@@ -6673,6 +6750,46 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                         return;
 
                     m_caster->CastSpell(unitTarget, 72588, true);
+                    return;
+                }
+                // Burst at the Seams (Quest: That's Abominable!)
+                case 59576:
+                {
+                    Unit * pCaster = GetCaster();
+                    // Iterate for all creatures around cast place
+                    CellPair pair(MaNGOS::ComputeCellPair(pCaster->GetPositionX(), pCaster->GetPositionY()));
+                    Cell cell(pair);
+                    cell.data.Part.reserved = ALL_DISTRICT;
+                    cell.SetNoCreate();
+
+                    std::list<Creature*> creatureList;
+                    {
+                        MaNGOS::AnyUnitInPointRangeCheck go_check(pCaster->GetPositionX(), pCaster->GetPositionY(), pCaster->GetPositionZ(), 20);
+                        MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(unitTarget, creatureList, go_check);
+                        TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+                        cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                    }
+
+                    if (!creatureList.empty())
+                    {
+                        for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+                        {
+                            uint32 entryToCredit = 0;
+                            switch((*itr)->GetEntry())
+                            {
+                                case 31142: entryToCredit = 31743; break;
+                                case 31147: entryToCredit = 32168; break;
+                                case 31205: entryToCredit = 32167; break;
+                            }
+
+                            if (GetCaster()->GetOwner())
+                                if (GetCaster()->GetOwner()->GetTypeId() == TYPEID_PLAYER)
+                                    ((Player*)GetCaster()->GetOwner())->KilledMonsterCredit(entryToCredit);
+
+                            unitTarget->DealDamage((*itr), (*itr)->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                        }
+                        unitTarget->DealDamage(unitTarget, unitTarget->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                    }
                     return;
                 }
             }
@@ -7088,12 +7205,27 @@ void Spell::EffectSanctuary(SpellEffectIndex /*eff_idx*/)
         return;
     //unitTarget->CombatStop();
 
+    std::list<Unit *> targets;
+    {
+        MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck u_check(m_caster, m_caster, m_caster->GetMap()->GetVisibilityDistance());
+        MaNGOS::UnitListSearcher<MaNGOS::AnyUnfriendlyUnitInObjectRangeCheck> searcher(m_caster, targets, u_check);
+        Cell::VisitAllObjects(m_caster, searcher, m_caster->GetMap()->GetVisibilityDistance());
+    }
+
+    for(std::list<Unit *>::iterator tIter = targets.begin(); tIter != targets.end(); ++tIter)
+        for(uint32 i = CURRENT_FIRST_NON_MELEE_SPELL; i < CURRENT_MAX_SPELL; ++i)
+            if ((*tIter)->GetCurrentSpell(CurrentSpellTypes(i)) && (*tIter)->GetCurrentSpell(CurrentSpellTypes(i))->m_targets.getUnitTargetGUID() == unitTarget->GetGUID())
+                (*tIter)->InterruptSpell(CurrentSpellTypes(i), false);
+
     unitTarget->CombatStop();
     unitTarget->getHostileRefManager().deleteReferences();  // stop all fighting
     // Vanish allows to remove all threat and cast regular stealth so other spells can be used
     if(m_spellInfo->SpellFamilyName == SPELLFAMILY_ROGUE && (m_spellInfo->SpellFamilyFlags & SPELLFAMILYFLAG_ROGUE_VANISH))
     {
         ((Player *)m_caster)->RemoveSpellsCausingAura(SPELL_AURA_MOD_ROOT);
+        // Overkill 
+        if(((Player*)m_caster)->HasSpell(58426))
+            m_caster->CastSpell(m_caster, 58427, true);
     }
 }
 
@@ -7351,8 +7483,16 @@ void Spell::DoSummonTotem(SpellEffectIndex eff_idx, uint8 slot_dbc)
 
     if (damage)                                             // if not spell info, DB values used
     {
-        pTotem->SetMaxHealth(damage);
-        pTotem->SetHealth(damage);
+        if (pTotem->GetEntry() == 10467) // Mana Tide inherits 10% of owner health
+        {
+            pTotem->SetMaxHealth(m_caster->GetMaxHealth()*0.1);
+            pTotem->SetHealth(m_caster->GetMaxHealth()*0.1);
+        }
+        else
+        {
+            pTotem->SetMaxHealth(damage);
+            pTotem->SetHealth(damage);
+        }
     }
 
     pTotem->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
@@ -7755,7 +7895,7 @@ void Spell::EffectCharge(SpellEffectIndex /*eff_idx*/)
     //TODO: research more ContactPoint/attack distance.
     //3.666666 instead of ATTACK_DISTANCE(5.0f) in below seem to give more accurate result.
     float x, y, z;
-    unitTarget->GetContactPoint(m_caster, x, y, z, 3.666666f);
+    unitTarget->GetContactPoint(m_caster, x, y, z, 3.6f);
 
     if (unitTarget->GetTypeId() != TYPEID_PLAYER)
         ((Creature *)unitTarget)->StopMoving();
@@ -7882,6 +8022,21 @@ void Spell::EffectKnockBack(SpellEffectIndex eff_idx)
     if(!unitTarget)
         return;
 
+    // Typhoon
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_DRUID && m_spellInfo->SpellFamilyFlags & UI64LIT(0x100000000000000) )
+        if (m_caster->HasAura(62135))         // Glyph of Typhoon
+            return;
+
+    // Thunderstorm
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_SHAMAN && m_spellInfo->SpellFamilyFlags & UI64LIT(0x00200000000000))
+        if (m_caster->HasAura(62132))         // Glyph of Thunderstorm
+            return;
+
+    // Blast Wave
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_MAGE && m_spellInfo->SpellFamilyFlags & UI64LIT(0x0004000000000))
+        if (m_caster->HasAura(62126))         // Glyph of Blast Wave
+            return;
+
     unitTarget->KnockBackFrom(m_caster,float(m_spellInfo->EffectMiscValue[eff_idx])/10,float(damage)/10);
 }
 
@@ -7965,7 +8120,8 @@ void Spell::EffectSummonAllTotems(SpellEffectIndex eff_idx)
         if (ActionButton const* actionButton = ((Player*)m_caster)->GetActionButton(start_button+slot))
             if (actionButton->GetType()==ACTION_BUTTON_SPELL)
                 if (uint32 spell_id = actionButton->GetAction())
-                    m_caster->CastSpell(unitTarget,spell_id,true);
+                    if (!((Player*)m_caster)->HasSpellCooldown(spell_id))
+                        m_caster->CastSpell(unitTarget,spell_id,true);
 }
 
 void Spell::EffectDestroyAllTotems(SpellEffectIndex /*eff_idx*/)
