@@ -6683,7 +6683,12 @@ uint32 Unit::SpellHealingBonusDone(Unit *pVictim, SpellEntry const *spellProto, 
 
     // No heal amount for this class spells
     if (spellProto->DmgClass == SPELL_DAMAGE_CLASS_NONE)
+    {
+        if(pVictim->GetDummyAura(SPELL_ARENA_DAMPENING) || pVictim->GetDummyAura(SPELL_BG_DAMPENING))
+            healamount = int32(healamount*0.9f);
+
         return healamount < 0 ? 0 : healamount;
+    }
 
     // Healing Done
     // Done total percent damage auras
@@ -6829,6 +6834,10 @@ uint32 Unit::SpellHealingBonusTaken(Unit *pCaster, SpellEntry const *spellProto,
 
     // use float as more appropriate for negative values and percent applying
     float heal = (healamount + TakenTotal * int32(stack)) * TakenTotalMod;
+
+    // 10% healing reduction in arenas/BG
+    if(GetDummyAura(SPELL_ARENA_DAMPENING) || GetDummyAura(SPELL_BG_DAMPENING))
+        heal *= 0.9f;
 
     return heal < 0 ? 0 : uint32(heal);
 }
