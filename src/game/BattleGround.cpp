@@ -914,7 +914,7 @@ uint32 BattleGround::GetBonusHonorFromKill(uint32 kills) const
 
 uint32 BattleGround::GetBattlemasterEntry() const
 {
-    switch(GetTypeID())
+    switch(GetTypeID(true))
     {
         case BATTLEGROUND_AV: return 15972;
         case BATTLEGROUND_WS: return 14623;
@@ -927,7 +927,7 @@ uint32 BattleGround::GetBattlemasterEntry() const
 
 void BattleGround::RewardMark(Player *plr,uint32 count)
 {
-    switch(GetTypeID())
+    switch(GetTypeID(true))
     {
         case BATTLEGROUND_AV:
             if (count == ITEM_WINNER_COUNT)
@@ -1033,7 +1033,7 @@ void BattleGround::SendRewardMarkByMail(Player *plr,uint32 mark, uint32 count)
 void BattleGround::RewardQuestComplete(Player *plr)
 {
     uint32 quest;
-    switch(GetTypeID())
+    switch(GetTypeID(true))
     {
         case BATTLEGROUND_AV:
             quest = SPELL_AV_QUEST_REWARD;

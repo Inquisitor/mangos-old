@@ -3315,7 +3315,7 @@ void Spell::finish(bool ok)
         m_caster->resetAttackTimer(RANGED_ATTACK);*/
 
     // Clear combo at finish state
-    if(m_caster->GetTypeId() == TYPEID_PLAYER && NeedsComboPoints(m_spellInfo))
+   if((m_caster->GetTypeId() == TYPEID_PLAYER || ((Creature*)m_caster)->isVehicle()) && NeedsComboPoints(m_spellInfo))
     {
         // Not drop combopoints if negative spell and if any miss on enemy exist
         bool needDrop = true;
@@ -3331,7 +3331,12 @@ void Spell::finish(bool ok)
             }
         }
         if (needDrop)
-            ((Player*)m_caster)->ClearComboPoints();
+        {
+            if(m_caster->GetTypeId() == TYPEID_PLAYER)
+                ((Player*)m_caster)->ClearComboPoints();
+            else
+                ((Player*)m_caster->GetCharmer())->ClearComboPoints();
+        }
     }
 
     // potions disabled by client, send event "not in combat" if need
@@ -4523,11 +4528,16 @@ SpellCastResult Spell::CheckCast(bool strict)
         return locRes;
 
     // not let players cast spells at mount (and let do it to creatures)
-    if (m_caster->IsMounted() && m_caster->GetTypeId()==TYPEID_PLAYER && !m_IsTriggeredSpell &&
+    if ((m_caster->IsMounted() || m_caster->GetVehicle() || m_caster->GetVehicleGUID()) && m_caster->GetTypeId()==TYPEID_PLAYER && !m_IsTriggeredSpell &&
         !IsPassiveSpell(m_spellInfo) && !(m_spellInfo->Attributes & SPELL_ATTR_CASTABLE_WHILE_MOUNTED))
     {
         if (m_caster->IsTaxiFlying())
             return SPELL_FAILED_NOT_ON_TAXI;
+        else if(m_caster->GetVehicleGUID() || m_caster->GetVehicle())
+        {
+            if(!(m_caster->m_movementInfo.GetVehicleSeatFlags() & SF_CAN_CAST))
+                return SPELL_FAILED_NOT_MOUNTED;
+        }
         else
             return SPELL_FAILED_NOT_MOUNTED;
     }
@@ -5347,24 +5357,8 @@ SpellCastResult Spell::CheckPetCast(Unit* target)
             if(!_target->isAlive())
                 return SPELL_FAILED_BAD_TARGETS;
 
-            if(IsPositiveSpell(m_spellInfo->Id))
-            {
-                if(m_caster->IsHostileTo(_target))
-                    return SPELL_FAILED_BAD_TARGETS;
-            }
-            else
-            {
-                bool duelvsplayertar = false;
-                for(int j = 0; j < MAX_EFFECT_INDEX; ++j)
-                {
-                                                            //TARGET_DUELVSPLAYER is positive AND negative
-                    duelvsplayertar |= (m_spellInfo->EffectImplicitTargetA[j] == TARGET_DUELVSPLAYER);
-                }
-                if(m_caster->IsFriendlyTo(target) && !duelvsplayertar)
-                {
-                    return SPELL_FAILED_BAD_TARGETS;
-                }
-            }
+            if(!IsValidSingleTargetSpell(_target))
+                return SPELL_FAILED_BAD_TARGETS;
         }
                                                             //cooldown
         if(((Creature*)m_caster)->HasSpellCooldown(m_spellInfo->Id))
@@ -5372,6 +5366,36 @@ SpellCastResult Spell::CheckPetCast(Unit* target)
     }
 
     return CheckCast(true);
+}
+
+bool Spell::IsValidSingleTargetEffect(Unit const* target, Targets type) const
+{
+    switch(type)
+    {
+        case TARGET_CHAIN_DAMAGE:
+            return !m_caster->IsFriendlyTo(target);
+        case TARGET_SINGLE_FRIEND:
+        case TARGET_AREAEFFECT_PARTY:
+            return m_caster->IsFriendlyTo(target);
+       case TARGET_SINGLE_PARTY:
+            return m_caster != target && m_caster->IsInPartyWith(target);
+        case TARGET_SINGLE_FRIEND_2:
+            return m_caster->IsInRaidWith(target);
+    }
+    return true;
+}
+
+bool Spell::IsValidSingleTargetSpell(Unit const* target) const
+{
+    for(int i = 0; i < 3; ++i)
+    {
+        if(!IsValidSingleTargetEffect(target, Targets(m_spellInfo->EffectImplicitTargetA[i])))
+            return false;
+        // Need to check B?
+        //if(!IsValidSingleTargetEffect(m_spellInfo->EffectImplicitTargetB[i], target)
+        //    return false;
+    }
+    return true;
 }
 
 SpellCastResult Spell::CheckCasterAuras() const

@@ -596,25 +596,31 @@ bool ChatHandler::HandleDebugArenaCommand(char* /*args*/)
 
 bool ChatHandler::HandleDebugSpawnVehicleCommand(char* args)
 {
-    uint32 entry;
-    if (!ExtractUInt32(&args, entry))
+    if (!*args)
         return false;
 
-    uint32 id;
-    if (!ExtractUInt32(&args, id))
+    char* e = strtok((char*)args, " ");
+    char* i = strtok(NULL, " ");
+
+    if (!e || !i)
         return false;
+
+    uint32 entry = (uint32)atoi(e);
+    uint32 id = (uint32)atoi(i);
 
     CreatureInfo const *ci = ObjectMgr::GetCreatureTemplate(entry);
+
     if (!ci)
         return false;
 
     VehicleEntry const *ve = sVehicleStore.LookupEntry(id);
+
     if (!ve)
         return false;
 
     Vehicle *v = new Vehicle;
     Map *map = m_session->GetPlayer()->GetMap();
-    if (!v->Create(map->GenerateLocalLowGuid(HIGHGUID_VEHICLE), map, entry, id, m_session->GetPlayer()->GetTeam()))
+    if (!v->Create(sObjectMgr.GenerateLowGuid(HIGHGUID_VEHICLE), map, m_session->GetPlayer()->GetPhaseMaskForSpawn(), entry, id, m_session->GetPlayer()->GetTeam()))
     {
         delete v;
         return false;
@@ -634,6 +640,7 @@ bool ChatHandler::HandleDebugSpawnVehicleCommand(char* args)
     }
 
     map->Add((Creature*)v);
+    v->AIM_Initialize();
 
     return true;
 }

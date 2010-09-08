@@ -452,6 +452,8 @@ class ChatHandler
         bool HandleReloadSpellPetAurasCommand(char* args);
         bool HandleReloadSpellStacksCommand(char* args);
         bool HandleReloadSpellDisabledCommand(char* args);
+        bool HandleReloadVehicleDataCommand(char* args);
+        bool HandleReloadVehicleSeatDataCommand(char* args);
 
 
         bool HandleResetAchievementsCommand(char* args);
