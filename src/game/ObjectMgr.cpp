@@ -626,6 +626,12 @@ void ObjectMgr::LoadCreatureTemplates()
         if (!displayScaleEntry)
             sLog.outErrorDb("Creature (Entry: %u) has nonexistent modelid in modelid_1/modelid_2/modelid_3/modelid_4", cInfo->Entry);
 
+        if (cInfo->powerType >= MAX_POWERS)
+        {
+            sLog.outErrorDb("Creature (Entry: %u) has invalid power type (%u)", cInfo->Entry, cInfo->powerType);
+            const_cast<CreatureInfo*>(cInfo)->powerType = POWER_MANA;
+        }
+
         // use below code for 0-checks for unit_class
         if (!cInfo->unit_class)
             ERROR_DB_STRICT_LOG("Creature (Entry: %u) not has proper unit_class(%u) for creature_template", cInfo->Entry, cInfo->unit_class);

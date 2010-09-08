@@ -75,6 +75,7 @@ struct CreatureInfo
     uint32  minlevel;
     uint32  maxlevel;
     uint32  minhealth;
+    uint8   powerType;
     uint32  maxhealth;
     uint32  minmana;
     uint32  maxmana;
@@ -124,7 +125,7 @@ struct CreatureInfo
     uint32  MovementType;
     uint32  InhabitType;
     float   unk16;
-    float   unk17;
+    float   power_mod;
     bool    RacialLeader;
     uint32  questItems[6];
     uint32  movementId;
