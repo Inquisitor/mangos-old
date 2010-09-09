@@ -2754,7 +2754,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
 
                     // Righteous Defense (step 2) (in old version 31980 dummy effect)
-                    // Clear targets for eff 1
+                    // case 45206:                                 // Copy Off-hand Weapons for eff 1
                     for(std::list<TargetInfo>::iterator ihit= m_UniqueTargetInfo.begin();ihit != m_UniqueTargetInfo.end();++ihit)
                         ihit->effectMask &= ~(1<<1);
 
@@ -4817,93 +4817,6 @@ void Spell::DoSummonWild(SpellEffectIndex eff_idx, uint32 forceFaction)
             summon->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
             summon->SetCreatorGUID(m_caster->GetGUID());
 
-            //Mirror image
-            if(creature_entry == 31216)
-            {
-                summon->SetLevel(m_caster->getLevel());
-                summon->SetMaxHealth(m_caster->GetMaxHealth());
-                summon->SetHealth(m_caster->GetHealth());
-                summon->SetDisplayId(m_caster->GetDisplayId());
-                summon->SetMaxPower(POWER_MANA, m_caster->GetMaxPower(POWER_MANA));
-                summon->SetPower(POWER_MANA, m_caster->GetPower(POWER_MANA));
-                summon->SetPvP(true);
-                summon->setFaction(m_caster->getFaction());
-                //m_caster->CastSpell(summon, 45204, false);
-                //m_caster->CastSpell((Unit*)NULL, 58838, true);
-                summon->SetUInt32Value(UNIT_FIELD_FLAGS_2, 2064);
-                if (m_caster->GetTypeId()== TYPEID_PLAYER)
-                {
-                    if (Item const* item = ((Player *)m_caster)->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND))
-                        summon->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, item->GetProto()->ItemId);
-                    if (Item const* item = ((Player *)m_caster)->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND))
-                        summon->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 1, item->GetProto()->ItemId);
-                }
-                else
-                {
-                    summon->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, m_caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID));
-                    summon->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 1, m_caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 1));
-                    summon->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 2, m_caster->GetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 2));
-                }
-
-                WorldPacket data(SMSG_MIRRORIMAGE_DATA, 68);
-                data << (uint32)m_caster->GetDisplayId();
-                if (m_caster->GetTypeId() == TYPEID_PLAYER)
-                {
-                    Player* pCreator = (Player *)m_caster;
-                    data << (uint8)pCreator->getRace();                         // race
-                    data << (uint8)pCreator->getGender();                       // gender
-                    data << (uint8)pCreator->getClass();                        // class
-                    data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 0);     // skin
-                    data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 1);     // face
-                    data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 2);     // hair
-                    data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 3);     // haircolor
-                    data << (uint8)pCreator->GetByteValue(PLAYER_BYTES_2, 0);   // facialhair
-
-                    data << (uint32)0;                    // unknown
-
-                    static const EquipmentSlots ItemSlots[] =
-                    {
-                        EQUIPMENT_SLOT_HEAD,
-                        EQUIPMENT_SLOT_SHOULDERS,
-                        EQUIPMENT_SLOT_BODY,
-                        EQUIPMENT_SLOT_CHEST,
-                        EQUIPMENT_SLOT_WAIST,
-                        EQUIPMENT_SLOT_LEGS,
-                        EQUIPMENT_SLOT_FEET,
-                        EQUIPMENT_SLOT_WRISTS,
-                        EQUIPMENT_SLOT_HANDS,
-                        EQUIPMENT_SLOT_BACK,
-                        EQUIPMENT_SLOT_TABARD,
-                        EQUIPMENT_SLOT_END
-                    };
-
-                    // Display items in visible slots
-                    for (EquipmentSlots const* itr = &ItemSlots[0]; *itr != EQUIPMENT_SLOT_END; ++itr)
-                        if (Item const* item =  pCreator->GetItemByPos(INVENTORY_SLOT_BAG_0, *itr))
-                            data << (uint32)item->GetProto()->DisplayInfoID;    // display id
-                        else
-                            data << (uint32)0;                    // no item found, so no id
-                }
-                else
-                {
-                    // Skip player data for creatures
-                    data << (uint32)0;
-                    data << (uint32)0;
-                    data << (uint32)0;
-                    data << (uint32)0;
-                    data << (uint32)0;
-                    data << (uint32)0;
-                    data << (uint32)0;
-                    data << (uint32)0;
-                    data << (uint32)0;
-                    data << (uint32)0;
-                    data << (uint32)0;
-                    data << (uint32)0;
-                    data << (uint32)0;
-                    data << (uint32)0;
-                }
-           }
-
             if(forceFaction)
                 summon->setFaction(forceFaction);
 
@@ -5013,6 +4926,48 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
         m_caster->AddGuardian(spawnCreature);
 
         map->Add((Creature*)spawnCreature);
+
+        switch(pet_entry)
+        {
+            case 31216:
+            {
+                // set bounding and combat radiuses to player defaults values
+                spawnCreature->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, DEFAULT_WORLD_OBJECT_SIZE);
+                spawnCreature->SetFloatValue(UNIT_FIELD_COMBATREACH, 1.5f);
+                // copy onwer's SheathState and UnitBytes2_Flags
+                spawnCreature->SetUInt32Value(UNIT_FIELD_BYTES_2,m_caster->GetUInt32Value(UNIT_FIELD_BYTES_2));
+                //Set Health and Manna
+                spawnCreature->SetMaxHealth(m_caster->GetMaxHealth()/6.0f);
+                spawnCreature->SetHealth(m_caster->GetHealth()/6.0f);
+                spawnCreature->SetMaxPower(POWER_MANA, m_caster->GetMaxPower(POWER_MANA)/6.0f);
+                spawnCreature->SetPower(POWER_MANA, m_caster->GetPower(POWER_MANA)/6.0f);
+                // copy owner auras
+                Unit::SpellAuraHolderMap const& holders = m_caster->GetSpellAuraHolderMap();
+                for (Unit::SpellAuraHolderMap::const_iterator itr = holders.begin(); itr != holders.end(); ++itr)
+                {
+                    SpellAuraHolder *holder = (*itr).second;
+                    for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
+                    {
+                        if (Aura *aur = holder->GetAuraByEffectIndex(SpellEffectIndex(i)))
+                        {
+                            if (aur && aur->IsPositive() && !holder->IsPassive())
+                            {
+                                SpellAuraHolder *new_holder = CreateSpellAuraHolder(aur->GetSpellProto(), spawnCreature, m_caster);
+                                int32 bp = aur->GetBasePoints();
+                                Aura * newA = CreateAura(aur->GetSpellProto(), aur->GetEffIndex(), &bp, new_holder, (Unit*)spawnCreature);
+                                newA->SetAuraMaxDuration( aur->GetAuraMaxDuration() );
+                                newA->SetAuraDuration( aur->GetAuraDuration() );
+                                new_holder->SetIsSingleTarget(false);
+                                new_holder->AddAura(newA, newA->GetEffIndex());
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+         }
     }
 }
 
@@ -6340,6 +6295,9 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, 44870, true);
                     break;
                 }
+                case 45204: // Clone Me!
+                    unitTarget->CastSpell(m_caster, damage, true);
+                    break;
                 case 45206:                                 // Copy Off-hand Weapon
                 {
                     if (m_caster->GetTypeId() != TYPEID_UNIT || !unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)

@@ -7376,23 +7376,13 @@ void Aura::PeriodicDummyTick()
         }
         case SPELLFAMILY_MAGE:
         {
-            /*if (spell->Id == 55342)
-            {
-                // Set name of summons to name of caster
-                m_target->CastSpell((Unit *)NULL, m_spellProto->EffectTriggerSpell[m_effIndex], true);
-                m_isPeriodic = false;
-            }*/
-            // Mirror Image
             if (spell->Id == 55342)
             {
-                if(target->GetTypeId() != TYPEID_PLAYER)
-                    break;
-                //Clear target
-                WorldPacket data(SMSG_CLEAR_TARGET, 8);
-                data << target->GetGUID();
-                ((Player*)target)->SendMessageToSetInRange(&data, 80.0f, false, false, true);
+                // Set name of summons to name of caster
+                target->CastSpell(target, GetSpellProto()->EffectTriggerSpell[m_effIndex], true);
                 m_isPeriodic = false;
             }
+
             break;
         }
         case SPELLFAMILY_DRUID:
@@ -9211,35 +9201,50 @@ bool Aura::IsEffectStacking()
 
 void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
 {
-    if (!Real || !Apply)
+    Unit * target = GetTarget();
+    if (!Real || !Apply || !target || target->GetTypeId() != TYPEID_UNIT)
         return;
-
     Unit* caster = GetCaster();
-    if (!caster)
+    Unit* creator = caster->GetMap()->GetUnit(target->GetCreatorGUID());
+    Creature* pImmage = (Creature*)target;
+    if (!creator || !caster || creator != caster || pImmage->isPet())
         return;
 
-    // Set item visual
+    // set stats and visual
+    pImmage->SetDisplayId(creator->GetDisplayId());
+//    pImmage->SetLevel(creator->getLevel());
+    pImmage->SetMaxHealth(creator->GetMaxHealth()/5);
+    pImmage->SetHealth(creator->GetHealth()/2);
+    pImmage->SetMaxPower(POWER_MANA, creator->GetMaxPower(POWER_MANA));
+    pImmage->SetPower(POWER_MANA, creator->GetPower(POWER_MANA));
+    pImmage->setFaction(creator->getFaction());
+    pImmage->SetUInt32Value(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE | UNIT_FLAG2_REGENERATE_POWER);
+    if (creator->IsPvP())
+	{
+	  pImmage->SetPvP(true);
+    }
+	if (creator->isInCombat() && pImmage->isAlive())
+    {
+	pImmage->CastSpell(pImmage, 58838, true);
+    }
+	  else
+   {
+       pImmage->GetMotionMaster()->Clear();
+       pImmage->GetMotionMaster()->MoveFollow(creator, pImmage->GetDistance(creator), pImmage->GetAngle(creator));
+   }
 }
 
 void Aura::HandleAuraCloneCaster(bool Apply, bool Real)
 {
-    if (!Real)
+    error_log("HandleAuraCloneCaster");
+    if (!Real || !Apply)
         return;
 
-    Unit * target = GetTarget();
+    Unit * caster = GetCaster();
+    if (!caster)
+        return;
 
-    if (Apply)
-    {
-        Unit * caster = GetCaster();
-        if (!caster)
-            return;
-        // Set display id
-        target->SetDisplayId(caster->GetDisplayId());
-        target->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE);
-    }
-    else
-    {
-        target->SetDisplayId(target->GetNativeDisplayId());
-        target->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE);
-    }
+    // Set item visual
+    GetTarget()->SetDisplayId(caster->GetDisplayId());
+    GetTarget()->SetUInt32Value(UNIT_FIELD_FLAGS_2, 2064);
 }
