@@ -1342,7 +1342,19 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                 // Divine Aegis
                 case 2820:
                 {
-                    basepoints[0] = damage * triggerAmount/100;
+                    if(!pVictim || !pVictim->isAlive())
+                    return SPELL_AURA_PROC_FAILED;
+
+                    // find Divine Aegis on the target and get absorb amount
+                    Aura* DivineAegis = pVictim->GetAura(47753, EFFECT_INDEX_0);
+                    if (DivineAegis)
+                        basepoints[0] = DivineAegis->GetModifier()->m_amount;
+                    basepoints[0] += damage * triggerAmount/100;
+
+                    // limit absorb amount
+                    if (basepoints[0] > (int)pVictim->getLevel()*125)
+                        basepoints[0] = pVictim->getLevel()*125;
+
                     triggered_spell_id = 47753;
                     break;
                 }
@@ -2858,6 +2870,13 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
                     // agility
                     if (GetStat(STAT_AGILITY)  > stat) { trigger_spell_id = 67772;                               }
                     break;
+                }
+                // Unyielding Knights
+                case 38164:
+                {
+                    // Do not summont our knights if we arent fighting specific enemy
+                    if( GetTypeId() != TYPEID_PLAYER || pVictim->GetEntry() != 19457)
+                        return SPELL_AURA_PROC_FAILED;
                 }
             }
             break;
