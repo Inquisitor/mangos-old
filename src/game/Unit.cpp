@@ -1878,7 +1878,25 @@ uint32 Unit::CalcArmorReducedDamage(Unit* pVictim, const uint32 damage)
 
     // Apply Player CR_ARMOR_PENETRATION rating and percent talents
     if (GetTypeId()==TYPEID_PLAYER)
-        armor *= 1.0f - ((Player*)this)->GetArmorPenetrationPct() / 100.0f;
+    { 
+        // calculate Armor Penetration constant 
+        float targetLevel = (float)pVictim->getLevel(); 
+        float arPenConstant = 400.0f + 85.0f * targetLevel; 
+        if (targetLevel > 59.0f) 
+            arPenConstant += 382.5f * (targetLevel - 59.0f); // 85.0f * 4.5f = 382.5f 
+        // calculate  Armor Penetration cap 
+        float armorReduction = (armor + arPenConstant) / 3.0f; 
+        if (armor < armorReduction) 
+            armorReduction = armor; 
+ 
+        float armorPenetrationCoeff = ((Player*)this)->GetArmorPenetrationPct() / 100.0f; 
+ 
+        if (armorPenetrationCoeff > 1.0f) 
+            armorPenetrationCoeff = 1.0f; 
+ 
+        armorReduction *= armorPenetrationCoeff; 
+        armor -= armorReduction; 
+    }
 
     if (armor < 0.0f)
         armor = 0.0f;
@@ -2207,6 +2225,17 @@ void Unit::CalculateAbsorbAndResist(Unit *pCaster, SpellSchoolMask schoolMask, D
                     uint32 ab_damage = absorbed;
                     pCaster->DealDamageMods(caster,ab_damage,NULL);
                     pCaster->DealDamage(caster, ab_damage, NULL, damagetype, schoolMask, 0, false);
+                    continue;
+                }
+                // Will of Necropolis
+                if (spellProto->SpellIconID == 857)
+                {
+                    // Apply absorb only on damage below 35% hp
+                    int32 absorbableDamage = RemainingDamage + 0.35f * GetMaxHealth() - GetHealth();
+                    if (absorbableDamage > RemainingDamage)
+                        absorbableDamage = RemainingDamage;
+                    if (absorbableDamage > 0)
+                        RemainingDamage -= absorbableDamage * currentAbsorb / 100;
                     continue;
                 }
                 break;
