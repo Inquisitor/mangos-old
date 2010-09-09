@@ -367,6 +367,8 @@ struct GCNewsData
 
 typedef std::multimap<uint32, GCNewsData> GCNewsMap;
 
+typedef std::map<uint64, uint32> ItemRefundableMap;
+
 enum ConditionType
 {                                                           // value1       value2  for the Condition enumed
     CONDITION_NONE                  = 0,                    // 0            0
@@ -1036,6 +1038,9 @@ class ObjectMgr
 
         int GetOrNewIndexForLocale(LocaleConstant loc);
 
+        GCNewsMap mGCNewsMap;
+        ItemRefundableMap mItemRefundableMap;
+
         VehicleDataMap mVehicleData;
         VehicleSeatDataMap mVehicleSeatData;
 
@@ -1053,8 +1058,6 @@ class ObjectMgr
             if(itr==mVehicleData.end()) return NULL;
             return &itr->second;
         }
-
-        GCNewsMap mGCNewsMap;
 
         SpellClickInfoMapBounds GetSpellClickInfoMapBounds(uint32 creature_id) const
         {
