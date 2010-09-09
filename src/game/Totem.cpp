@@ -60,9 +60,8 @@ void Totem::Summon(Unit* owner)
         SetHealth(GetMaxHealth());
     }
 
-    owner->GetMap()->Add((Creature*)this);
-
     AIM_Initialize();
+    owner->GetMap()->Add((Creature*)this);
 
     if (owner->GetTypeId() == TYPEID_UNIT && ((Creature*)owner)->AI())
         ((Creature*)owner)->AI()->JustSummoned((Creature*)this);
