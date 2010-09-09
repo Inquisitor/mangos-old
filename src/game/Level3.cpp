@@ -5115,7 +5115,7 @@ bool ChatHandler::HandleNewsGossipCommand(char* args)
     {
         player->PlayerTalkClass->SendGossipMenu(textId, player->GetGUID());
         player->PlayerTalkClass->SendGossipMenu(textId, player->GetGUID());
-        PSendSysMessage("Sending News Gossip nr. %i to player GUID: %i",entry,target_guid);
+        PSendSysMessage("Sending News Gossip nr. %u to player GUID: %u",entry,GUID_LOPART(target_guid));
     }
     return true;
 }
