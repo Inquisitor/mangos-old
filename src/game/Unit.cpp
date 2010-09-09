@@ -4246,8 +4246,6 @@ float Unit::CheckAuraStackingAndApply(Aura *Aur, UnitMods unitMod, UnitModifierT
 {
     if(!Aur->IsStacking())
     {
-        printf("\n ! aura is non stacking ! \n ");
-
         if(modifierType == TOTAL_VALUE)
             modifierType = NONSTACKING_VALUE;
         else if(modifierType == TOTAL_PCT)
