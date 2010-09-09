@@ -245,7 +245,7 @@ class MANGOS_DLL_SPEC Aura
         void HandleAuraModIncreaseEnergyPercent(bool Apply, bool Real);
         void HandleAuraModIncreaseHealthPercent(bool Apply, bool Real);
         void HandleAuraModRegenInterrupt(bool Apply, bool Real);
-        void HandleHaste(bool Apply, bool Real);
+        void HandleAuraModMeleeHaste(bool Apply, bool Real);
         void HandlePeriodicTriggerSpell(bool Apply, bool Real);
         void HandlePeriodicTriggerSpellWithValue(bool apply, bool Real);
         void HandlePeriodicEnergize(bool Apply, bool Real);
@@ -417,6 +417,9 @@ class MANGOS_DLL_SPEC Aura
         }
         void ApplyModifier(bool apply, bool Real = false);
 
+        bool IsStacking() const { return m_stacking;}
+        bool IsEffectStacking();
+
         void UpdateAura(uint32 diff) { SetInUse(true); Update(diff); SetInUse(false); }
         void _AddAura();
         bool _RemoveAura();
@@ -473,6 +476,7 @@ class MANGOS_DLL_SPEC Aura
         bool m_isPeriodic:1;
         bool m_isAreaAura:1;
         bool m_isPersistent:1;
+        bool m_stacking:1;                                  // Aura is not overwritten, but effects are not cumulative with similar effects
 
         uint32 m_in_use;                                    // > 0 while in Aura::ApplyModifier call/Aura::Update/etc
 
