@@ -7949,7 +7949,8 @@ m_auraFlags(AFLAG_NONE), m_auraLevel(1), m_procCharges(0), m_stackAmount(1)
     else
     {
         // remove this assert when not unit casters will be supported
-        MANGOS_ASSERT(caster->GetObjectGuid().IsUnit())
+        MANGOS_ASSERT(caster->GetObjectGuid().IsUnit() || caster->GetObjectGuid().IsVehicle())
+
         m_caster_guid = caster->GetGUID();
     }
 
