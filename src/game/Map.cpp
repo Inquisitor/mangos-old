@@ -3219,3 +3219,25 @@ uint32 Map::GenerateLocalLowGuid(HighGuid guidhigh)
     MANGOS_ASSERT(0);
     return 0;
 }
+
+bool Map::IsNextZcoordOK(float x, float y, float oldZ, float maxDiff) const
+{
+    // The fastest way to get an accurate result 90% of the time.
+    // Better result can be obtained like 99% accuracy with a ray light, but the cost is too high and the code is too long.
+    maxDiff = maxDiff >= 100.0f ? 10.0f : sqrtf(maxDiff);
+    bool useVmaps = false;
+    if ( GetHeight(x, y, oldZ+2.0f, false) <  GetHeight(x, y, oldZ+2.0f, true) ) // check use of vmaps
+        useVmaps = true;
+
+    float newZ = GetHeight(x, y, oldZ+2.0f, useVmaps);
+
+    if (fabs(newZ-oldZ) > maxDiff)                              // bad...
+    {
+        useVmaps = !useVmaps;                                     // try change vmap use
+        newZ = GetHeight(x, y, oldZ+2.0f, useVmaps);
+
+        if (fabs(newZ-oldZ) > maxDiff)
+            return false;
+    }
+    return true;
+}
