@@ -2958,7 +2958,7 @@ void Spell::cast(bool skipCheck)
     InitializeDamageMultipliers();
 
     // Okay, everything is prepared. Now we need to distinguish between immediate and evented delayed spells
-    if (m_spellInfo->speed > 0.0f)
+    if (m_spellInfo->speed > 0.0f || m_spellInfo->Id == 14157)
     {
 
         // Remove used for cast item if need (it can be already NULL after TakeReagents call
@@ -5124,6 +5124,16 @@ SpellCastResult Spell::CheckCast(bool strict)
             {
                 if (m_targets.getUnitTarget() == m_caster)
                     return SPELL_FAILED_BAD_TARGETS;
+                break;
+            }
+            case SPELL_EFFECT_TRANS_DOOR:
+            {
+                if(m_caster->GetTypeId() == TYPEID_PLAYER)
+                {
+                    if(m_spellInfo->Id == 698)
+                        if(((Player*)m_caster)->GetMap()->IsBattleGround())
+                            return SPELL_FAILED_NOT_HERE;
+                }
                 break;
             }
             default:break;
