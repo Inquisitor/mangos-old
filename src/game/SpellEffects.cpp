@@ -103,7 +103,7 @@ pEffect SpellEffects[TOTAL_SPELL_EFFECTS]=
     &Spell::EffectEmpty,                                    // 39 SPELL_EFFECT_LANGUAGE                 misc store lang id
     &Spell::EffectDualWield,                                // 40 SPELL_EFFECT_DUAL_WIELD
     &Spell::EffectJump,                                     // 41 SPELL_EFFECT_JUMP
-    &Spell::EffectJumpToDest,                               // 42 SPELL_EFFECT_JUMP2
+    &Spell::EffectJump,                                     // 42 SPELL_EFFECT_JUMP2
     &Spell::EffectTeleUnitsFaceCaster,                      // 43 SPELL_EFFECT_TELEPORT_UNITS_FACE_CASTER
     &Spell::EffectLearnSkill,                               // 44 SPELL_EFFECT_SKILL_STEP
     &Spell::EffectAddHonor,                                 // 45 SPELL_EFFECT_ADD_HONOR                honor/pvp related
@@ -2996,24 +2996,28 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 // consume diseases
                 unitTarget->RemoveAurasWithDispelType(DISPEL_DISEASE, m_caster->GetGUID());
             }
-            //Death Grip - 1st part
-            else if (m_spellInfo->Id == 49576)
+            // Death Grip
+            if(m_spellInfo->Id == 49560 || m_spellInfo->Id == 49576)
             {
-                if (!unitTarget)
+                    if (!unitTarget || !m_caster)
+                        return;
+
+                    float x = m_caster->GetPositionX();
+                    float y = m_caster->GetPositionY();
+                    float z = m_caster->GetPositionZ() + 1.0f;
+                    float orientation = unitTarget->GetOrientation();
+
+                    m_caster->CastSpell(unitTarget, 51399, true, NULL);                
+                    
+                    if(unitTarget->GetTypeId() != TYPEID_PLAYER)
+                    {
+                        unitTarget->GetMap()->CreatureRelocation((Creature*)unitTarget,x,y,z,orientation);
+                        ((Creature*)unitTarget)->SendMonsterMove(x, y, z, SPLINETYPE_NORMAL, SPLINEFLAG_UNKNOWN11, 1);
+                    }
+                    else
+                        unitTarget->NearTeleportTo(x,y,z,orientation,false);
+
                     return;
-        
-                m_caster->CastSpell(unitTarget, 49560, true);
-                return;
-            }
-            //Death Grip - 2nd part
-            else if (m_spellInfo->Id == 49560)
-            {
-                if (!unitTarget || m_caster == unitTarget)
-                    return;
-                
-                uint32 entry = m_spellInfo->CalculateSimpleValue(eff_idx);
-                unitTarget->CastSpell(unitTarget, entry, true, NULL, NULL, m_caster->GetGUID());
-                return;
             }
             break;
         }
@@ -3040,8 +3044,8 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
         return;
 
     sLog.outDebug("Spell ScriptStart spellid %u in EffectDummy ", m_spellInfo->Id);
-    if(pSource->IsInWorld())
-        pSource->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, pSource, unitTarget);
+    if(m_caster->IsInWorld())
+        m_caster->GetMap()->ScriptsStart(sSpellScripts, m_spellInfo->Id, m_caster, unitTarget);
 }
 
 void Spell::EffectTriggerSpellWithValue(SpellEffectIndex eff_idx)
@@ -3316,89 +3320,20 @@ void Spell::EffectJump(SpellEffectIndex eff_idx)
         return;
     }
 
-    m_caster->NearTeleportTo(x, y, z, o, true);
-}
-
-void Spell::EffectJumpToDest(SpellEffectIndex eff_idx)
-{
-    Unit* target = unitTarget;
-
-    float x, y, z, direction, angle, unk;
-    SplineType splinetype = SPLINETYPE_NORMAL;
-    // Death Grip
-    if (m_spellInfo->EffectImplicitTargetA[eff_idx] == TARGET_SELF2)
-    {
-        target = m_originalCaster;
-        direction = 0;
-    }
-    // Behind victim
+    //m_caster->NearTeleportTo(x,y,z,o,true);
+    float speedZ;
+    if(m_spellInfo->EffectMiscValue[eff_idx])
+        speedZ = float(m_spellInfo->EffectMiscValue[eff_idx])/10;
+    else if(m_spellInfo->EffectMiscValueB[eff_idx])
+        speedZ = float(m_spellInfo->EffectMiscValueB[eff_idx])/10;
     else
-    {
-        direction = M_PI_F;
-        splinetype = SPLINETYPE_FACINGTARGET;
-    }
+        speedZ = 10.0f;
+    float speedXY = m_caster->GetDistance2d(x, y) * 10.0f / speedZ;
 
-    if (!target)
-        return;
+    SplineFlags moveFlag = SplineFlags(SPLINEFLAG_TRAJECTORY | SPLINEFLAG_WALKMODE);
+    uint32 time = speedZ * 100;
 
-    angle = target->GetOrientation();
-    angle += direction;
-    angle = (angle >= 0) ? angle : 2 * M_PI_F + angle;
-    angle = (angle <= 2*M_PI_F) ? angle : angle - 2 * M_PI_F; 
-    target->GetPosition(x,y,z);
-    x += cos(angle) * (target->GetObjectBoundingRadius() + CONTACT_DISTANCE);
-    y += sin(angle) * (target->GetObjectBoundingRadius() + CONTACT_DISTANCE);
-    if (!target->GetMap()->IsNextZcoordOK(x, y, z, 10.0f))
-    {
-        SendCastResult(SPELL_FAILED_TRY_AGAIN);
-        return;
-    }
-    target->UpdateGroundPositionZ(x, y, z, 10.0f);
-    z+=0.5f;
-
-    float distance = m_caster->GetDistance(x, y, z)+m_caster->GetObjectBoundingRadius();
-    float time = 12*distance;
-    //Calculate feral charge unk
-    // Need WAY more research for this one...
-    // This is ..*cough*.. OK, but really no precise.
-    unk = distance*1.15f;
-    if (splinetype == SPLINETYPE_FACINGTARGET)
-    {
-        unk = (distance-13.942f)*0.6146*1.58;
-        if (unk > 10.411f)
-            unk = distance*1.62f;
-        else
-            unk = distance*(10.411-unk);    
-    }
-    
-    WorldPacket data(SMSG_MONSTER_MOVE);
-    data << m_caster->GetPackGUID();
-    data << uint8(0);
-    data << m_caster->GetPositionX() << m_caster->GetPositionY() << m_caster->GetPositionZ();
-    data << uint32(getMSTime());
-    // -- FERAL CHARGE --
-    // on retail its SPLINETYPE_NORMAL, then, when cat lands, client send MSG_MOVE_FALL_LAND
-    // and server send another SMSG_MONSTER_MOVE with SPLINETYPE_FACINGTARGET as response
-    // but this is too slow on mangos, because of update periods. And client can handle this
-    // For death grip, there is normal spline type I think
-    data << uint8(splinetype);  
-    if (splinetype == SPLINETYPE_FACINGTARGET)
-        data << uint64(target->GetGUID());
-    data << uint32(SPLINEFLAG_TRAJECTORY | SPLINEFLAG_WALKMODE);
-    data << uint32(time);
-    data << float(unk); // <<------ ?????
-    data << uint32(0);
-    data << uint32(1);
-    data << x << y << z;
-    if (target->GetTypeId() == TYPEID_PLAYER)
-    {
-        m_caster->SendMessageToSetExcept(&data, (Player*)target);
-        ((Player*)target)->GetSession()->SendPacket(&data);
-    }else
-        m_caster->SendMessageToSet(&data, true);
-
-    if (m_caster->GetTypeId() != TYPEID_PLAYER)
-        m_caster->GetMap()->CreatureRelocation((Creature*)m_caster, x, y, z, m_caster->GetOrientation());
+    m_caster->SendMonsterMove(x,y,z, SPLINETYPE_NORMAL, moveFlag, time);
 }
 
 void Spell::EffectTeleportUnits(SpellEffectIndex eff_idx)
