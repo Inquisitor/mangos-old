@@ -18,6 +18,7 @@
 
 //lets use Intel scalable_allocator by default and
 //switch to OS specific allocator only when _STANDARD_MALLOC is defined
+#define USE_STANDARD_MALLOC
 #ifndef USE_STANDARD_MALLOC
 
 #include "../../dep/tbb/include/tbb/scalable_allocator.h"
