@@ -41,6 +41,7 @@
 #include "GossipDef.h"
 #include "Creature.h"
 #include "Totem.h"
+#include "Vehicle.h"
 #include "CreatureAI.h"
 #include "BattleGroundMgr.h"
 #include "BattleGround.h"
@@ -2074,7 +2075,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
                     return;
                 }
-                /*case 48610:                                 // Q:Shredder Repair
+                case 48610:                                 // Q:Shredder Repair
                 {
                     if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->isVehicle())
                         ((Vehicle*)m_caster)->RemoveAllPassengers();
@@ -2088,7 +2089,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         m_caster->ExitVehicle();
 
                     return;
-                }*/
+                }
                 case 49319:                                 // Q:The Horse Hollerer
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
