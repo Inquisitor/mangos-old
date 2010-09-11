@@ -612,6 +612,7 @@ struct SpellProcEventEntry
 
 struct SpellBonusEntry
 {
+    SpellBonusEntry() : direct_damage(0.0f), dot_damage(0.0f), ap_bonus(0.0f) {}
     float  direct_damage;
     float  dot_damage;
     float  ap_bonus;
