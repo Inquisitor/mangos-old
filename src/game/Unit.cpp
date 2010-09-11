@@ -248,9 +248,6 @@ Unit::Unit()
     for(int i=0; i < MAX_REACTIVE; ++i)
         m_reactiveTimer[i] = 0;
 
-    m_ThreatRedirectionPercent = 0;
-    m_misdirectionTargetGUID = 0;
-
     m_auraUpdateMask = 0;
 
     m_vehicleGUID = 0;
@@ -6330,6 +6327,7 @@ void Unit::SendHealSpellLog(Unit *pVictim, uint32 SpellID, uint32 Damage, uint32
     data << uint32(SpellID);
     data << uint32(Damage);
     data << uint32(OverHeal);
+    data << uint32(0);                                      // absorb, not implemented, look 301 aura
     data << uint8(critical ? 1 : 0);
     data << uint8(0);                                       // unused in client?
     SendMessageToSet(&data, true);
@@ -6763,9 +6761,9 @@ uint32 Unit::SpellDamageBonusTaken(Unit *pCaster, SpellEntry const *spellProto, 
     // Mod damage taken from AoE spells
     if(IsAreaOfEffectSpell(spellProto))
     {
-        AuraList const& avoidAuras = GetAurasByType(SPELL_AURA_MOD_AOE_DAMAGE_AVOIDANCE);
-        for(AuraList::const_iterator itr = avoidAuras.begin(); itr != avoidAuras.end(); ++itr)
-            TakenTotalMod *= ((*itr)->GetModifier()->m_amount + 100.0f) / 100.0f;
+        TakenTotalMod *= GetTotalAuraMultiplier(SPELL_AURA_MOD_AOE_DAMAGE_AVOIDANCE);
+        if (GetTypeId() == TYPEID_UNIT && ((Creature*)this)->isPet())
+            TakenTotalMod *= GetTotalAuraMultiplier(SPELL_AURA_MOD_PET_AOE_DAMAGE_AVOIDANCE);
     }
 
     // Taken fixed damage bonus auras
@@ -7724,8 +7722,11 @@ uint32 Unit::MeleeDamageBonusTaken(Unit *pCaster, uint32 pdamage,WeaponAttackTyp
 
     // ..taken pct (aoe avoidance)
     if(spellProto && IsAreaOfEffectSpell(spellProto))
+    {
         TakenPercent *= GetTotalAuraMultiplier(SPELL_AURA_MOD_AOE_DAMAGE_AVOIDANCE);
-
+        if (GetTypeId() == TYPEID_UNIT && ((Creature*)this)->isPet())
+            TakenPercent *= GetTotalAuraMultiplier(SPELL_AURA_MOD_PET_AOE_DAMAGE_AVOIDANCE);
+    }
 
     // special dummys/class scripts and other effects
     // =============================================
@@ -11351,9 +11352,4 @@ void Unit::_AddAura(uint32 spellID, uint32 duration)
             AddSpellAuraHolder(holder);
         }
     }
-}
-
-Unit * Unit::GetMisdirectionTarget()
-{
-    return m_misdirectionTargetGUID ? ObjectAccessor::GetUnit(*this, m_misdirectionTargetGUID) : NULL;
 }

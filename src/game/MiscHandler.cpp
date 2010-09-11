@@ -1040,7 +1040,7 @@ void WorldSession::HandleMoveRootAck(WorldPacket& recv_data)
 */
 }
 
-void WorldSession::HandleSetActionBarToggles(WorldPacket& recv_data)
+void WorldSession::HandleSetActionBarTogglesOpcode(WorldPacket& recv_data)
 {
     uint8 ActionBar;
 
@@ -1512,7 +1512,7 @@ void WorldSession::HandleSetTaxiBenchmarkOpcode( WorldPacket & recv_data )
     DEBUG_LOG("Client used \"/timetest %d\" command", mode);
 }
 
-void WorldSession::HandleQueryInspectAchievements( WorldPacket & recv_data )
+void WorldSession::HandleQueryInspectAchievementsOpcode( WorldPacket & recv_data )
 {
     ObjectGuid guid;
 
@@ -1522,7 +1522,7 @@ void WorldSession::HandleQueryInspectAchievements( WorldPacket & recv_data )
         player->GetAchievementMgr().SendRespondInspectAchievements(_player);
 }
 
-void WorldSession::HandleWorldStateUITimerUpdate(WorldPacket& /*recv_data*/)
+void WorldSession::HandleWorldStateUITimerUpdateOpcode(WorldPacket& /*recv_data*/)
 {
     // empty opcode
     DEBUG_LOG("WORLD: CMSG_WORLD_STATE_UI_TIMER_UPDATE");
@@ -1532,7 +1532,7 @@ void WorldSession::HandleWorldStateUITimerUpdate(WorldPacket& /*recv_data*/)
     SendPacket(&data);
 }
 
-void WorldSession::HandleReadyForAccountDataTimes(WorldPacket& /*recv_data*/)
+void WorldSession::HandleReadyForAccountDataTimesOpcode(WorldPacket& /*recv_data*/)
 {
     // empty opcode
     DEBUG_LOG("WORLD: CMSG_READY_FOR_ACCOUNT_DATA_TIMES");

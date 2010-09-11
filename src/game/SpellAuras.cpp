@@ -360,7 +360,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleNULL,                                      //307 absorb healing?
     &Aura::HandleNULL,                                      //308 new aura for hunter traps
     &Aura::HandleNULL,                                      //309 absorb healing?
-    &Aura::HandleNULL,                                      //310 pet avoidance passive?
+    &Aura::HandleNoImmediateEffect,                         //310 SPELL_AURA_MOD_PET_AOE_DAMAGE_AVOIDANCE implemented in Unit::SpellDamageBonusTaken
     &Aura::HandleNULL,                                      //311 0 spells in 3.3
     &Aura::HandleNULL,                                      //312 0 spells in 3.3
     &Aura::HandleNULL,                                      //313 0 spells in 3.3
@@ -2261,6 +2261,14 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
 
                 return;
             }
+            case 35079:                                     // Misdirection, triggered buff
+            case 59628:                                     // Tricks of the Trade, triggered buff
+            case 59665:                                     // Vigilance, redirection spell
+            {
+                if (Unit* pCaster = GetCaster())
+                    pCaster->getHostileRefManager().ResetThreatRedirection();
+                return;
+            }
             case 36730:                                     // Flame Strike
             {
                 target->CastSpell(target, 36731, true, NULL, this);
@@ -2287,13 +2295,6 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             {
                 // casted only at creatures at spawn
                 target->CastSpell(target, 47287, true, NULL, this);
-                return;
-            }
-            case 34477:                                     //Misdirection
-            case 57934:                                     //Tricks of Trade
-            {
-                if (Unit * caster = GetCaster())
-                    caster->SetThreatRedirectionTarget(0, 0);
                 return;
             }
             case 51870:                                     // Collect Hair Sample
@@ -2669,7 +2670,39 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             }
             break;
         }
+        case SPELLFAMILY_ROGUE:
+            switch(GetId())
+            {
+                case 57934:                                 // Tricks of the Trade, main spell
+                {
+                    if (apply)
+                        GetHolder()->SetAuraCharges(1);     // not have proper charges set in spell data
+                    else
+                    {
+                        // used for direct in code aura removes and spell proc event charges expire
+                        if (m_removeMode != AURA_REMOVE_BY_DEFAULT)
+                            target->getHostileRefManager().ResetThreatRedirection();
+                    }
+                    return;
+                }
+            }
+            break;
         case SPELLFAMILY_HUNTER:
+            switch(GetId())
+            {
+                case 34477:                                 // Misdirection, main spell
+                {
+                    if (apply)
+                        GetHolder()->SetAuraCharges(1);     // not have proper charges set in spell data
+                    else
+                    {
+                        // used for direct in code aura removes and spell proc event charges expire
+                        if (m_removeMode != AURA_REMOVE_BY_DEFAULT)
+                            target->getHostileRefManager().ResetThreatRedirection();
+                    }
+                    return;
+                }
+            }
             break;
         case SPELLFAMILY_PALADIN:
             switch(GetId())

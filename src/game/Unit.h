@@ -1953,15 +1953,6 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void AddPetAura(PetAura const* petSpell);
         void RemovePetAura(PetAura const* petSpell);
 
-        // redirect auras
-        void SetThreatRedirectionTarget(uint64 guid, uint32 pct)
-        {
-            m_misdirectionTargetGUID = guid;
-            m_ThreatRedirectionPercent = pct;
-        }
-        uint32 GetThreatRedirectionPercent() { return m_ThreatRedirectionPercent; }
-        Unit *GetMisdirectionTarget();
-
         // Vehicle System
         void EnterVehicle(Vehicle *vehicle, int8 seat_id, bool force = false);
         void ExitVehicle();

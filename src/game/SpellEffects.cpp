@@ -7662,7 +7662,7 @@ void Spell::DoSummonTotem(SpellEffectIndex eff_idx, uint8 slot_dbc)
     if (slot < MAX_TOTEM_SLOT)
         m_caster->_AddTotem(TotemSlot(slot),pTotem);
 
-    pTotem->SetOwner(m_caster->GetGUID());
+    pTotem->SetOwner(m_caster);
     pTotem->SetTypeBySummonSpell(m_spellInfo);              // must be after Create call where m_spells initialized
 
     int32 duration=GetSpellDuration(m_spellInfo);
@@ -8938,6 +8938,18 @@ void Spell::EffectRestoreItemCharges( SpellEffectIndex eff_idx )
     item->RestoreCharges();
 }
 
+void Spell::EffectRedirectThreat(SpellEffectIndex eff_idx)
+{
+    if (unitTarget)
+    {
+        m_caster->getHostileRefManager().SetThreatRedirection(unitTarget->GetObjectGuid(), uint32(damage));
+
+        // Tricks of trade hacky buff applying (15% damage increase)
+        if( m_spellInfo->Id == 57934 )
+            unitTarget->CastSpell(unitTarget, 57933, true);
+    }
+}
+
 void Spell::EffectTeachTaxiNode( SpellEffectIndex eff_idx )
 {
     if (unitTarget->GetTypeId() != TYPEID_PLAYER)
@@ -8958,17 +8970,5 @@ void Spell::EffectTeachTaxiNode( SpellEffectIndex eff_idx )
         data << m_caster->GetObjectGuid();
         data << uint8( 1 );
         player->SendDirectMessage( &data );
-    }
-}
-
-void Spell::EffectRedirectThreat(SpellEffectIndex eff_idx)
-{
-    if(unitTarget)
-    {
-        m_caster->SetThreatRedirectionTarget(unitTarget->GetGUID(), (uint32)damage);
-
-        // Tricks of trade hacky buff applying (15% damage increase)
-        if( m_spellInfo->Id == 57934 )
-            unitTarget->CastSpell(unitTarget, 57933, true);
     }
 }
