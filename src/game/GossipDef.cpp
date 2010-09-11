@@ -37,19 +37,22 @@ GossipMenu::~GossipMenu()
 
 void GossipMenu::AddMenuItem(uint8 Icon, const std::string& Message, uint32 dtSender, uint32 dtAction, const std::string& BoxMessage, uint32 BoxMoney, bool Coded)
 {
-    MANGOS_ASSERT( m_gItems.size() <= GOSSIP_MAX_MENU_ITEMS  );
+    if (m_gItems.size() <= GOSSIP_MAX_MENU_ITEMS)
+    {
+        GossipMenuItem gItem;
 
-    GossipMenuItem gItem;
+        gItem.m_gIcon       = Icon;
+        gItem.m_gMessage    = Message;
+        gItem.m_gCoded      = Coded;
+        gItem.m_gSender     = dtSender;
+        gItem.m_gOptionId   = dtAction;
+        gItem.m_gBoxMessage = BoxMessage;
+        gItem.m_gBoxMoney   = BoxMoney;
 
-    gItem.m_gIcon       = Icon;
-    gItem.m_gMessage    = Message;
-    gItem.m_gCoded      = Coded;
-    gItem.m_gSender     = dtSender;
-    gItem.m_gOptionId   = dtAction;
-    gItem.m_gBoxMessage = BoxMessage;
-    gItem.m_gBoxMoney   = BoxMoney;
-
-    m_gItems.push_back(gItem);
+        m_gItems.push_back(gItem);
+    }
+    else
+        sLog.outError("Gossip menu item list overflow! Skipping adding item.");
 }
 
 void GossipMenu::AddGossipMenuItemData(uint32 action_menu, uint32 action_poi, uint32 action_script)
