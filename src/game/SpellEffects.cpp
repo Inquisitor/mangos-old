@@ -3200,6 +3200,7 @@ void Spell::EffectTriggerSpell(SpellEffectIndex effIndex)
             // Glyph of Mirror Image
             if (m_caster->HasAura(63093))
                 m_caster->CastSpell(m_caster, 65047, true); // Mirror Image
+            return;
         }
         // Empower Rune Weapon
         case 53258:
