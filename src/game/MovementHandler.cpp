@@ -531,7 +531,6 @@ void WorldSession::HandleDismissControlledVehicle(WorldPacket &recv_data)
 void WorldSession::HandleRequestVehicleExit(WorldPacket &recv_data)
 {
     sLog.outDebug("WORLD: Recvd CMSG_REQUEST_VEHICLE_EXIT");
-    recv_data.hexlike();
 
     uint64 vehicleGUID = _player->GetVehicleGUID();
 
@@ -547,7 +546,6 @@ void WorldSession::HandleRequestVehicleExit(WorldPacket &recv_data)
 void WorldSession::HandleRequestVehiclePrevSeat(WorldPacket &recv_data)
 {
     DEBUG_LOG("WORLD: Recvd CMSG_REQUEST_VEHICLE_PREV_SEAT");
-    recv_data.hexlike();
 
     GetPlayer()->ChangeSeat(-1, false);
 }
@@ -555,7 +553,6 @@ void WorldSession::HandleRequestVehiclePrevSeat(WorldPacket &recv_data)
 void WorldSession::HandleRequestVehicleNextSeat(WorldPacket &recv_data)
 {
     DEBUG_LOG("WORLD: Recvd CMSG_REQUEST_VEHICLE_NEXT_SEAT");
-    recv_data.hexlike();
 
     GetPlayer()->ChangeSeat(-1, true);
 }
