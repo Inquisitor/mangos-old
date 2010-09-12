@@ -9458,9 +9458,12 @@ void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
     if (!Real || !Apply || !target || target->GetTypeId() != TYPEID_UNIT)
         return;
     Unit* caster = GetCaster();
+    if(!caster)
+        return;
+
     Unit* creator = caster->GetMap()->GetUnit(target->GetCreatorGUID());
     Creature* pImmage = (Creature*)target;
-    if (!creator || !caster || creator != caster || pImmage->isPet())
+    if (!creator || creator != caster || pImmage->isPet())
         return;
 
     // set stats and visual
@@ -9473,23 +9476,19 @@ void Aura::HandleAuraInitializeImages(bool Apply, bool Real)
     pImmage->setFaction(creator->getFaction());
     pImmage->SetUInt32Value(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE | UNIT_FLAG2_REGENERATE_POWER);
     if (creator->IsPvP())
-	{
-	  pImmage->SetPvP(true);
-    }
+	    pImmage->SetPvP(true);
+
 	if (creator->isInCombat() && pImmage->isAlive())
+	    pImmage->CastSpell(pImmage, 58838, true);
+	else
     {
-	pImmage->CastSpell(pImmage, 58838, true);
+        pImmage->GetMotionMaster()->Clear();
+        pImmage->GetMotionMaster()->MoveFollow(creator, pImmage->GetDistance(creator), pImmage->GetAngle(creator));
     }
-	  else
-   {
-       pImmage->GetMotionMaster()->Clear();
-       pImmage->GetMotionMaster()->MoveFollow(creator, pImmage->GetDistance(creator), pImmage->GetAngle(creator));
-   }
 }
 
 void Aura::HandleAuraCloneCaster(bool Apply, bool Real)
 {
-    error_log("HandleAuraCloneCaster");
     if (!Real || !Apply)
         return;
 
