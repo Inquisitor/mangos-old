@@ -4796,6 +4796,12 @@ void Aura::HandlePeriodicEnergize(bool apply, bool Real)
                 break;
         }
     }
+    if (!apply)
+    {
+        if (GetId() == 5229)
+            if (target->HasAura(51185))               // King of the Jungle self Enrage bonus with infinite duration
+                    target->RemoveAurasDueToSpell(51185);
+    }
 
     m_isPeriodic = apply;
 }
