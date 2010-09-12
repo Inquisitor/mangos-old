@@ -1418,8 +1418,8 @@ void Creature::setDeathState(DeathState s)
             return;
 
         Unit::setDeathState(CORPSE);
-        if(isVehicle())
-            ((Vehicle*)this)->setDeathState(JUST_DIED);
+        /*if(isVehicle())
+            ((Vehicle*)this)->setDeathState(JUST_DIED);*/
     }
 
     if (s == JUST_ALIVED)
