@@ -76,7 +76,7 @@ struct CreatureInfo
     uint32  maxlevel;
     uint32  minhealth;
     uint32  maxhealth;
-    uint32   powerType;
+    uint32  powerType;
     uint32  minmana;
     uint32  maxmana;
     uint32  armor;

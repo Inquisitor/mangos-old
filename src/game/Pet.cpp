@@ -220,6 +220,9 @@ bool Pet::LoadPetFromDB( Player* owner, uint32 petentry, uint32 petnumber, bool 
             sLog.outError("Pet have incorrect type (%u) for pet loading.", getPetType());
     }
 
+    // To check
+    setPowerType(Powers(cinfo->powerType));
+
     if(owner->IsPvP())
         SetPvP(true);
 
@@ -471,6 +474,20 @@ void Pet::setDeathState(DeathState s)                       // overwrite virtual
                 ModifyPower(POWER_HAPPINESS, -HAPPINESS_LEVEL_SIZE);
 
             SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_STUNNED);
+        }
+        // send cooldown for summon spell if necessary
+        if (Player* p_owner = GetCharmerOrOwnerPlayerOrPlayerItself())
+        {
+            SpellEntry const *spellInfo = sSpellStore.LookupEntry(GetUInt32Value(UNIT_CREATED_BY_SPELL));
+
+            if (!spellInfo) return;
+
+            if (spellInfo->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE)
+                p_owner->SendCooldownEvent(spellInfo);
+            // Raise Dead hack
+            if (spellInfo->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT && spellInfo->SpellFamilyFlags & 0x1000)
+                if (spellInfo = sSpellStore.LookupEntry(46584))
+                    p_owner->SendCooldownEvent(spellInfo);
         }
     }
     else if(getDeathState()==ALIVE)

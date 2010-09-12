@@ -17914,6 +17914,15 @@ void Player::RemovePet(Pet* pet, PetSaveMode mode, bool returnreagent)
                     }
                 }
             }
+            // cooldown, only if pet is not death already (corpse)
+            if (spellInfo->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE && pet->getDeathState() != CORPSE)
+            {
+                SendCooldownEvent(spellInfo);
+                // Raise Dead hack
+                if (spellInfo->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT && spellInfo->SpellFamilyFlags & 0x1000)
+                    if (spellInfo = sSpellStore.LookupEntry(46584))
+                        SendCooldownEvent(spellInfo);
+            }
         }
     }
 
