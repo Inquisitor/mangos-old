@@ -4172,6 +4172,32 @@ bool Unit::AddSpellAuraHolder(SpellAuraHolder *holder)
                 {
                     // can be created with >1 stack by some spell mods
                     foundHolder->ModStackAmount(holder->GetStackAmount());
+
+                    switch(holder->GetId())
+                    {
+                        case 28832: // Mark of Korth'azz
+                        case 28833: // Mark of Blaumeux
+                        case 28834: // Mark of Rivendare
+                        case 28835: // Mark of Zeliek
+                            if(Unit *caster = holder->GetCaster()) // actually we can also use cast(this, originalcasterguid)
+                            {
+                                int32 damageToDeal;
+                                switch(foundHolder->GetStackAmount())
+                                {
+                                    case 1: damageToDeal = 0;     break;
+                                    case 2: damageToDeal = 500;   break;
+                                    case 3: damageToDeal = 1000;  break;
+                                    case 4: damageToDeal = 1500;  break;
+                                    case 5: damageToDeal = 4000;  break;
+                                    case 6: damageToDeal = 12000; break;
+                                    default:damageToDeal = 20000 + 1000 * (foundHolder->GetStackAmount() - 7); break;
+                                }
+                                if(damageToDeal)
+                                    caster->CastCustomSpell(this, 28836, &damageToDeal, NULL, NULL, true);
+                            }
+                            break;
+                    }
+
                     delete holder;
                     return false;
                 }
