@@ -427,6 +427,7 @@ struct CliCommandHolder
     typedef void Print(void*, const char*);
     typedef void CommandFinished(void*, bool success);
 
+    uint32 guid;
     uint32 m_cliAccountId;                                  // 0 for console and real account id for RA/soap
     AccountTypes m_cliAccessLevel;
     void* m_callbackArg;
@@ -437,9 +438,28 @@ struct CliCommandHolder
     CliCommandHolder(uint32 accountId, AccountTypes cliAccessLevel, void* callbackArg, const char *command, Print* zprint, CommandFinished* commandFinished)
         : m_cliAccountId(accountId), m_cliAccessLevel(cliAccessLevel), m_callbackArg(callbackArg), m_print(zprint), m_commandFinished(commandFinished)
     {
-        size_t len = strlen(command)+1;
+        char* command_clean = NULL;
+        sscanf (command, "%d|", &guid);
+        if(guid)
+        {
+            for(uint32 x = 0; command[x]; ++x)
+                if(command[x] == '|' && command[x+1])
+                {
+                    command_clean = (char*)command + x + 1;
+                    break;
+                }
+        }
+
+        if(!command_clean)
+        {
+            command_clean = (char*)command;
+            guid = 0;
+        }
+
+        size_t len = strlen(command_clean)+1;
         m_command = new char[len];
-        memcpy(m_command, command, len);
+
+        memcpy(m_command, command_clean, len);
     }
 
     ~CliCommandHolder() { delete[] m_command; }

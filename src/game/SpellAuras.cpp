@@ -2539,6 +2539,19 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
         }
         case SPELLFAMILY_PRIEST:
         {
+            // Penance - set target if noone is selected
+            if (GetSpellProto()->SpellIconID == 225 || GetSpellProto()->SpellIconID == 2818)
+            {
+                if (Unit* caster = GetCaster())
+                {
+                    if (caster->GetTypeId() == TYPEID_PLAYER)
+                    {
+                        if (apply && target)     
+                           ((Player*)caster)->SetSelection(target->GetGUID()); 
+                        return;
+                    }
+                }
+            }
             // Pain and Suffering
             if (GetSpellProto()->SpellIconID == 2874 && target->GetTypeId()==TYPEID_PLAYER)
             {
