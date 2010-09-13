@@ -196,6 +196,9 @@ bool Pet::LoadPetFromDB( Player* owner, uint32 petentry, uint32 petnumber, bool 
     SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
     SetName(fields[8].GetString());
 
+    // To check
+    setPowerType(Powers(cinfo->powerType));
+
     switch (getPetType())
     {
         case SUMMON_PET:
@@ -219,9 +222,6 @@ bool Pet::LoadPetFromDB( Player* owner, uint32 petentry, uint32 petnumber, bool 
         default:
             sLog.outError("Pet have incorrect type (%u) for pet loading.", getPetType());
     }
-
-    // To check
-    setPowerType(Powers(cinfo->powerType));
 
     if(owner->IsPvP())
         SetPvP(true);
