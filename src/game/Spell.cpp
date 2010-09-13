@@ -873,11 +873,11 @@ void Spell::AddUnitTarget(Unit* pVictim, SpellEffectIndex effIndex)
 
     // Calculate hit result
     
-    /*// Procs can miss, weapon enchants can miss, triggered spells and effects cannot miss (miss already calculated in triggering spell)
+    // Procs can miss, weapon enchants can miss, triggered spells and effects cannot miss (miss already calculated in triggering spell)
     bool canMiss = (m_triggeredByAuraSpell || !m_IsTriggeredSpell);
     if(m_caster->GetTypeId() != TYPEID_PLAYER && ((Creature*)m_caster)->isVehicle())
         canMiss = false;
-    target.missCondition = m_caster->SpellHitResult(pVictim, m_spellInfo, m_canReflect, canMiss);*/
+    target.missCondition = m_caster->SpellHitResult(pVictim, m_spellInfo, m_canReflect, canMiss);
 
     // Spell have speed - need calculate incoming time
     if (m_spellInfo->speed > 0.0f)
@@ -4350,7 +4350,7 @@ SpellCastResult Spell::CheckCast(bool strict)
             if(bg->GetStatus() == STATUS_WAIT_LEAVE)
                 return SPELL_FAILED_DONT_REPORT;
 
-    if (m_caster->isInCombat() && IsNonCombatSpell(m_spellInfo) && !m_caster->isIgnoreUnitState(m_spellInfo))
+    if (m_caster->isInCombat() && IsNonCombatSpell(m_spellInfo) && !m_IsTriggeredSpell && !m_caster->isIgnoreUnitState(m_spellInfo))
         return m_triggeredByAuraSpell ? SPELL_FAILED_DONT_REPORT : SPELL_FAILED_AFFECTING_COMBAT;
 
     if (m_caster->GetTypeId() == TYPEID_PLAYER && !((Player*)m_caster)->isGameMaster() &&
@@ -5894,16 +5894,24 @@ SpellCastResult Spell::CheckItems()
 
     Player* p_caster = (Player*)m_caster;
 
+    bool isScrollItem = false;
+    bool isVellumTarget = false;
+
+    bool isNoReagentReqCast = m_CastItem ? m_CastItem->GetEntry() == m_spellInfo->EffectItemType[0] : false;
+
     // cast item checks
     if(m_CastItem)
     {
         uint32 itemid = m_CastItem->GetEntry();
-        if( !p_caster->HasItemCount(itemid, 1) )
+        if( !p_caster->HasItemCount(itemid, 1) && !isNoReagentReqCast )
             return SPELL_FAILED_ITEM_NOT_FOUND;
 
         ItemPrototype const *proto = m_CastItem->GetProto();
         if(!proto)
             return SPELL_FAILED_ITEM_NOT_FOUND;
+
+        if(proto->Flags & ITEM_FLAGS_ENCHANT_SCROLL)
+            isScrollItem = true;
 
         for (int i = 0; i < 5; ++i)
             if (proto->Spells[i].SpellCharges)
@@ -5971,8 +5979,14 @@ SpellCastResult Spell::CheckItems()
         if(!m_targets.getItemTarget())
             return SPELL_FAILED_ITEM_GONE;
 
-        if(!m_targets.getItemTarget()->IsFitToSpellRequirements(m_spellInfo))
+        isVellumTarget = m_targets.getItemTarget()->GetProto()->IsVellum();
+
+        if(!m_targets.getItemTarget()->IsFitToSpellRequirements(m_spellInfo) && !isNoReagentReqCast)
             return SPELL_FAILED_EQUIPPED_ITEM_CLASS;
+
+        // Do not enchant vellum with scroll
+        if(isVellumTarget && isScrollItem)
+            return SPELL_FAILED_BAD_TARGETS;
     }
     // if not item target then required item must be equipped
     else
@@ -6125,6 +6139,19 @@ SpellCastResult Spell::CheckItems()
 
                 if( targetItem->GetProto()->ItemLevel < m_spellInfo->baseLevel )
                     return SPELL_FAILED_LOWLEVEL;
+
+                // Check if we can store a new scroll, enchanting vellum has implicit SPELL_EFFECT_CREATE_ITEM
+                if(isVellumTarget && m_spellInfo->EffectItemType[i])
+                {
+                    ItemPosCountVec dest;
+                    uint8 msg = p_caster->CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, m_spellInfo->EffectItemType[i], 1 );
+                    if(msg != EQUIP_ERR_OK)
+                    {
+                        p_caster->SendEquipError( msg, NULL, NULL );
+                        return SPELL_FAILED_DONT_REPORT;
+                    }
+                }
+
                 // Not allow enchant in trade slot for some enchant type
                 if( targetItem->GetOwner() != m_caster )
                 {
@@ -6134,6 +6161,10 @@ SpellCastResult Spell::CheckItems()
                         return SPELL_FAILED_ERROR;
                     if (pEnchant->slot & ENCHANTMENT_CAN_SOULBOUND)
                         return SPELL_FAILED_NOT_TRADEABLE;
+
+                    // cannot replace vellum with scroll in trade slot
+                    if (isVellumTarget)
+                        return SPELL_FAILED_BAD_TARGETS;
                 }
                 break;
             }
