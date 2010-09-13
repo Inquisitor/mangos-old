@@ -4340,7 +4340,7 @@ SpellCastResult Spell::CheckCast(bool strict)
     {
         if(m_triggeredByAuraSpell)
             return SPELL_FAILED_DONT_REPORT;
-        else
+        else if(!m_IsTriggeredSpell || m_CastItem)
             return SPELL_FAILED_NOT_READY;
     }
 
