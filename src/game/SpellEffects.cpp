@@ -2247,6 +2247,26 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     m_caster->CastSpell(m_caster, spell_id, true);
                     return;
                 }
+                case 45923:                                 // Q: Foolish Endeavors
+                {
+                    if (unitTarget->HasAura(45924))
+                        unitTarget->CastSpell(unitTarget, 45922, true);
+                    return;
+                }
+                case 45607:                                 // Q: Kaganishu
+                {
+                    if (m_caster->GetTypeId() == TYPEID_PLAYER)
+                        ((Player*)m_caster)->KilledMonsterCredit(25425, ObjectGuid());
+                    return;
+                }
+                case 64385:                                 // Unusual Compass
+                {
+                    m_caster->SetOrientation(float(urand(0,62832)) / 10000.0f);
+                    WorldPacket data;
+                    m_caster->BuildHeartBeatMsg(&data);
+                    m_caster->SendMessageToSet(&data,true);
+                    return;
+                }
             }
             break;
         }
