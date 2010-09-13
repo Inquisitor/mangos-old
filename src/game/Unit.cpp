@@ -6339,16 +6339,21 @@ Unit* Unit::SelectMagnetTarget(Unit *victim, SpellEntry const *spellInfo)
     if(!victim)
         return NULL;
 
-    // Magic case
-    if(spellInfo && (spellInfo->DmgClass == SPELL_DAMAGE_CLASS_NONE || spellInfo->DmgClass == SPELL_DAMAGE_CLASS_MAGIC))
+    // SPELL_AURA_SPELL_MAGNET must NOT take any physical spells except for Hamstring, Wing Clip and Death Grip
+    if(spellInfo && ((spellInfo->SchoolMask != SPELL_SCHOOL_MASK_NORMAL && spellInfo->DmgClass == SPELL_DAMAGE_CLASS_MAGIC) || (spellInfo->Id == 1715 || spellInfo->Id == 2974 || spellInfo->Id == 49576)))
     {
         Unit::AuraList const& magnetAuras = victim->GetAurasByType(SPELL_AURA_SPELL_MAGNET);
         for(Unit::AuraList::const_iterator itr = magnetAuras.begin(); itr != magnetAuras.end(); ++itr)
             if(Unit* magnet = (*itr)->GetCaster())
                 if(magnet->IsWithinLOSInMap(this) && magnet->isAlive())
+                {
+                    //Destroy totem...
+                    if( ((Creature*)magnet)->isTotem())
+                         magnet->CastSpell(magnet, 5, true);
                     return magnet;
+                }
     }
-    // Melee && ranged case
+    // Normal case
     else
     {
         AuraList const& hitTriggerAuras = victim->GetAurasByType(SPELL_AURA_ADD_CASTER_HIT_TRIGGER);
@@ -6356,7 +6361,12 @@ Unit* Unit::SelectMagnetTarget(Unit *victim, SpellEntry const *spellInfo)
             if(Unit* magnet = (*i)->GetCaster())
                 if(magnet->isAlive() && magnet->IsWithinLOSInMap(this))
                     if(roll_chance_i((*i)->GetModifier()->m_amount))
-                        return magnet;
+                        if ((*i)->GetHolder()->GetAuraCharges())
+                        {
+                            if((*i)->GetHolder()->DropAuraCharge())
+                                victim->RemoveAura((*i),AURA_REMOVE_BY_DEFAULT);
+                            return magnet;
+                        }
     }
 
     return victim;
