@@ -6698,6 +6698,13 @@ uint32 Unit::SpellDamageBonusDone(Unit *pVictim, SpellEntry const *spellProto, u
         }
         case SPELLFAMILY_DEATHKNIGHT:
         {
+            // Glyph of Unholy Blight
+            if (spellProto->Id == 50536) 
+            { 
+                if (Aura *glyphAura = GetDummyAura(63332)) 
+                    DoneTotalMod *= (glyphAura->GetModifier()->m_amount + 100.0f)/ 100.0f; 
+                break; 
+            } 
             // Icy Touch and Howling Blast
             if (spellProto->SpellFamilyFlags & UI64LIT(0x0000000200000002))
             {
