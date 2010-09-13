@@ -2551,6 +2551,46 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             target->PlayDirectSound(14972, (Player *)target);
                     }
                     return;
+                case 43354:                                 // Q: Seeds of the Blacksouled Keepers
+                    if (apply)
+                    {
+                        if (Unit* caster = GetCaster())
+                            if (caster->GetTypeId() == TYPEID_PLAYER)
+                                ((Player*)caster)->KilledMonsterCredit( 24235, 0);
+                    }
+                    else 
+                    {
+                        if (target->GetTypeId() != TYPEID_PLAYER && target->GetEntry() == 23876)
+                            ((Creature*)target)->ForcedDespawn();
+                    }
+                    return;
+                case 57806:                                 // Q: The Restless Dead
+                    if (apply)
+                    {
+                        if (Unit* caster = GetCaster())
+                            if (caster->GetTypeId() == TYPEID_PLAYER)
+                                ((Player*)caster)->KilledMonsterCredit( 30546, 0);
+                    }
+                    else 
+                    {
+                        if (target->GetTypeId() != TYPEID_PLAYER && target->GetEntry() == 31043)
+                            ((Creature*)target)->ForcedDespawn();
+                    }
+                    return;
+                case 43115:                                 // Q: Test at Sea
+                    if (apply && target->GetEntry() == 24120)
+                    {
+                        switch(urand(0, 3))
+                        {
+                            case 0: target->MonsterYell("I don't feel so good...", LANG_UNIVERSAL, 0); break;
+                            case 1: target->MonsterYell("That liquid... it reeks!", LANG_UNIVERSAL, 0); break;
+                            case 2: target->MonsterYell("Someone shoot that bat down!", LANG_UNIVERSAL, 0); break;
+                        }
+                        if (Unit* caster = GetCaster())
+                            if (caster->GetTypeId() == TYPEID_PLAYER)
+                                caster->CastSpell(caster, 43138, true);
+                    }
+                    return;
                 case 40131:
                 case 27978:
                     if (apply)
