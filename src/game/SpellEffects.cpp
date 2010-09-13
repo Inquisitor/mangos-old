@@ -3621,6 +3621,10 @@ void Spell::EffectApplyAura(SpellEffectIndex eff_idx)
             return;
     }
 
+    //Molten Fury, buff from Flame Tsunami, should affect only sartarions adds...
+    if(m_spellInfo->Id == 60430 && (unitTarget->GetTypeId() != TYPEID_UNIT || unitTarget->GetEntry() != 30643))
+        return;
+
     DEBUG_FILTER_LOG(LOG_FILTER_SPELL_CAST, "Spell: Aura is: %u", m_spellInfo->EffectApplyAuraName[eff_idx]);
 
     Aura* Aur = CreateAura(m_spellInfo, eff_idx, &m_currentBasePoints[eff_idx], spellAuraHolder, unitTarget, caster, m_CastItem);
@@ -4145,10 +4149,12 @@ void Spell::EffectEnergize(SpellEffectIndex eff_idx)
             level_multiplier = 4;
             break;
         case 31930:                                         // Judgements of the Wise
-        case 48542:                                         // Revitalize (mana restore case)
         case 63375:                                         // Improved Stormstrike
         case 68082:                                         // Glyph of Seal of Command
             damage = damage * unitTarget->GetCreateMana() / 100;
+            break;
+        case 48542:                                         // Revitalize (mana restore case)
+            damage = damage * unitTarget->GetMaxPower(POWER_MANA) / 100;
             break;
         case 67487:                                         // Mana Potion Injector
         case 67490:                                         // Runic Mana Injector
