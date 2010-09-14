@@ -1953,6 +1953,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void AddPetAura(PetAura const* petSpell);
         void RemovePetAura(PetAura const* petSpell);
 
+        uint32 GetModelForForm(ShapeshiftForm form);
+
         // Vehicle System
         void EnterVehicle(Vehicle *vehicle, int8 seat_id, bool force = false);
         void ExitVehicle();
