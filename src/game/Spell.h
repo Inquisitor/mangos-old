@@ -340,6 +340,7 @@ class Spell
         void EffectPlayMusic(SpellEffectIndex eff_idx);
         void EffectSpecCount(SpellEffectIndex eff_idx);
         void EffectActivateSpec(SpellEffectIndex eff_idx);
+        void EffectSummonSnakes(SpellEffectIndex eff_idx);
 
         Spell( Unit* caster, SpellEntry const *info, bool triggered, ObjectGuid originalCasterGUID = ObjectGuid(), Spell** triggeringContainer = NULL );
         ~Spell();
