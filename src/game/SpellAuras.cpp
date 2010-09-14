@@ -7789,6 +7789,14 @@ void Aura::PeriodicDummyTick()
                         Cell::VisitAllObjects(target, checker, radius);
                     }
 
+                    for (std::list<Unit*>::iterator iter = targets.begin(); iter != targets.end(); ) // Remove Stealthed and Invisible units 
+                    {
+                        if ((*iter)->HasInvisibilityAura() || (*iter)->HasStealthAura())
+                            iter = targets.erase(iter);
+                        else
+                            ++iter;
+                    }
+
                     if(targets.empty())
                         return;
 
