@@ -384,7 +384,7 @@ bool Unit::IsTriggeredAtSpellProcEvent(Unit *pVictim, SpellAuraHolder* holder, S
             return false;
     }
 
-    if (EventProcFlag & PROC_FLAG_ON_TAKE_PERIODIC && GetTypeId() == TYPEID_PLAYER && IsPositiveSpell(procSpell->Id))
+    if (EventProcFlag & PROC_FLAG_ON_TAKE_PERIODIC && GetTypeId() == TYPEID_PLAYER && procSpell && IsPositiveSpell(procSpell->Id))
     {
         bool allow = true;
         for(int i = 0; i < 3; ++i)
