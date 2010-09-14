@@ -401,21 +401,23 @@ Spell::Spell( Unit* caster, SpellEntry const *info, bool triggered, ObjectGuid o
     // determine reflection
     m_canReflect = false;
 
-    if(m_spellInfo->DmgClass == SPELL_DAMAGE_CLASS_MAGIC && !(m_spellInfo->AttributesEx2 & SPELL_ATTR_EX2_CANT_REFLECTED))
+    // AoE spells, spells with non-magic DmgClass or SchoolMask or with SPELL_ATTR_EX2_CANT_REFLECTED cannot be reflected
+    if (m_spellInfo->DmgClass == SPELL_DAMAGE_CLASS_MAGIC &&
+        m_spellInfo->SchoolMask != SPELL_SCHOOL_MASK_NORMAL &&
+        !(m_spellInfo->AttributesEx2 & SPELL_ATTR_EX2_CANT_REFLECTED) &&
+        !IsAreaOfEffectSpell(m_spellInfo))
     {
         for(int j = 0; j < MAX_EFFECT_INDEX; ++j)
         {
             if (m_spellInfo->Effect[j] == 0)
                 continue;
 
-            if(!IsPositiveTarget(m_spellInfo->EffectImplicitTargetA[j], m_spellInfo->EffectImplicitTargetB[j]))
-                m_canReflect = true;
-            else
-                m_canReflect = (m_spellInfo->AttributesEx & SPELL_ATTR_EX_NEGATIVE) ? true : false;
-
-            if(m_canReflect)
+            if(IsPositiveTarget(m_spellInfo->EffectImplicitTargetA[j], m_spellInfo->EffectImplicitTargetB[j]) && !(m_spellInfo->AttributesEx & SPELL_ATTR_EX_NEGATIVE))
                 continue;
             else
+                m_canReflect = true;
+
+            if(m_canReflect)
                 break;
         }
     }
@@ -1039,6 +1041,35 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
 
         // maybe used in effects that are handled on hit
         m_damage += target->damage;
+    }
+
+    // Recheck immune (only for delayed spells)
+    if (m_spellInfo->speed && (
+        unit->IsImmunedToDamage(GetSpellSchoolMask(m_spellInfo)) ||
+        unit->IsImmunedToSpell(m_spellInfo)))
+    {
+        caster->SendSpellMiss(unit, m_spellInfo->Id, SPELL_MISS_IMMUNE);
+        missInfo = SPELL_MISS_IMMUNE;
+        return;
+    }
+
+    // recheck deflect for delayed spells on target with Deterrence,
+    if (m_spellInfo->speed && unit->HasAura(19263))
+    {
+        caster->SendSpellMiss(unit, m_spellInfo->Id, SPELL_MISS_DEFLECT);
+        missInfo = SPELL_MISS_DEFLECT;
+        return;
+    }
+    
+    // recheck for visibility of target
+    if ((m_spellInfo->speed > 0.0f || 
+        (m_spellInfo->EffectImplicitTargetA[0] == TARGET_CHAIN_DAMAGE &&
+        GetSpellCastTime(m_spellInfo, this) > 0)) 
+         && !unit->isVisibleForOrDetect(caster, caster, false))
+    {
+        caster->SendSpellMiss(unit, m_spellInfo->Id, SPELL_MISS_EVADE);
+        missInfo = SPELL_MISS_EVADE;
+        return;
     }
 
     if (missInfo==SPELL_MISS_NONE)                          // In case spell hit target, do all effect on that target
