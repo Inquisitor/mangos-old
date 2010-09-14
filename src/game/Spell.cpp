@@ -2041,7 +2041,12 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
         {
             // Check original caster is GO - set its coordinates as dst cast
             if (WorldObject *caster = GetCastingObject())
-                m_targets.setDestination(caster->GetPositionX(), caster->GetPositionY(), caster->GetPositionZ());
+            {
+                if(m_spellInfo->Id == 61079 || m_spellInfo->Id == 56279)
+                    FillAreaTargets(targetUnitMap, m_targets.m_destX, m_targets.m_destY, radius, PUSH_SELF_CENTER,SPELL_TARGETS_HOSTILE);
+                else
+                    m_targets.setDestination(caster->GetPositionX(), caster->GetPositionY(), caster->GetPositionZ());
+            }
             break;
         }
         case TARGET_ALL_HOSTILE_UNITS_AROUND_CASTER:
@@ -2102,7 +2107,11 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 FillRaidOrPartyHealthPriorityTargets(targetUnitMap, m_caster, target, radius, count, true, false, true);
             }
             else
+            {
                 FillAreaTargets(targetUnitMap, m_targets.m_destX, m_targets.m_destY, radius, PUSH_DEST_CENTER, SPELL_TARGETS_FRIENDLY);
+                if( m_spellInfo->Id == 27820) // Exclude caster from targets
+                    targetUnitMap.remove(m_caster);
+            }
             break;
         // TARGET_SINGLE_PARTY means that the spells can only be casted on a party member and not on the caster (some seals, fire shield from imp, etc..)
         case TARGET_SINGLE_PARTY:
@@ -2606,6 +2615,7 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case SPELL_EFFECT_SKILL_STEP:
                 case SPELL_EFFECT_PROFICIENCY:
                 case SPELL_EFFECT_SUMMON_OBJECT_WILD:
+                case SPELL_EFFECT_SUMMON_OBJECT_SLOT1:
                 case SPELL_EFFECT_SELF_RESURRECT:
                 case SPELL_EFFECT_REPUTATION:
                 case SPELL_EFFECT_SEND_TAXI:
