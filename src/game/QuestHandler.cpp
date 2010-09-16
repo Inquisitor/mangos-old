@@ -258,6 +258,9 @@ void WorldSession::HandleQuestgiverQueryQuestOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleQuestQueryOpcode( WorldPacket & recv_data )
 {
+    if (!_player)
+        return;
+
     uint32 quest;
     recv_data >> quest;
     DEBUG_LOG( "WORLD: Received CMSG_QUEST_QUERY quest = %u",quest );
