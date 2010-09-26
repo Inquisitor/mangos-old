@@ -981,6 +981,9 @@ void World::SetInitialWorldSettings()
     sLog.outString( "Loading Spell Bonus Data..." );
     sSpellMgr.LoadSpellBonuses();                           // must be after LoadSpellChains
 
+    sLog.outString( "Loading spell disabled table...");
+    sObjectMgr.LoadSpellDisabledEntrys();
+
     sLog.outString( "Loading Spell Proc Item Enchant..." );
     sSpellMgr.LoadSpellProcItemEnchant();                   // must be after LoadSpellChains
 
