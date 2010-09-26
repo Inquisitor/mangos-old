@@ -1644,7 +1644,11 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
             val *= GetModifierValue(UnitMods(UNIT_MOD_RESISTANCE_START+school), TOTAL_PCT);
             ApplyModSignedFloatValue((val > 0 ? UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE+school : UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE+school), val, apply);
         }
-        void ApplyResistanceBuffModsPercentMod(SpellSchools school, bool positive, float val, bool apply) { ApplyPercentModFloatValue(positive ? UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE+school : UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE+school, val, apply); }
+        void ApplyResistanceBuffModsPercentMod(SpellSchools school, float val, bool apply)
+        {
+            ApplyPercentModFloatValue(UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE+school, val, apply);
+            ApplyPercentModFloatValue(UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE+school, val, apply);
+        }
         void InitStatBuffMods()
         {
             for(int i = STAT_STRENGTH; i < MAX_STATS; ++i) SetFloatValue(UNIT_FIELD_POSSTAT0+i, 0);
