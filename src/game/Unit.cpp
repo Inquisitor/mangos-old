@@ -11217,6 +11217,9 @@ void Unit::EnterVehicle(Vehicle *vehicle, int8 seat_id, bool force)
 
 void Unit::ExitVehicle()
 {
+    if(m_vehicleKit && m_vehicleKit->GetBase() == this)
+        m_vehicleKit->RemoveAllPassengers();
+
     if(uint64 vehicleGUID = GetVehicleGUID())
     {
         float v_size = 0.0f;
