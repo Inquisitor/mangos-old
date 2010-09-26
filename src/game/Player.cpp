@@ -6621,11 +6621,11 @@ bool Player::RewardHonor(Unit *uVictim, uint32 groupsize, float honor)
         }
     }
 
+    honor *= sWorld.getConfig(CONFIG_FLOAT_RATE_HONOR);
+    honor *= (GetMaxPositiveAuraModifier(SPELL_AURA_MOD_HONOR_GAIN) + 100.0f)/100.0f;
+
     if (uVictim != NULL)
     {
-        honor *= sWorld.getConfig(CONFIG_FLOAT_RATE_HONOR);
-        honor *= (GetMaxPositiveAuraModifier(SPELL_AURA_MOD_HONOR_GAIN) + 100.0f)/100.0f;
-
         if(groupsize > 1)
             honor /= groupsize;
 
