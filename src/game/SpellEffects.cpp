@@ -1180,13 +1180,15 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     return;
                 }
                 case 28089:                                 // Polarity Shift
+                {
                     if (unitTarget && unitTarget->GetTypeId() == TYPEID_PLAYER)
                     {
-                        uint32 toCast = (roll_chance_i(50) ? 28059 : 28084);
-                        unitTarget->RemoveAurasDueToSpell( (toCast == 28059)? 28084 : 28059 );
-                        unitTarget->CastSpell(unitTarget, toCast, true);
+                        unitTarget->RemoveAurasDueToSpell(28084);
+                        unitTarget->RemoveAurasDueToSpell(28059);
+                        unitTarget->CastSpell(unitTarget, (roll_chance_i(50) ? 28059 : 28084), true);
                     }
                     break;
+                }
                 case 39096:                                 // Polarity Shift
                     if (unitTarget)
                         unitTarget->CastSpell(unitTarget, roll_chance_i(50) ? 39088 : 39091, true);
