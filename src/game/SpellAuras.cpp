@@ -6957,7 +6957,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune (not use charges)
-            if(target->IsImmunedToDamage(GetSpellSchoolMask(spellProto)))
+            if(target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             // some auras remove at specific health level or more
@@ -6967,7 +6967,7 @@ void Aura::PeriodicTick()
                 {
                     case 43093: case 31956: case 38801:
                     case 35321: case 38363: case 39215:
-                    case 48920:
+                    case 48920: case 59262: case 58517:
                     {
                         if(target->GetHealth() == target->GetMaxHealth() )
                         {
@@ -7115,7 +7115,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune
-            if(target->IsImmunedToDamage(GetSpellSchoolMask(spellProto)))
+            if(target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             uint32 absorb=0;
@@ -7204,6 +7204,9 @@ void Aura::PeriodicTick()
 
             Unit *pCaster = GetCaster();
             if(!pCaster)
+                return;
+
+            if (GetSpellProto()->SpellFamilyName != SPELLFAMILY_GENERIC && target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             // heal for caster damage (must be alive)
@@ -7324,7 +7327,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune (not use charges)
-            if(target->IsImmunedToDamage(GetSpellSchoolMask(spellProto)))
+            if(target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             // ignore non positive values (can be result apply spellmods to aura damage
@@ -7440,7 +7443,7 @@ void Aura::PeriodicTick()
                 return;
 
             // Check for immune (not use charges)
-            if(target->IsImmunedToDamage(GetSpellSchoolMask(spellProto)))
+            if(target->IsImmunedToSpell(GetSpellProto()))
                 return;
 
             int32 pdamage = m_modifier.m_amount > 0 ? m_modifier.m_amount : 0;
