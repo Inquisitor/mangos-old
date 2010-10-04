@@ -7107,6 +7107,38 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
 
                     return;
                 }
+                // Lightwell
+                case 60123: 
+                {
+                   if (m_caster->GetTypeId() != TYPEID_UNIT)
+                       return;
+
+                    uint32 spellID;
+                    uint32 entry  = m_caster->GetEntry();
+
+                    switch(entry)
+                    {
+                        case 31897: spellID = 7001; break;   // Lightwell Renew    Rank 1
+                        case 31896: spellID = 27873; break;  // Lightwell Renew    Rank 2
+                        case 31895: spellID = 27874; break;  // Lightwell Renew    Rank 3
+                        case 31894: spellID = 28276; break;  // Lightwell Renew    Rank 4
+                        case 31893: spellID = 48084; break;  // Lightwell Renew    Rank 5
+                        case 31883: spellID = 48085; break;  // Lightwell Renew    Rank 6
+                        default:
+                            sLog.outError("Unknown Lightwell spell caster %u", m_caster->GetEntry());
+                            return;
+                    }
+                    Aura* chargesaura = m_caster->GetAura(59907, EFFECT_INDEX_0);
+                    if(chargesaura && chargesaura->GetHolder() && chargesaura->GetHolder()->GetAuraCharges() >= 1)
+                    {
+                        chargesaura->GetHolder()->SetAuraCharges(chargesaura->GetHolder()->GetAuraCharges() - 1);
+                        m_caster->CastSpell(unitTarget, spellID, false, NULL, NULL);
+                    }
+                    else
+                        ((TemporarySummon*)m_caster)->UnSummon();
+
+                    return;
+                }
                 case 45713:
                 {
                     uint32 transformTo = m_caster->GetDisplayId();
