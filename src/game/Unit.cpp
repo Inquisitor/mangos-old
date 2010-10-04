@@ -7489,7 +7489,6 @@ bool Unit::IsDamageToThreatSpell(SpellEntry const * spellInfo) const
     uint64 flags = spellInfo->SpellFamilyFlags;
 
     if ((family == 5 && flags == 256) ||                    //Searing Pain
-        (family == 6 && flags == 8192) ||                   //Mind Blast
         (family == 11 && flags == 1048576))                 //Earth Shock
         return true;
 
