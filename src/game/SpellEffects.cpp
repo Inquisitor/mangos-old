@@ -592,7 +592,7 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                     if (aura)
                     {
                         int32 damagetick = aura->GetModifier()->m_amount;
-                        damage += damagetick * 4;
+                        damage += (damagetick * aura->GetAuraMaxTicks())*0.6f;    // 60% of overal periodic damage.
 
                         // Glyph of Conflagrate
                         if (!m_caster->HasAura(56235))

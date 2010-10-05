@@ -5159,7 +5159,7 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
                     {
                         // for caster applied auras only
                         if ((*i)->GetSpellProto()->SpellFamilyName != SPELLFAMILY_WARLOCK ||
-                            (*i)->GetCasterGUID()!=caster->GetGUID())
+                            (*i)->GetCasterGUID() != caster->GetGUID())
                             continue;
 
                         // Immolate
@@ -5177,16 +5177,13 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
                     // found Immolate or Shadowflame
                     if (aura)
                     {
-                        int32 damagetick = caster->SpellDamageBonusDone(GetTarget(), aura->GetSpellProto(), aura->GetModifier()->m_amount, DOT);
-                        m_modifier.m_amount += damagetick * 0.3f;
+                        int32 damagetick = aura->GetModifier()->m_amount;
+                        m_modifier.m_amount += (damagetick * aura->GetAuraMaxTicks())*0.4f*0.333f;    // 40% over 6 sec, every 2 sec.
 
-                        // Glyph of Conflagrate
-                        if (!caster->HasAura(56235))
-                            GetTarget()->RemoveAurasByCasterSpell(aura->GetId(), caster->GetGUID());
-
-                        return;
+                        break;
                     }
                 }
+                break;
             }
             case SPELLFAMILY_DRUID:
             {
