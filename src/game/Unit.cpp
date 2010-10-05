@@ -2999,22 +2999,6 @@ uint32 Unit::CalculateDamage (WeaponAttackType attType, bool normalized)
     return urand((uint32)min_damage, (uint32)max_damage);
 }
 
-float Unit::CalculateLevelPenalty(SpellEntry const* spellProto) const
-{
-    if(spellProto->spellLevel <= 0)
-        return 1.0f;
-
-    float LvlPenalty = 0.0f;
-
-    if(spellProto->spellLevel < 20)
-        LvlPenalty = 20.0f - spellProto->spellLevel * 3.75f;
-    float LvlFactor = (float(spellProto->spellLevel) + 6.0f) / float(getLevel());
-    if(LvlFactor > 1.0f)
-        LvlFactor = 1.0f;
-
-    return (100.0f - LvlPenalty) * LvlFactor / 100.0f;
-}
-
 void Unit::SendMeleeAttackStart(Unit* pVictim)
 {
     WorldPacket data( SMSG_ATTACKSTART, 8 + 8 );
@@ -6451,8 +6435,6 @@ int32 Unit::SpellBonusWithCoeffs(SpellEntry const *spellProto, int32 total, int3
 
     if (benefit)
     {
-        float LvlPenalty = CalculateLevelPenalty(spellProto);
-
         // Spellmod SpellDamage
         if(Player* modOwner = GetSpellModOwner())
         {
@@ -6461,7 +6443,7 @@ int32 Unit::SpellBonusWithCoeffs(SpellEntry const *spellProto, int32 total, int3
             coeff /= 100.0f;
         }
 
-        total += int32(benefit * coeff * LvlPenalty);
+        total += int32(benefit * coeff);
     }
 
     return total;
