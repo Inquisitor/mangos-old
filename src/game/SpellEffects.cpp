@@ -272,7 +272,7 @@ void Spell::EffectResurrectNew(SpellEffectIndex eff_idx)
 
 void Spell::EffectInstaKill(SpellEffectIndex /*eff_idx*/)
 {
-    if( !unitTarget || !unitTarget->isAlive() )
+    if (!unitTarget || !unitTarget->isAlive())
         return;
                                                                                // Videre Elixir  and  Divine Intervention
     if ((m_caster->GetTypeId() == TYPEID_PLAYER) && (m_caster == unitTarget) && m_spellInfo->Id != 14050 && m_spellInfo->Id != 19752)
@@ -306,12 +306,14 @@ void Spell::EffectInstaKill(SpellEffectIndex /*eff_idx*/)
             return;
     }
 
-    if(m_caster == unitTarget)                              // prevent interrupt message
+    if (m_caster == unitTarget)                             // prevent interrupt message
         finish();
 
+    WorldObject* caster = GetCastingObject();               // we need the original casting object
+
     WorldPacket data(SMSG_SPELLINSTAKILLLOG, (8+8+4));
-    data << uint64(m_caster->GetTypeId() != TYPEID_GAMEOBJECT ? m_caster->GetGUID() : 0); //Caster GUID
-    data << uint64(unitTarget->GetGUID());  //Victim GUID
+    data << (caster && caster->GetTypeId() != TYPEID_GAMEOBJECT ? m_caster->GetObjectGuid() : ObjectGuid()); // Caster GUID
+    data << unitTarget->GetObjectGuid();                    // Victim GUID
     data << uint32(m_spellInfo->Id);
     m_caster->SendMessageToSet(&data, true);
 
@@ -590,7 +592,7 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                     if (aura)
                     {
                         int32 damagetick = aura->GetModifier()->m_amount;
-                        damage += damagetick * 4;
+                        damage += (damagetick * aura->GetAuraMaxTicks())*0.6f;    // 60% of overal periodic damage.
 
                         // Glyph of Conflagrate
                         if (!m_caster->HasAura(56235))
@@ -1829,6 +1831,12 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     if (!m_CastItem)
                         return;
 
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    if (BattleGround* bg = ((Player*)m_caster)->GetBattleGround())
+                        bg->EventPlayerDroppedFlag((Player*)m_caster);
+
                     if (roll_chance_i(95))                  // Nitro Boosts - success
                         m_caster->CastSpell(m_caster, 54861, true, m_CastItem);
                     else                                    // Knocked Up   - backfire 5%
@@ -2215,6 +2223,11 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
                     return;
                 }
+                case 64385:                                 // Spinning (from Unusual Compass)
+                {
+                    m_caster->SetFacingTo(frand(0, M_PI_F*2), true);
+                    return;
+                }
                 case 67019:                                 // Flask of the North
                 {
                     if (m_caster->GetTypeId() != TYPEID_PLAYER)
@@ -2260,14 +2273,6 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 {
                     if (m_caster->GetTypeId() == TYPEID_PLAYER)
                         ((Player*)m_caster)->KilledMonsterCredit(25425, ObjectGuid());
-                    return;
-                }
-                case 64385:                                 // Unusual Compass
-                {
-                    m_caster->SetOrientation(float(urand(0,62832)) / 10000.0f);
-                    WorldPacket data;
-                    m_caster->BuildHeartBeatMsg(&data);
-                    m_caster->SendMessageToSet(&data,true);
                     return;
                 }
             }
@@ -4862,6 +4867,11 @@ void Spell::EffectDispel(SpellEffectIndex eff_idx)
                 if (positive == unitTarget->IsFriendlyTo(m_caster))
                     continue;
             }
+            // Unholy Blight prevents dispel of diseases from target
+            else if (holder->GetSpellProto()->Dispel == DISPEL_DISEASE)
+                if (unitTarget->HasAura(50536))
+                    continue;
+
             dispel_list.push_back(std::pair<SpellAuraHolder* ,uint32>(holder, holder->GetStackAmount()));
         }
     }
@@ -7098,6 +7108,38 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     // learn random explicit discovery recipe (if any)
                     if (uint32 discoveredSpell = GetExplicitDiscoverySpell(m_spellInfo->Id, (Player*)m_caster))
                         ((Player*)m_caster)->learnSpell(discoveredSpell, false);
+
+                    return;
+                }
+                // Lightwell
+                case 60123: 
+                {
+                   if (m_caster->GetTypeId() != TYPEID_UNIT)
+                       return;
+
+                    uint32 spellID;
+                    uint32 entry  = m_caster->GetEntry();
+
+                    switch(entry)
+                    {
+                        case 31897: spellID = 7001; break;   // Lightwell Renew    Rank 1
+                        case 31896: spellID = 27873; break;  // Lightwell Renew    Rank 2
+                        case 31895: spellID = 27874; break;  // Lightwell Renew    Rank 3
+                        case 31894: spellID = 28276; break;  // Lightwell Renew    Rank 4
+                        case 31893: spellID = 48084; break;  // Lightwell Renew    Rank 5
+                        case 31883: spellID = 48085; break;  // Lightwell Renew    Rank 6
+                        default:
+                            sLog.outError("Unknown Lightwell spell caster %u", m_caster->GetEntry());
+                            return;
+                    }
+                    Aura* chargesaura = m_caster->GetAura(59907, EFFECT_INDEX_0);
+                    if(chargesaura && chargesaura->GetHolder() && chargesaura->GetHolder()->GetAuraCharges() >= 1)
+                    {
+                        chargesaura->GetHolder()->SetAuraCharges(chargesaura->GetHolder()->GetAuraCharges() - 1);
+                        m_caster->CastSpell(unitTarget, spellID, false, NULL, NULL);
+                    }
+                    else
+                        ((TemporarySummon*)m_caster)->UnSummon();
 
                     return;
                 }
