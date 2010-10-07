@@ -1137,7 +1137,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                 // Glyph of Icy Veins
                 case 56374:
                 {
-                    pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_HASTE, true, false);
+                    pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_MELEE_HASTE, true, false);
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_HASTE_SPELLS, true, false);
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
                     return SPELL_AURA_PROC_OK;
@@ -1738,7 +1738,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
             {
                 // "refresh your Slice and Dice duration to its 5 combo point maximum"
                 // lookup Slice and Dice
-                AuraList const& sd = GetAurasByType(SPELL_AURA_MOD_HASTE);
+                AuraList const& sd = GetAurasByType(SPELL_AURA_MOD_MELEE_HASTE);
                 for(AuraList::const_iterator itr = sd.begin(); itr != sd.end(); ++itr)
                 {
                     SpellEntry const *spellProto = (*itr)->GetSpellProto();
