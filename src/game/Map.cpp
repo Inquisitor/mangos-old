@@ -3273,6 +3273,92 @@ void Map::ScriptsProcess()
 
                 break;
             }
+            case SCRIPT_COMMAND_ADD_QUEST_COUNT:
+            {
+                if(!source)
+                {
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT call for NULL object.");
+                    break;
+                }
+
+                if(source->GetTypeId() != TYPEID_PLAYER) 
+                {
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT call for non-player (QuestId: %u TypeId is %u), skipping.",step.script->add_quest_count.quest_id, uint32(source->GetTypeId()));
+                    break;
+                }
+                Player * user = static_cast<Player*>(source);
+
+                uint32 QuestID = step.script->add_quest_count.quest_id;
+                uint32 x = step.script->add_quest_count.quest_field;
+                uint32 increment = step.script->add_quest_count.inc_value;
+
+                if( increment < 1 ) // We havent anything to increment (it cant be either 0 nor minus value )
+                {
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT increment is lower than 0 for quest: %u",QuestID);
+                    break;
+                }
+
+                Quest const* pQuest = sObjectMgr.GetQuestTemplate(QuestID);
+                if (!pQuest)
+                {
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT Quest Template doesnt exist for quest: %u",QuestID);
+                    break;
+                }
+
+                uint16 log_slot = user->FindQuestSlot(pQuest->GetQuestId());
+                if (log_slot > MAX_QUEST_LOG_SIZE)
+                    break;
+
+                QuestStatusData& q_status = user->getQuestStatusMap()[QuestID];
+
+                if(q_status.m_creatureOrGOcount[x] + increment > pQuest->ReqCreatureOrGOCount[x]) // We shouldnt go above required count
+                    break;
+
+                uint32 oldCount = q_status.m_creatureOrGOcount[x];
+                q_status.m_creatureOrGOcount[x] = oldCount + increment;
+                if (q_status.uState != QUEST_NEW) 
+                    q_status.uState = QUEST_CHANGED;
+
+                user->SendQuestUpdateAddCreatureOrGo(pQuest, ObjectGuid(), x, oldCount, increment);
+                if (user->CanCompleteQuest(QuestID))
+                    user->CompleteQuest(QuestID);
+
+                break;
+            }
+            case SCRIPT_COMMAND_TEMP_SUMMON_OBJECT:
+            {
+                if(!source)
+                {
+                    sLog.outError("SCRIPT_COMMAND_TEMP_SUMMON_OBJECT call for NULL object.");
+                    break;
+                }
+
+                WorldObject * pSummoner = dynamic_cast<WorldObject*>(source);
+
+                float x = step.script->x;
+                float y = step.script->y;
+                float z = step.script->z;
+                float o = step.script->o;
+
+                if(!x && !y && !z)
+                    pSummoner->GetPosition(x,y,z);
+
+                if(GameObject * pGameObj = pSummoner->SummonGameObject(step.script->go_summon.go_entry, x,y,z, o, step.script->go_summon.despawn_delay))
+                    if (pSummoner->GetTypeId() == TYPEID_UNIT)
+                        ((Unit*)pSummoner)->AddGameObject(pGameObj);
+                break;
+            }
+            case SCRIPT_COMMAND_SET_ENTRY:
+            {
+                if(!target || target->GetTypeId() != TYPEID_UNIT)
+                {
+                    sLog.outError("SCRIPT_COMMAND_SET_ENTRY (script id %u) call for NULL target or non-creature type.", step.script->id);
+                    break;
+                }
+
+                Creature *pCreature = (Creature*)target;
+                pCreature->UpdateEntry(step.script->set_entry.entry, ALLIANCE, 0, step.script->set_entry.keep_stat ? true : false);
+            }
             case SCRIPT_COMMAND_SET_RUN:
             {
                 if (!source)
