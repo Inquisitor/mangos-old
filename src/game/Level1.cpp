@@ -2249,7 +2249,7 @@ bool ChatHandler::HandleSendSysMsgCommand(char* args)
     if(!ExtractPlayerTarget(&args,&rPlayer))
         return false;
 
-    char* msg_str = strtok(NULL, "");
+    char* msg_str = ExtractQuotedArg(&args);
     if(!msg_str)
         return false;
 
