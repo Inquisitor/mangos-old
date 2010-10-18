@@ -1658,22 +1658,25 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
             case ACHIEVEMENT_CRITERIA_TYPE_HONORABLE_KILL:
             case ACHIEVEMENT_CRITERIA_TYPE_GET_KILLING_BLOWS:
             {	
-                BattleGround* bg = GetPlayer()->GetBattleGround();
-                if (!bg || !miscvalue1 || GetPlayer()->GetMapId() != achievementCriteria->healing_done.mapid)
+                if (!miscvalue1)
+		    continue
+
+		if(achievementCriteria->healing_done.flag != 0 && GetPlayer()->GetMapId() != achievementCriteria->healing_done.mapid)
                     continue;
 
+                BattleGround* bg = GetPlayer()->GetBattleGround();
                 // some hardcoded requirements
                 switch(achievementCriteria->referredAchievement)
                 {
                     case 231:					// Wrecking Ball
                     {
-                        if(bg->GetPlayerScore(GetPlayer(),SCORE_DEATHS) != 0)
+                        if(!bg || bg->GetPlayerScore(GetPlayer(),SCORE_DEATHS) != 0)
                             continue;
                         break;
                     }
                     case 233:					// Bloodthirsty Berserker
                     {
-                        if(bg->GetTypeID(true) != BATTLEGROUND_EY)
+                        if(!bg || bg->GetTypeID(true) != BATTLEGROUND_EY)
                             continue;
                         if(!GetPlayer()->HasAura(23505))
                             continue;
@@ -2825,3 +2828,4 @@ void AchievementGlobalMgr::LoadRewardLocales()
     sLog.outString();
     sLog.outString( ">> Loaded %lu achievement reward locale strings", (unsigned long)m_achievementRewardLocales.size() );
 }
+
