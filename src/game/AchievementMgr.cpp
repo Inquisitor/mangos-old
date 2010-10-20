@@ -1659,7 +1659,7 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
             case ACHIEVEMENT_CRITERIA_TYPE_GET_KILLING_BLOWS:
             {	
                 if (!miscvalue1)
-                    continue
+                    continue;
 
                 if(achievementCriteria->healing_done.flag != 0 && GetPlayer()->GetMapId() != achievementCriteria->healing_done.mapid)
                     continue;
