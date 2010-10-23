@@ -1713,121 +1713,35 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
             case ACHIEVEMENT_CRITERIA_TYPE_BG_OBJECTIVE_CAPTURE:
             {
                 BattleGround* bg = GetPlayer()->GetBattleGround();
-                if (!miscvalue1 || !bg)
+                if (!miscvalue1 || !miscvalue2 || !bg)
+                    continue;
+
+                if(achievementCriteria->objective_capture.captureID != miscvalue2)
                     continue;
 
                 // some hardcoded requirements
-                switch(achievementCriteria->objective_capture.captureID)
+                switch(achievementCriteria->referredAchievement)
                 {
-                    case 42:							// WS, capture a flag
+                    case 204:					// WS, capture 3 flags without dying
                     {
-                        if(bg->GetTypeID(true) != BATTLEGROUND_WS)
-                            continue;
-
-                        if(miscvalue2 == 1)
-                            continue;
-
-                        switch(achievementCriteria->referredAchievement)
-                        {
-                            case 204:					// WS, capture 3 flags without dying
-                            {
-                                if(bg->GetPlayerScore(GetPlayer(),SCORE_DEATHS) != 0)
-                                    continue;
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    case 44:                           // WS, return a flag
-                    {
-                        if(bg->GetTypeID(true) != BATTLEGROUND_WS)
+                        if(bg->GetPlayerScore(GetPlayer(),SCORE_DEATHS) != 0)
                             continue;
                         break;
                     }
-                    case 183:							// EY, capture a flag
-                    {
-                        if(bg->GetTypeID(true) != BATTLEGROUND_EY)
-                            continue;
-
-                        switch(achievementCriteria->referredAchievement)
-                        {
-                            case 211:					// EY, capture flag while controling all 4 bases
-                            {
-                                if(!bg->IsAllNodesConrolledByTeam(GetPlayer()->GetTeam()))
-                                    continue;
-                                break;
-                            }
-                            case 216:					// EY, capture 3 flags without dying
-                            {
-                                if(bg->GetPlayerScore(GetPlayer(),SCORE_DEATHS) != 0)
-                                    continue;
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    case 122:                           // AB, assault a base
-                    {
-                        if(bg->GetTypeID(true) != BATTLEGROUND_AB)
-                            continue;
-                        
-                        if(miscvalue2 == 1)
-                            continue;
-
-                        break;
-                    }
-                    case 123:                           // AB, defend a base
-                    {
-                        if(bg->GetTypeID(true) != BATTLEGROUND_AB)
-                            continue;
-                        
-                        if(miscvalue2 == 0)
-                            continue;
-
-                        break;
-                    }
-                    case 61:							// AV, assault a tower
-                    {
-                        if(bg->GetTypeID(true) != BATTLEGROUND_AV)
-                            continue;
-                        
-                        if(miscvalue2 == 1)
-                            continue;
-
-                        break;
-                    }
-                    case 63:	                        // AV, take a graveyard
-                    {
-                        if(bg->GetTypeID(true) != BATTLEGROUND_AV)
-                            continue;
-                        
-                        if(miscvalue2 == 1)
-                            continue;
-
-                        break;
-                    }
-                    case 64:	                        // AV, defend a tower
-                    {
-                        if(bg->GetTypeID(true) != BATTLEGROUND_AV)
-                            continue;
-                        
-                        if(miscvalue2 == 0)
-                            continue;
-
-                        break;
-                    }
-                    case 65:	                        // AV, defend a graveyard
-                    {
-                        if(bg->GetTypeID(true) != BATTLEGROUND_AV)
-                            continue;
-                        
-                        if(miscvalue2 == 0)
-                            continue;
-
-                        break;
-                    }
-
+	                case 211:					// EY, capture flag while controling all 4 bases
+	                {
+	                    if(!bg->IsAllNodesConrolledByTeam(GetPlayer()->GetTeam()))
+	                        continue;
+	                    break;
+	                }
+	                case 216:					// EY, capture 3 flags without dying
+	                {
+	                    if(bg->GetPlayerScore(GetPlayer(),SCORE_DEATHS) != 0)
+	                        continue;
+	                    break;
+	                }
                 }
+
                 SetCriteriaProgress(achievementCriteria, achievement, miscvalue1, PROGRESS_ACCUMULATE);
                 break;
             }
