@@ -98,6 +98,8 @@ bool AchievementCriteriaRequirement::IsValid(AchievementCriteriaEntry const* cri
         case ACHIEVEMENT_CRITERIA_TYPE_CAST_SPELL2:
         case ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET:
         case ACHIEVEMENT_CRITERIA_TYPE_BE_SPELL_TARGET2:
+        case ACHIEVEMENT_CRITERIA_TYPE_HONORABLE_KILL:
+        case ACHIEVEMENT_CRITERIA_TYPE_GET_KILLING_BLOWS:
             break;
         default:
             sLog.outErrorDb( "Table `achievement_criteria_requirement` have data for not supported criteria type (Entry: %u Type: %u), ignore.", criteria->ID, criteria->requiredType);
@@ -1661,8 +1663,29 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 if (!miscvalue1)
                     continue;
 
-                if(achievementCriteria->healing_done.flag != 0 && GetPlayer()->GetMapId() != achievementCriteria->healing_done.mapid)
-                    continue;
+                // those requirements couldn't be found in the dbc
+                AchievementCriteriaRequirementSet const* data = sAchievementMgr.GetCriteriaRequirementSet(achievementCriteria);
+
+                if(achievementCriteria->healing_done.flag != 0)
+                {
+                    if(GetPlayer()->GetMapId() != achievementCriteria->healing_done.mapid)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        if(data && !data->Meets(GetPlayer(),unit))
+                            continue;
+                    }
+                }
+                else
+                {
+                    if(!data)
+                        continue;
+
+                    if(!data->Meets(GetPlayer(),unit))
+                        continue;
+                }
 
                 BattleGround* bg = GetPlayer()->GetBattleGround();
                 // some hardcoded requirements
@@ -1673,19 +1696,6 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                         if(!bg || bg->GetPlayerScore(GetPlayer(),SCORE_DEATHS) != 0)
                             continue;
                         break;
-                    }
-                    case 233:					// Bloodthirsty Berserker
-                    {
-                        if(!bg || bg->GetTypeID(true) != BATTLEGROUND_EY)
-                            continue;
-                        if(!GetPlayer()->HasAura(23505))
-                            continue;
-                        break;
-                    }
-                    case 1261:                                  // G.N.E.R.D. Rage
-                    {
-                       if(!GetPlayer()->HasAura(48890))
-                           continue;
                     }
                 }
 
@@ -1726,7 +1736,7 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                                 break;
                             }
                         }
-			break;
+                        break;
                     }
                     case 44:                           // WS, return a flag
                     {
