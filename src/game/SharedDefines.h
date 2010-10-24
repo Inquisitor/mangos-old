@@ -1402,7 +1402,7 @@ enum TextEmotes
     TEXTEMOTE_ENEMY                = 376,
     TEXTEMOTE_EYEBROW              = 377,
     TEXTEMOTE_TOAST                = 378,
-	TEXTEMOTE_TRAIN                = 379
+    TEXTEMOTE_TRAIN                = 379
 };
 
 enum Emote
