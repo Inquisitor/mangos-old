@@ -266,7 +266,7 @@ bool Item::Create( uint32 guidlow, uint32 itemid, Player const* owner)
     for(int i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
         SetSpellCharges(i,itemProto->Spells[i].SpellCharges);
 
-    SetUInt32Value(ITEM_FIELD_FLAGS, itemProto->Flags);
+    //SetUInt32Value(ITEM_FIELD_FLAGS, itemProto->Flags);
     SetUInt32Value(ITEM_FIELD_DURATION, itemProto->Duration);
 
     return true;
