@@ -991,6 +991,13 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     }
                     break;
                 }
+                // Necrotic Touch www.wowhead.com/item=50692
+                case 71875: // Item - Icecrown 25 Normal Slow Melee Weapon Proc
+                case 71877: // Item - Icecrown 25 Heroic Slow Melee Weapon Proc
+                    {
+                        basepoints[0] = damage * triggerAmount / 100;
+                        triggered_spell_id = 71879;
+                    }
             }
             break;
         }
