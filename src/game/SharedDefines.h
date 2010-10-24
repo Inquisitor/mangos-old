@@ -1994,7 +1994,8 @@ enum HolidayIds
     HOLIDAY_PILGRIMS_BOUNTY          = 404,
     HOLIDAY_WOTLK_LAUNCH             = 406,
     HOLIDAY_DAY_OF_DEAD              = 409,
-    HOLIDAY_CALL_TO_ARMS_ISLE_OF_C   = 420
+    HOLIDAY_CALL_TO_ARMS_ISLE_OF_C   = 420,
+    HOLIDAY_KALUAK_FISHING_DERBY     = 424
 };
 
 // values based at QuestSort.dbc
