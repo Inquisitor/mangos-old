@@ -2979,6 +2979,16 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
                     if( GetTypeId() != TYPEID_PLAYER || pVictim->GetEntry() != 19457)
                         return SPELL_AURA_PROC_FAILED;
                 }
+                //Blood Reserve
+                case 64568:
+                {
+                     if (!HasAuraState(AURA_STATE_HEALTHLESS_35_PERCENT))
+                          return SPELL_AURA_PROC_FAILED;
+                     RemoveAurasDueToSpell(64568);
+                     basepoints[0] =triggeredByAura->GetStackAmount()*CalculateSpellDamage(this, auraSpellInfo, EFFECT_INDEX_0);
+                     trigger_spell_id=64569; //Blood Reserve (Heal)
+                     break;
+                }
             }
             break;
         case SPELLFAMILY_MAGE:
