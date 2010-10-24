@@ -92,7 +92,7 @@ enum BG_AB_ObjectType
 
 enum BG_AB_Timers
 {
-    BG_AB_FLAG_CAPTURING_TIME           = 60000,
+    BG_AB_FLAG_CAPTURING_TIME           = 63000,
 };
 
 enum BG_AB_Score
