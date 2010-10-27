@@ -1901,23 +1901,23 @@ void World::ProcessCliCommands()
         DEBUG_LOG("CLI command under processing...");
         zprint = command->m_print;
         callbackArg = command->m_callbackArg;
-        if (command->guid)
+        if (command->m_guid)
         {
             char outStr[64];
-            snprintf( (char*)outStr, 64, "%u|BEGIN\r\n", command->guid);
+            snprintf( (char*)outStr, 64, "%u|BEGIN\r\n", command->m_guid);
             zprint(callbackArg,outStr);
         }
 
-        CliHandler handler(command->m_cliAccountId, command->m_cliAccessLevel, callbackArg, zprint);
+        CliHandler handler(command->m_guid, command->m_cliAccountId, command->m_cliAccessLevel, callbackArg, zprint);
         handler.ParseCommands(command->m_command);
 
         if(command->m_commandFinished)
             command->m_commandFinished(callbackArg, !handler.HasSentErrorMessage());
 
-        if (command->guid)
+        if (command->m_guid)
         {
             char outStr[64];
-            snprintf( (char*)outStr, 64, "%u|END\r\n", command->guid);
+            snprintf( (char*)outStr, 64, "%u|END\r\n", command->m_guid);
             zprint(callbackArg,outStr);
         }
 
