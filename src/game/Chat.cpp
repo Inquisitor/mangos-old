@@ -3333,19 +3333,19 @@ bool CliHandler::isAvailable(ChatCommand const& cmd) const
 
 void CliHandler::SendSysMessage(const char *str)
 {
-    if (guid)
+    if (m_guid)
     {
         std::string out = str;
         char guidStr[64];
 
-        snprintf( (char*)guidStr, 64, "\r\n%u|", guid);
+        snprintf( (char*)guidStr, 64, "\r\n%u|", m_guid);
         StrReplaceStr(out, "\r\n", guidStr);
 
-        snprintf( (char*)guidStr, 64, "\n\r%u|", guid);
+        snprintf( (char*)guidStr, 64, "\n\r%u|", m_guid);
         StrReplaceStr(out, "\n\r", guidStr);
 
         char resultMsg[2048];
-        snprintf( (char*)resultMsg, 2048, "%u|%s\r\n", guid, out.c_str());
+        snprintf( (char*)resultMsg, 2048, "%u|%s\r\n", m_guid, out.c_str());
         m_print(m_callbackArg, resultMsg);
     }
     else

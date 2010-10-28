@@ -681,8 +681,8 @@ class CliHandler : public ChatHandler
 {
     public:
         typedef void Print(void*, char const*);
-        explicit CliHandler(uint32 accountId, AccountTypes accessLevel, void* callbackArg, Print* zprint)
-            : m_accountId(accountId), m_loginAccessLevel(accessLevel), m_callbackArg(callbackArg), m_print(zprint) {}
+        explicit CliHandler(uint32 guid, uint32 accountId, AccountTypes accessLevel, void* callbackArg, Print* zprint)
+            : m_accountId(accountId), m_loginAccessLevel(accessLevel), m_callbackArg(callbackArg), m_print(zprint), m_guid(guid) {}
 
         // overwrite functions
         const char *GetMangosString(int32 entry) const;
@@ -700,7 +700,7 @@ class CliHandler : public ChatHandler
         AccountTypes m_loginAccessLevel;
         void* m_callbackArg;
         Print* m_print;
-        uint32 guid;
+        uint32 m_guid;
 };
 
 

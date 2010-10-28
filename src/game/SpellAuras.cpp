@@ -291,7 +291,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleModSpellHealingPercentFromAttackPower,     //238 SPELL_AURA_MOD_SPELL_HEALING_OF_ATTACK_POWER implemented in Unit::SpellBaseHealingBonusDone
     &Aura::HandleAuraModScale,                              //239 SPELL_AURA_MOD_SCALE_2 only in Noggenfogger Elixir (16595) before 2.3.0 aura 61
     &Aura::HandleAuraModExpertise,                          //240 SPELL_AURA_MOD_EXPERTISE
-    &Aura::HandleForceMoveForward,                          //241 Forces the player to move forward
+    &Aura::HandleForceMoveForward,                          //241 Forces the caster to move forward
     &Aura::HandleUnused,                                    //242 SPELL_AURA_MOD_SPELL_DAMAGE_FROM_HEALING (only 2 test spels in 3.2.2a)
     &Aura::HandleNULL,                                      //243 faction reaction override spells
     &Aura::HandleComprehendLanguage,                        //244 SPELL_AURA_COMPREHEND_LANGUAGE
@@ -3382,6 +3382,49 @@ void Aura::HandleAuraTransform(bool apply, bool Real)
                 }
                 // Murloc costume
                 case 42365: target->SetDisplayId(21723); break;
+                //Dread Corsair costume
+                case 51926:
+                case 50517:
+                {
+                    switch(target->getGender())
+                    {
+                        case GENDER_MALE:
+                        {
+                            switch(target->getRace())
+                            {
+                                case RACE_UNDEAD_PLAYER: target->SetDisplayId(25042); break;
+                                case RACE_TROLL: target->SetDisplayId(25041); break;
+                                case RACE_TAUREN: target->SetDisplayId(25040); break;
+                                case RACE_ORC: target->SetDisplayId(25039); break;
+                                case RACE_NIGHTELF: target->SetDisplayId(25038); break;
+                                case RACE_HUMAN: target->SetDisplayId(25037); break;
+                                case RACE_GNOME: target->SetDisplayId(25035); break;
+                                case RACE_DWARF: target->SetDisplayId(25034); break;
+                                case RACE_DRAENEI: target->SetDisplayId(25033); break;
+                                case RACE_BLOODELF: target->SetDisplayId(25032); break;
+                            }
+                            break;
+                        }
+                        case GENDER_FEMALE:
+                        {
+                            switch(target->getRace())
+                            {
+                                case RACE_UNDEAD_PLAYER: target->SetDisplayId(25053); break;
+                                case RACE_TROLL: target->SetDisplayId(25052); break;
+                                case RACE_TAUREN: target->SetDisplayId(25051); break;
+                                case RACE_ORC: target->SetDisplayId(25050); break;
+                                case RACE_NIGHTELF: target->SetDisplayId(25049); break;
+                                case RACE_HUMAN: target->SetDisplayId(25048); break;
+                                case RACE_GNOME: target->SetDisplayId(25046); break;
+                                case RACE_DWARF: target->SetDisplayId(25045); break;
+                                case RACE_DRAENEI: target->SetDisplayId(25044); break;
+                                case RACE_BLOODELF: target->SetDisplayId(25043); break;
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
                 // Honor the Dead
                 case 65386:
                 case 65495:
@@ -6618,9 +6661,10 @@ void Aura::HandleModRatingFromStat(bool apply, bool Real)
 
 void Aura::HandleForceMoveForward(bool apply, bool Real)
 {
-    if(!Real || GetTarget()->GetTypeId() != TYPEID_PLAYER)
+    if (!Real)
         return;
-    if(apply)
+
+    if (apply)
         GetTarget()->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FORCE_MOVE);
     else
         GetTarget()->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FORCE_MOVE);
