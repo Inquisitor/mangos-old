@@ -2314,6 +2314,12 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         ((Player*)m_caster)->KilledMonsterCredit(25425, ObjectGuid());
                     return;
                 }
+                case 70769: //Item - Paladin T10 Retribution 2P Bonus
+                {
+                     if (m_caster->GetTypeId() == TYPEID_PLAYER)
+                        ((Player*)m_caster)->RemoveSpellCooldown(53385, true); //Divine Storm
+                    return;
+                }
             }
             break;
         }
