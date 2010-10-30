@@ -2198,6 +2198,19 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     case 75614:                             // Celestial Steed
                         Spell::SelectMountByAreaAndSkill(target, 75619, 75620, 75617, 75618, 76153);
                         return;
+                    case 71563:                             //Deadly Precision Item 50259 - Nevermelting Ice Crystal  
+                        {
+                            if (Unit* caster = GetCaster())
+                            {
+                                caster->CastSpell(caster, 71564, true); //Deadly Precision
+                                if (Aura* A=caster->GetAura(71564,EFFECT_INDEX_0))
+                                {
+                                    SpellAuraHolder* H=A->GetHolder();
+                                    H->SetStackAmount(H->GetSpellProto()->StackAmount);
+                                }
+                            }
+                            return;
+                        }
                 }
                 break;
             }
