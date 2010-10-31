@@ -3328,6 +3328,29 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
                 trigger_spell_id = 54843;
                 target = pVictim;
             }
+            //Item - Coliseum 25 Heroic Caster Trinket /Item - Coliseum 25 Normal Caster Trinket
+            if (auraSpellInfo->Id == 67712 || auraSpellInfo->Id == 67758 )
+            {
+                if(!pVictim || !pVictim->isAlive())
+                    return SPELL_AURA_PROC_FAILED;
+                bool normal=auraSpellInfo->Id == 67712;
+                int32 stack_spell=normal ? 67713 : 67759; //Mote of Flame / Shard of Flame
+                
+                // counting
+                Aura * dummy = GetDummyAura(stack_spell);
+                // release at 3 aura in stack (cont contain in basepoint of trigger aura)
+                if(dummy && (dummy->GetStackAmount() +1) >= (uint32)triggerAmount)
+                {
+                    RemoveAurasDueToSpell(stack_spell);
+                    trigger_spell_id =normal ? 67714 : 67760 ; // Normal/Heroic Pillar of Flame
+                    target = pVictim;
+                }
+                else 
+                { 
+                    trigger_spell_id=stack_spell;// stacking
+                    target =this;
+                }
+            }
             break;
         }
         case SPELLFAMILY_SHAMAN:
