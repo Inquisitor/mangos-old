@@ -1005,8 +1005,81 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                         target = this;
                         triggered_spell_id = 59913;// Swift Hand of Justice
                     }
-            }
-            break;
+                 //======================================================
+                //                Deathbringer's Will
+                //71484 Strength of the Taunka  +600 Strength /71561 +700 Strength,
+                //71491 Aim of the Iron Dwarves () +600 /71559  +700 Crit
+                //71492 Speed of the Vrykul () +600 Haste / 71560  +700 Haste
+                //71486 Power of the Taunka () +1200 Attack Power/ 71558  +1400 Attack Power
+                //71485 Agility of the Vrykul () +600 Agility /71556  +700 Agility,
+
+                case 71519:
+                case 71562:
+                    {
+                        if(GetTypeId() != TYPEID_PLAYER)
+                            return SPELL_AURA_PROC_FAILED;
+
+                        if (((Player*)this)->HasSpellCooldown(dummySpell->Id) )
+                            return SPELL_AURA_PROC_FAILED;
+
+                        uint32 static RandomSpell[][4][3]=
+                        {
+                            {   //Normal version
+                                {71484,71492,71491},//PALADIN,WARRIOR,DEATH KNIGHT
+                                {71484,71492,71485},//DRUID
+                                {71485,71492,71486},//ROGUE ,SHAMAN
+                                {71485,71491,71486} //HUNTER
+                            }
+                            ,
+                            {   //Heroic version
+                                {71561,71559,71560},//PALADIN,WARRIOR,DEATH KNIGHT
+                                {71556,71560,71561},//DRUID
+                                {71560,71556,71558},//ROGUE ,SHAMAN
+                                {71556,71559,71558} //HUNTER
+                            }
+                        };
+                        // Select class defined buff
+                        uint32 temp_spell_table;
+                        switch (getClass())
+                        {
+                        case CLASS_PALADIN:
+                        case CLASS_WARRIOR:
+                        case CLASS_DEATH_KNIGHT:
+                            {
+                                temp_spell_table=0;
+                                break;
+                            }
+                        case CLASS_DRUID:
+                            {
+                                temp_spell_table=1;
+                                break;
+                            }
+                        case CLASS_ROGUE:
+                        case CLASS_SHAMAN:
+                            {
+                                temp_spell_table=2;
+                                break;
+                            }
+                        case CLASS_HUNTER:
+                            {
+                                temp_spell_table=3;
+                                break;
+                            }
+
+                        default:
+                            return SPELL_AURA_PROC_FAILED;
+                        }
+                        uint32 heroic=(dummySpell->Id==71519? 0:1);
+                        triggered_spell_id = RandomSpell[heroic][temp_spell_table][irand(0,2) ];
+                        target = this;
+                        ((Player*)this)->AddSpellCooldown(dummySpell->Id,0,time(NULL)+cooldown);
+                        break;
+                    }
+
+
+        }
+
+        break;
         }
         case SPELLFAMILY_MAGE:
         {
@@ -2794,6 +2867,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
         }
         default:
             break;
+            
     }
 
     // processed charge only counting case
