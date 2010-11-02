@@ -2724,6 +2724,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
             {
                 // TODO: need more info (cooldowns/PPM)
                 triggered_spell_id = 61607;
+                target = this;
                 break;
             }
             // Unholy Blight
