@@ -997,6 +997,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     {
                         basepoints[0] = damage * triggerAmount / 100;
                         triggered_spell_id = 71879;
+                        break;
                     }
                 //  Swift Hand of Justice http://www.wowhead.com/item=42991
                 case 59906:
@@ -1004,6 +1005,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                         basepoints[0] = GetMaxHealth() * triggerAmount / 100;
                         target = this;
                         triggered_spell_id = 59913;// Swift Hand of Justice
+                        break;
                     }
                  //======================================================
                 //                Deathbringer's Will
