@@ -1712,6 +1712,14 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     triggered_spell_id = 54820;
                     break;
                 }
+                // Item - Druid T10 Balance 4P Bonus
+                case 70723:
+                {
+                    basepoints[0] = int32(triggerAmount * damage / 100);
+                    basepoints[0] = int32(basepoints[0] / 2);
+                    triggered_spell_id = 71023;
+                    break;
+                }
                 // King of the Jungle (Bear and Cat)
                 case 48492: // Rank  1
                 case 48494: // Rank  2
