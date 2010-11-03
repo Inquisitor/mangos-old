@@ -3668,6 +3668,21 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
             // 5 rank -> 100% 4 rank -> 80% and etc from full rate
             if(!roll_chance_i(20*rank))
                 return SPELL_AURA_PROC_FAILED;
+            // Item - Shaman T10 Enhancement 4P Bonus
+            if (triggeredByAura)
+            {
+                Unit* mw_caster = triggeredByAura->GetCaster();
+                if (mw_caster && mw_caster->HasAura(70832) && mw_caster->HasAura(53817))
+                {
+                    if (mw_caster->GetAura(53817, EFFECT_INDEX_0)->GetStackAmount() == 4) // state before 5 charges will reached
+                    {
+                        if(roll_chance_i(mw_caster->GetDummyAura(70832)->GetModifier()->m_amount))
+                        {
+                            mw_caster->CastSpell(mw_caster, 70831, true);
+                        }
+                    }
+                }
+            }
             break;
         }
         // Brain Freeze
