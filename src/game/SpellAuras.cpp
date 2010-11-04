@@ -6999,6 +6999,16 @@ void Aura::PeriodicTick()
                         target->CastSpell(target, 74795, true, NULL, NULL, GetCasterGUID());
                         break;
                     };
+                    case 31803: // Holy Vengeance should not tick if paladin haven't Seal of Vengeance up
+                    case 53742: // Blood Corruption should not tick if paladin haven't Seal of Corruption up
+                    {
+                        if (!pCaster->HasAura((GetId()==53742) ? 53736 : 31801))
+                        {
+                            target->RemoveAurasDueToSpell(GetId());
+                            return;
+                        }
+                        break;
+                    }
                     default:
                         break;
                 }
