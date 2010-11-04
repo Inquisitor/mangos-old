@@ -1861,6 +1861,9 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
      // Improved Mind Blast debuff stacks with everything
      if (spellInfo_1->Id == 48301 || spellInfo_2->Id == 48301)
          return false;
+     // Righteous Vengeance stack with all
+     if (spellInfo_1->Id == 61840 || spellInfo_2->Id == 61840)
+         return false;
 
      // Ardent Defender cooldown debuff stacks with everything
     if (spellInfo_1->Id == 66233 || spellInfo_2->Id == 66233)
@@ -2076,6 +2079,9 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
 
                 // Metamorphosis, diff effects
                 if (spellInfo_1->SpellIconID == 3314 && spellInfo_2->SpellIconID == 3314)
+                    return false;
+                // Shadowflame fix
+                if (spellInfo_1->SpellIconID == 3317 || spellInfo_2->SpellIconID == 3317)
                     return false;
             }
             // Detect Invisibility and Mana Shield (multi-family check)
