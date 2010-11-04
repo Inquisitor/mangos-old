@@ -629,6 +629,29 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
     SpellEntry const *spellproto = sSpellStore.LookupEntry(spellId);
     if (!spellproto) return false;
 
+    switch(spellId)
+    {
+        case 37675:                                         // Chaos Blast
+        case 56266:                                         // Vortex
+            return false;
+        case 36032:                                         // Arcane Blast
+        case 47540:                                         // Penance start dummy aura - Rank 1
+        case 53005:                                         // Penance start dummy aura - Rank 2
+        case 53006:                                         // Penance start dummy aura - Rank 3
+        case 53007:                                         // Penance start dummy aura - Rank 4
+        case 47757:                                         // Penance heal effect trigger - Rank 1
+        case 52986:                                         // Penance heal effect trigger - Rank 2
+        case 52987:                                         // Penance heal effect trigger - Rank 3
+        case 52988:                                         // Penance heal effect trigger - Rank 4
+        case 642:                                           // Divine Shield
+        case 64843:                                         // Divine Hymn
+        case 64844:                                         // Divine Hymn aura
+        case 64901:                                         // Hymn of Hope
+        case 64904:                                         // Hymn of Hope aura
+        case 552:                                           // Abolish Disease
+        case 59286:                                         // Opening
+            return true;
+    }
     switch(spellproto->Effect[effIndex])
     {
         case SPELL_EFFECT_DUMMY:
