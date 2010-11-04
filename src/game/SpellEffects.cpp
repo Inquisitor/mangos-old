@@ -2376,6 +2376,12 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
                     return;
                 }
+                case 44450:                                 // Burnout -- mana consume
+                {
+                    if (unitTarget)
+                      unitTarget->ModifyPower(POWER_MANA, -(int32)this->m_currentBasePoints[eff_idx]);
+                    return;
+                }
             }
 
             // Conjure Mana Gem
