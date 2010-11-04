@@ -498,6 +498,15 @@ uint32 GameEventMgr::Update()                               // return the next e
 
 void GameEventMgr::UnApplyEvent(uint16 event_id)
 {
+    // check event_id validity
+    int32 internal_event_id = mGameEvent.size() + event_id - 1;
+
+    if (internal_event_id < 0 || (size_t)internal_event_id >= mGameEventCreatureGuids.size())
+    {
+        sLog.outError("GameEventMgr::UnApplyEvent: invalid event ID: %u", event_id);
+        return;
+    }
+
     sLog.outString("GameEvent %u \"%s\" removed.", event_id, mGameEvent[event_id].description.c_str());
     // un-spawn positive event tagged objects
     GameEventUnspawn(event_id);
@@ -513,6 +522,15 @@ void GameEventMgr::UnApplyEvent(uint16 event_id)
 
 void GameEventMgr::ApplyNewEvent(uint16 event_id)
 {
+    // check event_id validity
+    int32 internal_event_id = mGameEvent.size() + event_id - 1;
+
+    if (internal_event_id < 0 || (size_t)internal_event_id >= mGameEventCreatureGuids.size())
+    {
+        sLog.outError("GameEventMgr::ApplyNewEvent: invalid event ID: %u", event_id);
+        return;
+    }
+
     if (sWorld.getConfig(CONFIG_BOOL_EVENT_ANNOUNCE))
         sWorld.SendWorldText(LANG_EVENTMESSAGE, mGameEvent[event_id].description.c_str());
 
