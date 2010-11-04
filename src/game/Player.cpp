@@ -17323,6 +17323,30 @@ void Player::_SaveGlyphs()
     }
 }
 
+bool Player::CheckItemSaveQueue()
+{
+    bool queueOk = true;
+    for(size_t i = 0; i < m_itemUpdateQueue.size(); ++i)
+    {
+        Item *item = m_itemUpdateQueue[i];
+        if(!item || item->GetState() == ITEM_REMOVED) continue;
+        Item *test = GetItemByPos( item->GetBagSlot(), item->GetSlot());
+
+        if (test == NULL)
+        {
+            sLog.outError("Player(GUID: %u Name: %s)::_SaveInventory - the bag(%d) and slot(%d) values for the item with guid %d are incorrect, the player doesn't have an item at that position!", GetGUIDLow(), GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow());
+            queueOk = false;
+        }
+        else if (test != item)
+        {
+            sLog.outError("Player(GUID: %u Name: %s)::_SaveInventory - the bag(%d) and slot(%d) values for the item with guid %d are incorrect, the item with guid %d is there instead!", GetGUIDLow(), GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow(), test->GetGUIDLow());
+            queueOk = false;
+        }
+    }
+    return queueOk;
+
+}
+
 void Player::_SaveInventory()
 {
     // force items in buyback slots to new state
@@ -17346,26 +17370,8 @@ void Player::_SaveInventory()
     if (m_itemUpdateQueue.empty()) return;
 
     // do not save if the update queue is corrupt
-    bool error = false;
-    for(size_t i = 0; i < m_itemUpdateQueue.size(); ++i)
-    {
-        Item *item = m_itemUpdateQueue[i];
-        if(!item || item->GetState() == ITEM_REMOVED) continue;
-        Item *test = GetItemByPos( item->GetBagSlot(), item->GetSlot());
 
-        if (test == NULL)
-        {
-            sLog.outError("Player(GUID: %u Name: %s)::_SaveInventory - the bag(%d) and slot(%d) values for the item with guid %d are incorrect, the player doesn't have an item at that position!", GetGUIDLow(), GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow());
-            error = true;
-        }
-        else if (test != item)
-        {
-            sLog.outError("Player(GUID: %u Name: %s)::_SaveInventory - the bag(%d) and slot(%d) values for the item with guid %d are incorrect, the item with guid %d is there instead!", GetGUIDLow(), GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow(), test->GetGUIDLow());
-            error = true;
-        }
-    }
-
-    if (error)
+    if (!CheckItemSaveQueue())
     {
         sLog.outError("Player::_SaveInventory - one or more errors occurred save aborted!");
         ChatHandler(this).SendSysMessage(LANG_ITEM_SAVE_FAILED);

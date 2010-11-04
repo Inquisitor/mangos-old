@@ -748,6 +748,10 @@ bool Item::CanBeTraded(bool mail) const
             return false;
         if (owner->GetLootGUID()==GetGUID())
             return false;
+        // do not trade item if the update queue is corrupt
+        if (!owner->CheckItemSaveQueue())
+            return false;
+
     }
 
     if (IsBoundByEnchant())

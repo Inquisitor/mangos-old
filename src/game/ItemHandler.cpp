@@ -56,6 +56,13 @@ void WorldSession::HandleSplitItemOpcode( WorldPacket & recv_data )
         return;
     }
 
+    // do not allow split stack if item queue is corrupt
+    if (!_player->CheckItemSaveQueue())
+    {
+        _player->SendEquipError( EQUIP_ERR_ITEM_DOESNT_GO_TO_SLOT, NULL, NULL );
+        return;
+    }
+
     _player->SplitItem( src, dst, count );
 }
 
@@ -535,6 +542,13 @@ void WorldSession::HandleSellItemOpcode( WorldPacket & recv_data )
             return;
         }
 
+        // prevent sell if item save queue is corrupt
+        if (!_player->CheckItemSaveQueue())
+        {
+            _player->SendSellError( SELL_ERR_CANT_SELL_ITEM, pCreature, itemguid, 0);
+            return;
+        }
+
         // special case at auto sell (sell all)
         if(count == 0)
         {
@@ -683,6 +697,10 @@ void WorldSession::HandleBuyItemInSlotOpcode( WorldPacket & recv_data )
     // bag not found, cheating?
     if (bag == NULL_BAG)
         return;
+    // prevent cheating
+    if (!GetPlayer()->CheckItemSaveQueue())
+        return;
+
 
     GetPlayer()->BuyItemFromVendorSlot(vendorguid, slot, item, count, bag, bagslot);
 }
