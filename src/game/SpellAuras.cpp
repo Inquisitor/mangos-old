@@ -6859,6 +6859,13 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
                         DoneActualBenefit = caster->SpellBaseHealingBonusDone(GetSpellSchoolMask(spellProto)) * 0.75f;
                     }
                     break;
+                case SPELLFAMILY_GENERIC:
+                    // Stoicism
+                    if (spellProto->Id==70845) 
+                    {
+                        DoneActualBenefit = caster->GetMaxHealth()*0.20f;
+                    }
+                    break;
                 default:
                     break;
             }

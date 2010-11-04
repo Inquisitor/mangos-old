@@ -3025,6 +3025,9 @@ void Spell::cast(bool skipCheck)
             if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000020000000000)) && m_spellInfo->Category==1209)
                 if (m_caster->HasAura(58375))               // Glyph of Blocking
                     AddTriggeredSpell(58374);               // Glyph of Blocking
+            //Warrior T10 Protection 4P Bonus trigger from Bloodrage.
+           if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x00000100) && m_caster->HasAura(70844))
+               AddTriggeredSpell(70845); //Stoicism
             break;
         }
         case SPELLFAMILY_PRIEST:
