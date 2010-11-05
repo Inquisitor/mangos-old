@@ -2451,7 +2451,9 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 if(rageLeft < lastrage)
                     rageLeft = lastrage;
 
-                m_caster->RemoveAura(52437, EFFECT_INDEX_0); // Remove Sudden Death after calculations
+                Aura *s_aura = m_caster->GetAura(52437, EFFECT_INDEX_0);// Drop charge Sudden Death after calculations
+                if (s_aura && s_aura->GetHolder()->DropAuraCharge())
+                    m_caster->RemoveAura(52437, EFFECT_INDEX_0);
 
                 m_caster->SetPower(POWER_RAGE,rageLeft);
                 return;

@@ -2836,7 +2836,7 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
     prepareDataForTriggerSystem();
 
     // calculate cast time (calculated after first CheckCast check to prevent charge counting for first CheckCast fail)
-    m_casttime = GetSpellCastTime(m_spellInfo, this);
+    m_casttime = GetSpellCastTime(m_spellInfo, this,false);
 
     // set timer base at cast time
     ReSetTimer();
@@ -3028,6 +3028,18 @@ void Spell::cast(bool skipCheck)
             //Warrior T10 Protection 4P Bonus trigger from Bloodrage.
            if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x00000100) && m_caster->HasAura(70844))
                AddTriggeredSpell(70845); //Stoicism
+            // Item - Warrior T10 Melee 4P Bonus
+           if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0300000000000000)) //Slam! & Sudden Death
+           {
+               Aura* A=m_caster->GetAura(70847,EFFECT_INDEX_0);
+               if (A && roll_chance_i(A->GetModifier()->m_amount) )
+               {
+                   AddPrecastSpell(70849); //Extra Charge!
+                   // Slam! trigger Slam GCD Reduced . Sudden Death trigger Execute GCD Reduced
+                   int32 gcd_spell=m_spellInfo->Id==46916  ? 71072 : 71069 ;
+                   AddPrecastSpell(gcd_spell);
+               }
+           }
             break;
         }
         case SPELLFAMILY_PRIEST:

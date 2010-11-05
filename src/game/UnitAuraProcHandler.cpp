@@ -4109,6 +4109,12 @@ SpellAuraProcResult Unit::HandleAddPctModifierAuraProc(Unit* /*pVictim*/, uint32
             }
             break;
         }
+        case SPELLFAMILY_WARRIOR:
+        {
+            //Slam must proc only from Slam damage spell
+           return (spellInfo->Id==46916 && procSpell->Id==50782)  ? SPELL_AURA_PROC_OK : SPELL_AURA_PROC_FAILED;
+        }
+
     }
     return SPELL_AURA_PROC_OK;
 }
