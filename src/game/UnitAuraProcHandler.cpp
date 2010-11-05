@@ -1851,7 +1851,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
         case SPELLFAMILY_PALADIN:
         {
             // Seal of Righteousness - melee proc dummy (addition ${$MWS*(0.022*$AP+0.044*$SPH)} damage)
-            if ((dummySpell->SpellFamilyFlags & UI64LIT(0x000000008000000)) && effIndex == EFFECT_INDEX_0)
+            if ((dummySpell->SpellFamilyFlags & UI64LIT(0x000000008000000)) && effIndex == EFFECT_INDEX_0 && (procFlag & PROC_FLAG_SUCCESSFUL_MELEE_HIT))
             {
                 triggered_spell_id = 25742;
                 float ap = GetTotalAttackPowerValue(BASE_ATTACK);
@@ -1885,6 +1885,17 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     if (pVictim == this)
                         return SPELL_AURA_PROC_FAILED;
 
+                    if (!(procFlag & PROC_FLAG_SUCCESSFUL_MELEE_HIT))
+                        return SPELL_AURA_PROC_FAILED;
+
+                    // PPM per victim
+                    float ppmJoL = 15.0f; // must be hard-coded + 100% proc chance in DB
+                    WeaponAttackType attType = BASE_ATTACK; // TODO: attack type based? 
+                    uint32 WeaponSpeed = pVictim->GetAttackTime(attType);
+                    float chanceForVictim = pVictim->GetPPMProcChance(WeaponSpeed, ppmJoL);
+                    if (!roll_chance_f(chanceForVictim))
+                        return SPELL_AURA_PROC_FAILED;
+
                     basepoints[0] = int32( pVictim->GetMaxHealth() * triggeredByAura->GetModifier()->m_amount / 100 );
                     pVictim->CastCustomSpell(pVictim, 20267, &basepoints[0], NULL, NULL, true, NULL, triggeredByAura);
                     return SPELL_AURA_PROC_OK;
@@ -1894,6 +1905,14 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                 {
                     if (pVictim->getPowerType() == POWER_MANA)
                     {
+                        // PPM per victim
+                        float ppmJoW = 15.0f; // must be hard-coded + 100% proc chance in DB
+                        WeaponAttackType attType = BASE_ATTACK; // TODO: attack type based? 
+                        uint32 WeaponSpeed = pVictim->GetAttackTime(attType);
+                        float chanceForVictim = pVictim->GetPPMProcChance(WeaponSpeed, ppmJoW);
+                        if (!roll_chance_f(chanceForVictim))
+                            return SPELL_AURA_PROC_FAILED;
+
                         // 2% of maximum base mana
                         basepoints[0] = int32(pVictim->GetCreateMana() * 2 / 100);
                         pVictim->CastCustomSpell(pVictim, 20268, &basepoints[0], NULL, NULL, true, NULL, triggeredByAura);
