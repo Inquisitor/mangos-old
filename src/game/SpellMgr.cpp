@@ -2025,6 +2025,10 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 if( spellInfo_1->SpellIconID == 2947 && spellInfo_2->SpellIconID == 2947)
                     return false;
 
+                // Focus Magic
+                if( (spellInfo_1->Id == 54646 && spellInfo_2->Id == 54648) ||
+                    (spellInfo_2->Id == 54646 && spellInfo_1->Id == 54648) )
+                    return false;
 
                 // Living Bomb & Ignite (Dots)
                 if( (spellInfo_1->SpellFamilyFlags & UI64LIT(0x2000000000000)) && (spellInfo_2->SpellFamilyFlags & UI64LIT(0x8000000)) ||
@@ -2151,6 +2155,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 //  Tree of Life (Shapeshift) and 34123 Tree of Life (Passive)
                 if ((spellId_1 == 33891 && spellId_2 == 34123) ||
                     (spellId_2 == 33891 && spellId_1 == 34123))
+                    return false;
+
+                //  Moonfire and Lacarate
+                if ((spellInfo_1->SpellIconID == 225 && spellInfo_2->SpellIconID == 2246) ||
+                    (spellInfo_2->SpellIconID == 225 && spellInfo_1->SpellIconID == 2246))
                     return false;
 
                 // Lifebloom and Wild Growth
