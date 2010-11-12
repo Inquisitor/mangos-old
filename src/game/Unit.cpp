@@ -3078,43 +3078,44 @@ bool Unit::IsSpellBlocked(Unit *pCaster, SpellEntry const *spellEntry, WeaponAtt
 float Unit::MeleeSpellMissChance(Unit *pVictim, WeaponAttackType attType, int32 skillDiff, SpellEntry const *spell)
 {
     // Calculate hit chance (more correct for chance mod)
-    float hitChance = 0.0f;
+    int32 HitChance;
 
     // PvP - PvE melee chances
-    // TODO: implement diminishing returns for defense from player's defense rating
-    // pure skill diff is not sufficient since 3.x anymore, but exact formulas hard to research
-    if (pVictim->GetTypeId() == TYPEID_PLAYER)
-        hitChance = 95.0f + skillDiff * 0.04f;
-    else if (skillDiff < -10)
-        hitChance = 94.0f + (skillDiff + 10) * 0.4f;
+    int32 lchance = pVictim->GetTypeId() == TYPEID_PLAYER ? 5 : 7;
+    int32 leveldif = pVictim->getLevelForTarget(this) - getLevelForTarget(pVictim);
+    if(leveldif < 3)
+        HitChance = 95 - leveldif;
     else
-        hitChance = 95.0f + skillDiff * 0.1f;
+        HitChance = 93 - (leveldif - 2) * lchance;
 
     // Hit chance depends from victim auras
-    if (attType == RANGED_ATTACK)
-        hitChance += pVictim->GetTotalAuraModifier(SPELL_AURA_MOD_ATTACKER_RANGED_HIT_CHANCE);
+    if(attType == RANGED_ATTACK)
+        HitChance += pVictim->GetTotalAuraModifier(SPELL_AURA_MOD_ATTACKER_RANGED_HIT_CHANCE);
     else
-        hitChance += pVictim->GetTotalAuraModifier(SPELL_AURA_MOD_ATTACKER_MELEE_HIT_CHANCE);
+        HitChance += pVictim->GetTotalAuraModifier(SPELL_AURA_MOD_ATTACKER_MELEE_HIT_CHANCE);
 
     // Spellmod from SPELLMOD_RESIST_MISS_CHANCE
-    if (Player *modOwner = GetSpellModOwner())
-        modOwner->ApplySpellMod(spell->Id, SPELLMOD_RESIST_MISS_CHANCE, hitChance);
+    if(Player *modOwner = GetSpellModOwner())
+        modOwner->ApplySpellMod(spell->Id, SPELLMOD_RESIST_MISS_CHANCE, HitChance);
 
     // Miss = 100 - hit
-    float missChance = 100.0f - hitChance;
+    float miss_chance= 100.0f - HitChance;
 
     // Bonuses from attacker aura and ratings
     if (attType == RANGED_ATTACK)
-        missChance -= m_modRangedHitChance;
+        miss_chance -= m_modRangedHitChance;
     else
-        missChance -= m_modMeleeHitChance;
+        miss_chance -= m_modMeleeHitChance;
+
+    // bonus from skills is 0.04%
+    miss_chance -= skillDiff * 0.04f;
 
     // Limit miss chance from 0 to 60%
-    if (missChance < 0.0f)
+    if (miss_chance < 0.0f)
         return 0.0f;
-    if (missChance > 60.0f)
+    if (miss_chance > 60.0f)
         return 60.0f;
-    return missChance;
+    return miss_chance;
 }
 
 // Melee based spells hit result calculations
@@ -3126,18 +3127,24 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell, 
         attType = RANGED_ATTACK;
 
     // bonus from skills is 0.04% per skill Diff
-    int32 attackerWeaponSkill = (spell->EquippedItemClass == ITEM_CLASS_WEAPON) ? int32(GetWeaponSkillValue(attType,pVictim)) : GetMaxSkillValueForLevel();
+    int32 attackerWeaponSkill = !(spell->DmgClass == SPELL_DAMAGE_CLASS_RANGED && !(spell->Attributes & SPELL_ATTR_RANGED) )
+        ? int32(GetWeaponSkillValue(attType,pVictim))
+        : int32(GetMaxSkillValueForLevel());
+
     int32 skillDiff = attackerWeaponSkill - int32(pVictim->GetMaxSkillValueForLevel(this));
     int32 fullSkillDiff = attackerWeaponSkill - int32(pVictim->GetDefenseSkillValue(this));
 
     uint32 roll = urand (0, 10000);
+    uint32 tmp = 0;
 
-    uint32 missChance = uint32(MeleeSpellMissChance(pVictim, attType, fullSkillDiff, spell)*100.0f);
-    uint32 tmp = missChance;
-
-    // Roll miss
-    if (canMiss && roll < tmp)
-        return SPELL_MISS_MISS;
+    if(canMiss)
+    {
+        uint32 missChance = uint32(MeleeSpellMissChance(pVictim, attType, fullSkillDiff, spell)*100.0f);
+        // Roll miss
+        tmp += missChance;
+        if (roll < tmp)
+            return SPELL_MISS_MISS;
+    }
 
     // Chance resist mechanic (select max value from every mechanic spell effect)
     int32 resist_mech = 0;
@@ -3167,14 +3174,10 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell, 
     // Ranged attack cannot be parry/dodge only deflect
     if (attType == RANGED_ATTACK)
     {
-        // only if in front
-        if (pVictim->HasInArc(M_PI_F,this))
-        {
-            int32 deflect_chance = pVictim->GetTotalAuraModifier(SPELL_AURA_DEFLECT_SPELLS)*100;
-            tmp+=deflect_chance;
-            if (roll < tmp)
-                return SPELL_MISS_DEFLECT;
-        }
+        int32 deflect_chance = pVictim->GetTotalAuraModifier(SPELL_AURA_DEFLECT_SPELLS)*100;
+        tmp+=deflect_chance;
+        if (roll < tmp)
+            return SPELL_MISS_DEFLECT;
         return SPELL_MISS_NONE;
     }
 
@@ -3415,64 +3418,71 @@ float Unit::MeleeMissChanceCalc(const Unit *pVictim, WeaponAttackType attType) c
         return 0.0f;
 
     // Base misschance 5%
-    float missChance = 5.0f;
+    float misschance = 5.0f;
 
-    // DualWield - white damage has additional 19% miss penalty
+    // DualWield - Melee spells and physical dmg spells - 5% , white damage 24%
     if (haveOffhandWeapon() && attType != RANGED_ATTACK)
     {
         bool isNormal = false;
         for (uint32 i = CURRENT_FIRST_NON_MELEE_SPELL; i < CURRENT_MAX_SPELL; ++i)
         {
-            if (m_currentSpells[i] && (GetSpellSchoolMask(m_currentSpells[i]->m_spellInfo) & SPELL_SCHOOL_MASK_NORMAL))
+            if( m_currentSpells[i] && (GetSpellSchoolMask(m_currentSpells[i]->m_spellInfo) & SPELL_SCHOOL_MASK_NORMAL) )
             {
                 isNormal = true;
                 break;
             }
         }
-        if (!isNormal && !m_currentSpells[CURRENT_MELEE_SPELL])
-            missChance += 19.0f;
+        if (isNormal || m_currentSpells[CURRENT_MELEE_SPELL])
+            misschance = 5.0f;
+        else
+            misschance = 24.0f;
     }
 
-    int32 skillDiff = int32(GetWeaponSkillValue(attType, pVictim)) - int32(pVictim->GetDefenseSkillValue(this));
+    // PvP : PvE melee misschances per leveldif > 2
+    int32 chance = pVictim->GetTypeId() == TYPEID_PLAYER ? 5 : 7;
 
-    // PvP - PvE melee chances
-    // TODO: implement diminishing returns for defense from player's defense rating
-    // pure skill diff is not sufficient since 3.x anymore, but exact formulas hard to research
-    if ( pVictim->GetTypeId() == TYPEID_PLAYER )
-        missChance -= skillDiff * 0.04f;
-    else if ( skillDiff < -10 )
-        missChance -= (skillDiff + 10) * 0.4f - 1.0f;
-    else
-        missChance -=  skillDiff * 0.1f;
+    int32 leveldif = int32(pVictim->getLevelForTarget(this)) - int32(getLevelForTarget(pVictim));
+    if(leveldif < 0)
+        leveldif = 0;
 
-    // Hit chance bonus from attacker based on ratings and auras
+    // Hit chance from attacker based on ratings and auras
+    float m_modHitChance;
     if (attType == RANGED_ATTACK)
-        missChance -= m_modRangedHitChance;
+        m_modHitChance = m_modRangedHitChance;
     else
-        missChance -= m_modMeleeHitChance;
+        m_modHitChance = m_modMeleeHitChance;
+
+    if(leveldif < 4)
+        misschance += (leveldif - m_modHitChance);
+    else
+        misschance += ((leveldif - 2) * chance - m_modHitChance);
 
     // Hit chance for victim based on ratings
     if (pVictim->GetTypeId()==TYPEID_PLAYER)
     {
         if (attType == RANGED_ATTACK)
-            missChance += ((Player*)pVictim)->GetRatingBonusValue(CR_HIT_TAKEN_RANGED);
+            misschance += ((Player*)pVictim)->GetRatingBonusValue(CR_HIT_TAKEN_RANGED);
         else
-            missChance += ((Player*)pVictim)->GetRatingBonusValue(CR_HIT_TAKEN_MELEE);
+            misschance += ((Player*)pVictim)->GetRatingBonusValue(CR_HIT_TAKEN_MELEE);
     }
 
     // Modify miss chance by victim auras
     if(attType == RANGED_ATTACK)
-        missChance -= pVictim->GetTotalAuraModifier(SPELL_AURA_MOD_ATTACKER_RANGED_HIT_CHANCE);
+        misschance -= pVictim->GetTotalAuraModifier(SPELL_AURA_MOD_ATTACKER_RANGED_HIT_CHANCE);
     else
-        missChance -= pVictim->GetTotalAuraModifier(SPELL_AURA_MOD_ATTACKER_MELEE_HIT_CHANCE);
+        misschance -= pVictim->GetTotalAuraModifier(SPELL_AURA_MOD_ATTACKER_MELEE_HIT_CHANCE);
+
+    // Modify miss chance from skill difference ( bonus from skills is 0.04% )
+    int32 skillBonus = int32(GetWeaponSkillValue(attType,pVictim)) - int32(pVictim->GetDefenseSkillValue(this));
+    misschance -= skillBonus * 0.04f;
 
     // Limit miss chance from 0 to 60%
-    if (missChance < 0.0f)
+    if ( misschance < 0.0f)
         return 0.0f;
-    if (missChance > 60.0f)
+    if ( misschance > 60.0f)
         return 60.0f;
 
-    return missChance;
+    return misschance;
 }
 
 uint32 Unit::GetDefenseSkillValue(Unit const* target) const
