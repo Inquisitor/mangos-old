@@ -3080,13 +3080,12 @@ float Unit::MeleeSpellMissChance(Unit *pVictim, WeaponAttackType attType, int32 
     // Calculate hit chance (more correct for chance mod)
     int32 HitChance;
 
-    // PvP - PvE melee chances
-    int32 lchance = pVictim->GetTypeId() == TYPEID_PLAYER ? 5 : 7;
+    // melee hit chances for both, PvE and PvP
     int32 leveldif = pVictim->getLevelForTarget(this) - getLevelForTarget(pVictim);
-    if(leveldif < 3)
-        HitChance = 95 - leveldif;
+    if(skillDiff < -10)
+        HitChance = 95 + skillDiff * 0.1f;
     else
-        HitChance = 93 - (leveldif - 2) * lchance;
+        HitChance = 94 + (skillDiff + 10) * 0.4f;
 
     // Hit chance depends from victim auras
     if(attType == RANGED_ATTACK)
@@ -3106,9 +3105,6 @@ float Unit::MeleeSpellMissChance(Unit *pVictim, WeaponAttackType attType, int32 
         miss_chance -= m_modRangedHitChance;
     else
         miss_chance -= m_modMeleeHitChance;
-
-    // bonus from skills is 0.04%
-    miss_chance -= skillDiff * 0.04f;
 
     // Limit miss chance from 0 to 60%
     if (miss_chance < 0.0f)
