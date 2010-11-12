@@ -2055,7 +2055,7 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 break;
             }
             else
-                FillRaidOrPartyTargets(targetUnitMap, m_caster, m_caster, radius, true, true, IsPositiveSpell(m_spellInfo->Id));
+                FillRaidOrPartyTargets(targetUnitMap, m_caster, m_caster, radius, true, true, true);
             break;
         }
         case TARGET_SINGLE_FRIEND:

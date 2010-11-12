@@ -41,19 +41,6 @@ struct PageText
 #pragma pack(pop)
 #endif
 
-struct PageTextLocale
-{
-    std::vector<std::string> Text;
-};
-
-struct NpcTextLocale
-{
-    NpcTextLocale() { Text_0.resize(8); Text_1.resize(8); }
-
-    std::vector<std::vector<std::string> > Text_0;
-    std::vector<std::vector<std::string> > Text_1;
-};
-
 struct QEmote
 {
     uint32 _Emote;
@@ -74,4 +61,16 @@ struct GossipText
     GossipTextOption Options[8];
 };
 
+struct PageTextLocale
+{
+    std::vector<std::string> Text;
+};
+
+struct NpcTextLocale
+{
+    NpcTextLocale() { Text_0.resize(8); Text_1.resize(8); }
+
+    std::vector<std::vector<std::string> > Text_0;
+    std::vector<std::vector<std::string> > Text_1;
+};
 #endif

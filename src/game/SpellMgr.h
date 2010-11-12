@@ -998,7 +998,7 @@ class SpellMgr
 
         SpellLearnSpellMapBounds GetSpellLearnSpellMapBounds(uint32 spell_id) const
         {
-            return mSpellLearnSpells.equal_range(spell_id);
+            return SpellLearnSpellMapBounds(mSpellLearnSpells.lower_bound(spell_id),mSpellLearnSpells.upper_bound(spell_id));
         }
 
         bool IsSpellLearnToSpell(uint32 spell_id1,uint32 spell_id2) const
@@ -1021,7 +1021,7 @@ class SpellMgr
         // Spell script targets
         SpellScriptTargetBounds GetSpellScriptTargetBounds(uint32 spell_id) const
         {
-            return mSpellScriptTarget.equal_range(spell_id);
+            return SpellScriptTargetBounds(mSpellScriptTarget.lower_bound(spell_id),mSpellScriptTarget.upper_bound(spell_id));
         }
 
         // Spell correctess for client using
@@ -1029,7 +1029,7 @@ class SpellMgr
 
         SkillLineAbilityMapBounds GetSkillLineAbilityMapBounds(uint32 spell_id) const
         {
-            return mSkillLineAbilityMap.equal_range(spell_id);
+            return SkillLineAbilityMapBounds(mSkillLineAbilityMap.lower_bound(spell_id),mSkillLineAbilityMap.upper_bound(spell_id));
         }
 
         PetAura const* GetPetAura(uint32 spell_id, SpellEffectIndex eff)
@@ -1063,30 +1063,30 @@ class SpellMgr
 
         SpellAreaMapBounds GetSpellAreaMapBounds(uint32 spell_id) const
         {
-            return mSpellAreaMap.equal_range(spell_id);
+            return SpellAreaMapBounds(mSpellAreaMap.lower_bound(spell_id),mSpellAreaMap.upper_bound(spell_id));
         }
 
         SpellAreaForQuestMapBounds GetSpellAreaForQuestMapBounds(uint32 quest_id, bool active) const
         {
-            if (active)
-                return mSpellAreaForActiveQuestMap.equal_range(quest_id);
+            if(active)
+                return SpellAreaForQuestMapBounds(mSpellAreaForActiveQuestMap.lower_bound(quest_id),mSpellAreaForActiveQuestMap.upper_bound(quest_id));
             else
-                return mSpellAreaForQuestMap.equal_range(quest_id);
+                return SpellAreaForQuestMapBounds(mSpellAreaForQuestMap.lower_bound(quest_id),mSpellAreaForQuestMap.upper_bound(quest_id));
         }
 
         SpellAreaForQuestMapBounds GetSpellAreaForQuestEndMapBounds(uint32 quest_id) const
         {
-            return mSpellAreaForQuestEndMap.equal_range(quest_id);
+            return SpellAreaForQuestMapBounds(mSpellAreaForQuestEndMap.lower_bound(quest_id),mSpellAreaForQuestEndMap.upper_bound(quest_id));
         }
 
         SpellAreaForAuraMapBounds GetSpellAreaForAuraMapBounds(uint32 spell_id) const
         {
-            return mSpellAreaForAuraMap.equal_range(spell_id);
+            return SpellAreaForAuraMapBounds(mSpellAreaForAuraMap.lower_bound(spell_id),mSpellAreaForAuraMap.upper_bound(spell_id));
         }
 
         SpellAreaForAreaMapBounds GetSpellAreaForAreaMapBounds(uint32 area_id) const
         {
-            return mSpellAreaForAreaMap.equal_range(area_id);
+            return SpellAreaForAreaMapBounds(mSpellAreaForAreaMap.lower_bound(area_id),mSpellAreaForAreaMap.upper_bound(area_id));
         }
 
     // Modifiers

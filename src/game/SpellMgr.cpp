@@ -2664,8 +2664,9 @@ void SpellMgr::LoadSpellChains()
                 continue;
 
             // some forward spells still exist but excluded from real use as ranks and not listed in skill abilities now
-            SkillLineAbilityMapBounds bounds = mSkillLineAbilityMap.equal_range(forward_id);
-            if (bounds.first == bounds.second)
+            SkillLineAbilityMap::const_iterator forward_ab_low = mSkillLineAbilityMap.lower_bound(forward_id);
+            SkillLineAbilityMap::const_iterator forward_ab_up  = mSkillLineAbilityMap.upper_bound(forward_id);
+            if (forward_ab_low == forward_ab_up)
                 continue;
 
             // spell already listed in chains store
@@ -2859,11 +2860,11 @@ void SpellMgr::LoadSpellChains()
         {
             bool skip = false;
             // some forward spells still exist but excluded from real use as ranks and not listed in skill abilities now
-            SkillLineAbilityMapBounds bounds = mSkillLineAbilityMap.equal_range(spell_id);
-            if (bounds.first == bounds.second)
+            SkillLineAbilityMap::const_iterator forward_ab_low = mSkillLineAbilityMap.lower_bound(spell_id);
+            SkillLineAbilityMap::const_iterator forward_ab_up  = mSkillLineAbilityMap.upper_bound(spell_id);
+            if (forward_ab_low == forward_ab_up)
             {
-                SkillLineAbilityMapBounds prev_bounds = mSkillLineAbilityMap.equal_range(node.prev);
-                for(SkillLineAbilityMap::const_iterator ab_itr = prev_bounds.first; ab_itr != prev_bounds.second; ++ab_itr)
+                for(SkillLineAbilityMap::const_iterator ab_itr = mSkillLineAbilityMap.lower_bound(node.prev); ab_itr != mSkillLineAbilityMap.upper_bound(node.prev); ++ab_itr)
                 {
                     // spell listed as forward and not listed as ability
                     // this is marker for removed ranks

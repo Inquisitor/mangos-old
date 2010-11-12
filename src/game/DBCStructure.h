@@ -1514,6 +1514,11 @@ struct SpellEntry
         SpellEntry(SpellEntry const&);                      // DON'T must have implementation
 };
 
+typedef std::set<uint32> SpellCategorySet;
+typedef std::map<uint32,SpellCategorySet > SpellCategoryStore;
+typedef std::set<uint32> PetFamilySpellsSet;
+typedef std::map<uint32,PetFamilySpellsSet > PetFamilySpellsStore;
+
 struct SpellCastTimesEntry
 {
     uint32    ID;                                           // 0
@@ -1867,11 +1872,6 @@ struct WorldSafeLocsEntry
 #pragma pack(pop)
 #endif
 
-typedef std::set<uint32> SpellCategorySet;
-typedef std::map<uint32,SpellCategorySet > SpellCategoryStore;
-typedef std::set<uint32> PetFamilySpellsSet;
-typedef std::map<uint32,PetFamilySpellsSet > PetFamilySpellsStore;
-
 // Structures not used for casting to loaded DBC data and not required then packing
 struct MapDifficulty
 {
@@ -1917,6 +1917,6 @@ struct TaxiPathNodePtr
 typedef Path<TaxiPathNodePtr,TaxiPathNodeEntry const> TaxiPathNodeList;
 typedef std::vector<TaxiPathNodeList> TaxiPathNodesByPath;
 
-#define TaxiMaskSize 14
+#define TaxiMaskSize 12
 typedef uint32 TaxiMask[TaxiMaskSize];
 #endif

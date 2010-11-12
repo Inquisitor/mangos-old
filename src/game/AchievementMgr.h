@@ -212,8 +212,7 @@ struct AchievementReward
     std::string text;
 };
 
-typedef std::multimap<uint32, AchievementReward> AchievementRewardsMap;
-typedef std::pair<AchievementRewardsMap::const_iterator, AchievementRewardsMap::const_iterator> AchievementRewardsMapBounds;
+typedef std::multimap<uint32,AchievementReward> AchievementRewards;
 
 struct AchievementRewardLocale
 {
@@ -222,8 +221,8 @@ struct AchievementRewardLocale
     std::vector<std::string> text;
 };
 
-typedef std::multimap<uint32, AchievementRewardLocale> AchievementRewardLocalesMap;
-typedef std::pair<AchievementRewardLocalesMap::const_iterator, AchievementRewardLocalesMap::const_iterator> AchievementRewardLocalesMapBounds;
+typedef std::multimap<uint32,AchievementRewardLocale> AchievementRewardLocales;
+
 
 struct CompletedAchievementData
 {
@@ -312,8 +311,9 @@ class AchievementGlobalMgr
 
         AchievementReward const* GetAchievementReward(AchievementEntry const* achievement, uint8 gender) const
         {
-            AchievementRewardsMapBounds bounds = m_achievementRewards.equal_range(achievement->ID);
-            for (AchievementRewardsMap::const_iterator iter = bounds.first; iter != bounds.second; ++iter)
+            AchievementRewards::const_iterator iter_low = m_achievementRewards.lower_bound(achievement->ID);
+            AchievementRewards::const_iterator iter_up  = m_achievementRewards.upper_bound(achievement->ID);
+            for (AchievementRewards::const_iterator iter = iter_low; iter != iter_up; ++iter)
                 if(iter->second.gender == GENDER_NONE || uint8(iter->second.gender) == gender)
                     return &iter->second;
 
@@ -322,8 +322,9 @@ class AchievementGlobalMgr
 
         AchievementRewardLocale const* GetAchievementRewardLocale(AchievementEntry const* achievement, uint8 gender) const
         {
-            AchievementRewardLocalesMapBounds bounds = m_achievementRewardLocales.equal_range(achievement->ID);
-            for (AchievementRewardLocalesMap::const_iterator iter = bounds.first; iter != bounds.second; ++iter)
+            AchievementRewardLocales::const_iterator iter_low = m_achievementRewardLocales.lower_bound(achievement->ID);
+            AchievementRewardLocales::const_iterator iter_up  = m_achievementRewardLocales.upper_bound(achievement->ID);
+            for (AchievementRewardLocales::const_iterator iter = iter_low; iter != iter_up; ++iter)
                 if(iter->second.gender == GENDER_NONE || uint8(iter->second.gender) == gender)
                     return &iter->second;
 
@@ -365,8 +366,8 @@ class AchievementGlobalMgr
         typedef std::set<uint32> AllCompletedAchievements;
         AllCompletedAchievements m_allCompletedAchievements;
 
-        AchievementRewardsMap       m_achievementRewards;
-        AchievementRewardLocalesMap m_achievementRewardLocales;
+        AchievementRewards m_achievementRewards;
+        AchievementRewardLocales m_achievementRewardLocales;
 };
 
 #define sAchievementMgr MaNGOS::Singleton<AchievementGlobalMgr>::Instance()
