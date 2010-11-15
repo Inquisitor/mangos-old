@@ -288,12 +288,12 @@ bool Pet::LoadPetFromDB( Player* owner, uint32 petentry, uint32 petnumber, bool 
     if (getPetType() == SUMMON_PET && !current)             //all (?) summon pets come with full health when called, but not when they are current
     {
         SetHealth(GetMaxHealth());
-        SetPower(POWER_MANA, GetMaxPower(POWER_MANA));
+        SetPower(getPowerType(), GetMaxPower(getPowerType()));
     }
     else
     {
         SetHealth(savedhealth > GetMaxHealth() ? GetMaxHealth() : savedhealth);
-        SetPower(POWER_MANA, savedmana > GetMaxPower(POWER_MANA) ? GetMaxPower(POWER_MANA) : savedmana);
+        SetPower(getPowerType(), savedmana > GetMaxPower(getPowerType()) ? GetMaxPower(getPowerType()) : savedmana);
     }
 
     UpdateWalkMode(owner);
@@ -382,7 +382,7 @@ void Pet::SavePetToDB(PetSaveMode mode)
         }
 
         uint32 curhealth = GetHealth();
-        uint32 curmana = GetPower(POWER_MANA);
+        uint32 curmana = GetPower(getPowerType());
 
         // stable and not in slot saves
         if (mode != PET_SAVE_AS_CURRENT)
@@ -1020,6 +1020,8 @@ bool Pet::InitStatsForLevel(uint32 petlevel, Unit* owner)
 
             SetUInt32Value(UNIT_FIELD_PETEXPERIENCE, 0);
             SetUInt32Value(UNIT_FIELD_PETNEXTLEVELEXP, 1000);
+           
+            break;
 
             SetCreateMana(28 + 10*petlevel);
             SetCreateHealth(28 + 30*petlevel);
@@ -1031,11 +1033,14 @@ bool Pet::InitStatsForLevel(uint32 petlevel, Unit* owner)
 
     for (int i = SPELL_SCHOOL_HOLY; i < MAX_SPELL_SCHOOL; ++i)
         SetModifierValue(UnitMods(UNIT_MOD_RESISTANCE_START + i), BASE_VALUE, float(createResistance[i]));
-
+    // DK ghouls have energy
+    if (cinfo->family == CREATURE_FAMILY_GHOUL)
+        setPowerType(POWER_ENERGY);
     UpdateAllStats();
 
     SetHealth(GetMaxHealth());
-    SetPower(POWER_MANA, GetMaxPower(POWER_MANA));
+    setPowerType(getPowerType());
+    SetPower(getPowerType(), GetMaxPower(getPowerType()));
 
     return true;
 }

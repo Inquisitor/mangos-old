@@ -552,7 +552,7 @@ void Creature::Update(uint32 diff)
             if (!isInCombat() || IsPolymorphed())
                 RegenerateHealth();
 
-            RegenerateMana();
+            Regenerate(getPowerType());
 
             m_regenTimer = REGEN_TIME_FULL;
             break;
@@ -584,32 +584,42 @@ void Creature::StopGroupLoot()
     m_groupLootId = 0;
 }
 
-void Creature::RegenerateMana()
+void Creature::Regenerate(Powers power)
 {
-    uint32 curValue = GetPower(POWER_MANA);
-    uint32 maxValue = GetMaxPower(POWER_MANA);
+    uint32 curValue = GetPower(power);
+    uint32 maxValue = GetMaxPower(power);
 
     if (curValue >= maxValue)
         return;
 
     uint32 addvalue = 0;
 
-    // Combat and any controlled creature
-    if (isInCombat() || GetCharmerOrOwnerGUID())
+    switch(power)
     {
-        if(!IsUnderLastManaUseEffect())
-        {
-            float ManaIncreaseRate = sWorld.getConfig(CONFIG_FLOAT_RATE_POWER_MANA);
-            float Spirit = GetStat(STAT_SPIRIT);
-
-            addvalue = uint32((Spirit / 5.0f + 17.0f) * ManaIncreaseRate);
-        }
+          case POWER_MANA:
+           // Combat and any controlled creature
+           if (isInCombat() || GetCharmerOrOwnerGUID())
+           {
+               if(!IsUnderLastManaUseEffect())
+               {
+                   float ManaIncreaseRate = sWorld.getConfig(CONFIG_FLOAT_RATE_POWER_MANA);
+                    float Spirit = GetStat(STAT_SPIRIT);
+                 addvalue = uint32((Spirit / 5.0f + 17.0f) * ManaIncreaseRate);
+                }
+            }
+            else
+                addvalue = maxValue / 3;
+            break;
+        case POWER_ENERGY:
+            addvalue = 20;
+            break;
     }
-    else
-        addvalue = maxValue / 3;
-
-    ModifyPower(POWER_MANA, addvalue);
+     ModifyPower(power, addvalue);
 }
+
+
+
+
 
 void Creature::RegenerateHealth()
 {
@@ -1270,7 +1280,7 @@ bool Creature::LoadFromDB(uint32 guidlow, Map *map)
     }
 
     SetHealth(m_deathState == ALIVE ? curhealth : 0);
-    SetPower(POWER_MANA, data->curmana);
+    SetPower(getPowerType(), data->curmana);
 
     SetMeleeDamageSchool(SpellSchools(GetCreatureInfo()->dmgschool));
 
