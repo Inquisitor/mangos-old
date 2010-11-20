@@ -17587,7 +17587,13 @@ void Player::_SaveStats()
     std::ostringstream ss;
     ss << "INSERT INTO character_stats (guid, maxhealth, maxpower1, maxpower2, maxpower3, maxpower4, maxpower5, maxpower6, maxpower7, "
         "strength, agility, stamina, intellect, spirit, armor, resHoly, resFire, resNature, resFrost, resShadow, resArcane, "
-        "blockPct, dodgePct, parryPct, critPct, rangedCritPct, spellCritPct, attackPower, rangedAttackPower, spellPower) VALUES ("
+        "blockPct, dodgePct, parryPct, critPct, rangedCritPct, spellCritPct, attackPower, rangedAttackPower, spellPower, "
+        "attackSpeed, rangedAttackSpeed, minDamage, maxDamage, minOffhandDamage, maxOffhandDamage, attackPowerMod, attackPowerMultiplier, "
+        "rangedAttackPowerMod, rangedAttackPowerMultiplier, minRangedDamage, maxRangedDamage, flags, expertise, offhandExpertise, "
+        "modDmgDonePos, modDmgDoneNeg, modDmgDonePct, spellPene, armorPene, ";
+    for(int i = 0; i < MAX_COMBAT_RATING; ++i)
+        ss << "combatRating" << i << ", ";
+    ss << " blockValue) VALUES ("
         << GetGUIDLow() << ", "
         << GetMaxHealth() << ", ";
     for(int i = 0; i < MAX_POWERS; ++i)
@@ -17596,7 +17602,7 @@ void Player::_SaveStats()
         ss << GetStat(Stats(i)) << ", ";
     // armor + school resistances
     for(int i = 0; i < MAX_SPELL_SCHOOL; ++i)
-        ss << GetResistance(SpellSchools(i)) << ",";
+        ss << GetUInt32Value(UNIT_FIELD_RESISTANCES + i) + GetUInt32Value(UNIT_FIELD_RESISTANCEBUFFMODSPOSITIVE + i) + GetUInt32Value(UNIT_FIELD_RESISTANCEBUFFMODSNEGATIVE + i) << ",";
     ss << GetFloatValue(PLAYER_BLOCK_PERCENTAGE) << ", "
        << GetFloatValue(PLAYER_DODGE_PERCENTAGE) << ", "
        << GetFloatValue(PLAYER_PARRY_PERCENTAGE) << ", "
@@ -17605,7 +17611,30 @@ void Player::_SaveStats()
        << GetFloatValue(PLAYER_SPELL_CRIT_PERCENTAGE1) << ", "
        << GetUInt32Value(UNIT_FIELD_ATTACK_POWER) << ", "
        << GetUInt32Value(UNIT_FIELD_RANGED_ATTACK_POWER) << ", "
-       << GetBaseSpellPowerBonus() << ")";
+       << GetBaseSpellPowerBonus() << ", "
+       << GetUInt32Value(UNIT_FIELD_BASEATTACKTIME) << ", "
+       << GetUInt32Value(UNIT_FIELD_RANGEDATTACKTIME) << ", "
+       << GetFloatValue(UNIT_FIELD_MINDAMAGE) << ", "
+       << GetFloatValue(UNIT_FIELD_MAXDAMAGE) << ", "
+       << GetFloatValue(UNIT_FIELD_MINOFFHANDDAMAGE) << ", "
+       << GetFloatValue(UNIT_FIELD_MAXOFFHANDDAMAGE) << ", "
+       << GetUInt32Value(UNIT_FIELD_ATTACK_POWER_MODS) << ", "
+       << GetFloatValue(UNIT_FIELD_ATTACK_POWER_MULTIPLIER) << ", "
+       << GetUInt32Value(UNIT_FIELD_RANGED_ATTACK_POWER_MODS) << ", "
+       << GetFloatValue(UNIT_FIELD_RANGED_ATTACK_POWER_MULTIPLIER) << ", "
+       << GetFloatValue(UNIT_FIELD_MINRANGEDDAMAGE) << ", "
+       << GetFloatValue(UNIT_FIELD_MAXRANGEDDAMAGE) << ", "
+       << GetUInt32Value(PLAYER_FLAGS) << ", "
+       << GetUInt32Value(PLAYER_EXPERTISE) << ", "
+       << GetUInt32Value(PLAYER_OFFHAND_EXPERTISE) << ", "
+       << GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS) << ", "
+       << GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_NEG) << ", "
+       << GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_PCT) << ", "
+       << GetUInt32Value(PLAYER_FIELD_MOD_TARGET_RESISTANCE) << ", "
+       << GetUInt32Value(PLAYER_FIELD_MOD_TARGET_PHYSICAL_RESISTANCE) << ", ";
+    for(int i = 0; i < MAX_COMBAT_RATING; ++i)
+       ss << GetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + i) << ", ";
+    ss << GetUInt32Value(PLAYER_SHIELD_BLOCK) << ")";
     CharacterDatabase.Execute( ss.str().c_str() );
 }
 
