@@ -8565,6 +8565,17 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
                 default:
                     return;
             }
+
+            // Deathbloom of Loatheb
+            if( (GetId() == 29865 || GetId() == 55053) && !apply )
+            {
+                cast_at_remove = true;
+                // normal | heroic
+                spellId1 = ((GetId() == 29865) ? 55594 : 55601 );
+            }
+            else
+                return;
+
             break;
         }
         case SPELLFAMILY_MAGE:
