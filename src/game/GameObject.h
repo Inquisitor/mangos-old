@@ -24,6 +24,7 @@
 #include "Object.h"
 #include "LootMgr.h"
 #include "Database/DatabaseEnv.h"
+#include "Utilities/EventProcessor.h"
 
 // GCC have alternative #pragma pack(N) syntax and old gcc version not support pack(push,N), also any gcc version not support it at some platform
 #if defined( __GNUC__ )
@@ -577,7 +578,6 @@ class Unit;
 #define FISHING_BOBBER_READY_TIME 5
 
 #define GO_ANIMPROGRESS_DEFAULT 0xFF
-
 class MANGOS_DLL_SPEC GameObject : public WorldObject
 {
     public:
@@ -599,6 +599,9 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         // overwrite WorldObject function for proper name localization
         const char* GetNameForLocaleIdx(int32 locale_idx) const;
+
+        // Event handler
+        EventProcessor m_ObjectEvents;
 
         void SaveToDB();
         void SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask);
@@ -645,7 +648,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         bool isSpawnedByDefault() const { return m_spawnedByDefault; }
         uint32 GetRespawnDelay() const { return m_respawnDelayTime; }
         void Refresh();
-        void Delete();
+        void Delete(uint32 timeMSToDelete = 0);
         void getFishLoot(Loot *loot, Player* loot_owner);
         GameobjectTypes GetGoType() const { return GameobjectTypes(GetByteValue(GAMEOBJECT_BYTES_1, 1)); }
         void SetGoType(GameobjectTypes type) { SetByteValue(GAMEOBJECT_BYTES_1, 1, type); }
@@ -731,4 +734,15 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         GridReference<GameObject> m_gridRef;
 };
+
+class ForcedDeleteDelayEvent : public BasicEvent
+{
+    public:
+        ForcedDeleteDelayEvent(GameObject& owner) : BasicEvent(), m_owner(owner) { }
+        bool Execute(uint64 e_time, uint32 p_time);
+
+    private:
+        GameObject& m_owner;
+};
+
 #endif

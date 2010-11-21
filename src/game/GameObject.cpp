@@ -37,6 +37,12 @@
 #include "Util.h"
 #include "ScriptCalls.h"
 
+bool ForcedDeleteDelayEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
+{
+    m_owner.Delete();
+    return true;
+}
+
 GameObject::GameObject() : WorldObject()
 {
     m_objectType |= TYPEMASK_GAMEOBJECT;
@@ -159,8 +165,11 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
     return true;
 }
 
-void GameObject::Update(uint32 /*p_time*/)
+void GameObject::Update(uint32 p_time)
 {
+    if (IsInWorld())
+        m_ObjectEvents.Update(p_time);
+
     if (GetObjectGuid().IsMOTransport())
     {
         //((Transport*)this)->Update(p_time);
@@ -457,8 +466,16 @@ void GameObject::AddUniqueUse(Player* player)
     
 }
 
-void GameObject::Delete()
+void GameObject::Delete(uint32 timeMSToDelete)
 {
+    if (timeMSToDelete)
+    {
+        ForcedDeleteDelayEvent *pEvent = new ForcedDeleteDelayEvent(*this);
+
+        m_ObjectEvents.AddEvent(pEvent, m_ObjectEvents.CalculateTime(timeMSToDelete));
+        return;
+    }
+
     SendObjectDeSpawnAnim(GetGUID());
 
     SetGoState(GO_STATE_READY);
