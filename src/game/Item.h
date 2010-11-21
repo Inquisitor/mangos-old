@@ -382,6 +382,12 @@ class MANGOS_DLL_SPEC Item : public Object
         void AddToClientUpdateList();
         void RemoveFromClientUpdateList();
         void BuildUpdateData(UpdateDataMapType& update_players);
+
+        // Item Refunding / Soulbound Trading System
+        bool IsEligibleForRefund();
+        void SetPlayedtimeField(uint32 time) { SetInt32Value(ITEM_FIELD_CREATE_PLAYED_TIME ,time); }
+        uint32 GetPlayedtimeField() { return GetInt32Value(ITEM_FIELD_CREATE_PLAYED_TIME); }
+
     private:
         std::string m_text;
         uint8 m_slot;
@@ -391,5 +397,4 @@ class MANGOS_DLL_SPEC Item : public Object
         bool mb_in_trade;                                   // true if item is currently in trade-window
         ItemLootUpdateState m_lootState;
 };
-
 #endif

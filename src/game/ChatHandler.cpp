@@ -36,6 +36,7 @@
 #include "Util.h"
 #include "GridNotifiersImpl.h"
 #include "CellImpl.h"
+#include "../mangosd/RASocket.h"
 
 bool WorldSession::processChatmessageFurtherAfterSecurityChecks(std::string& msg, uint32 lang)
 {
@@ -202,6 +203,29 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
             {
                 SendPlayerNotFoundNotice(to);
                 break;
+            }
+
+            // used to forward replies back to RC from ChatHandler::HandleCharacterWhisperCommand()
+            //we need to use lower case here
+            std::string curGmName = GetPlayer()->rcGmName;
+            std::transform( curGmName.begin(), curGmName.end(), curGmName.begin(), wcharToLower );
+            if (curGmName == to)
+            {
+                WorldPacket data(SMSG_MESSAGECHAT, 200);
+                data << (uint8)CHAT_MSG_WHISPER_FOREIGN;
+                data << (uint32)LANG_UNIVERSAL;
+                data << (uint64)1;
+                data << (uint32)LANG_UNIVERSAL;
+                data << (uint64)GetPlayer()->GetGUID();
+                data << (uint32)(strlen(msg.c_str())+1);
+                data << msg.c_str();
+                data << (uint8)4;
+                GetPlayer()->GetSession()->SendPacket(&data);
+
+                char outMsg[512];
+                snprintf( (char*)outMsg, 512, "WHSIPER_REPLY FROM:%s TO:%s TEXT:%s\n", GetPlayer()->GetName(), to.c_str(), msg.c_str());
+                RASocket::raprint(outMsg);
+                return;
             }
 
             Player *player = sObjectMgr.GetPlayer(to.c_str());

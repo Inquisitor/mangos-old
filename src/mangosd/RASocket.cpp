@@ -31,6 +31,9 @@
 #include "Language.h"
 #include "ObjectMgr.h"
 
+std::set<RASocket*> RASocket::connectedClients;
+ACE_Thread_Mutex RASocket::listLock;
+
 /// RASocket constructor
 RASocket::RASocket()
 :RAHandler(),
@@ -107,6 +110,9 @@ int RASocket::handle_close (ACE_HANDLE h, ACE_Reactor_Mask)
     if (h == ACE_INVALID_HANDLE)
         peer ().close_writer ();
     remove_reference();
+    //aquire lock
+    ACE_GUARD_RETURN (ACE_Thread_Mutex, Guard2, RASocket::listLock, -1);
+    RASocket::connectedClients.erase(this);
     return 0;
 }
 
@@ -238,6 +244,9 @@ int RASocket::handle_input(ACE_HANDLE)
 
                     sendf("+Logged in.\r\n");
                     sLog.outRALog("User account %u has logged in.", accId);
+                    //aquire lock
+                    ACE_GUARD_RETURN(ACE_Thread_Mutex,Guard,RASocket::listLock,-1);
+                    RASocket::connectedClients.insert(this);
                     sendf("mangos>");
                 }
                 else
@@ -323,3 +332,27 @@ int RASocket::sendf(const char* msg)
     }
     return 0;
 }
+
+/// Output function
+void RASocket::raprint( const char * szText )
+{
+    if( !szText )
+        return;
+
+    #ifdef RA_CRYPT
+
+    char *megabuffer = mangos_strdup(szText);
+    unsigned int sz=strlen(megabuffer);
+    Encrypt(megabuffer,sz);
+    send(r,megabuffer,sz,0);
+    delete [] megabuffer;
+
+    #else
+    //aquire lock
+    ACE_GUARD(ACE_Thread_Mutex,Guard,RASocket::listLock);
+    for(std::set<RASocket*>::iterator list_iter = RASocket::connectedClients.begin(); list_iter != RASocket::connectedClients.end(); ++list_iter)
+        (*list_iter)->sendf(szText);
+
+    #endif
+}
+

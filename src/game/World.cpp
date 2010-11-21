@@ -971,6 +971,8 @@ void World::SetInitialWorldSettings()
     sLog.outString( "Loading Spell Bonus Data..." );
     sSpellMgr.LoadSpellBonuses();                           // must be after LoadSpellChains
 
+    sLog.outString( "Loading spell disabled table...");
+    sObjectMgr.LoadSpellDisabledEntrys();
     sLog.outString( "Loading Spell Proc Item Enchant..." );
     sSpellMgr.LoadSpellProcItemEnchant();                   // must be after LoadSpellChains
 
@@ -1907,11 +1909,25 @@ void World::ProcessCliCommands()
         DEBUG_LOG("CLI command under processing...");
         zprint = command->m_print;
         callbackArg = command->m_callbackArg;
-        CliHandler handler(command->m_cliAccountId, command->m_cliAccessLevel, callbackArg, zprint);
+        if (command->m_guid)
+        {
+            char outStr[64];
+            snprintf( (char*)outStr, 64, "%u|BEGIN\r\n", command->m_guid);
+            zprint(callbackArg,outStr);
+        }
+
+        CliHandler handler(command->m_guid, command->m_cliAccountId, command->m_cliAccessLevel, callbackArg, zprint);
         handler.ParseCommands(command->m_command);
 
         if(command->m_commandFinished)
             command->m_commandFinished(callbackArg, !handler.HasSentErrorMessage());
+
+        if (command->m_guid)
+        {
+            char outStr[64];
+            snprintf( (char*)outStr, 64, "%u|END\r\n", command->m_guid);
+            zprint(callbackArg,outStr);
+        }
 
         delete command;
     }
