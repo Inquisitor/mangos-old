@@ -6642,8 +6642,6 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
                     break;
             }
 
-            DoneActualBenefit *= caster->CalculateLevelPenalty(GetSpellProto());
-
             m_modifier.m_amount += (int32)DoneActualBenefit;
         }
     }
@@ -7811,8 +7809,6 @@ void Aura::HandleManaShield(bool apply, bool Real)
                 default:
                     break;
             }
-
-            DoneActualBenefit *= caster->CalculateLevelPenalty(GetSpellProto());
 
             m_modifier.m_amount += (int32)DoneActualBenefit;
         }
