@@ -6203,7 +6203,7 @@ Unit* Unit::SelectMagnetTarget(Unit *victim, SpellEntry const *spellInfo)
                 if(magnet->IsWithinLOSInMap(this) && magnet->isAlive())
                 {
                     //Destroy totem...
-                    if( ((Creature*)magnet)->isTotem())
+                    if( ((Creature*)magnet)->IsTotem())
                          magnet->CastSpell(magnet, 5, true);
                     return magnet;
                 }
