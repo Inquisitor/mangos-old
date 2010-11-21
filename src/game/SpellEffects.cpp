@@ -4550,6 +4550,9 @@ void Spell::DoSummonWild(SpellEffectIndex eff_idx, uint32 forceFaction)
 
             if(forceFaction)
                 summon->setFaction(forceFaction);
+
+            if(m_caster->GetTypeId() == TYPEID_PLAYER && summon->AI())
+                summon->AI()->SummonedBySpell((Player*)m_caster );
         }
     }
 }
