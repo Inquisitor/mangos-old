@@ -6746,7 +6746,7 @@ bool Unit::IsSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolM
 
     // Creatures cant crit with spells
     if (GetTypeId() == TYPEID_UNIT && (((Creature*)this)->GetSubtype() == CREATURE_SUBTYPE_GENERIC // If its normal creature
-        || (((Creature*)this)->GetSubtype() == CREATURE_SUBTYPE_TEMPORARY_SUMMON && !((Creature*)this)->GetOwnerGUID()))  // or temporary summon without owner, hope this is correct
+        || (((Creature*)this)->GetSubtype() == CREATURE_SUBTYPE_TEMPORARY_SUMMON && ((Creature*)this)->GetOwnerGuid().IsEmpty()))  // or temporary summon without owner, hope this is correct
         && spellProto->DmgClass == SPELL_DAMAGE_CLASS_MAGIC) // Also affect only magic
         return false;
 

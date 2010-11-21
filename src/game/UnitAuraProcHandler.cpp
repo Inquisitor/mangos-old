@@ -2895,6 +2895,13 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
                     if (GetStat(STAT_AGILITY)  > stat) { trigger_spell_id = 67772;                               }
                     break;
                 }
+                // Unyielding Knights
+                case 38164:
+                {
+                    // Do not summont our knights if we arent fighting specific enemy
+                    if( GetTypeId() != TYPEID_PLAYER || pVictim->GetEntry() != 19457)
+                        return SPELL_AURA_PROC_FAILED;
+                }
             }
             break;
         case SPELLFAMILY_MAGE:
