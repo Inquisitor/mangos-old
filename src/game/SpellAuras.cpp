@@ -7641,7 +7641,7 @@ void Aura::PeriodicDummyTick()
                 // Killing Spree
                 case 51690:
                 {
-                    if (target->hasUnitState(UNIT_STAT_STUNNED) || target->isFeared())
+                    if (target->hasUnitState(UNIT_STAT_STUNNED) || target->isFeared() || target->HasAuraType(SPELL_AURA_MOD_CONFUSE))
                         return;
 
                     std::list<Unit*> targets;
@@ -7652,6 +7652,14 @@ void Aura::PeriodicDummyTick()
                         MaNGOS::AnyUnfriendlyVisibleUnitInObjectRangeCheck u_check(target, target, radius);
                         MaNGOS::UnitListSearcher<MaNGOS::AnyUnfriendlyVisibleUnitInObjectRangeCheck> checker(targets, u_check);
                         Cell::VisitAllObjects(target, checker, radius);
+                    }
+
+                    for (std::list<Unit*>::iterator iter = targets.begin(); iter != targets.end(); ) // Remove Stealthed and Invisible units 
+                    {
+                        if ((*iter)->HasInvisibilityAura() || (*iter)->HasStealthAura())
+                            iter = targets.erase(iter);
+                        else
+                            ++iter;
                     }
 
                     if(targets.empty())
