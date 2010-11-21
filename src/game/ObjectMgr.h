@@ -115,6 +115,11 @@ enum eScriptCommand
     SCRIPT_COMMAND_SET_RUN                  = 25,           // source=any, target=creature
                                                             // datalong= bool 0=off, 1=on
                                                             // datalong2=creature entry, datalong3=search radius
+
+    SCRIPT_COMMAND_ADD_QUEST_COUNT          = 30,           // source = any, target = any, datalong = quest_id, datalong2 = quest_field, dataint = increment value
+    SCRIPT_COMMAND_TEMP_SUMMON_OBJECT       = 31,           // source = any (summoner), datalong=gameobject entry, datalong2=despawn_delay
+    SCRIPT_COMMAND_SET_ENTRY                = 32,           // source = any target = creature only, datalong = entry to transform datalong2 = bool (preserve HP and MP)
+
 };
 
 #define MAX_TEXT_ID 4                                       // used for SCRIPT_COMMAND_TALK
@@ -123,6 +128,8 @@ struct ScriptInfo
 {
     uint32 id;
     uint32 delay;
+    uint32 reqtype;
+    uint32 reqvalue;
     uint32 command;
 
     union
@@ -291,6 +298,29 @@ struct ScriptInfo
             uint32 creatureEntry;                           // datalong2
             uint32 searchRadius;                            // datalong3
         } run;
+
+        struct                                              // SCRIPT_COMMAND_ADD_QUEST_COUNT (30)
+        {
+            uint32 quest_id;                                // datalong
+            uint32 quest_field;                             // datalong2
+            uint32 datalong3;                               // datalong3
+            uint32 datalong4;                               // datalong4
+            uint32 flags;                                   // data_flags
+            int32  inc_value;                               // dataint to dataint4
+
+        } add_quest_count;
+
+        struct                                              // SCRIPT_COMMAND_TEMP_SUMMON_OBJECT (31)
+        {
+            uint32 go_entry;                                // datalong
+            uint32 despawn_delay;                           // datalong2
+        } go_summon;
+
+        struct                                              // SCRIPT_COMMAND_SET_ENTRY (32)
+        {
+            uint32 entry;                                   // datalong
+            uint32 keep_stat;                               // datalong2
+        } set_entry;
 
         struct
         {

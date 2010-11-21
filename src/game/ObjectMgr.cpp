@@ -4655,20 +4655,22 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
         ScriptInfo tmp;
         tmp.id          = fields[0].GetUInt32();
         tmp.delay       = fields[1].GetUInt32();
-        tmp.command     = fields[2].GetUInt32();
-        tmp.raw.data[0] = fields[3].GetUInt32();
-        tmp.raw.data[1] = fields[4].GetUInt32();
-        tmp.raw.data[2] = fields[5].GetUInt32();
-        tmp.raw.data[3] = fields[6].GetUInt32();
-        tmp.raw.data[4] = fields[7].GetUInt32();
-        tmp.raw.data[5] = fields[8].GetInt32();
-        tmp.raw.data[6] = fields[9].GetInt32();
-        tmp.raw.data[7] = fields[10].GetInt32();
-        tmp.raw.data[8] = fields[11].GetInt32();
-        tmp.x           = fields[12].GetFloat();
-        tmp.y           = fields[13].GetFloat();
-        tmp.z           = fields[14].GetFloat();
-        tmp.o           = fields[15].GetFloat();
+        tmp.reqtype     = fields[2].GetUInt32();
+        tmp.reqvalue    = fields[3].GetUInt32();
+        tmp.command     = fields[4].GetUInt32();
+        tmp.raw.data[0] = fields[5].GetUInt32();
+        tmp.raw.data[1] = fields[6].GetUInt32();
+        tmp.raw.data[2] = fields[7].GetUInt32();
+        tmp.raw.data[3] = fields[8].GetUInt32();
+        tmp.raw.data[4] = fields[9].GetUInt32();
+        tmp.raw.data[5] = fields[10].GetInt32();
+        tmp.raw.data[6] = fields[11].GetInt32();
+        tmp.raw.data[7] = fields[12].GetInt32();
+        tmp.raw.data[8] = fields[13].GetInt32();
+        tmp.x           = fields[14].GetFloat();
+        tmp.y           = fields[15].GetFloat();
+        tmp.z           = fields[16].GetFloat();
+        tmp.o           = fields[17].GetFloat();
 
         // generic command args check
         switch(tmp.command)
@@ -5037,6 +5039,41 @@ void ObjectMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
                     continue;
                 }
 
+                break;
+            }
+            case SCRIPT_COMMAND_ADD_QUEST_COUNT:
+            {
+                Quest const* quest = GetQuestTemplate(tmp.add_quest_count.quest_id);
+                if( tmp.add_quest_count.quest_field > 4 )
+                {
+                    sLog.outErrorDb("Table `%s` has x for requirement [] (x: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `datalong2` for script id %u",tablename,tmp.add_quest_count.quest_field,tmp.id);
+                    continue;
+                }
+                if( tmp.add_quest_count.inc_value < 1 )
+                {
+                    sLog.outErrorDb("Table `%s` has increment value (Value: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `dataint` for script id %u",tablename,tmp.add_quest_count.inc_value,tmp.id);
+                    continue;
+                }
+                if(!quest)
+                {
+                    sLog.outErrorDb("Table `%s` has invalid quest (ID: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `datalong` for script id %u",tablename,tmp.add_quest_count.quest_id,tmp.id);
+                    continue;
+                }
+                break;
+            } 
+            case SCRIPT_COMMAND_TEMP_SUMMON_OBJECT:
+            {
+                if(!MaNGOS::IsValidMapCoord(tmp.x,tmp.y,tmp.z,tmp.o))
+                {
+                    sLog.outErrorDb("Table `%s` has invalid coordinates (X: %f Y: %f) in SCRIPT_COMMAND_TEMP_SUMMON_OBJECT for script id %u",tablename,tmp.x,tmp.y,tmp.id);
+                    continue;
+                }
+
+                if(!GetGameObjectInfo(tmp.go_summon.go_entry))
+                {
+                    sLog.outErrorDb("Table `%s` has invalid gameobject (Entry: %u) in SCRIPT_COMMAND_TEMP_SUMMON_OBJECT for script id %u",tablename,tmp.go_summon.go_entry,tmp.id);
+                    continue;
+                }
                 break;
             }
             case SCRIPT_COMMAND_SET_RUN:
