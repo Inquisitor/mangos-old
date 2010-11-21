@@ -2063,6 +2063,70 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             // Reindeer Transformation
                             target->CastSpell(target, 25860, true, NULL, this);
                         return;
+                    case 39246:                             // Q: The Big Bone Worm
+                    {
+                        if (!target)
+                            return;
+
+                        if (Unit* caster = GetCaster())
+                        {
+                            if (urand(0,10) > 2)
+                                for(uint8 x = 0; x < (urand(0,1) ? 2:3); ++x)
+                                    caster->SummonCreature(urand(0,1) ? 22482 : 22483, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
+                            else 
+                                caster->SummonCreature(22038, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
+                        }
+                        return;
+                    }
+                    case 45611:                             // Q: Abduction
+                    {
+                        if (Unit* caster = GetCaster())
+                        {
+                            if (caster->GetTypeId() == TYPEID_PLAYER && target->GetEntry() == 25316 && target->GetHealthPercent() < 35)
+                            {
+                                target->SetVisibility(VISIBILITY_OFF);
+                                target->DealDamage(target, target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                                caster->CastSpell(caster, 45626, true);
+                            }
+                        }
+                    }
+                    case 59579: // Burst at the Seams (Feanor: Is this needed anymore ? Handled in SpellEffects (59576)
+                    {                    
+                        CellPair pair(MaNGOS::ComputeCellPair(target->GetPositionX(), target->GetPositionY()));
+                        Cell cell(pair);
+                        cell.data.Part.reserved = ALL_DISTRICT;
+                        cell.SetNoCreate();
+
+                        std::list<Creature*> creatureList;
+                        {
+                            MaNGOS::AnyUnitInObjectRangeCheck go_check(target, 15); // 15 yards check
+                            MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(creatureList, go_check);
+                            TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+                            cell.Visit(pair, go_visit, *(target->GetMap()));
+                        }
+
+                        if (!creatureList.empty())
+                        {
+                            for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+                            {
+                                if ((*itr)->isAlive() && (*itr)->GetTypeId() != TYPEID_PLAYER && ((*itr)->GetEntry() == 31142 || (*itr)->GetEntry() == 31147 || (*itr)->GetEntry() == 31205))
+                                {
+                                    target->CastSpell((*itr), 59580, true);
+                                    if (target->GetOwner())
+                                    {
+                                        Unit * pOwner = target->GetOwner();
+                                        switch((*itr)->GetEntry())
+                                        {
+                                            case 31142: pOwner->CastSpell(pOwner, 59591, true); break;
+                                            case 31147: pOwner->CastSpell(pOwner, 60042, true); break;
+                                            case 31205: pOwner->CastSpell(pOwner, 60040, true); break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return;
+                    }
                     case 63624:                             // Learn a Second Talent Specialization
                         // Teach Learn Talent Specialization Switches, required for client triggered casts, allow after 30 sec delay
                         if (target->GetTypeId() == TYPEID_PLAYER)
@@ -2517,6 +2581,46 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         // Play part 3
                         else
                             target->PlayDirectSound(14972, (Player *)target);
+                    }
+                    return;
+                case 43354:                                 // Q: Seeds of the Blacksouled Keepers
+                    if (apply)
+                    {
+                        if (Unit* caster = GetCaster())
+                            if (caster->GetTypeId() == TYPEID_PLAYER)
+                                ((Player*)caster)->KilledMonsterCredit(24235, ObjectGuid());
+                    }
+                    else 
+                    {
+                        if (target->GetTypeId() != TYPEID_PLAYER && target->GetEntry() == 23876)
+                            ((Creature*)target)->ForcedDespawn();
+                    }
+                    return;
+                case 57806:                                 // Q: The Restless Dead
+                    if (apply)
+                    {
+                        if (Unit* caster = GetCaster())
+                            if (caster->GetTypeId() == TYPEID_PLAYER)
+                                ((Player*)caster)->KilledMonsterCredit(30546, ObjectGuid());
+                    }
+                    else 
+                    {
+                        if (target->GetTypeId() != TYPEID_PLAYER && target->GetEntry() == 31043)
+                            ((Creature*)target)->ForcedDespawn();
+                    }
+                    return;
+                case 43115:                                 // Q: Test at Sea
+                    if (apply && target->GetEntry() == 24120)
+                    {
+                        switch(urand(0, 3))
+                        {
+                            case 0: target->MonsterYell("I don't feel so good...", LANG_UNIVERSAL, 0); break;
+                            case 1: target->MonsterYell("That liquid... it reeks!", LANG_UNIVERSAL, 0); break;
+                            case 2: target->MonsterYell("Someone shoot that bat down!", LANG_UNIVERSAL, 0); break;
+                        }
+                        if (Unit* caster = GetCaster())
+                            if (caster->GetTypeId() == TYPEID_PLAYER)
+                                caster->CastSpell(caster, 43138, true);
                     }
                     return;
                 case 40131:
@@ -3187,6 +3291,49 @@ void Aura::HandleAuraTransform(bool apply, bool Real)
                 }
                 // Murloc costume
                 case 42365: target->SetDisplayId(21723); break;
+                //Dread Corsair costume
+                case 51926:
+                case 50517:
+                {
+                    switch(target->getGender())
+                    {
+                        case GENDER_MALE:
+                        {
+                            switch(target->getRace())
+                            {
+                                case RACE_UNDEAD_PLAYER: target->SetDisplayId(25042); break;
+                                case RACE_TROLL: target->SetDisplayId(25041); break;
+                                case RACE_TAUREN: target->SetDisplayId(25040); break;
+                                case RACE_ORC: target->SetDisplayId(25039); break;
+                                case RACE_NIGHTELF: target->SetDisplayId(25038); break;
+                                case RACE_HUMAN: target->SetDisplayId(25037); break;
+                                case RACE_GNOME: target->SetDisplayId(25035); break;
+                                case RACE_DWARF: target->SetDisplayId(25034); break;
+                                case RACE_DRAENEI: target->SetDisplayId(25033); break;
+                                case RACE_BLOODELF: target->SetDisplayId(25032); break;
+                            }
+                            break;
+                        }
+                        case GENDER_FEMALE:
+                        {
+                            switch(target->getRace())
+                            {
+                                case RACE_UNDEAD_PLAYER: target->SetDisplayId(25053); break;
+                                case RACE_TROLL: target->SetDisplayId(25052); break;
+                                case RACE_TAUREN: target->SetDisplayId(25051); break;
+                                case RACE_ORC: target->SetDisplayId(25050); break;
+                                case RACE_NIGHTELF: target->SetDisplayId(25049); break;
+                                case RACE_HUMAN: target->SetDisplayId(25048); break;
+                                case RACE_GNOME: target->SetDisplayId(25046); break;
+                                case RACE_DWARF: target->SetDisplayId(25045); break;
+                                case RACE_DRAENEI: target->SetDisplayId(25044); break;
+                                case RACE_BLOODELF: target->SetDisplayId(25043); break;
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
                 // Honor the Dead
                 case 65386:
                 case 65495:
