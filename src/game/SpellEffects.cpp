@@ -1912,7 +1912,6 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     // Iterate for all creatures around cast place
                     CellPair pair(MaNGOS::ComputeCellPair(m_targets.m_destX, m_targets.m_destY));
                     Cell cell(pair);
-                    cell.data.Part.reserved = ALL_DISTRICT;
                     cell.SetNoCreate();
 
                     std::list<Creature*> creatureList;
@@ -1920,7 +1919,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         MaNGOS::AnyUnitInPointRangeCheck go_check(unitTarget, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10); // 10 yards check
                         MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(creatureList, go_check);
                         TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-                        cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                        unitTarget->GetMap()->Visit(cell, go_visit);
                     }
 
                     if (!creatureList.empty())
@@ -1971,9 +1970,9 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     if (m_caster->GetTypeId() != TYPEID_PLAYER || !((Player*)m_caster)->IsFlying())
                         return;
 
-                    if (m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -145.554f, 1511.28f, 34.3641f) < 25)
+                    if (m_caster->GetDistance(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -145.554f, 1511.28f, 34.3641f) < 25)
                         ((Player*)m_caster)->KilledMonsterCredit(19291);
-                    if (m_caster->GetDistance( m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -304.408f, 1524.45f, 37.9685f ) < 25)
+                    if (m_caster->GetDistance(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, -304.408f, 1524.45f, 37.9685f ) < 25)
                         ((Player*)m_caster)->KilledMonsterCredit(19292);
                     return;
                 }
@@ -2127,7 +2126,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 }
                 case 48610:                                 // Q:Shredder Repair
                 {
-                    if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->isVehicle())
+                    if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->IsVehicle())
                         ((Vehicle*)m_caster)->RemoveAllPassengers();
 
                     return;
@@ -2149,7 +2148,6 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     // Iterate for all creatures around cast place
                     CellPair pair(MaNGOS::ComputeCellPair(m_targets.m_destX, m_targets.m_destY));
                     Cell cell(pair);
-                    cell.data.Part.reserved = ALL_DISTRICT;
                     cell.SetNoCreate();
 
                     std::list<Creature*> creatureList;
@@ -2157,7 +2155,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         MaNGOS::AnyUnitInPointRangeCheck go_check(m_caster, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 5); // 5 yards check
                         MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(creatureList, go_check);
                         TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-                        cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                        unitTarget->GetMap()->Visit(cell, go_visit);
                     }
 
                     if (!creatureList.empty())
@@ -2180,7 +2178,6 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     // Iterate for all creatures around cast place
                     CellPair pair(MaNGOS::ComputeCellPair(m_targets.m_destX, m_targets.m_destY));
                     Cell cell(pair);
-                    cell.data.Part.reserved = ALL_DISTRICT;
                     cell.SetNoCreate();
 
                     std::list<GameObject*> gobList;
@@ -2188,7 +2185,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         MaNGOS::AnyGameObjectInPointRangeCheck go_check(m_caster, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10.0f); // 10 yards check
                         MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck> go_search(gobList, go_check);
                         TypeContainerVisitor<MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-                        cell.Visit(pair, go_visit, *(GetCaster()->GetMap()));
+                        GetCaster()->GetMap()->Visit(cell, go_visit);
                     }
 
                     if (!gobList.empty())
@@ -2230,7 +2227,6 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     // Iterate for all creatures around cast place
                     CellPair pair(MaNGOS::ComputeCellPair(m_targets.m_destX, m_targets.m_destY));
                     Cell cell(pair);
-                    cell.data.Part.reserved = ALL_DISTRICT;
                     cell.SetNoCreate();
 
                     std::list<Creature*> creatureList;
@@ -2238,7 +2234,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         MaNGOS::AnyUnitInPointRangeCheck go_check(m_caster, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10); // 10 yards check
                         MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(creatureList, go_check);
                         TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-                        cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                        unitTarget->GetMap()->Visit(cell, go_visit);
                     }
 
                     if (!creatureList.empty())
@@ -6984,15 +6980,15 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     // Iterate for all creatures around cast place
                     CellPair pair(MaNGOS::ComputeCellPair(pCaster->GetPositionX(), pCaster->GetPositionY()));
                     Cell cell(pair);
-                    cell.data.Part.reserved = ALL_DISTRICT;
                     cell.SetNoCreate();
+
 
                     std::list<Creature*> creatureList;
                     {
                         MaNGOS::AnyUnitInPointRangeCheck go_check(pCaster, pCaster->GetPositionX(), pCaster->GetPositionY(), pCaster->GetPositionZ(), 20);
                         MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(creatureList, go_check);
                         TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-                        cell.Visit(pair, go_visit, *(unitTarget->GetMap()));
+                        unitTarget->GetMap()->Visit(cell, go_visit);
                     }
 
                     if (!creatureList.empty())

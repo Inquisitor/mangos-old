@@ -2130,7 +2130,6 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     {                    
                         CellPair pair(MaNGOS::ComputeCellPair(target->GetPositionX(), target->GetPositionY()));
                         Cell cell(pair);
-                        cell.data.Part.reserved = ALL_DISTRICT;
                         cell.SetNoCreate();
 
                         std::list<Creature*> creatureList;
@@ -2138,7 +2137,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             MaNGOS::AnyUnitInObjectRangeCheck go_check(target, 15); // 15 yards check
                             MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(creatureList, go_check);
                             TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-                            cell.Visit(pair, go_visit, *(target->GetMap()));
+                            target->GetMap()->Visit(cell, go_visit);
                         }
 
                         if (!creatureList.empty())
