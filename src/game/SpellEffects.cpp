@@ -206,7 +206,7 @@ pEffect SpellEffects[TOTAL_SPELL_EFFECTS]=
     &Spell::EffectTriggerSpellWithValue,                    //142 SPELL_EFFECT_TRIGGER_SPELL_WITH_VALUE
     &Spell::EffectApplyAreaAura,                            //143 SPELL_EFFECT_APPLY_AREA_AURA_OWNER
     &Spell::EffectNULL,                                     //144 SPELL_EFFECT_144                      Spectral Blast
-    &Spell::EffectNULL,                                     //145 SPELL_EFFECT_145                      Black Hole Effect
+    &Spell::EffectPlayerPull,                               //145 SPELL_EFFECT_145                      Black Hole Effect
     &Spell::EffectActivateRune,                             //146 SPELL_EFFECT_ACTIVATE_RUNE
     &Spell::EffectQuestFail,                                //147 SPELL_EFFECT_QUEST_FAIL               quest fail
     &Spell::EffectNULL,                                     //148 SPELL_EFFECT_148                      single spell: Inflicts Fire damage to an enemy.
@@ -260,6 +260,10 @@ void Spell::EffectResurrectNew(SpellEffectIndex eff_idx)
         return;
 
     uint32 health = damage;
+    
+    if (m_caster->HasAura(54733, EFFECT_INDEX_0) && m_spellInfo->Category == 26) // Glyph of Rebirth
+        health = pTarget->GetMaxHealth();
+
     uint32 mana = m_spellInfo->EffectMiscValue[eff_idx];
     pTarget->setResurrectRequestData(m_caster->GetObjectGuid(), m_caster->GetMapId(), m_caster->GetPositionX(), m_caster->GetPositionY(), m_caster->GetPositionZ(), health, mana);
     SendResurrectRequest(pTarget);
@@ -269,6 +273,37 @@ void Spell::EffectInstaKill(SpellEffectIndex /*eff_idx*/)
 {
     if (!unitTarget || !unitTarget->isAlive())
         return;
+                                                                               // Videre Elixir  and  Divine Intervention
+    if ((m_caster->GetTypeId() == TYPEID_PLAYER) && (m_caster == unitTarget) && m_spellInfo->Id != 14050 && m_spellInfo->Id != 19752)
+        return;
+
+    // Demonic Sacrifice
+    if(m_spellInfo->Id==18788 && unitTarget->GetTypeId()==TYPEID_UNIT)
+    {
+        uint32 entry = unitTarget->GetEntry();
+        uint32 spellID;
+        switch(entry)
+        {
+            case   416: spellID=18789; break;               //imp
+            case   417: spellID=18792; break;               //fellhunter
+            case  1860: spellID=18790; break;               //void
+            case  1863: spellID=18791; break;               //succubus
+            case 17252: spellID=35701; break;               //fellguard
+            default:
+                sLog.outError("EffectInstaKill: Unhandled creature entry (%u) case.", entry);
+                return;
+        }
+
+        m_caster->CastSpell(m_caster, spellID, true);
+    }
+
+    if(m_spellInfo->Id == 52479)
+    {
+        if(unitTarget->GetTypeId()==TYPEID_PLAYER)
+            return;
+        if(unitTarget->GetEntry() != 28822)
+            return;
+    }
 
     if (m_caster == unitTarget)                             // prevent interrupt message
         finish();
