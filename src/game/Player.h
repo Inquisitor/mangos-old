@@ -1491,6 +1491,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void MoneyChanged( uint32 value );
         void ReputationChanged(FactionEntry const* factionEntry );
         bool HasQuestForItem( uint32 itemid ) const;
+        bool HasQuest( uint32 questId ) const;
         bool HasQuestForGO(int32 GOId) const;
         void UpdateForQuestWorldObjects();
         bool CanShareQuest(uint32 quest_id) const;

@@ -20168,6 +20168,21 @@ bool Player::IsSpellFitByClassAndRace( uint32 spell_id ) const
     return false;
 }
 
+bool Player::HasQuest(uint32 questId) const
+{
+    for (uint32 i = 0; i < MAX_QUEST_LOG_SIZE; ++i)
+    {
+        uint32 questid = GetQuestSlotQuestId(i);
+        if (questid == 0)
+            continue;
+        if (questid == questId)
+            return true;
+
+        return false;
+    }
+    return false;
+}
+
 bool Player::HasQuestForGO(int32 GOId) const
 {
     for( int i = 0; i < MAX_QUEST_LOG_SIZE; ++i )
