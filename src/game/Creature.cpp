@@ -1402,6 +1402,7 @@ void Creature::SetDeathState(DeathState s)
             return;
 
         Unit::SetDeathState(CORPSE);
+
         if(IsVehicle())
             ((Vehicle*)this)->Die();
     }

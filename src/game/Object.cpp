@@ -1181,6 +1181,14 @@ void WorldObject::SetOrientation(float orientation)
         ((Unit*)this)->m_movementInfo.ChangeOrientation(orientation);
 }
 
+void WorldObject::SetOrientation(float orientation)
+{ 
+    m_orientation = orientation;
+
+    if(isType(TYPEMASK_UNIT))
+        ((Unit*)this)->m_movementInfo.ChangeOrientation(orientation);
+}
+
 uint32 WorldObject::GetZoneId() const
 {
     return GetTerrain()->GetZoneId(m_positionX, m_positionY, m_positionZ);
