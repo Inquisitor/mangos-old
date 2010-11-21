@@ -472,7 +472,11 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                 }
                 // Shield Slam
                 else if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x0000020000000000)) && m_spellInfo->Category==1209)
-                    damage += int32(m_caster->GetShieldBlockValue());
+                {
+                    int32 shieldBlockVal = int32(m_caster->GetShieldBlockValue());
+                    if(shieldBlockVal > int32(m_caster->getLevel()*34.5)) shieldBlockVal = int32(m_caster->getLevel()*34.5);
+                        damage += shieldBlockVal;
+                }
                 // Victory Rush
                 else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x10000000000))
                 {
@@ -823,7 +827,9 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                 // Shield of Righteousness
                 else if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x0010000000000000))
                 {
-                    damage+=int32(m_caster->GetShieldBlockValue());
+                    int32 shieldBlockVal = int32(m_caster->GetShieldBlockValue());
+                    if(shieldBlockVal > int32(m_caster->getLevel()*34.5)) shieldBlockVal = int32(m_caster->getLevel()*34.5);
+                        damage += shieldBlockVal;
                 }
                 // Judgement
                 else if (m_spellInfo->Id == 54158)
