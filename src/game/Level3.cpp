@@ -6311,6 +6311,9 @@ bool ChatHandler::HandleInstanceUnbindCommand(char* args)
 
 bool ChatHandler::HandleInstanceSetDataCommand(char * args)
 {
+    if (!*args)
+        return false;
+
     Player* pl = m_session->GetPlayer();
 
 
@@ -6345,8 +6348,10 @@ bool ChatHandler::HandleInstanceSetDataCommand(char * args)
 
 bool ChatHandler::HandleInstanceGetDataCommand(char * args)
 {
-    Player* pl = m_session->GetPlayer();
+    if (!*args)
+        return false;
 
+    Player* pl = m_session->GetPlayer();
 
     Map* map = pl->GetMap();
     if (!map->IsDungeon())

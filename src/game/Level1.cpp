@@ -2288,8 +2288,11 @@ bool ChatHandler::HandleSendSysMsgCommand(char* args)
 //Send message to channel
 bool ChatHandler::HandleSendChannelMsgCommand(char *args)
 {
+    if (!*args)
+        return false;
+
     ChannelMgr* cMgr = channelMgr(HORDE);
-    if( !cMgr )
+    if (!cMgr)
         return false;
 
     char* channel_name = strtok((char*)args, " ");
