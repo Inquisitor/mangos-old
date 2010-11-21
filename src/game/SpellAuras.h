@@ -513,7 +513,7 @@ class MANGOS_DLL_SPEC SingleEnemyTargetAura : public Aura
 
     protected:
         SingleEnemyTargetAura(SpellEntry const* spellproto, SpellEffectIndex eff, int32 *currentBasePoints, SpellAuraHolder *holder, Unit *target, Unit *caster  = NULL, Item* castItem = NULL);
-        uint64 m_casters_target_guid;
+        ObjectGuid m_castersTargetGuid;
 };
 
 MANGOS_DLL_SPEC Aura* CreateAura(SpellEntry const* spellproto, SpellEffectIndex eff, int32 *currentBasePoints, SpellAuraHolder *holder, Unit *target, Unit *caster = NULL, Item* castItem = NULL);
