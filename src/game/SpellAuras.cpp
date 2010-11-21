@@ -4860,6 +4860,13 @@ void Aura::HandlePeriodicTriggerSpell(bool apply, bool /*Real*/)
                 if (m_removeMode == AURA_REMOVE_BY_EXPIRE && GetEffIndex() + 1 < MAX_EFFECT_INDEX)
                     target->CastSpell(target, GetSpellProto()->CalculateSimpleValue(SpellEffectIndex(GetEffIndex()+1)), true);
                 return;
+            case 27819:                                     //Detonate Mana
+            {
+                int32 damage = target->GetMaxPower(POWER_MANA);
+                target->ModifyPower(POWER_MANA, -(damage/4));
+                target->CastCustomSpell(target, 27820, &damage , 0, 0, true );
+                return;
+            }
             case 51912:                                     // Ultra-Advanced Proto-Typical Shortening Blaster
                 if (m_removeMode == AURA_REMOVE_BY_EXPIRE)
                 {
