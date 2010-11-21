@@ -8850,6 +8850,15 @@ int32 Unit::CalculateSpellDamage(Unit const* target, SpellEntry const* spellProt
     if (comboDamage != 0 && unitPlayer && target && (target->GetObjectGuid() == unitPlayer->GetComboTargetGuid()))
         value += (int32)(comboDamage * comboPoints);
 
+    // Mixology - wrong formula, TODO: find proper one
+    SpellSpecific spellSpec = GetSpellSpecific(spellProto->Id);
+    if(HasAura(53042) && (spellSpec == SPELL_BATTLE_ELIXIR || spellSpec == SPELL_GUARDIAN_ELIXIR || spellSpec == SPELL_FLASK_ELIXIR))
+        value *= 1.4f;
+
+    // Magic Absorption always misses 1 point
+    if(spellProto->Id == 29444 && effect_index == EFFECT_INDEX_1)
+        value += spellProto->EffectRealPointsPerLevel[EFFECT_INDEX_1];
+
     if(Player* modOwner = GetSpellModOwner())
     {
         modOwner->ApplySpellMod(spellProto->Id, SPELLMOD_ALL_EFFECTS, value);
@@ -8924,6 +8933,44 @@ int32 Unit::CalculateSpellDuration(SpellEntry const* spellProto, SpellEffectInde
             duration = int32(int64(duration) * (100+durationMod) /100);
 
         if (duration < 0) duration = 0;
+    }
+
+    switch(spellProto->SpellFamilyName)
+    {
+        case SPELLFAMILY_POTION:
+        {
+            // Mixology
+            if (HasAura(53042))
+                duration *= 2;
+
+            break;
+        }
+        case SPELLFAMILY_DRUID:
+        {
+            if (spellProto->SpellFamilyFlags & UI64LIT(0x100))
+            {
+                // Glyph of Thorns
+                if (Aura * aur = GetAura(57862, EFFECT_INDEX_0))
+                    duration += aur->GetModifier()->m_amount * MINUTE * IN_MILLISECONDS;
+            }
+            break;
+        }
+        case SPELLFAMILY_PALADIN:
+        {
+            if (spellProto->SpellFamilyFlags & UI64LIT(0x00000002))
+            {
+                // Glyph of Blessing of Might
+                if (Aura * aur = GetAura(57958, EFFECT_INDEX_0))
+                    duration += aur->GetModifier()->m_amount * MINUTE * IN_MILLISECONDS;
+            }
+            else if (spellProto->SpellFamilyFlags & UI64LIT(0x00010000))
+            {
+                // Glyph of Blessing of Wisdom
+                if (Aura * aur = GetAura(57979, EFFECT_INDEX_0))
+                    duration += aur->GetModifier()->m_amount * MINUTE * IN_MILLISECONDS;
+            }
+            break;
+        }
     }
 
     return duration;
