@@ -2790,4 +2790,3 @@ void AchievementGlobalMgr::LoadRewardLocales()
     sLog.outString();
     sLog.outString( ">> Loaded %lu achievement reward locale strings", (unsigned long)m_achievementRewardLocales.size() );
 }
-
