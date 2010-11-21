@@ -4184,6 +4184,17 @@ void Aura::HandleModStealth(bool apply, bool Real)
                         target->CastSpell(target, 58427, true);
                     }
                 }
+
+                Unit::AuraList const& mModifierAuras = target->GetAurasByType(SPELL_AURA_ADD_FLAT_MODIFIER);
+                for(Unit::AuraList::const_iterator i = mDummyAuras.begin();i != mDummyAuras.end(); ++i)
+                {
+                    // Camouflage hack
+                    if((*i)->GetSpellProto()->SpellIconID == 250)
+                    {
+                        int32 bp = (*i)->GetModifier()->m_amount; 
+                        target->CastCustomSpell(target,22586,&bp,NULL,NULL,true);
+                    }
+                }
             }
         }
     }
@@ -4209,6 +4220,9 @@ void Aura::HandleModStealth(bool apply, bool Real)
                 else
                     target->SetVisibility(VISIBILITY_ON);
             }
+
+            // Camouflage hack
+            target->RemoveAurasDueToSpell(22586);
 
             // apply delayed talent bonus remover at last stealth aura remove
             Unit::AuraList const& mDummyAuras = target->GetAurasByType(SPELL_AURA_DUMMY);
