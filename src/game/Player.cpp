@@ -22125,7 +22125,14 @@ void Player::ActivateSpec(uint8 specNum)
     if(specNum >= GetSpecsCount())
         return;
 
+    if (GetBattleGround() && GetBattleGround()->GetStatus() == STATUS_IN_PROGRESS)
+        return;
+
     UnsummonPetTemporaryIfAny();
+    UnsummonAllTotems();
+    ClearComboPointHolders(); 	
+    ClearAllReactives();
+    RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
 
     ApplyGlyphs(false);
 
