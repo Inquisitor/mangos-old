@@ -1795,7 +1795,7 @@ void Map::ScriptsProcess()
 
         if (!step.targetGuid.IsEmpty())
         {
-            switch(GUID_HIPART(step.targetGuid))
+            switch(step.targetGuid.GetHigh())
             {
                 case HIGHGUID_UNIT:
                     target = GetCreature(step.targetGuid);
@@ -1816,7 +1816,7 @@ void Map::ScriptsProcess()
                     target = HashMapHolder<Corpse>::Find(step.targetGuid);
                     break;
                 default:
-                    sLog.outError("*_script source with unsupported high guid value %u",GUID_HIPART(step.targetGUID));
+                    sLog.outError("*_script source with unsupported high guid value %u",step.targetGuid.GetHigh());
                     break;
             }
         }
