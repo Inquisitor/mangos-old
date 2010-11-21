@@ -1893,6 +1893,29 @@ void Aura::TriggerSpell()
                 triggerTarget->CastCustomSpell(triggerTarget, trigger_spell_id, &mana, NULL, NULL, true, NULL, this);
                 return;
             }
+            // Grobbulus Poison Cloud called from script (modified ID)
+            case 30914:
+            {
+                if( triggeredSpellInfo->Id == 54363 ) // If it triggers our hacky-moded spell
+                {
+                    uint32 irangeIndex;
+                    if( GetAuraDuration() > 50000 )
+                        irangeIndex = 7; // 2 yards
+                    else if( GetAuraDuration() > 40000 && GetAuraDuration() < 50000 )
+                        irangeIndex = 8; // 5 yards
+                    else if( GetAuraDuration() > 30000 && GetAuraDuration() < 40000 )
+                        irangeIndex = 14; // 8 yards
+                    else if( GetAuraDuration() > 20000 && GetAuraDuration() < 30000 )
+                        irangeIndex = 13; // 10 yards
+                    else if( GetAuraDuration() > 10000 && GetAuraDuration() < 20000 )
+                        irangeIndex = 17; // 13 yards
+                    else if( GetAuraDuration() < 10000 )
+                        irangeIndex = 18; // 15 yards
+
+                    const_cast<SpellEntry*>(triggeredSpellInfo)->EffectRadiusIndex[0] = irangeIndex;
+                }
+                break;
+            }
         }
     }
 
