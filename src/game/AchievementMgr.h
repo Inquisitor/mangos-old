@@ -33,12 +33,14 @@ typedef std::list<AchievementEntry const*>         AchievementEntryList;
 
 typedef std::map<uint32,AchievementCriteriaEntryList> AchievementCriteriaListByAchievement;
 typedef std::map<uint32,AchievementEntryList>         AchievementListByReferencedId;
+typedef std::map<uint32,time_t>                       AchievementCriteriaFailTimeMap;
 
 struct CriteriaProgress
 {
     uint32 counter;
     time_t date;
     bool changed;
+    bool timedCriteriaFailed;
 };
 
 enum AchievementCriteriaRequirementType
@@ -212,7 +214,8 @@ struct AchievementReward
     std::string text;
 };
 
-typedef std::multimap<uint32,AchievementReward> AchievementRewards;
+typedef std::multimap<uint32, AchievementReward> AchievementRewardsMap;
+typedef std::pair<AchievementRewardsMap::const_iterator, AchievementRewardsMap::const_iterator> AchievementRewardsMapBounds;
 
 struct AchievementRewardLocale
 {
@@ -221,8 +224,8 @@ struct AchievementRewardLocale
     std::vector<std::string> text;
 };
 
-typedef std::multimap<uint32,AchievementRewardLocale> AchievementRewardLocales;
-
+typedef std::multimap<uint32, AchievementRewardLocale> AchievementRewardLocalesMap;
+typedef std::pair<AchievementRewardLocalesMap::const_iterator, AchievementRewardLocalesMap::const_iterator> AchievementRewardLocalesMapBounds;
 
 struct CompletedAchievementData
 {
@@ -237,7 +240,7 @@ class Unit;
 class Player;
 class WorldPacket;
 
-class MANGOS_DLL_SPEC AchievementMgr
+class AchievementMgr
 {
     public:
         AchievementMgr(Player* pl);
@@ -249,9 +252,8 @@ class MANGOS_DLL_SPEC AchievementMgr
         void SaveToDB();
         void ResetAchievementCriteria(AchievementCriteriaTypes type, uint32 miscvalue1=0, uint32 miscvalue2=0);
         void StartTimedAchievementCriteria(AchievementCriteriaTypes type, uint32 timedRequirementId, time_t startTime = 0);
+        void DoFailedTimedAchievementCriterias();
         void UpdateAchievementCriteria(AchievementCriteriaTypes type, uint32 miscvalue1=0, uint32 miscvalue2=0, Unit *unit=NULL, uint32 time=0);
-        void CompletedAchievement(AchievementEntry const* entry);
-        bool IsCompletedAchievement(AchievementEntry const* entry);
         void CheckAllAchievementCriteria();
         void SendAllAchievementData();
         void SendRespondInspectAchievements(Player* player);
@@ -284,13 +286,16 @@ class MANGOS_DLL_SPEC AchievementMgr
         void SendAchievementEarned(AchievementEntry const* achievement);
         void SendCriteriaUpdate(uint32 id, CriteriaProgress const* progress);
         void CompletedCriteriaFor(AchievementEntry const* achievement);
+        void CompletedAchievement(AchievementEntry const* entry);
         void IncompletedAchievement(AchievementEntry const* entry);
+        bool IsCompletedAchievement(AchievementEntry const* entry);
         void CompleteAchievementsWithRefs(AchievementEntry const* entry);
         void BuildAllDataPacket(WorldPacket *data);
 
         Player* m_player;
         CriteriaProgressMap m_criteriaProgress;
         CompletedAchievementMap m_completedAchievements;
+        AchievementCriteriaFailTimeMap m_criteriaFailTimes;
 };
 
 class AchievementGlobalMgr
@@ -311,9 +316,8 @@ class AchievementGlobalMgr
 
         AchievementReward const* GetAchievementReward(AchievementEntry const* achievement, uint8 gender) const
         {
-            AchievementRewards::const_iterator iter_low = m_achievementRewards.lower_bound(achievement->ID);
-            AchievementRewards::const_iterator iter_up  = m_achievementRewards.upper_bound(achievement->ID);
-            for (AchievementRewards::const_iterator iter = iter_low; iter != iter_up; ++iter)
+            AchievementRewardsMapBounds bounds = m_achievementRewards.equal_range(achievement->ID);
+            for (AchievementRewardsMap::const_iterator iter = bounds.first; iter != bounds.second; ++iter)
                 if(iter->second.gender == GENDER_NONE || uint8(iter->second.gender) == gender)
                     return &iter->second;
 
@@ -322,9 +326,8 @@ class AchievementGlobalMgr
 
         AchievementRewardLocale const* GetAchievementRewardLocale(AchievementEntry const* achievement, uint8 gender) const
         {
-            AchievementRewardLocales::const_iterator iter_low = m_achievementRewardLocales.lower_bound(achievement->ID);
-            AchievementRewardLocales::const_iterator iter_up  = m_achievementRewardLocales.upper_bound(achievement->ID);
-            for (AchievementRewardLocales::const_iterator iter = iter_low; iter != iter_up; ++iter)
+            AchievementRewardLocalesMapBounds bounds = m_achievementRewardLocales.equal_range(achievement->ID);
+            for (AchievementRewardLocalesMap::const_iterator iter = bounds.first; iter != bounds.second; ++iter)
                 if(iter->second.gender == GENDER_NONE || uint8(iter->second.gender) == gender)
                     return &iter->second;
 
@@ -366,8 +369,8 @@ class AchievementGlobalMgr
         typedef std::set<uint32> AllCompletedAchievements;
         AllCompletedAchievements m_allCompletedAchievements;
 
-        AchievementRewards m_achievementRewards;
-        AchievementRewardLocales m_achievementRewardLocales;
+        AchievementRewardsMap       m_achievementRewards;
+        AchievementRewardLocalesMap m_achievementRewardLocales;
 };
 
 #define sAchievementMgr MaNGOS::Singleton<AchievementGlobalMgr>::Instance()

@@ -24,7 +24,6 @@
 #include "Object.h"
 #include "LootMgr.h"
 #include "Database/DatabaseEnv.h"
-#include "Utilities/EventProcessor.h"
 
 // GCC have alternative #pragma pack(N) syntax and old gcc version not support pack(push,N), also any gcc version not support it at some platform
 #if defined( __GNUC__ )
@@ -577,6 +576,8 @@ class Unit;
 // 5 sec for bobber catch
 #define FISHING_BOBBER_READY_TIME 5
 
+#define GO_ANIMPROGRESS_DEFAULT 0xFF
+
 class MANGOS_DLL_SPEC GameObject : public WorldObject
 {
     public:
@@ -586,7 +587,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         void AddToWorld();
         void RemoveFromWorld();
 
-        bool Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint32 animprogress, GOState go_state);
+        bool Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint8 animprogress, GOState go_state);
         void Update(uint32 p_time);
         GameObjectInfo const* GetGOInfo() const;
 
@@ -596,29 +597,20 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         void UpdateRotationFields(float rotation2 = 0.0f, float rotation3 = 0.0f);
 
-        void Say(int32 textId, uint32 language, uint64 TargetGuid) { MonsterSay(textId,language,TargetGuid); }
-        void Yell(int32 textId, uint32 language, uint64 TargetGuid) { MonsterYell(textId,language,TargetGuid); }
-        void TextEmote(int32 textId, uint64 TargetGuid) { MonsterTextEmote(textId,TargetGuid); }
-        void Whisper(int32 textId, uint64 receiver) { MonsterWhisper(textId,receiver); }
-        void YellToZone(int32 textId, uint32 language, uint64 TargetGuid) { MonsterYellToZone(textId,language,TargetGuid); }
-
         // overwrite WorldObject function for proper name localization
         const char* GetNameForLocaleIdx(int32 locale_idx) const;
-
-        // Event handler
-        EventProcessor m_ObjectEvents;
 
         void SaveToDB();
         void SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask);
         bool LoadFromDB(uint32 guid, Map *map);
         void DeleteFromDB();
 
-        void SetOwnerGUID(uint64 owner)
+        void SetOwnerGuid(ObjectGuid ownerGuid)
         {
             m_spawnedByDefault = false;                     // all object with owner is despawned after delay
-            SetUInt64Value(OBJECT_FIELD_CREATED_BY, owner);
+            SetGuidValue(OBJECT_FIELD_CREATED_BY, ownerGuid);
         }
-        uint64 GetOwnerGUID() const { return GetUInt64Value(OBJECT_FIELD_CREATED_BY); }
+        ObjectGuid const& GetOwnerGuid() const { return GetGuidValue(OBJECT_FIELD_CREATED_BY); }
         Unit* GetOwner() const;
 
         void SetSpellId(uint32 id)
@@ -653,7 +645,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         bool isSpawnedByDefault() const { return m_spawnedByDefault; }
         uint32 GetRespawnDelay() const { return m_respawnDelayTime; }
         void Refresh();
-        void Delete(uint32 timeMSToDelete = 0);
+        void Delete();
         void getFishLoot(Loot *loot, Player* loot_owner);
         GameobjectTypes GetGoType() const { return GameobjectTypes(GetByteValue(GAMEOBJECT_BYTES_1, 1)); }
         void SetGoType(GameobjectTypes type) { SetByteValue(GAMEOBJECT_BYTES_1, 1, type); }
@@ -692,8 +684,8 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         Loot        loot;
 
-        bool hasQuest(uint32 quest_id) const;
-        bool hasInvolvedQuest(uint32 quest_id) const;
+        bool HasQuest(uint32 quest_id) const;
+        bool HasInvolvedQuest(uint32 quest_id) const;
         bool ActivateToQuest(Player *pTarget) const;
         void UseDoorOrButton(uint32 time_to_restore = 0, bool alternative = false);
                                                             // 0 = use `gameobject`.`spawntimesecs`
@@ -739,15 +731,4 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         GridReference<GameObject> m_gridRef;
 };
-
-class ForcedDeleteDelayEvent : public BasicEvent
-{
-    public:
-        ForcedDeleteDelayEvent(GameObject& owner) : BasicEvent(), m_owner(owner) { }
-        bool Execute(uint64 e_time, uint32 p_time);
-
-    private:
-        GameObject& m_owner;
-};
-
 #endif

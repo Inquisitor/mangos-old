@@ -52,7 +52,6 @@
 #include "InstanceData.h"
 #include "CreatureEventAIMgr.h"
 #include "DBCEnums.h"
-#include "GossipDef.h"
 
 //reload commands
 bool ChatHandler::HandleReloadAllCommand(char* /*args*/)
@@ -172,8 +171,6 @@ bool ChatHandler::HandleReloadAllSpellCommand(char* /*args*/)
     HandleReloadSpellTargetPositionCommand((char*)"a");
     HandleReloadSpellThreatsCommand((char*)"a");
     HandleReloadSpellPetAurasCommand((char*)"a");
-    HandleReloadSpellStacksCommand((char*)"a");
-    HandleReloadSpellDisabledCommand((char*)"a");
     return true;
 }
 
@@ -191,6 +188,7 @@ bool ChatHandler::HandleReloadAllGossipsCommand(char* args)
 bool ChatHandler::HandleReloadAllItemCommand(char* /*args*/)
 {
     HandleReloadPageTextsCommand((char*)"a");
+    HandleReloadItemConvertCommand((char*)"a");
     HandleReloadItemEnchantementsCommand((char*)"a");
     HandleReloadItemRequiredTragetCommand((char*)"a");
     return true;
@@ -271,14 +269,6 @@ bool ChatHandler::HandleReloadCreatureQuestInvRelationsCommand(char* /*args*/)
     sLog.outString( "Loading Quests Relations... (`creature_involvedrelation`)" );
     sObjectMgr.LoadCreatureInvolvedRelations();
     SendGlobalSysMessage("DB table `creature_involvedrelation` (creature quest takers) reloaded.");
-    return true;
-}
-
-bool ChatHandler::HandleReloadGCNewsCommand(char*)
-{
-    sLog.outString( "Re-Loading `gc_news` Table!" );
-    sObjectMgr.LoadGCNews();
-    SendGlobalSysMessage("DB table `gc_news` reloaded.");
     return true;
 }
 
@@ -488,6 +478,11 @@ bool ChatHandler::HandleReloadNpcTrainerCommand(char* /*args*/)
 
 bool ChatHandler::HandleReloadNpcVendorCommand(char* /*args*/)
 {
+    // not safe reload vendor template tables independent...
+    sLog.outString( "Re-Loading `npc_vendor_template` Table!" );
+    sObjectMgr.LoadVendorTemplates();
+    SendGlobalSysMessage("DB table `npc_vendor_template` reloaded.");
+
     sLog.outString( "Re-Loading `npc_vendor` Table!" );
     sObjectMgr.LoadVendors();
     SendGlobalSysMessage("DB table `npc_vendor` reloaded.");
@@ -654,22 +649,6 @@ bool ChatHandler::HandleReloadSpellPetAurasCommand(char* /*args*/)
     return true;
 }
 
-bool ChatHandler::HandleReloadSpellStacksCommand(char*)
-{
-    sLog.outString( "Re-Loading Spell Stacking Rules...");
-    sSpellMgr.LoadSpellStackingRules();
-    SendGlobalSysMessage("DB table `spell_stacking` (spell stacking definitions) reloaded.");
-    return true;
-}
-
-bool ChatHandler::HandleReloadSpellDisabledCommand(char* /*arg*/)
-{
-    sLog.outString( "Re-Loading spell disabled table...");
-    sObjectMgr.LoadSpellDisabledEntrys();
-    SendGlobalSysMessage("DB table `spell_disabled` reloaded.");
-    return true;
-}
-
 bool ChatHandler::HandleReloadPageTextsCommand(char* /*args*/)
 {
     sLog.outString( "Re-Loading Page Texts..." );
@@ -683,6 +662,14 @@ bool ChatHandler::HandleReloadItemEnchantementsCommand(char* /*args*/)
     sLog.outString( "Re-Loading Item Random Enchantments Table..." );
     LoadRandomEnchantmentsTable();
     SendGlobalSysMessage("DB table `item_enchantment_template` reloaded.");
+    return true;
+}
+
+bool ChatHandler::HandleReloadItemConvertCommand(char* /*args*/)
+{
+    sLog.outString( "Re-Loading Item Converts Table..." );
+    sObjectMgr.LoadItemConverts();
+    SendGlobalSysMessage("DB table `item_convert` reloaded.");
     return true;
 }
 
@@ -1012,7 +999,7 @@ bool ChatHandler::HandleAccountSetGmLevelCommand(char* args)
 
     return true;
 }
-/*
+
 /// Set password for account
 bool ChatHandler::HandleAccountSetPasswordCommand(char* args)
 {
@@ -1063,7 +1050,7 @@ bool ChatHandler::HandleAccountSetPasswordCommand(char* args)
 
     return true;
 }
-*/
+
 
 void ChatHandler::ShowAchievementCriteriaListHelper(AchievementCriteriaEntry const* criEntry, AchievementEntry const * achEntry, LocaleConstant loc, Player* target /*= NULL*/)
 {
@@ -3705,7 +3692,7 @@ bool ChatHandler::HandleDieCommand(char* /*args*/)
 {
     Unit* target = getSelectedUnit();
 
-    if(!target || !m_session->GetPlayer()->GetSelection())
+    if(!target || m_session->GetPlayer()->GetSelectionGuid().IsEmpty())
     {
         SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
         SetSentErrorMessage(true);
@@ -3733,7 +3720,7 @@ bool ChatHandler::HandleDamageCommand(char* args)
 
     Unit* target = getSelectedUnit();
 
-    if (!target || !m_session->GetPlayer()->GetSelection())
+    if (!target || m_session->GetPlayer()->GetSelectionGuid().IsEmpty())
     {
         SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
         SetSentErrorMessage(true);
@@ -4140,8 +4127,8 @@ bool ChatHandler::HandleNpcAddWeaponCommand(char* /*args*/)
     /*if (!*args)
     return false;
 
-    uint64 guid = m_session->GetPlayer()->GetSelection();
-    if (guid == 0)
+    ObjectGuid guid = m_session->GetPlayer()->GetSelectionGuid();
+    if (guid.IsEmpty())
     {
         SendSysMessage(LANG_NO_SELECTION);
         return true;
@@ -4474,14 +4461,14 @@ bool ChatHandler::HandleAuctionCommand(char* /*args*/)
 
 bool ChatHandler::HandleBankCommand(char* /*args*/)
 {
-    m_session->SendShowBank( m_session->GetPlayer()->GetGUID() );
+    m_session->SendShowBank(m_session->GetPlayer()->GetObjectGuid());
 
     return true;
 }
 
 bool ChatHandler::HandleStableCommand(char* /*args*/)
 {
-    m_session->SendStablePet(m_session->GetPlayer()->GetGUID());
+    m_session->SendStablePet(m_session->GetPlayer()->GetObjectGuid());
 
     return true;
 }
@@ -4626,7 +4613,7 @@ bool ChatHandler::HandleListAurasCommand (char* /*args*/)
                     aur->GetModifier()->m_auraname, aur->GetAuraDuration(), aur->GetAuraMaxDuration(),
                     ss_name.str().c_str(),
                     (holder->IsPassive() ? passiveStr : ""),(talent ? talentStr : ""),
-                    IS_PLAYER_GUID(holder->GetCasterGUID()) ? "player" : "creature",GUID_LOPART(holder->GetCasterGUID()));
+                    holder->GetCasterGuid().GetString().c_str());
             }
             else
             {
@@ -4634,7 +4621,7 @@ bool ChatHandler::HandleListAurasCommand (char* /*args*/)
                     aur->GetModifier()->m_auraname, aur->GetAuraDuration(), aur->GetAuraMaxDuration(),
                     name,
                     (holder->IsPassive() ? passiveStr : ""),(talent ? talentStr : ""),
-                    IS_PLAYER_GUID(holder->GetCasterGUID()) ? "player" : "creature",GUID_LOPART(holder->GetCasterGUID()));
+                    holder->GetCasterGuid().GetString().c_str());
             }
         }
     }
@@ -4656,13 +4643,13 @@ bool ChatHandler::HandleListAurasCommand (char* /*args*/)
 
                 PSendSysMessage(LANG_COMMAND_TARGET_AURASIMPLE, (*itr)->GetId(), (*itr)->GetEffIndex(),
                     ss_name.str().c_str(),((*itr)->GetHolder()->IsPassive() ? passiveStr : ""),(talent ? talentStr : ""),
-                    IS_PLAYER_GUID((*itr)->GetCasterGUID()) ? "player" : "creature",GUID_LOPART((*itr)->GetCasterGUID()));
+                    (*itr)->GetCasterGuid().GetString().c_str());
             }
             else
             {
                 PSendSysMessage(LANG_COMMAND_TARGET_AURASIMPLE, (*itr)->GetId(), (*itr)->GetEffIndex(),
                     name,((*itr)->GetHolder()->IsPassive() ? passiveStr : ""),(talent ? talentStr : ""),
-                    IS_PLAYER_GUID((*itr)->GetCasterGUID()) ? "player" : "creature",GUID_LOPART((*itr)->GetCasterGUID()));
+                    (*itr)->GetCasterGuid().GetString().c_str());
             }
         }
     }
@@ -4895,7 +4882,7 @@ bool ChatHandler::HandleResetTalentsCommand(char* args)
     {
         // Try reset talents as Hunter Pet
         Creature* creature = getSelectedCreature();
-        if (!*args && creature && creature->isPet())
+        if (!*args && creature && creature->IsPet())
         {
             Unit *owner = creature->GetOwner();
             if(owner && owner->GetTypeId() == TYPEID_PLAYER && ((Pet *)creature)->IsPermanentPetFor((Player*)owner))
@@ -4934,7 +4921,7 @@ bool ChatHandler::HandleResetTalentsCommand(char* args)
     SetSentErrorMessage(true);
     return false;
 }
-/*
+
 bool ChatHandler::HandleResetAllCommand(char* args)
 {
     if (!*args)
@@ -4973,7 +4960,7 @@ bool ChatHandler::HandleResetAllCommand(char* args)
 
     return true;
 }
-*/
+
 bool ChatHandler::HandleServerShutDownCancelCommand(char* /*args*/)
 {
     sWorld.ShutdownCancel();
@@ -5057,66 +5044,6 @@ bool ChatHandler::HandleServerIdleShutDownCommand(char* args)
         return false;
 
     sWorld.ShutdownServ(delay, SHUTDOWN_MASK_IDLE, exitcode);
-    return true;
-}
-
-bool ChatHandler::HandleNewsGossipCommand(char* args)
-{
-    Player* player;
-    uint64 target_guid;
-
-    if (!ExtractPlayerTarget(&args,&player,&target_guid))
-        return false;
-    if (!player)
-        return false;
-
-    int news_id = 0;
-    char* cId = strtok(NULL, " ");
-    uint32 entry;
-
-    cId ? entry = atol(cId) : 0;
-
-    player->PlayerTalkClass->ClearMenus();
-    uint32 textId = 110001;
-    for( std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.begin(); itr != sObjectMgr.mGCNewsMap.end(); ++itr )
-    {
-        GCNewsData const& news = (*itr).second;
-        if(news.parent == entry)
-            switch (news.type)
-            {
-                case 3:
-                {
-                    // we add a level up item for that we need to know the parents parent.
-                    std::multimap<uint32,GCNewsData>::iterator itr2 = sObjectMgr.mGCNewsMap.find(entry);
-                    // if there actually is a parent
-                    if( itr2 != sObjectMgr.mGCNewsMap.end() )
-                        player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_BATTLE,news.textstring,1,(*itr2).second.parent,"",0);
-                    break;
-                }
-                case 2:
-                    // we add a icon that can be clicked
-                    player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_INTERACT_1,news.textstring,1,(*itr).first,"",0);
-                    break;
-                case 1:
-                    // we add normal text, on click it will lead to same menu.
-                    player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_DOT,news.textstring,1,entry,"",0);
-                    break;
-                case 0:
-                    // we set the correct text
-                    textId = atoi(news.textstring.c_str());
-                    break;
-            }
-    }
-    player->PlayerTalkClass->SendTalking(textId);
-
-    if (player->PlayerTalkClass->GetGossipMenu().Empty())
-        player->PlayerTalkClass->CloseGossip();
-    else 
-    {
-        player->PlayerTalkClass->SendGossipMenu(textId, player->GetGUID());
-        player->PlayerTalkClass->SendGossipMenu(textId, player->GetGUID());
-        PSendSysMessage("Sending News Gossip nr. %u to player GUID: %u",entry,GUID_LOPART(target_guid));
-    }
     return true;
 }
 
@@ -5755,16 +5682,16 @@ bool ChatHandler::HandleRespawnCommand(char* /*args*/)
 
     // accept only explicitly selected target (not implicitly self targeting case)
     Unit* target = getSelectedUnit();
-    if(pl->GetSelection() && target)
+    if (!pl->GetSelectionGuid().IsEmpty() && target)
     {
-        if(target->GetTypeId()!=TYPEID_UNIT)
+        if (target->GetTypeId() != TYPEID_UNIT)
         {
             SendSysMessage(LANG_SELECT_CREATURE);
             SetSentErrorMessage(true);
             return false;
         }
 
-        if(target->isDead())
+        if (target->isDead())
             ((Creature*)target)->Respawn();
         return true;
     }
@@ -6388,67 +6315,6 @@ bool ChatHandler::HandleInstanceUnbindCommand(char* args)
     return true;
 }
 
-bool ChatHandler::HandleInstanceSetDataCommand(char * args)
-{
-    Player* pl = m_session->GetPlayer();
-
-
-    Map* map = pl->GetMap();
-    if (!map->IsDungeon())
-    {
-        PSendSysMessage("Map is not a dungeon.");
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    if (!((InstanceMap*)map)->GetInstanceData())
-    {
-        PSendSysMessage("Map has no instance data.");
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    char* field_str = strtok ((char*) args, " ");
-    char* value_str = strtok (NULL, "");
-
-    if (!field_str || !value_str)
-        return false;
-
-    int32 field = atoi (field_str);
-    int32 value = atoi (value_str);
-
-    ((InstanceMap*)map)->GetInstanceData()->SetData(field, value);
-    PSendSysMessage("Instance data field %i is now set to %i.", field, value);
-    return true;
-}
-
-bool ChatHandler::HandleInstanceGetDataCommand(char * args)
-{
-    Player* pl = m_session->GetPlayer();
-
-
-    Map* map = pl->GetMap();
-    if (!map->IsDungeon())
-    {
-        PSendSysMessage("Map is not a dungeon.");
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    if (!((InstanceMap*)map)->GetInstanceData())
-    {
-        PSendSysMessage("Map has no instance data.");
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    int32 field = atoi (args);
-
-    int32 val = ((InstanceMap*)map)->GetInstanceData()->GetData(field);
-    PSendSysMessage("Instance data for field %i is %i.", field, val);
-    return true;
-}
-
 bool ChatHandler::HandleInstanceStatsCommand(char* /*args*/)
 {
     PSendSysMessage("instances loaded: %d", sMapMgr.GetNumInstances());
@@ -6617,8 +6483,8 @@ bool ChatHandler::HandleAccountSetAddonCommand(char* args)
         return false;
 
     // No SQL injection
-    LoginDatabase.PExecute("UPDATE account SET expansion = '%d' WHERE id = '%u'",lev,account_id);
-    PSendSysMessage(LANG_ACCOUNT_SETADDON,account_name.c_str(),account_id,lev);
+    LoginDatabase.PExecute("UPDATE account SET expansion = '%u' WHERE id = '%u'", lev, account_id);
+    PSendSysMessage(LANG_ACCOUNT_SETADDON,account_name.c_str(), account_id, lev);
     return true;
 }
 

@@ -68,7 +68,7 @@ class ChatHandler
         explicit ChatHandler(Player* player);
         ~ChatHandler();
 
-        static void FillMessageData( WorldPacket *data, WorldSession* session, uint8 type, uint32 language, const char *channelName, uint64 target_guid, const char *message, Unit *speaker, bool forceGMIcon = false);
+        static void FillMessageData( WorldPacket *data, WorldSession* session, uint8 type, uint32 language, const char *channelName, uint64 target_guid, const char *message, Unit *speaker);
 
         void FillMessageData( WorldPacket *data, uint8 type, uint32 language, uint64 target_guid, const char* message)
         {
@@ -89,7 +89,6 @@ class ChatHandler
         void SendSysMessage(          int32     entry);
         void PSendSysMessage(         const char *format, ...) ATTR_PRINTF(2,3);
         void PSendSysMessage(         int32     entry, ...  );
-        void StrReplaceStr(std::string &str, const std::string &find_what, const std::string &replace_with);
 
         bool ParseCommands(const char* text);
         ChatCommand const* FindCommand(char const* text);
@@ -133,7 +132,7 @@ class ChatHandler
         bool HandleAccountPasswordCommand(char* args);
         bool HandleAccountSetAddonCommand(char* args);
         bool HandleAccountSetGmLevelCommand(char* args);
-        //bool HandleAccountSetPasswordCommand(char* args);
+        bool HandleAccountSetPasswordCommand(char* args);
 
         bool HandleAuctionAllianceCommand(char* args);
         bool HandleAuctionGoblinCommand(char* args);
@@ -218,7 +217,6 @@ class ChatHandler
         bool HandleGameObjectDeleteCommand(char* args);
         bool HandleGameObjectMoveCommand(char* args);
         bool HandleGameObjectNearCommand(char* args);
-        bool HandleGameObjectStateCommand(char* args);
         bool HandleGameObjectPhaseCommand(char* args);
         bool HandleGameObjectTargetCommand(char* args);
         bool HandleGameObjectTurnCommand(char* args);
@@ -254,8 +252,6 @@ class ChatHandler
         bool HandleInstanceListBindsCommand(char* args);
         bool HandleInstanceUnbindCommand(char* args);
         bool HandleInstanceStatsCommand(char* args);
-        bool HandleInstanceSetDataCommand(char * args);
-        bool HandleInstanceGetDataCommand(char * args);
         bool HandleInstanceSaveDataCommand(char* args);
 
         bool HandleLearnCommand(char* args);
@@ -357,7 +353,6 @@ class ChatHandler
 
         bool HandleQuestAddCommand(char* args);
         bool HandleQuestRemoveCommand(char* args);
-        bool HandleNewsGossipCommand(char * args);
         bool HandleQuestCompleteCommand(char* args);
 
         bool HandleReloadAllCommand(char* args);
@@ -391,12 +386,12 @@ class ChatHandler
         bool HandleReloadGameGraveyardZoneCommand(char* args);
         bool HandleReloadGameObjectScriptsCommand(char* args);
         bool HandleReloadGameTeleCommand(char* args);
-        bool HandleReloadGCNewsCommand(char* args);
         bool HandleReloadGossipMenuCommand(char* args);
         bool HandleReloadGossipMenuOptionCommand(char* args);
         bool HandleReloadGossipScriptsCommand(char* args);
         bool HandleReloadGOQuestRelationsCommand(char* args);
         bool HandleReloadGOQuestInvRelationsCommand(char* args);
+        bool HandleReloadItemConvertCommand(char* args);
         bool HandleReloadItemEnchantementsCommand(char* args);
         bool HandleReloadItemRequiredTragetCommand(char* args);
         bool HandleReloadLocalesAchievementRewardCommand(char* args);
@@ -451,14 +446,11 @@ class ChatHandler
         bool HandleReloadSpellTargetPositionCommand(char* args);
         bool HandleReloadSpellThreatsCommand(char* args);
         bool HandleReloadSpellPetAurasCommand(char* args);
-        bool HandleReloadSpellStacksCommand(char* args);
-        bool HandleReloadSpellDisabledCommand(char* args);
         bool HandleReloadVehicleDataCommand(char* args);
         bool HandleReloadVehicleSeatDataCommand(char* args);
 
-
         bool HandleResetAchievementsCommand(char* args);
-        //bool HandleResetAllCommand(char* args);
+        bool HandleResetAllCommand(char* args);
         bool HandleResetHonorCommand(char* args);
         bool HandleResetLevelCommand(char* args);
         bool HandleResetSpecsCommand(char* args);
@@ -470,9 +462,6 @@ class ChatHandler
         bool HandleSendMailCommand(char* args);
         bool HandleSendMessageCommand(char* args);
         bool HandleSendMoneyCommand(char* args);
-        bool HandleSendChannelMsgCommand(char* args);
-        bool HandleSendSysMsgCommand(char * args);
-        bool HandleCharacterWhisperCommand(char* args);
 
         bool HandleServerCorpsesCommand(char* args);
         bool HandleServerExitCommand(char* args);
@@ -681,8 +670,8 @@ class CliHandler : public ChatHandler
 {
     public:
         typedef void Print(void*, char const*);
-        explicit CliHandler(uint32 guid, uint32 accountId, AccountTypes accessLevel, void* callbackArg, Print* zprint)
-            : m_accountId(accountId), m_loginAccessLevel(accessLevel), m_callbackArg(callbackArg), m_print(zprint), m_guid(guid) {}
+        explicit CliHandler(uint32 accountId, AccountTypes accessLevel, void* callbackArg, Print* zprint)
+            : m_accountId(accountId), m_loginAccessLevel(accessLevel), m_callbackArg(callbackArg), m_print(zprint) {}
 
         // overwrite functions
         const char *GetMangosString(int32 entry) const;
@@ -700,7 +689,6 @@ class CliHandler : public ChatHandler
         AccountTypes m_loginAccessLevel;
         void* m_callbackArg;
         Print* m_print;
-        uint32 m_guid;
 };
 
 

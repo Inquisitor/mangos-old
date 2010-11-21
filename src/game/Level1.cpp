@@ -33,7 +33,6 @@
 #include "InstanceSaveMgr.h"
 #include "Mail.h"
 #include "Util.h"
-#include "ChannelMgr.h"
 #ifdef _DEBUG_VMAPS
 #include "VMapFactory.h"
 #endif
@@ -52,7 +51,7 @@ bool ChatHandler::HandleNpcSayCommand(char* args)
         return false;
     }
 
-    pCreature->MonsterSay(args, LANG_UNIVERSAL, 0);
+    pCreature->MonsterSay(args, LANG_UNIVERSAL);
 
     return true;
 }
@@ -70,7 +69,7 @@ bool ChatHandler::HandleNpcYellCommand(char* args)
         return false;
     }
 
-    pCreature->MonsterYell(args, LANG_UNIVERSAL, 0);
+    pCreature->MonsterYell(args, LANG_UNIVERSAL);
 
     return true;
 }
@@ -90,7 +89,7 @@ bool ChatHandler::HandleNpcTextEmoteCommand(char* args)
         return false;
     }
 
-    pCreature->MonsterTextEmote(args, 0);
+    pCreature->MonsterTextEmote(args, NULL);
 
     return true;
 }
@@ -102,8 +101,8 @@ bool ChatHandler::HandleNpcWhisperCommand(char* args)
     if (!ExtractPlayerTarget(&args, &target))
         return false;
 
-    uint64 guid = m_session->GetPlayer()->GetSelection();
-    if (!guid)
+    ObjectGuid guid = m_session->GetPlayer()->GetSelectionGuid();
+    if (guid.IsEmpty())
         return false;
 
     Creature* pCreature = m_session->GetPlayer()->GetMap()->GetCreature(guid);
@@ -115,7 +114,7 @@ bool ChatHandler::HandleNpcWhisperCommand(char* args)
     if (HasLowerSecurity(target, 0))
         return false;
 
-    pCreature->MonsterWhisper(args, target->GetGUID());
+    pCreature->MonsterWhisper(args, target);
 
     return true;
 }
@@ -294,7 +293,7 @@ bool ChatHandler::HandleGPSCommand(char* args)
         zone_y = 0;
     }
 
-    Map const *map = obj->GetMap();
+    TerrainInfo const *map = obj->GetTerrain();
     float ground_z = map->GetHeight(obj->GetPositionX(), obj->GetPositionY(), MAX_HEIGHT);
     float floor_z = map->GetHeight(obj->GetPositionX(), obj->GetPositionY(), obj->GetPositionZ());
 
@@ -554,8 +553,16 @@ bool ChatHandler::HandleGonameCommand(char* args)
                 InstanceGroupBind *gBind = group ? group->GetBoundInstance(target->GetMapId(), target) : NULL;
                 // if no bind exists, create a solo bind
                 if (!gBind)
+                {
                     if (InstanceSave *save = target->GetMap()->GetInstanceSave())
-                        _player->BindToInstance(save, !save->CanReset());
+                    {
+                        // if player is group leader then we need add group bind
+                        if (group && group->IsLeader(_player->GetObjectGuid()))
+                            group->BindToInstance(save, !save->CanReset());
+                        else
+                            _player->BindToInstance(save, !save->CanReset());
+                    }
+                }
             }
 
             if(cMap->IsRaid())
@@ -908,7 +915,7 @@ bool ChatHandler::HandleModifyTalentCommand (char* args)
         ((Player*)target)->SendTalentsInfoData(false);
         return true;
     }
-    else if(((Creature*)target)->isPet())
+    else if(((Creature*)target)->IsPet())
     {
         Unit *owner = target->GetOwner();
         if(owner && owner->GetTypeId() == TYPEID_PLAYER && ((Pet *)target)->IsPermanentPetFor((Player*)owner))
@@ -1823,7 +1830,7 @@ bool ChatHandler::HandleTeleNameCommand(char* args)
 
         PSendSysMessage(LANG_TELEPORTING_TO, nameLink.c_str(), GetMangosString(LANG_OFFLINE), tele->name.c_str());
         Player::SavePositionInDB(tele->mapId,tele->position_x,tele->position_y,tele->position_z,tele->orientation,
-            sMapMgr.GetZoneId(tele->mapId,tele->position_x,tele->position_y,tele->position_z),target_guid);
+            sTerrainMgr.GetZoneId(tele->mapId,tele->position_x,tele->position_y,tele->position_z),target_guid);
     }
 
     return true;
@@ -2027,7 +2034,7 @@ bool ChatHandler::HandleGoHelper( Player* player, uint32 mapid, float x, float y
             return false;
         }
 
-        Map const *map = sMapMgr.CreateBaseMap(mapid);
+        TerrainInfo const *map = sTerrainMgr.LoadTerrain(mapid);
         z = map->GetWaterOrGroundLevel(x, y, MAX_HEIGHT);
     }
 
@@ -2238,72 +2245,5 @@ bool ChatHandler::HandleModifyDrunkCommand(char* args)
 
     m_session->GetPlayer()->SetDrunkValue(drunkMod);
 
-    return true;
-}
-
-// Send a system message (command-return-like) to a player in game
-bool ChatHandler::HandleSendSysMsgCommand(char* args)
-{
-    ///- Find the player
-    Player *rPlayer;
-    if(!ExtractPlayerTarget(&args,&rPlayer))
-        return false;
-
-    char* msg_str = ExtractQuotedArg(&args);
-    if(!msg_str)
-        return false;
-
-    ///- Check that he is not logging out.
-    if(rPlayer->GetSession()->isLogingOut())
-    {
-        SendSysMessage(LANG_PLAYER_NOT_FOUND);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    WorldPacket data;
-
-    char* buf = mangos_strdup(msg_str);
-    char* pos = buf;
-
-    while(char* line = LineFromMessage(pos))
-    {
-        FillSystemMessageData(&data, line);
-        rPlayer->GetSession()->SendPacket(&data);
-    }
-
-    delete [] buf;
-
-    return true;
-}
-
-//Send message to channel
-bool ChatHandler::HandleSendChannelMsgCommand(char *args)
-{
-    ChannelMgr* cMgr = channelMgr(HORDE);
-    if( !cMgr )
-        return false;
-
-    char* channel_name = strtok((char*)args, " ");
-    char* irc_name = strtok(NULL, " ");
-    char* arg_GM = strtok(NULL, " ");
-    char* text = strtok(NULL, "");
-
-    if( !channel_name || !irc_name || !text || !arg_GM )
-        return false;
-
-    Channel * channel = cMgr->GetChannel(channel_name, NULL, false );
-    if( !channel )
-        return false;
-
-    char msg[256];
-    snprintf( ( char* )msg, 256, "[%s]: %s",irc_name, text );
-    bool isGM = false;
-    if(!strcmp(arg_GM,"GM"))
-        isGM = true;
-
-    WorldPacket dataa;
-    ChatHandler::FillMessageData(&dataa, NULL, CHAT_MSG_CHANNEL, LANG_UNIVERSAL, channel->GetName().c_str(), NULL, msg, NULL, isGM);
-    channel->SendToAll(&dataa);
     return true;
 }

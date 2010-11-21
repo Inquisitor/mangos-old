@@ -34,17 +34,15 @@
 #include "Group.h"
 #include "MapRefManager.h"
 #include "DBCEnums.h"
-#include "MapInstanced.h"
 #include "InstanceSaveMgr.h"
 #include "VMapFactory.h"
 #include "BattleGroundMgr.h"
-#include "CreatureEventAI.h"
 
 struct ScriptAction
 {
-    uint64 sourceGUID;
-    uint64 targetGUID;
-    uint64 ownerGUID;                                       // owner of source if source is item
+    ObjectGuid sourceGuid;
+    ObjectGuid targetGuid;
+    ObjectGuid ownerGuid;                                   // owner of source if source is item
     ScriptInfo const* script;                               // pointer to static script data
 };
 
@@ -58,88 +56,35 @@ Map::~Map()
 
     if (m_instanceSave)
         m_instanceSave->SetUsedByMapState(false);           // field pointer can be deleted after this
-}
 
-void Map::LoadVMap(int gx,int gy)
-{
-                                                            // x and y are swapped !!
-    VMAP::VMAPLoadResult vmapLoadResult = VMAP::VMapFactory::createOrGetVMapManager()->loadMap((sWorld.GetDataPath()+ "vmaps").c_str(),  GetId(), gx,gy);
-    switch(vmapLoadResult)
-    {
-        case VMAP::VMAP_LOAD_RESULT_OK:
-            DETAIL_LOG("VMAP loaded name:%s, id:%d, x:%d, y:%d (vmap rep.: x:%d, y:%d)", GetMapName(), GetId(), gx,gy,gx,gy);
-            break;
-        case VMAP::VMAP_LOAD_RESULT_ERROR:
-            DETAIL_LOG("Could not load VMAP name:%s, id:%d, x:%d, y:%d (vmap rep.: x:%d, y:%d)", GetMapName(), GetId(), gx,gy,gx,gy);
-            break;
-        case VMAP::VMAP_LOAD_RESULT_IGNORED:
-            DEBUG_LOG("Ignored VMAP name:%s, id:%d, x:%d, y:%d (vmap rep.: x:%d, y:%d)", GetMapName(), GetId(), gx,gy,gx,gy);
-            break;
-    }
-}
-
-void Map::LoadMap(int gx,int gy, bool reload)
-{
-    if( i_InstanceId != 0 )
-    {
-        if(GridMaps[gx][gy])
-            return;
-
-        // load grid map for base map
-        if (!m_parentMap->GridMaps[gx][gy])
-            m_parentMap->EnsureGridCreated(GridPair(63-gx,63-gy));
-
-        ((MapInstanced*)(m_parentMap))->AddGridMapReference(GridPair(gx,gy));
-        GridMaps[gx][gy] = m_parentMap->GridMaps[gx][gy];
-        return;
-    }
-
-    if(GridMaps[gx][gy] && !reload)
-        return;
-
-    //map already load, delete it before reloading (Is it necessary? Do we really need the ability the reload maps during runtime?)
-    if(GridMaps[gx][gy])
-    {
-        DETAIL_LOG("Unloading already loaded map %u before reloading.",i_id);
-        delete (GridMaps[gx][gy]);
-        GridMaps[gx][gy]=NULL;
-    }
-
-    // map file name
-    char *tmp=NULL;
-    int len = sWorld.GetDataPath().length()+strlen("maps/%03u%02u%02u.map")+1;
-    tmp = new char[len];
-    snprintf(tmp, len, (char *)(sWorld.GetDataPath()+"maps/%03u%02u%02u.map").c_str(),i_id,gx,gy);
-    DETAIL_LOG("Loading map %s",tmp);
-    // loading data
-    GridMaps[gx][gy] = new GridMap();
-    if (!GridMaps[gx][gy]->loadData(tmp))
-    {
-        sLog.outError("Error load map file: \n %s\n", tmp);
-    }
-    delete [] tmp;
+    //release reference count
+    if(m_TerrainData->Release())
+        sTerrainMgr.UnloadTerrain(m_TerrainData->GetMapId());
 }
 
 void Map::LoadMapAndVMap(int gx,int gy)
 {
-    LoadMap(gx,gy);
-    if(i_InstanceId == 0)
-        LoadVMap(gx, gy);                                   // Only load the data for the base map
+    if(m_bLoadedGrids[gx][gx])
+        return;
+
+    GridMap * pInfo = m_TerrainData->Load(gx, gy);
+    if(pInfo)
+        m_bLoadedGrids[gx][gy] = true;
 }
 
-Map::Map(uint32 id, time_t expiry, uint32 InstanceId, uint8 SpawnMode, Map* _parent)
+Map::Map(uint32 id, time_t expiry, uint32 InstanceId, uint8 SpawnMode)
   : i_mapEntry (sMapStore.LookupEntry(id)), i_spawnMode(SpawnMode),
   i_id(id), i_InstanceId(InstanceId), m_unloadTimer(0),
   m_VisibleDistance(DEFAULT_VISIBILITY_DISTANCE), m_instanceSave(NULL),
   m_activeNonPlayersIter(m_activeNonPlayers.end()),
-  i_gridExpiry(expiry), m_parentMap(_parent ? _parent : this)
+  i_gridExpiry(expiry), m_TerrainData(sTerrainMgr.LoadTerrain(id))
 {
-    for(unsigned int idx=0; idx < MAX_NUMBER_OF_GRIDS; ++idx)
+    for(unsigned int j=0; j < MAX_NUMBER_OF_GRIDS; ++j)
     {
-        for(unsigned int j=0; j < MAX_NUMBER_OF_GRIDS; ++j)
+        for(unsigned int idx=0; idx < MAX_NUMBER_OF_GRIDS; ++idx)
         {
             //z code
-            GridMaps[idx][j] =NULL;
+            m_bLoadedGrids[idx][j] = false;
             setNGrid(NULL, idx, j);
         }
     }
@@ -147,6 +92,9 @@ Map::Map(uint32 id, time_t expiry, uint32 InstanceId, uint8 SpawnMode, Map* _par
 
     //lets initialize visibility distance for map
     Map::InitVisibilityDistance();
+
+    //add reference for TerrainData object
+    m_TerrainData->AddRef();
 }
 
 void Map::InitVisibilityDistance()
@@ -187,7 +135,7 @@ template<>
 void Map::AddToGrid(Creature* obj, NGridType *grid, Cell const& cell)
 {
     // add to world object registry in grid
-    if(obj->isPet() || obj->isVehicle())
+    if(obj->IsPet() || obj->IsVehicle())
     {
         (*grid)(cell.CellX(), cell.CellY()).AddWorldObject<Creature>(obj);
         obj->SetCurrentCell(cell);
@@ -231,7 +179,7 @@ template<>
 void Map::RemoveFromGrid(Creature* obj, NGridType *grid, Cell const& cell)
 {
     // remove from world object registry in grid
-    if(obj->isPet() || obj->isVehicle())
+    if(obj->IsPet() || obj->IsVehicle())
     {
         (*grid)(cell.CellX(), cell.CellY()).RemoveWorldObject<Creature>(obj);
     }
@@ -293,7 +241,7 @@ Map::EnsureGridCreated(const GridPair &p)
             int gx = (MAX_NUMBER_OF_GRIDS - 1) - p.x_coord;
             int gy = (MAX_NUMBER_OF_GRIDS - 1) - p.y_coord;
 
-            if(!GridMaps[gx][gy])
+            if(!m_bLoadedGrids[gx][gy])
                 LoadMapAndVMap(gx,gy);
         }
     }
@@ -335,13 +283,17 @@ bool Map::EnsureGridLoaded(const Cell &cell)
     MANGOS_ASSERT(grid != NULL);
     if( !isGridObjectDataLoaded(cell.GridX(), cell.GridY()) )
     {
+        //it's important to set it loaded before loading!
+        //otherwise there is a possibility of infinity chain (grid loading will be called many times for the same grid)
+        //possible scenario:
+        //active object A(loaded with loader.LoadN call and added to the  map)
+        //summons some active object B, while B added to map grid loading called again and so on.. 
+        setGridObjectDataLoaded(true,cell.GridX(), cell.GridY());
         ObjectGridLoader loader(*grid, this, cell);
         loader.LoadN();
 
         // Add resurrectable corpses to world object list in grid
         sObjectAccessor.AddCorpsesToGrid(GridPair(cell.GridX(),cell.GridY()),(*grid)(cell.CellX(), cell.CellY()), this);
-
-        setGridObjectDataLoaded(true,cell.GridX(), cell.GridY());
         return true;
     }
 
@@ -427,7 +379,6 @@ void Map::MessageBroadcast(Player *player, WorldPacket *msg, bool to_self)
     }
 
     Cell cell(p);
-    cell.data.Part.reserved = ALL_DISTRICT;
     cell.SetNoCreate();
 
     if( !loaded(GridPair(cell.data.Part.grid_x, cell.data.Part.grid_y)) )
@@ -449,7 +400,6 @@ void Map::MessageBroadcast(WorldObject *obj, WorldPacket *msg)
     }
 
     Cell cell(p);
-    cell.data.Part.reserved = ALL_DISTRICT;
     cell.SetNoCreate();
 
     if( !loaded(GridPair(cell.data.Part.grid_x, cell.data.Part.grid_y)) )
@@ -462,7 +412,7 @@ void Map::MessageBroadcast(WorldObject *obj, WorldPacket *msg)
     cell.Visit(p, message, *this, *obj, GetVisibilityDistance());
 }
 
-void Map::MessageDistBroadcast(Player *player, WorldPacket *msg, float dist, bool to_self, bool own_team_only, bool enemyTeamOnly)
+void Map::MessageDistBroadcast(Player *player, WorldPacket *msg, float dist, bool to_self, bool own_team_only)
 {
     CellPair p = MaNGOS::ComputeCellPair(player->GetPositionX(), player->GetPositionY());
 
@@ -473,13 +423,12 @@ void Map::MessageDistBroadcast(Player *player, WorldPacket *msg, float dist, boo
     }
 
     Cell cell(p);
-    cell.data.Part.reserved = ALL_DISTRICT;
     cell.SetNoCreate();
 
     if( !loaded(GridPair(cell.data.Part.grid_x, cell.data.Part.grid_y)) )
         return;
 
-    MaNGOS::MessageDistDeliverer post_man(*player, msg, dist, to_self, own_team_only, enemyTeamOnly);
+    MaNGOS::MessageDistDeliverer post_man(*player, msg, dist, to_self, own_team_only);
     TypeContainerVisitor<MaNGOS::MessageDistDeliverer , WorldTypeMapContainer > message(post_man);
     cell.Visit(p, message, *this, *player, dist);
 }
@@ -495,7 +444,6 @@ void Map::MessageDistBroadcast(WorldObject *obj, WorldPacket *msg, float dist)
     }
 
     Cell cell(p);
-    cell.data.Part.reserved = ALL_DISTRICT;
     cell.SetNoCreate();
 
     if( !loaded(GridPair(cell.data.Part.grid_x, cell.data.Part.grid_y)) )
@@ -536,25 +484,15 @@ void Map::Update(const uint32 &t_diff)
     {
         Player* plr = m_mapRefIter->getSource();
 
-        if(!plr->IsInWorld())
+        if (!plr->IsInWorld() || !plr->IsPositionValid())
             continue;
 
-        CellPair standing_cell(MaNGOS::ComputeCellPair(plr->GetPositionX(), plr->GetPositionY()));
-
-        // Check for correctness of standing_cell, it also avoids problems with update_cell
-        if (standing_cell.x_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP || standing_cell.y_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP)
-            continue;
-
-        // the overloaded operators handle range checking
-        // so ther's no need for range checking inside the loop
-        CellPair begin_cell(standing_cell), end_cell(standing_cell);
         //lets update mobs/objects in ALL visible cells around player!
-        CellArea area = Cell::CalculateCellArea(*plr, GetVisibilityDistance());
-        area.ResizeBorders(begin_cell, end_cell);
+        CellArea area = Cell::CalculateCellArea(plr->GetPositionX(), plr->GetPositionY(), GetVisibilityDistance());
 
-        for(uint32 x = begin_cell.x_coord; x <= end_cell.x_coord; ++x)
+        for(uint32 x = area.low_bound.x_coord; x <= area.high_bound.x_coord; ++x)
         {
-            for(uint32 y = begin_cell.y_coord; y <= end_cell.y_coord; ++y)
+            for(uint32 y = area.low_bound.y_coord; y <= area.high_bound.y_coord; ++y)
             {
                 // marked cells are those that have been visited
                 // don't visit the same cell twice
@@ -564,10 +502,9 @@ void Map::Update(const uint32 &t_diff)
                     markCell(cell_id);
                     CellPair pair(x,y);
                     Cell cell(pair);
-                    cell.data.Part.reserved = CENTER_DISTRICT;
                     cell.SetNoCreate();
-                    cell.Visit(pair, grid_object_update,  *this);
-                    cell.Visit(pair, world_object_update, *this);
+                    Visit(cell, grid_object_update);
+                    Visit(cell, world_object_update);
                 }
             }
         }
@@ -585,24 +522,15 @@ void Map::Update(const uint32 &t_diff)
             // step to next-next, and if we step to end() then newly added objects can wait next update.
             ++m_activeNonPlayersIter;
 
-            if(!obj->IsInWorld())
+            if (!obj->IsInWorld() || !obj->IsPositionValid())
                 continue;
 
-            CellPair standing_cell(MaNGOS::ComputeCellPair(obj->GetPositionX(), obj->GetPositionY()));
+            //lets update mobs/objects in ALL visible cells around player!
+            CellArea area = Cell::CalculateCellArea(obj->GetPositionX(), obj->GetPositionY(), GetVisibilityDistance());
 
-            // Check for correctness of standing_cell, it also avoids problems with update_cell
-            if (standing_cell.x_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP || standing_cell.y_coord >= TOTAL_NUMBER_OF_CELLS_PER_MAP)
-                continue;
-
-            // the overloaded operators handle range checking
-            // so ther's no need for range checking inside the loop
-            CellPair begin_cell(standing_cell), end_cell(standing_cell);
-            begin_cell << 1; begin_cell -= 1;               // upper left
-            end_cell >> 1; end_cell += 1;                   // lower right
-
-            for(uint32 x = begin_cell.x_coord; x <= end_cell.x_coord; ++x)
+            for(uint32 x = area.low_bound.x_coord; x <= area.high_bound.x_coord; ++x)
             {
-                for(uint32 y = begin_cell.y_coord; y <= end_cell.y_coord; ++y)
+                for(uint32 y = area.low_bound.y_coord; y <= area.high_bound.y_coord; ++y)
                 {
                     // marked cells are those that have been visited
                     // don't visit the same cell twice
@@ -612,10 +540,9 @@ void Map::Update(const uint32 &t_diff)
                         markCell(cell_id);
                         CellPair pair(x,y);
                         Cell cell(pair);
-                        cell.data.Part.reserved = CENTER_DISTRICT;
                         cell.SetNoCreate();
-                        cell.Visit(pair, grid_object_update,  *this);
-                        cell.Visit(pair, world_object_update, *this);
+                        Visit(cell, grid_object_update);
+                        Visit(cell, world_object_update);
                     }
                 }
             }
@@ -720,7 +647,7 @@ Map::Remove(T *obj, bool remove)
     else
         obj->RemoveFromWorld();
 
-    UpdateObjectVisibility(obj,cell,p); // i think will be better to call this function while object still in grid, this changes nothing but logically is better(as for me)
+    UpdateObjectVisibility(obj,cell,p);                     // i think will be better to call this function while object still in grid, this changes nothing but logically is better(as for me)
     RemoveFromGrid(obj,grid,cell);
 
     obj->ResetMap();
@@ -743,7 +670,6 @@ Map::PlayerRelocation(Player *player, float x, float y, float z, float orientati
 
     Cell old_cell(old_val);
     Cell new_cell(new_val);
-    new_cell |= old_cell;
     bool same_cell = (new_cell == old_cell);
 
     player->Relocate(x, y, z, orientation);
@@ -751,10 +677,6 @@ Map::PlayerRelocation(Player *player, float x, float y, float z, float orientati
     if( old_cell.DiffGrid(new_cell) || old_cell.DiffCell(new_cell) )
     {
         DEBUG_FILTER_LOG(LOG_FILTER_PLAYER_MOVES, "Player %s relocation grid[%u,%u]cell[%u,%u]->grid[%u,%u]cell[%u,%u]", player->GetName(), old_cell.GridX(), old_cell.GridY(), old_cell.CellX(), old_cell.CellY(), new_cell.GridX(), new_cell.GridY(), new_cell.CellX(), new_cell.CellY());
-
-        // update player position for group at taxi flight
-        if(player->GetGroup() && player->IsTaxiFlying())
-            player->SetGroupUpdateFlag(GROUP_UPDATE_FLAG_POSITION);
 
         NGridType* oldGrid = getNGrid(old_cell.GridX(), old_cell.GridY());
         RemoveFromGrid(player, oldGrid,old_cell);
@@ -943,23 +865,14 @@ bool Map::UnloadGrid(const uint32 &x, const uint32 &y, bool pForce)
     int gx = (MAX_NUMBER_OF_GRIDS - 1) - x;
     int gy = (MAX_NUMBER_OF_GRIDS - 1) - y;
 
-    // delete grid map, but don't delete if it is from parent map (and thus only reference)
-    //+++if (GridMaps[gx][gy]) don't check for GridMaps[gx][gy], we might have to unload vmaps
+    // unload GridMap - it is reference-countable so will be deleted safely when lockCount < 1
+    // also simply set Map's pointer to corresponding GridMap object to NULL
+    if(m_bLoadedGrids[gx][gy])
     {
-        if (i_InstanceId == 0)
-        {
-            if(GridMaps[gx][gy])
-            {
-                GridMaps[gx][gy]->unloadData();
-                delete GridMaps[gx][gy];
-            }
-            VMAP::VMapFactory::createOrGetVMapManager()->unloadMap(GetId(), gx, gy);
-        }
-        else
-            ((MapInstanced*)m_parentMap)->RemoveGridMapReference(GridPair(gx, gy));
-
-        GridMaps[gx][gy] = NULL;
+        m_bLoadedGrids[gx][gy] = false;
+        m_TerrainData->Unload(gx, gy);
     }
+
     DEBUG_LOG("Unloading grid[%u,%u] for map %u finished", x,y, i_id);
     return true;
 }
@@ -1000,345 +913,6 @@ uint32 Map::GetMaxResetDelay() const
     return InstanceResetScheduler::GetMaxResetTimeFor(GetMapDifficulty());
 }
 
-inline GridMap *Map::GetGrid(float x, float y)
-{
-    // half opt method
-    int gx=(int)(32-x/SIZE_OF_GRIDS);                       //grid x
-    int gy=(int)(32-y/SIZE_OF_GRIDS);                       //grid y
-
-    // ensure GridMap is loaded
-    EnsureGridCreated(GridPair(63-gx,63-gy));
-
-    return GridMaps[gx][gy];
-}
-
-float Map::GetHeight(float x, float y, float z, bool pUseVmaps, float maxSearchDist) const
-{
-    // find raw .map surface under Z coordinates
-    float mapHeight;
-    float z2 = z + 2.f;
-    if (GridMap *gmap = const_cast<Map*>(this)->GetGrid(x, y))
-    {
-        float _mapheight = gmap->getHeight(x,y);
-
-        // look from a bit higher pos to find the floor, ignore under surface case
-        if (z2 > _mapheight)
-            mapHeight = _mapheight;
-        else
-            mapHeight = VMAP_INVALID_HEIGHT_VALUE;
-    }
-    else
-        mapHeight = VMAP_INVALID_HEIGHT_VALUE;
-
-    float vmapHeight;
-    if (pUseVmaps)
-    {
-        VMAP::IVMapManager* vmgr = VMAP::VMapFactory::createOrGetVMapManager();
-        if (vmgr->isHeightCalcEnabled())
-        {
-            // if mapHeight has been found search vmap height at least until mapHeight point
-            // this prevent case when original Z "too high above ground and vmap height search fail"
-            // this will not affect most normal cases (no map in instance, or stay at ground at continent)
-            if (mapHeight > INVALID_HEIGHT && z2 - mapHeight > maxSearchDist)
-                maxSearchDist = z2 - mapHeight + 1.0f;      // 1.0 make sure that we not fail for case when map height near but above for vamp height
-
-            // look from a bit higher pos to find the floor
-            vmapHeight = vmgr->getHeight(GetId(), x, y, z2, maxSearchDist);
-        }
-        else
-            vmapHeight = VMAP_INVALID_HEIGHT_VALUE;
-    }
-    else
-        vmapHeight = VMAP_INVALID_HEIGHT_VALUE;
-
-    // mapHeight set for any above raw ground Z or <= INVALID_HEIGHT
-    // vmapheight set for any under Z value or <= INVALID_HEIGHT
-
-    if (vmapHeight > INVALID_HEIGHT)
-    {
-        if (mapHeight > INVALID_HEIGHT)
-        {
-            // we have mapheight and vmapheight and must select more appropriate
-
-            // we are already under the surface or vmap height above map heigt
-            // or if the distance of the vmap height is less the land height distance
-            if (z < mapHeight || vmapHeight > mapHeight || fabs(mapHeight-z) > fabs(vmapHeight-z))
-                return vmapHeight;
-            else
-                return mapHeight;                           // better use .map surface height
-
-        }
-        else
-            return vmapHeight;                              // we have only vmapHeight (if have)
-    }
-
-    return mapHeight;
-}
-
-inline bool IsOutdoorWMO(uint32 mogpFlags, int32 adtId, int32 rootId, int32 groupId,
-                              WMOAreaTableEntry const* wmoEntry, AreaTableEntry const* atEntry)
-{
-    bool outdoor = true;
-
-    if(wmoEntry && atEntry)
-    {
-        if(atEntry->flags & AREA_FLAG_OUTSIDE)
-            return true;
-        if(atEntry->flags & AREA_FLAG_INSIDE)
-            return false;
-    }
-
-    outdoor = mogpFlags&0x8;
-
-    if(wmoEntry)
-    {
-        if(wmoEntry->Flags & 4)
-            return true;
-
-        if((wmoEntry->Flags & 2)!=0)
-            outdoor = false;
-    }
-    return outdoor;
-}
-
-bool Map::IsOutdoors(float x, float y, float z) const
-{
-    uint32 mogpFlags;
-    int32 adtId, rootId, groupId;
-
-    // no wmo found? -> outside by default
-    if(!GetAreaInfo(x, y, z, mogpFlags, adtId, rootId, groupId))
-        return true;
-
-    AreaTableEntry const* atEntry = 0;
-    WMOAreaTableEntry const* wmoEntry= GetWMOAreaTableEntryByTripple(rootId, adtId, groupId);
-    if(wmoEntry)
-    {
-        DEBUG_LOG("Got WMOAreaTableEntry! flag %u, areaid %u", wmoEntry->Flags, wmoEntry->areaId);
-
-        atEntry = GetAreaEntryByAreaID(wmoEntry->areaId);
-    }
-
-    return IsOutdoorWMO(mogpFlags, adtId, rootId, groupId, wmoEntry, atEntry);
-}
-
-bool Map::GetAreaInfo(float x, float y, float z, uint32 &flags, int32 &adtId, int32 &rootId, int32 &groupId) const
-{
-    float vmap_z = z;
-    VMAP::IVMapManager* vmgr = VMAP::VMapFactory::createOrGetVMapManager();
-    if (vmgr->getAreaInfo(GetId(), x, y, vmap_z, flags, adtId, rootId, groupId))
-    {
-        // check if there's terrain between player height and object height
-        if(GridMap *gmap = const_cast<Map*>(this)->GetGrid(x, y))
-        {
-            float _mapheight = gmap->getHeight(x,y);
-            // z + 2.0f condition taken from GetHeight(), not sure if it's such a great choice...
-            if(z + 2.0f > _mapheight &&  _mapheight > vmap_z)
-                return false;
-        }
-        return true;
-    }
-    return false;
-}
-
-uint16 Map::GetAreaFlag(float x, float y, float z, bool *isOutdoors) const
-{
-    uint32 mogpFlags;
-    int32 adtId, rootId, groupId;
-    WMOAreaTableEntry const* wmoEntry = 0;
-    AreaTableEntry const* atEntry = 0;
-    bool haveAreaInfo = false;
-
-    if(GetAreaInfo(x, y, z, mogpFlags, adtId, rootId, groupId))
-    {
-        haveAreaInfo = true;
-        if(wmoEntry = GetWMOAreaTableEntryByTripple(rootId, adtId, groupId))
-            atEntry = GetAreaEntryByAreaID(wmoEntry->areaId);
-    }
-
-    uint16 areaflag;
-    if (atEntry)
-        areaflag = atEntry->exploreFlag;
-    else
-    {
-        if(GridMap *gmap = const_cast<Map*>(this)->GetGrid(x, y))
-            areaflag = gmap->getArea(x, y);
-        // this used while not all *.map files generated (instances)
-        else
-            areaflag = GetAreaFlagByMapId(i_id);
-    }
-
-    if (isOutdoors)
-    {
-        if (haveAreaInfo)
-            *isOutdoors = IsOutdoorWMO(mogpFlags, adtId, rootId, groupId, wmoEntry, atEntry);
-        else
-            *isOutdoors = true;
-    }
-    return areaflag;
-}
-
-uint8 Map::GetTerrainType(float x, float y ) const
-{
-    if(GridMap *gmap = const_cast<Map*>(this)->GetGrid(x, y))
-        return gmap->getTerrainType(x, y);
-    else
-        return 0;
-}
-
-GridMapLiquidStatus Map::getLiquidStatus(float x, float y, float z, uint8 ReqLiquidType, GridMapLiquidData *data) const
-{
-    GridMapLiquidStatus result = LIQUID_MAP_NO_WATER;
-    VMAP::IVMapManager* vmgr = VMAP::VMapFactory::createOrGetVMapManager();
-    float liquid_level, ground_level = INVALID_HEIGHT;
-    uint32 liquid_type;
-    if (vmgr->GetLiquidLevel(GetId(), x, y, z, ReqLiquidType, liquid_level, ground_level, liquid_type))
-    {
-        DEBUG_LOG("getLiquidStatus(): vmap liquid level: %f ground: %f type: %u", liquid_level, ground_level, liquid_type);
-        // Check water level and ground level
-        if (liquid_level > ground_level && z > ground_level - 2)
-        {
-            // All ok in water -> store data
-            if (data)
-            {
-                data->type  = liquid_type;
-                data->level = liquid_level;
-                data->depth_level = ground_level;
-            }
-
-            // For speed check as int values
-            int delta = int((liquid_level - z) * 10);
-
-            // Get position delta
-            if (delta > 20)                   // Under water
-                return LIQUID_MAP_UNDER_WATER;
-            if (delta > 0 )                   // In water
-                return LIQUID_MAP_IN_WATER;
-            if (delta > -1)                   // Walk on water
-                return LIQUID_MAP_WATER_WALK;
-            result = LIQUID_MAP_ABOVE_WATER;
-        }
-    }
-    if(GridMap* gmap = const_cast<Map*>(this)->GetGrid(x, y))
-    {
-        GridMapLiquidData map_data;
-        GridMapLiquidStatus map_result = gmap->getLiquidStatus(x, y, z, ReqLiquidType, &map_data);
-        // Not override LIQUID_MAP_ABOVE_WATER with LIQUID_MAP_NO_WATER:
-        if (map_result != LIQUID_MAP_NO_WATER && (map_data.level > ground_level))
-        {
-            if (data)
-                *data = map_data;
-            return map_result;
-        }
-    }
-    return result;
-}
-
-uint32 Map::GetAreaIdByAreaFlag(uint16 areaflag,uint32 map_id)
-{
-    AreaTableEntry const *entry = GetAreaEntryByAreaFlagAndMap(areaflag,map_id);
-
-    if (entry)
-        return entry->ID;
-    else
-        return 0;
-}
-
-uint32 Map::GetZoneIdByAreaFlag(uint16 areaflag,uint32 map_id)
-{
-    AreaTableEntry const *entry = GetAreaEntryByAreaFlagAndMap(areaflag,map_id);
-
-    if( entry )
-        return ( entry->zone != 0 ) ? entry->zone : entry->ID;
-    else
-        return 0;
-}
-
-void Map::GetZoneAndAreaIdByAreaFlag(uint32& zoneid, uint32& areaid, uint16 areaflag,uint32 map_id)
-{
-    AreaTableEntry const *entry = GetAreaEntryByAreaFlagAndMap(areaflag,map_id);
-
-    areaid = entry ? entry->ID : 0;
-    zoneid = entry ? (( entry->zone != 0 ) ? entry->zone : entry->ID) : 0;
-}
-
-bool Map::IsInWater(float x, float y, float pZ, GridMapLiquidData *data) const
-{
-    // Check surface in x, y point for liquid
-    if (const_cast<Map*>(this)->GetGrid(x, y))
-    {
-        GridMapLiquidData liquid_status;
-        GridMapLiquidData *liquid_ptr = data ? data : &liquid_status;
-        if (getLiquidStatus(x, y, pZ, MAP_ALL_LIQUIDS, liquid_ptr))
-        {
-            //if (liquid_prt->level - liquid_prt->depth_level > 2) //???
-                return true;
-        }
-    }
-    return false;
-}
-
-bool Map::IsUnderWater(float x, float y, float z) const
-{
-    if (const_cast<Map*>(this)->GetGrid(x, y))
-    {
-        if (getLiquidStatus(x, y, z, MAP_LIQUID_TYPE_WATER|MAP_LIQUID_TYPE_OCEAN)&LIQUID_MAP_UNDER_WATER)
-            return true;
-    }
-    return false;
-}
-
-/**
- * Function find higher form water or ground height for current floor
- *
- * @param x, y, z    Coordinates original point at floor level
- *
- * @param pGround    optional arg for retrun calculated by function work ground height, it let avoid in caller code recalculate height for point if it need
- *
- * @param swim       z coordinate can be calculated for select above/at or under z coordinate (for fly or swim/walking by bottom)
- *                   in last cases for in water returned under water height for avoid client set swimming unit as saty at water.
- *
- * @return           calculated z coordinate
- */
-float Map::GetWaterOrGroundLevel(float x, float y, float z, float* pGround /*= NULL*/, bool swim /*= false*/) const
-{
-    if (const_cast<Map*>(this)->GetGrid(x, y))
-    {
-        // we need ground level (including grid height version) for proper return water level in point
-        float ground_z = GetHeight(x, y, z, true, DEFAULT_WATER_SEARCH);
-        if (pGround)
-            *pGround = ground_z;
-
-        GridMapLiquidData liquid_status;
-
-        GridMapLiquidStatus res = getLiquidStatus(x, y, ground_z, MAP_ALL_LIQUIDS, &liquid_status);
-        return res ? ( swim ? liquid_status.level - 2.0f : liquid_status.level) : ground_z;
-    }
-
-    return VMAP_INVALID_HEIGHT_VALUE;
-}
-
-float Map::GetWaterLevel(float x, float y, float z, float* pGround /*= NULL*/) const
-{
-    if (const_cast<Map*>(this)->GetGrid(x, y))
-    {
-        // we need ground level (including grid height version) for proper return water level in point
-        float ground_z = GetHeight(x, y, z, true, DEFAULT_WATER_SEARCH);
-        if (pGround)
-            *pGround = ground_z;
-
-        GridMapLiquidData liquid_status;
-
-        GridMapLiquidStatus res = getLiquidStatus(x, y, ground_z, MAP_ALL_LIQUIDS, &liquid_status);
-        if (!res)
-            return VMAP_INVALID_HEIGHT_VALUE;
-
-        return liquid_status.level;
-    }
-
-    return VMAP_INVALID_HEIGHT_VALUE;
-}
-
 bool Map::CheckGridIntegrity(Creature* c, bool moved) const
 {
     Cell const& cur_cell = c->GetCurrentCell();
@@ -1365,7 +939,6 @@ const char* Map::GetMapName() const
 
 void Map::UpdateObjectVisibility( WorldObject* obj, Cell cell, CellPair cellpair)
 {
-    cell.data.Part.reserved = ALL_DISTRICT;
     cell.SetNoCreate();
     MaNGOS::VisibleChangesNotifier notifier(*obj);
     TypeContainerVisitor<MaNGOS::VisibleChangesNotifier, WorldTypeMapContainer > player_notifier(notifier);
@@ -1375,7 +948,6 @@ void Map::UpdateObjectVisibility( WorldObject* obj, Cell cell, CellPair cellpair
 void Map::PlayerRelocationNotify( Player* player, Cell cell, CellPair cellpair )
 {
     MaNGOS::PlayerRelocationNotifier relocationNotifier(*player);
-    cell.data.Part.reserved = ALL_DISTRICT;
 
     TypeContainerVisitor<MaNGOS::PlayerRelocationNotifier, GridTypeMapContainer >  p2grid_relocation(relocationNotifier);
     TypeContainerVisitor<MaNGOS::PlayerRelocationNotifier, WorldTypeMapContainer > p2world_relocation(relocationNotifier);
@@ -1592,7 +1164,7 @@ void Map::AddToActive( WorldObject* obj )
     {
         Creature* c= (Creature*)obj;
 
-        if (!c->isPet() && c->GetDBTableGUIDLow())
+        if (!c->IsPet() && c->GetDBTableGUIDLow())
         {
             float x,y,z;
             c->GetRespawnCoord(x,y,z);
@@ -1627,7 +1199,7 @@ void Map::RemoveFromActive( WorldObject* obj )
     {
         Creature* c= (Creature*)obj;
 
-        if(!c->isPet() && c->GetDBTableGUIDLow())
+        if(!c->IsPet() && c->GetDBTableGUIDLow())
         {
             float x,y,z;
             c->GetRespawnCoord(x,y,z);
@@ -1656,8 +1228,8 @@ template void Map::Remove(DynamicObject *, bool);
 
 /* ******* Dungeon Instance Maps ******* */
 
-InstanceMap::InstanceMap(uint32 id, time_t expiry, uint32 InstanceId, uint8 SpawnMode, Map* _parent)
-  : Map(id, expiry, InstanceId, SpawnMode, _parent),
+InstanceMap::InstanceMap(uint32 id, time_t expiry, uint32 InstanceId, uint8 SpawnMode)
+  : Map(id, expiry, InstanceId, SpawnMode),
     m_resetAfterUnload(false), m_unloadWhenEmpty(false),
     i_data(NULL), i_script_id(0)
 {
@@ -1741,7 +1313,7 @@ bool InstanceMap::Add(Player *player)
         if (IsDungeon())
         {
             // check for existing instance binds
-            InstancePlayerBind *playerBind = player->GetBoundInstance(GetId(), Difficulty(GetSpawnMode()));
+            InstancePlayerBind *playerBind = player->GetBoundInstance(GetId(), GetDifficulty());
             if (playerBind && playerBind->perm)
             {
                 // cannot enter other instances if bound permanently
@@ -1755,9 +1327,7 @@ bool InstanceMap::Add(Player *player)
                         GetInstanceSave()->GetMapId(), GetInstanceSave()->GetInstanceId(),
                         GetInstanceSave()->GetDifficulty(), GetInstanceSave()->GetPlayerCount(),
                         GetInstanceSave()->GetGroupCount(), GetInstanceSave()->CanReset());
-                    //MANGOS_ASSERT(false);
-                    player->RepopAtGraveyard();
-                    return false;
+                    MANGOS_ASSERT(false);
                 }
             }
             else
@@ -1781,10 +1351,11 @@ bool InstanceMap::Add(Player *player)
                                 pGroup->GetId(),
                                 groupBind->save->GetMapId(), groupBind->save->GetInstanceId(), groupBind->save->GetDifficulty(),
                                 groupBind->save->GetPlayerCount(), groupBind->save->GetGroupCount(), groupBind->save->CanReset());
-                        //MANGOS_ASSERT(false);
-                        player->RepopAtGraveyard();
-                        return false;
+
+                        // no reason crash if we can fix state
+                        player->UnbindInstance(GetId(), GetDifficulty());
                     }
+
                     // bind to the group or keep using the group save
                     if (!groupBind)
                         pGroup->BindToInstance(GetInstanceSave(), false);
@@ -1809,9 +1380,7 @@ bool InstanceMap::Add(Player *player)
                                 sLog.outError("GroupBind save players: %d, group count: %d", groupBind->save->GetPlayerCount(), groupBind->save->GetGroupCount());
                             else
                                 sLog.outError("GroupBind save NULL");
-                            //MANGOS_ASSERT(false);
-                            player->TeleportToHomebind();
-                            return false;
+                            MANGOS_ASSERT(false);
                         }
                         // if the group/leader is permanently bound to the instance
                         // players also become permanently bound when they enter
@@ -1831,8 +1400,7 @@ bool InstanceMap::Add(Player *player)
                         player->BindToInstance(GetInstanceSave(), false);
                     else
                         // cannot jump to a different instance without resetting it
-                        //MANGOS_ASSERT(playerBind->save == GetInstanceSave());
-                        player->RepopAtGraveyard();
+                        MANGOS_ASSERT(playerBind->save == GetInstanceSave());
                 }
             }
         }
@@ -1930,7 +1498,7 @@ void InstanceMap::CreateInstanceData(bool load)
 /*
     Returns true if there are no players in the instance
 */
-bool InstanceMap::Reset(uint8 method)
+bool InstanceMap::Reset(InstanceResetMethod method)
 {
     // note: since the map may not be loaded when the instance needs to be reset
     // the instance must be deleted from the DB by InstanceSaveManager
@@ -2030,8 +1598,8 @@ void InstanceMap::SetResetSchedule(bool on)
 
 /* ******* Battleground Instance Maps ******* */
 
-BattleGroundMap::BattleGroundMap(uint32 id, time_t expiry, uint32 InstanceId, Map* _parent, uint8 spawnMode)
-  : Map(id, expiry, InstanceId, spawnMode, _parent)
+BattleGroundMap::BattleGroundMap(uint32 id, time_t expiry, uint32 InstanceId, uint8 spawnMode)
+  : Map(id, expiry, InstanceId, spawnMode)
 {
     //lets initialize visibility distance for BG/Arenas
     BattleGroundMap::InitVisibilityDistance();
@@ -2113,9 +1681,9 @@ void Map::ScriptsStart(ScriptMapMap const& scripts, uint32 id, Object* source, O
         return;
 
     // prepare static data
-    uint64 sourceGUID = source->GetGUID();
-    uint64 targetGUID = target ? target->GetGUID() : (uint64)0;
-    uint64 ownerGUID  = (source->GetTypeId()==TYPEID_ITEM) ? ((Item*)source)->GetOwnerGUID() : (uint64)0;
+    ObjectGuid sourceGuid = source->GetObjectGuid();
+    ObjectGuid targetGuid = target ? target->GetObjectGuid() : ObjectGuid();
+    ObjectGuid ownerGuid  = (source->GetTypeId()==TYPEID_ITEM) ? ((Item*)source)->GetOwnerGuid() : ObjectGuid();
 
     ///- Schedule script execution for all scripts in the script map
     ScriptMap const *s2 = &(s->second);
@@ -2123,9 +1691,9 @@ void Map::ScriptsStart(ScriptMapMap const& scripts, uint32 id, Object* source, O
     for (ScriptMap::const_iterator iter = s2->begin(); iter != s2->end(); ++iter)
     {
         ScriptAction sa;
-        sa.sourceGUID = sourceGUID;
-        sa.targetGUID = targetGUID;
-        sa.ownerGUID  = ownerGUID;
+        sa.sourceGuid = sourceGuid;
+        sa.targetGuid = targetGuid;
+        sa.ownerGuid  = ownerGuid;
 
         sa.script = &iter->second;
         m_scriptSchedule.insert(std::pair<time_t, ScriptAction>(time_t(sWorld.GetGameTime() + iter->first), sa));
@@ -2144,14 +1712,14 @@ void Map::ScriptCommandStart(ScriptInfo const& script, uint32 delay, Object* sou
     // NOTE: script record _must_ exist until command executed
 
     // prepare static data
-    uint64 sourceGUID = source->GetGUID();
-    uint64 targetGUID = target ? target->GetGUID() : (uint64)0;
-    uint64 ownerGUID  = (source->GetTypeId()==TYPEID_ITEM) ? ((Item*)source)->GetOwnerGUID() : (uint64)0;
+    ObjectGuid sourceGuid = source->GetObjectGuid();
+    ObjectGuid targetGuid = target ? target->GetObjectGuid() : ObjectGuid();
+    ObjectGuid ownerGuid  = (source->GetTypeId()==TYPEID_ITEM) ? ((Item*)source)->GetOwnerGuid() : ObjectGuid();
 
     ScriptAction sa;
-    sa.sourceGUID = sourceGUID;
-    sa.targetGUID = targetGUID;
-    sa.ownerGUID  = ownerGUID;
+    sa.sourceGuid = sourceGuid;
+    sa.targetGuid = targetGuid;
+    sa.ownerGuid  = ownerGuid;
 
     sa.script = &script;
     m_scriptSchedule.insert(std::pair<time_t, ScriptAction>(time_t(sWorld.GetGameTime() + delay), sa));
@@ -2178,38 +1746,37 @@ void Map::ScriptsProcess()
 
         Object* source = NULL;
 
-        if (step.sourceGUID)
+        if (!step.sourceGuid.IsEmpty())
         {
-            switch(GUID_HIPART(step.sourceGUID))
+            switch(step.sourceGuid.GetHigh())
             {
                 case HIGHGUID_ITEM:
                 // case HIGHGUID_CONTAINER: ==HIGHGUID_ITEM
                 {
-                    Player* player = HashMapHolder<Player>::Find(step.ownerGUID);
-                    if(player)
-                        source = player->GetItemByGuid(step.sourceGUID);
+                    if (Player* player = HashMapHolder<Player>::Find(step.ownerGuid))
+                        source = player->GetItemByGuid(step.sourceGuid);
                     break;
                 }
                 case HIGHGUID_UNIT:
-                    source = GetCreature(step.sourceGUID);
+                    source = GetCreature(step.sourceGuid);
                     break;
                 case HIGHGUID_PET:
-                    source = GetPet(step.sourceGUID);
+                    source = GetPet(step.sourceGuid);
                     break;
                 case HIGHGUID_VEHICLE:
-                    source = GetVehicle(step.sourceGUID);
+                    source = GetVehicle(step.sourceGuid);
                     break;
                 case HIGHGUID_PLAYER:
-                    source = HashMapHolder<Player>::Find(step.sourceGUID);
+                    source = HashMapHolder<Player>::Find(step.sourceGuid);
                     break;
                 case HIGHGUID_GAMEOBJECT:
-                    source = GetGameObject(step.sourceGUID);
+                    source = GetGameObject(step.sourceGuid);
                     break;
                 case HIGHGUID_CORPSE:
-                    source = HashMapHolder<Corpse>::Find(step.sourceGUID);
+                    source = HashMapHolder<Corpse>::Find(step.sourceGuid);
                     break;
                 default:
-                    sLog.outError("*_script source with unsupported high guid value %u",GUID_HIPART(step.sourceGUID));
+                    sLog.outError("*_script source with unsupported guid %s", step.sourceGuid.GetString().c_str());
                     break;
             }
         }
@@ -2219,30 +1786,30 @@ void Map::ScriptsProcess()
 
         Object* target = NULL;
 
-        if (step.targetGUID)
+        if (!step.targetGuid.IsEmpty())
         {
-            switch(GUID_HIPART(step.targetGUID))
+            switch(step.targetGuid.GetHigh())
             {
                 case HIGHGUID_UNIT:
-                    target = GetCreature(step.targetGUID);
+                    target = GetCreature(step.targetGuid);
                     break;
                 case HIGHGUID_PET:
-                    target = GetPet(step.targetGUID);
+                    target = GetPet(step.targetGuid);
                     break;
                 case HIGHGUID_VEHICLE:
-                    target = GetVehicle(step.targetGUID);
+                    target = GetVehicle(step.targetGuid);
                     break;
-                case HIGHGUID_PLAYER:                       // empty GUID case also
-                    target = HashMapHolder<Player>::Find(step.targetGUID);
+                case HIGHGUID_PLAYER:
+                    target = HashMapHolder<Player>::Find(step.targetGuid);
                     break;
                 case HIGHGUID_GAMEOBJECT:
-                    target = GetGameObject(step.targetGUID);
+                    target = GetGameObject(step.targetGuid);
                     break;
                 case HIGHGUID_CORPSE:
-                    target = HashMapHolder<Corpse>::Find(step.targetGUID);
+                    target = HashMapHolder<Corpse>::Find(step.targetGuid);
                     break;
                 default:
-                    sLog.outError("*_script source with unsupported high guid value %u",GUID_HIPART(step.targetGUID));
+                    sLog.outError("*_script target with unsupported guid %s", step.targetGuid.GetString().c_str());
                     break;
             }
         }
@@ -2250,68 +1817,7 @@ void Map::ScriptsProcess()
         if (target && !target->IsInWorld())
             target = NULL;
 
-        bool requirement_passed = true;
-
-        if( source && (source->GetTypeId() == TYPEID_UNIT || source->GetTypeId() == TYPEID_PLAYER) )
-        {
-            Unit * uSource = static_cast<Unit*>(source);
-
-            switch(step.script->reqtype)
-            {
-                case REQUIREMENT_T_INVOKER_AURA:
-                    if( !uSource->HasAura( step.script->reqvalue ) )
-                        requirement_passed = false;
-                    break;
-                case REQUIREMENT_T_QUEST:
-                    if( uSource->GetTypeId() != TYPEID_PLAYER || ((Player*)uSource)->GetQuestStatus(step.script->reqvalue) != QUEST_STATUS_INCOMPLETE )
-                        requirement_passed = false;
-                    break;
-                case REQUIREMENT_T_INVOKER_HAS_NO_AURA:
-                    if( uSource->HasAura( step.script->reqvalue ) )
-                        requirement_passed = false;
-                    break;
-            }
-        }
-
-        if( target && (target->GetTypeId() == TYPEID_UNIT || target->GetTypeId() == TYPEID_PLAYER) )
-        {
-            Unit * uTarget = static_cast<Unit*>(target);
-
-            switch( step.script->reqtype )
-            {
-                case REQUIREMENT_T_HP_PERCENT:
-                    if( uTarget->GetHealth() * 100 / uTarget->GetMaxHealth() > step.script->reqvalue )
-                        requirement_passed = false;
-                    break;
-                case REQUIREMENT_T_MANA_PERCENT:
-                    if( uTarget->GetPower(POWER_MANA) * 100 / uTarget->GetMaxPower(POWER_MANA) > step.script->reqvalue )
-                        requirement_passed = false;
-                    break;
-                case REQUIREMENT_T_AURA:
-                    if( !uTarget->HasAura( step.script->reqvalue ) )
-                        requirement_passed = false;
-                    break;
-                case REQUIREMENT_T_ZONE:
-                    if( uTarget->GetZoneId() != step.script->reqvalue )
-                        requirement_passed = false;
-                    break;
-                case REQUIREMENT_T_ENTRY:
-                    if( uTarget->GetTypeId() != TYPEID_UNIT || uTarget->GetEntry() != step.script->reqvalue )
-                        requirement_passed = false;
-                    break;
-            }
-        }
-
-        if( !requirement_passed )
-        {
-            m_scriptSchedule.erase(iter);
-            sWorld.DecreaseScheduledScriptCount();
-
-            iter = m_scriptSchedule.begin();
-            return;
-        }
-
-        switch (step.script->command)
+        switch(step.script->command)
         {
             case SCRIPT_COMMAND_TALK:
             {
@@ -2371,7 +1877,7 @@ void Map::ScriptsProcess()
                 if (step.script->talk.flags & 0x02)
                     target = source;
 
-                uint64 unit_target = target ? target->GetGUID() : 0;
+                Unit* unitTarget = target && target->isType(TYPEMASK_UNIT) ? static_cast<Unit*>(target) : NULL;
                 int32 textId = step.script->talk.textId[0];
 
                 // May have text for random
@@ -2391,35 +1897,35 @@ void Map::ScriptsProcess()
                 switch(step.script->talk.chatType)
                 {
                     case CHAT_TYPE_SAY:
-                        pSource->MonsterSay(textId, step.script->talk.language, unit_target);
+                        pSource->MonsterSay(textId, step.script->talk.language, unitTarget);
                         break;
                     case CHAT_TYPE_YELL:
-                        pSource->MonsterYell(textId, step.script->talk.language, unit_target);
+                        pSource->MonsterYell(textId, step.script->talk.language, unitTarget);
                         break;
                     case CHAT_TYPE_TEXT_EMOTE:
-                        pSource->MonsterTextEmote(textId, unit_target);
+                        pSource->MonsterTextEmote(textId, unitTarget);
                         break;
                     case CHAT_TYPE_BOSS_EMOTE:
-                        pSource->MonsterTextEmote(textId, unit_target, true);
+                        pSource->MonsterTextEmote(textId, unitTarget, true);
                         break;
                     case CHAT_TYPE_WHISPER:
-                        if (!unit_target || !IS_PLAYER_GUID(unit_target))
+                        if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
                         {
-                            sLog.outError("SCRIPT_COMMAND_TALK (script id %u) attempt to whisper (%u) 0-guid or non-player, skipping.", step.script->id, step.script->talk.chatType);
+                            sLog.outError("SCRIPT_COMMAND_TALK (script id %u) attempt to whisper (%u) to %s, skipping.", step.script->id, step.script->talk.chatType, unitTarget ? unitTarget->GetObjectGuid().GetString().c_str() : "<no target>");
                             break;
                         }
-                        pSource->MonsterWhisper(textId, unit_target);
+                        pSource->MonsterWhisper(textId, unitTarget);
                         break;
                     case CHAT_TYPE_BOSS_WHISPER:
-                        if (!unit_target || !IS_PLAYER_GUID(unit_target))
+                        if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
                         {
-                            sLog.outError("SCRIPT_COMMAND_TALK (script id %u) attempt to whisper (%u) 0-guid or non-player, skipping.", step.script->id, step.script->talk.chatType);
+                            sLog.outError("SCRIPT_COMMAND_TALK (script id %u) attempt to whisper (%u) to %s, skipping.", step.script->id, step.script->talk.chatType, unitTarget ? unitTarget->GetObjectGuid().GetString().c_str() : "<no target>");
                             break;
                         }
-                        pSource->MonsterWhisper(textId, unit_target, true);
+                        pSource->MonsterWhisper(textId, unitTarget, true);
                         break;
                     case CHAT_TYPE_ZONE_YELL:
-                        pSource->MonsterYellToZone(textId, step.script->talk.language, unit_target);
+                        pSource->MonsterYellToZone(textId, step.script->talk.language, unitTarget);
                         break;
                     default:
                         break;                              // must be already checked at load
@@ -3273,92 +2779,6 @@ void Map::ScriptsProcess()
 
                 break;
             }
-            case SCRIPT_COMMAND_ADD_QUEST_COUNT:
-            {
-                if(!source)
-                {
-                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT call for NULL object.");
-                    break;
-                }
-
-                if(source->GetTypeId() != TYPEID_PLAYER) 
-                {
-                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT call for non-player (QuestId: %u TypeId is %u), skipping.",step.script->add_quest_count.quest_id, uint32(source->GetTypeId()));
-                    break;
-                }
-                Player * user = static_cast<Player*>(source);
-
-                uint32 QuestID = step.script->add_quest_count.quest_id;
-                uint32 x = step.script->add_quest_count.quest_field;
-                uint32 increment = step.script->add_quest_count.inc_value;
-
-                if( increment < 1 ) // We havent anything to increment (it cant be either 0 nor minus value )
-                {
-                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT increment is lower than 0 for quest: %u",QuestID);
-                    break;
-                }
-
-                Quest const* pQuest = sObjectMgr.GetQuestTemplate(QuestID);
-                if (!pQuest)
-                {
-                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT Quest Template doesnt exist for quest: %u",QuestID);
-                    break;
-                }
-
-                uint16 log_slot = user->FindQuestSlot(pQuest->GetQuestId());
-                if (log_slot > MAX_QUEST_LOG_SIZE)
-                    break;
-
-                QuestStatusData& q_status = user->getQuestStatusMap()[QuestID];
-
-                if(q_status.m_creatureOrGOcount[x] + increment > pQuest->ReqCreatureOrGOCount[x]) // We shouldnt go above required count
-                    break;
-
-                uint32 oldCount = q_status.m_creatureOrGOcount[x];
-                q_status.m_creatureOrGOcount[x] = oldCount + increment;
-                if (q_status.uState != QUEST_NEW) 
-                    q_status.uState = QUEST_CHANGED;
-
-                user->SendQuestUpdateAddCreatureOrGo(pQuest, ObjectGuid(), x, oldCount, increment);
-                if (user->CanCompleteQuest(QuestID))
-                    user->CompleteQuest(QuestID);
-
-                break;
-            }
-            case SCRIPT_COMMAND_TEMP_SUMMON_OBJECT:
-            {
-                if(!source)
-                {
-                    sLog.outError("SCRIPT_COMMAND_TEMP_SUMMON_OBJECT call for NULL object.");
-                    break;
-                }
-
-                WorldObject * pSummoner = dynamic_cast<WorldObject*>(source);
-
-                float x = step.script->x;
-                float y = step.script->y;
-                float z = step.script->z;
-                float o = step.script->o;
-
-                if(!x && !y && !z)
-                    pSummoner->GetPosition(x,y,z);
-
-                if(GameObject * pGameObj = pSummoner->SummonGameObject(step.script->go_summon.go_entry, x,y,z, o, step.script->go_summon.despawn_delay))
-                    if (pSummoner->GetTypeId() == TYPEID_UNIT)
-                        ((Unit*)pSummoner)->AddGameObject(pGameObj);
-                break;
-            }
-            case SCRIPT_COMMAND_SET_ENTRY:
-            {
-                if(!target || target->GetTypeId() != TYPEID_UNIT)
-                {
-                    sLog.outError("SCRIPT_COMMAND_SET_ENTRY (script id %u) call for NULL target or non-creature type.", step.script->id);
-                    break;
-                }
-
-                Creature *pCreature = (Creature*)target;
-                pCreature->UpdateEntry(step.script->set_entry.entry, ALLIANCE, 0, step.script->set_entry.keep_stat ? true : false);
-            }
             case SCRIPT_COMMAND_SET_RUN:
             {
                 if (!source)
@@ -3596,26 +3016,4 @@ uint32 Map::GenerateLocalLowGuid(HighGuid guidhigh)
 
     MANGOS_ASSERT(0);
     return 0;
-}
-
-bool Map::IsNextZcoordOK(float x, float y, float oldZ, float maxDiff) const
-{
-    // The fastest way to get an accurate result 90% of the time.
-    // Better result can be obtained like 99% accuracy with a ray light, but the cost is too high and the code is too long.
-    maxDiff = maxDiff >= 100.0f ? 10.0f : sqrtf(maxDiff);
-    bool useVmaps = false;
-    if ( GetHeight(x, y, oldZ+2.0f, false) <  GetHeight(x, y, oldZ+2.0f, true) ) // check use of vmaps
-        useVmaps = true;
-
-    float newZ = GetHeight(x, y, oldZ+2.0f, useVmaps);
-
-    if (fabs(newZ-oldZ) > maxDiff)                              // bad...
-    {
-        useVmaps = !useVmaps;                                     // try change vmap use
-        newZ = GetHeight(x, y, oldZ+2.0f, useVmaps);
-
-        if (fabs(newZ-oldZ) > maxDiff)
-            return false;
-    }
-    return true;
 }

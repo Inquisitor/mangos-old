@@ -76,7 +76,7 @@ enum PowerType
 
 typedef std::map<int8, VehicleSeat> SeatMap;
 
-class MANGOS_DLL_SPEC Vehicle : public Creature
+class Vehicle : public Creature
 {
     public:
         explicit Vehicle();
@@ -85,9 +85,11 @@ class MANGOS_DLL_SPEC Vehicle : public Creature
         void AddToWorld();
         void RemoveFromWorld();
 
+        void Die();
         bool Create (uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, uint32 vehicleId, uint32 team, const CreatureData *data = NULL);
+        void Respawn();
 
-        void setDeathState(DeathState s);                   // overwrite virtual Creature::setDeathState and Unit::setDeathState
+        void SetDeathState(DeathState s);                   // overwrite virtual Creature::SetDeathState and Unit::SetDeathState
         void Update(uint32 diff);                           // overwrite virtual Creature::Update and Unit::Update
 
         void RegeneratePower(Powers power);
@@ -102,11 +104,10 @@ class MANGOS_DLL_SPEC Vehicle : public Creature
         Vehicle* GetNextEmptySeat(int8 *seatId, bool next = true, bool force = true);
         Vehicle* GetFirstEmptySeat(int8 *seatId, bool force = true);
         int8 GetEmptySeatsCount(bool force = true);
-        void EmptySeatsCountChanged();
+        void EmptySeatsCountChanged(void);
         int8 GetTotalSeatsCount() { return m_Seats.size(); }
         bool HasEmptySeat(int8 seatId) const;
         int8 GetNextEmptySeatNum(int8 seatId, bool next) const;
-        uint8 m_comboPointsForCast;
 
         void Dismiss();
 
@@ -125,17 +126,18 @@ class MANGOS_DLL_SPEC Vehicle : public Creature
         uint32 GetVehicleFlags() { return m_VehicleData ? m_VehicleData->v_flags : NULL; }
         uint32 GetCreationTime() { return m_creation_time; }
         void BuildVehicleActionBar(Player *plr) const;
+        void InstallAllAccessories();
+        Unit *GetPassenger(int8 seatId) const;
+        uint8 GetPassengerSeat(Unit *passenger) const;
 
     protected:
         uint32 m_vehicleId;
-
         VehicleEntry const *m_vehicleInfo;
         VehicleDataStructure const *m_VehicleData;
         uint32 m_creation_time;
         SeatMap m_Seats;
         bool despawn;
         int32 m_spawnduration;
-        uint32 m_regenUpdateTimer;
 
     private:
         void SaveToDB(uint32, uint8)                        // overwrited of Creature::SaveToDB     - don't must be called

@@ -34,7 +34,6 @@
 #include "MapManager.h"
 #include "Player.h"
 #include "Chat.h"
-#include "WorldPacket.h"
 
 void utf8print(void* arg, const char* str)
 {
@@ -438,71 +437,6 @@ bool ChatHandler::HandleCharacterEraseCommand(char* args)
     return true;
 }
 
-bool ChatHandler::HandleCharacterWhisperCommand(char* args)
-{
-    if(!*args)
-        return false;
-
-    char *character_name_str = strtok((char*)args, " ");
-    if(!character_name_str)
-        return false;
-
-    std::string character_name = character_name_str;
-    if(!normalizePlayerName(character_name))
-        return false;
-
-    char *from_name_str = strtok(NULL, " ");
-    if(!from_name_str)
-        return false;
-
-    std::string from_name = from_name_str;
-    if(!normalizePlayerName(from_name))
-        return false;
-
-    Player *player = sObjectMgr.GetPlayer(character_name.c_str());
-    if(!player || !player->GetSession())
-    {
-        PSendSysMessage("Character %s not found or not online", character_name.c_str());
-        return true;
-    }
-
-    from_name = std::string("[GM]") + from_name;
-    // set GM name for replies - more than one GM cannot speak with same player at same time
-    // maybe also needed in ::HandleNameQueryOpcode()  ?
-    // force SMSG_NAME_QUERY_RESPONSE if name changed to update client display
-    // note : guid 1 should be reserved dummy !!!
-    if (player->rcGmName != from_name)
-    {
-        player->rcGmName = from_name;
-
-        WorldPacket data( SMSG_NAME_QUERY_RESPONSE, (8+1+1+1+1+1+1+10) );
-        data.appendPackGUID(ObjectGuid(HIGHGUID_PLAYER, 0, 1).ReadAsPacked().m_guidPtr->GetRawValue());
-        data << uint8(0);             // added in 3.1
-        data << from_name.c_str();
-        data << uint32(0);            // not needed here data
-        data << uint8(0);             // is not declined
-        player->GetSession()->SendPacket(&data);
-    }
-
-    // all the tailing text is our msg
-    char* msgStr = strtok(NULL, "");
-    if(!msgStr)
-        return false;
-
-    WorldPacket data(SMSG_MESSAGECHAT, 200);
-    data << (uint8)CHAT_MSG_WHISPER;
-    data << (uint32)LANG_UNIVERSAL;
-    data << (uint64)1;              // from guid - reserved dummy
-    data << (uint32)LANG_UNIVERSAL;
-    data << (uint64)player->GetGUID();
-    data << (uint32)(strlen(msgStr)+1);
-    data << msgStr;
-    data << (uint8)4;
-
-    player->GetSession()->SendPacket(&data);
-    return true;
-}
-
 /// Close RA connection
 bool ChatHandler::HandleQuitCommand(char* /*args*/)
 {
@@ -578,12 +512,10 @@ bool ChatHandler::HandleServerLogFilterCommand(char* args)
 {
     if (!*args)
     {
-        uint32 logfiler = sLog.getLogFilter();
-
         SendSysMessage(LANG_LOG_FILTERS_STATE_HEADER);
         for(int i = 0; i < LOG_FILTER_COUNT; ++i)
             if (*logFilterData[i].name)
-                PSendSysMessage("  %-20s = %s",logFilterData[i].name,(logfiler & (1 << i)) !=0 ? GetMangosString(LANG_ON) : GetMangosString(LANG_OFF));
+                PSendSysMessage("  %-20s = %s",logFilterData[i].name, sLog.HasLogFilter(1 << i) ? GetMangosString(LANG_ON) : GetMangosString(LANG_OFF));
         return true;
     }
 

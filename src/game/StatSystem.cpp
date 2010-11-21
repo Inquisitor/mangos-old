@@ -39,18 +39,11 @@ bool Player::UpdateStats(Stats stat)
 
     SetStat(stat, int32(value));
 
-    if(stat == STAT_STAMINA || stat == STAT_INTELLECT || stat == STAT_STRENGTH)
+    if(stat == STAT_STAMINA || stat == STAT_INTELLECT)
     {
         Pet *pet = GetPet();
         if(pet)
-        {
             pet->UpdateStats(stat);
-            if (getClass() == CLASS_DEATH_KNIGHT && pet->getPetType() == SUMMON_PET)
-            {
-                pet->RemoveAllAuras();
-                pet->CastPetAuras(true);
-            }
-        }
     }
 
     switch(stat)
@@ -445,7 +438,7 @@ void Player::CalculateMinMaxDamage(WeaponAttackType attType, bool normalized, fl
         weapon_mindamage = lvl*0.85f*att_speed;
         weapon_maxdamage = lvl*1.25f*att_speed;
     }
-    else if (!IsUseEquippedWeapon(attType))    //check if player not in form but still can't use weapon (broken/etc)
+    else if (!IsUseEquippedWeapon(attType==BASE_ATTACK))    //check if player not in form but still can't use weapon (broken/etc)
     {
         weapon_mindamage = BASE_MINDAMAGE;
         weapon_maxdamage = BASE_MAXDAMAGE;
@@ -578,45 +571,14 @@ void Player::UpdateParryPercentage()
 
 void Player::UpdateDodgePercentage()
 {
-    static const float dodge_cap[MAX_CLASSES] = {
-         88.129021f,  // Warrior
-         88.129021f,  // Paladin
-        145.560408f,  // Hunter
-        145.560408f,  // Rogue
-        150.375940f,  // Priest
-         88.129021f,  // DK
-        145.560408f,  // Shaman
-        150.375940f,  // Mage
-        150.375940f,  // Warlock
-          0.0f,       // ??
-        116.890707f   // Druid
-    };
-    static const float k[MAX_CLASSES] = {
-        0.9560f,  // Warrior
-        0.9560f,  // Paladin
-        0.9880f,  // Hunter
-        0.9880f,  // Rogue
-        0.9830f,  // Priest
-        0.9560f,  // DK
-        0.9880f,  // Shaman
-        0.9830f,  // Mage
-        0.9830f,  // Warlock
-        0.0f,     // ??
-        0.9720f   // Druid
-    };
-    float diminishing = 0.f, nondiminishing = 0.f;
     // Dodge from agility
-    GetDodgeFromAgility(diminishing, nondiminishing);
+    float value = GetDodgeFromAgility();
     // Modify value from defense skill
-    nondiminishing += (GetSkillValue(SKILL_DEFENSE) - GetMaxSkillValueForLevel()) * 0.04f;
-    diminishing += (int32(GetRatingBonusValue(CR_DEFENSE_SKILL))) * 0.04f;
+    value += (int32(GetDefenseSkillValue()) - int32(GetMaxSkillValueForLevel())) * 0.04f;
     // Dodge from SPELL_AURA_MOD_DODGE_PERCENT aura
-    nondiminishing += GetTotalAuraModifier(SPELL_AURA_MOD_DODGE_PERCENT);
+    value += GetTotalAuraModifier(SPELL_AURA_MOD_DODGE_PERCENT);
     // Dodge from rating
-    diminishing += GetRatingBonusValue(CR_DODGE);
-    // apply diminishing formula to diminishing dodge
-    uint32 pclass = getClass()-1;
-    float value = nondiminishing + (diminishing*dodge_cap[pclass] / (diminishing + dodge_cap[pclass]*k[pclass]));
+    value += GetRatingBonusValue(CR_DODGE);
     value = value < 0.0f ? 0.0f : value;
     SetStatFloatValue(PLAYER_DODGE_PERCENTAGE, value);
 }
@@ -911,91 +873,18 @@ bool Pet::UpdateStats(Stats stat)
     float value  = GetTotalStatValue(stat);
 
     Unit *owner = GetOwner();
-    if (owner && owner->GetTypeId() == TYPEID_PLAYER)
+    if ( stat == STAT_STAMINA )
     {
-        float scale_coeff = 0.0f;
-        switch(stat)
-        {
-            case STAT_STRENGTH:
-            {
-                if(owner->getClass() == CLASS_DEATH_KNIGHT)
-                {
-                    if(getPetType() == SUMMON_PET)
-                    {
-                        scale_coeff = 0.7f;
-                        // Ravenous Dead
-                        if (SpellEntry const* spell = ((Player*)owner)->GetKnownTalentRankById(1934))
-                            scale_coeff *= 1.0f + spell->CalculateSimpleValue(EFFECT_INDEX_1) / 100.0f;
-                        // Glyph of Ghoul
-                        if (Aura *glyph = owner->GetDummyAura(58686))
-                            scale_coeff += glyph->GetModifier()->m_amount / 100.0f;
-                    }
-                }
-                break;
-            }
-            case STAT_STAMINA:
-            {
-                scale_coeff = 0.3f;
-                switch (owner->getClass())
-                {
-                    case CLASS_HUNTER:
-                    {
-                        scale_coeff = 0.45f;
-                        //Wild Hunt
-                        uint32 bonus_id = 0;
-                        if (HasSpell(62762))
-                            bonus_id = 62762;
-                        else if(HasSpell(62758))
-                            bonus_id = 62758;
-                        if (const SpellEntry *bonusProto = sSpellStore.LookupEntry(bonus_id)) 
-                            scale_coeff *= 1 + bonusProto->CalculateSimpleValue(EFFECT_INDEX_0) / 100.0f;
-                        break;
-                    }
-                    case CLASS_WARLOCK:
-                    {
-                        CreatureInfo const *cinfo = GetCreatureInfo();
-                        CreatureFamily petFamily = (CreatureFamily) cinfo->family;
-                        switch (petFamily)
-                        {
-                            case CREATURE_FAMILY_FELHUNTER:  value += float(owner->GetStat(stat)) * 0.7125f; break;
-                            case CREATURE_FAMILY_VOIDWALKER: value += float(owner->GetStat(stat)) * 0.825f; break;
-                            case CREATURE_FAMILY_FELGUARD:   value += float(owner->GetStat(stat)) * 0.825f; break;
-                            case CREATURE_FAMILY_SUCCUBUS:   value += float(owner->GetStat(stat)) * 0.6825f; break;
-                            case CREATURE_FAMILY_IMP:        value += float(owner->GetStat(stat)) * 0.63f; break;
-                            default: value += float(owner->GetStat(stat)) * 0.3f; break;
-                        }
-                        break;
-                    }
-                    case CLASS_DEATH_KNIGHT:
-                    {
-                        if(getPetType() == SUMMON_PET)
-                        {
-                            // Ravenous Dead
-                            if (owner->GetTypeId() == TYPEID_PLAYER)
-                                if (SpellEntry const* spell = ((Player*)owner)->GetKnownTalentRankById(1934))
-                                    scale_coeff *= 1.0f + spell->CalculateSimpleValue(EFFECT_INDEX_1) / 100.0f;
-                            // Glyph of Ghoul
-                            if (Aura *glyph = owner->GetDummyAura(58686))
-                                scale_coeff += glyph->GetModifier()->m_amount / 100.0f;
-                        }
-                        break; 
-                    }
-                }
-                break;
-            }
-            case STAT_INTELLECT:
-            {
-                //warlock's and mage's pets gain 30% of owner's intellect
-                if (getPetType() == SUMMON_PET)
-                {
-                    if(owner && (owner->getClass() == CLASS_WARLOCK || owner->getClass() == CLASS_MAGE) )
-                        scale_coeff = 0.3f;
-                }
-                break;
-            }
-        }
-        value += float(owner->GetStat(stat)) * scale_coeff;
+        if(owner)
+            value += float(owner->GetStat(stat)) * 0.3f;
     }
+                                                            //warlock's and mage's pets gain 30% of owner's intellect
+    else if ( stat == STAT_INTELLECT && getPetType() == SUMMON_PET )
+    {
+        if(owner && (owner->getClass() == CLASS_WARLOCK || owner->getClass() == CLASS_MAGE) )
+            value += float(owner->GetStat(stat)) * 0.3f;
+    }
+
     SetStat(stat, int32(value));
 
     switch(stat)
@@ -1111,12 +1000,6 @@ void Pet::UpdateAttackPowerAndDamage(bool ranged)
         {
             bonusAP = owner->GetTotalAttackPowerValue(RANGED_ATTACK) * 0.22f;
             SetBonusDamage( int32(owner->GetTotalAttackPowerValue(RANGED_ATTACK) * 0.1287f));
-        }
-        //ghouls benefit from deathknight's attack power
-        else if(getPetType() == SUMMON_PET && owner->getClass() == CLASS_DEATH_KNIGHT)
-        {
-            bonusAP = owner->GetTotalAttackPowerValue(BASE_ATTACK) * 0.82f;
-            SetBonusDamage( int32(owner->GetTotalAttackPowerValue(BASE_ATTACK) * 0.8287f));
         }
         //demons benefit from warlocks shadow or fire damage
         else if(getPetType() == SUMMON_PET && owner->getClass() == CLASS_WARLOCK)

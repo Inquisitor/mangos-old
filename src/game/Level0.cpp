@@ -185,7 +185,6 @@ bool ChatHandler::HandleGMListIngameCommand(char* /*args*/)
 
 bool ChatHandler::HandleAccountPasswordCommand(char* args)
 {
-    /*
     // allow use from RA, but not from console (not have associated account id)
     if (!GetAccountId())
     {
@@ -236,10 +235,7 @@ bool ChatHandler::HandleAccountPasswordCommand(char* args)
             SendSysMessage(LANG_COMMAND_NOTCHANGEPASSWORD);
             SetSentErrorMessage(true);
             return false;
-    }*/
-
-    PSendSysMessage("Due to security reasons you can only change your password through the forum. Please visit http://gamingconsortium.org/ for more information.");
-    SetSentErrorMessage(true);
+    }
 
     return true;
 }
@@ -264,12 +260,12 @@ bool ChatHandler::HandleAccountLockCommand(char* args)
 
     if (value)
     {
-        LoginDatabase.PExecute( "UPDATE account SET locked = '1' WHERE id = '%d'",GetAccountId());
+        LoginDatabase.PExecute( "UPDATE account SET locked = '1' WHERE id = '%u'", GetAccountId());
         PSendSysMessage(LANG_COMMAND_ACCLOCKLOCKED);
     }
     else
     {
-        LoginDatabase.PExecute( "UPDATE account SET locked = '0' WHERE id = '%d'",GetAccountId());
+        LoginDatabase.PExecute( "UPDATE account SET locked = '0' WHERE id = '%u'", GetAccountId());
         PSendSysMessage(LANG_COMMAND_ACCLOCKUNLOCKED);
     }
 

@@ -27,8 +27,8 @@
 #include "Spell.h"
 #include "ScriptCalls.h"
 #include "Totem.h"
-#include "Vehicle.h"
 #include "SpellAuras.h"
+#include "Vehicle.h"
 
 void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
 {
@@ -110,7 +110,7 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
 
     // only allow conjured consumable, bandage, poisons (all should have the 2^21 item flag set in DB)
     if (proto->Class == ITEM_CLASS_CONSUMABLE &&
-        !(proto->Flags & ITEM_FLAGS_USEABLE_IN_ARENA) &&
+        !(proto->Flags & ITEM_FLAG_USEABLE_IN_ARENA) &&
         pUser->InArena())
     {
         recvPacket.rpos(recvPacket.wpos());                 // prevent spam at not read packet tail
@@ -223,7 +223,7 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recvPacket)
 
     // locked item
     uint32 lockId = proto->LockID;
-    if(lockId)
+    if(lockId && !pItem->HasFlag(ITEM_FIELD_FLAGS, ITEM_DYNFLAG_UNLOCKED))
     {
         LockEntry const *lockInfo = sLockStore.LookupEntry(lockId);
 
@@ -242,7 +242,7 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recvPacket)
         }
     }
 
-    if(pItem->HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAGS_WRAPPED))// wrapped?
+    if (pItem->HasFlag(ITEM_FIELD_FLAGS, ITEM_DYNFLAG_WRAPPED))// wrapped?
     {
         QueryResult *result = CharacterDatabase.PQuery("SELECT entry, flags FROM character_gifts WHERE item_guid = '%u'", pItem->GetGUIDLow());
         if (result)
@@ -266,16 +266,16 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recvPacket)
         CharacterDatabase.PExecute("DELETE FROM character_gifts WHERE item_guid = '%u'", pItem->GetGUIDLow());
     }
     else
-        pUser->SendLoot(pItem->GetGUID(),LOOT_CORPSE);
+        pUser->SendLoot(pItem->GetObjectGuid(),LOOT_CORPSE);
 }
 
 void WorldSession::HandleGameObjectUseOpcode( WorldPacket & recv_data )
 {
-    uint64 guid;
+    ObjectGuid guid;
 
     recv_data >> guid;
 
-    DEBUG_LOG( "WORLD: Recvd CMSG_GAMEOBJ_USE Message [guid=%u]", GUID_LOPART(guid));
+    DEBUG_LOG("WORLD: Recvd CMSG_GAMEOBJ_USE Message guid: %s", guid.GetString().c_str());
 
     // ignore for remote control state
     if (!_player->IsSelfMover())
@@ -286,22 +286,29 @@ void WorldSession::HandleGameObjectUseOpcode( WorldPacket & recv_data )
     if(!obj)
         return;
 
+    // Never expect this opcode for some type GO's
+    if (obj->GetGoType() == GAMEOBJECT_TYPE_GENERIC)
+    {
+        sLog.outError("HandleGameObjectUseOpcode: CMSG_GAMEOBJ_USE for not allowed GameObject type %u (Entry %u), didn't expect this to happen.", obj->GetGoType(), obj->GetEntry());
+        return;
+    }
+
     obj->Use(_player);
 }
 
 void WorldSession::HandleGameobjectReportUse(WorldPacket& recvPacket)
 {
-    uint64 guid;
+    ObjectGuid guid;
     recvPacket >> guid;
 
-    DEBUG_LOG( "WORLD: Recvd CMSG_GAMEOBJ_REPORT_USE Message [in game guid: %u]", GUID_LOPART(guid));
+    DEBUG_LOG("WORLD: Recvd CMSG_GAMEOBJ_REPORT_USE Message guid: %s", guid.GetString().c_str());
 
     // ignore for remote control state
     if (!_player->IsSelfMover())
         return;
 
     GameObject* go = GetPlayer()->GetMap()->GetGameObject(guid);
-    if(!go)
+    if (!go)
         return;
 
     if(!go->IsWithinDistInMap(_player,INTERACTION_DISTANCE))
@@ -331,7 +338,7 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
 
     // vehicle spells are handled by CMSG_PET_CAST_SPELL,
     // but player is still able to cast own spells
-    if(_player->GetCharmGUID() && _player->GetCharmGUID() == _player->GetVehicleGUID())
+    if(!_player->GetCharmGuid().IsEmpty() && _player->GetCharmGuid() == _player->GetVehicleGUID())
         mover = _player;
 
     SpellEntry const *spellInfo = sSpellStore.LookupEntry(spellId );
@@ -375,6 +382,8 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
     {
         uint8 unk1;
 
+        recvPacket >> Unused<float>();                      // unk1, coords?
+        recvPacket >> Unused<float>();                      // unk1, coords?
         recvPacket >> unk1;                                 // >> 1 or 0
         if(unk1)
         {
@@ -429,7 +438,7 @@ void WorldSession::HandleCancelAuraOpcode( WorldPacket& recvPacket)
     if (!spellInfo)
         return;
 
-    if (spellInfo->Attributes & SPELL_ATTR_CANT_CANCEL || spellId == 56266)
+    if (spellInfo->Attributes & SPELL_ATTR_CANT_CANCEL)
         return;
 
     if (IsPassiveSpell(spellInfo))
@@ -481,7 +490,7 @@ void WorldSession::HandleCancelAuraOpcode( WorldPacket& recvPacket)
 
 void WorldSession::HandlePetCancelAuraOpcode( WorldPacket& recvPacket)
 {
-    uint64 guid;
+    ObjectGuid guid;
     uint32 spellId;
 
     recvPacket >> guid;
@@ -498,21 +507,21 @@ void WorldSession::HandlePetCancelAuraOpcode( WorldPacket& recvPacket)
         return;
     }
 
-    Creature* pet=ObjectAccessor::GetCreatureOrPetOrVehicle(*_player,guid);
+    Creature* pet=ObjectAccessor::GetAnyTypeCreature(*_player,guid);
 
-    if(!pet)
+    if (!pet)
     {
-        sLog.outError( "Pet %u not exist.", uint32(GUID_LOPART(guid)) );
+        sLog.outError("HandlePetCancelAuraOpcode - %s not exist.", guid.GetString().c_str());
         return;
     }
 
-    if(pet != GetPlayer()->GetPet() && pet != GetPlayer()->GetCharm())
+    if (guid != GetPlayer()->GetPetGuid() && guid != GetPlayer()->GetCharmGuid())
     {
-        sLog.outError( "HandlePetCancelAura.Pet %u isn't pet of player %s", uint32(GUID_LOPART(guid)),GetPlayer()->GetName() );
+        sLog.outError("HandlePetCancelAura. %s isn't pet of %s", guid.GetString().c_str(), GetPlayer()->GetObjectGuid().GetString().c_str());
         return;
     }
 
-    if(!pet->isAlive())
+    if (!pet->isAlive())
     {
         pet->SendPetActionFeedback(FEEDBACK_PET_DEAD);
         return;
@@ -560,9 +569,8 @@ void WorldSession::HandleTotemDestroyed( WorldPacket& recvPacket)
     if (int(slotId) >= MAX_TOTEM_SLOT)
         return;
 
-    Totem* totem = GetPlayer()->GetTotem(TotemSlot(slotId));
-    if(totem && totem->GetEntry() != SENTRY_TOTEM_ENTRY)
-        ((Totem*)totem)->UnSummon();
+    if (Totem* totem = GetPlayer()->GetTotem(TotemSlot(slotId)))
+        totem->UnSummon();
 }
 
 void WorldSession::HandleSelfResOpcode( WorldPacket & /*recv_data*/ )
@@ -581,11 +589,15 @@ void WorldSession::HandleSelfResOpcode( WorldPacket & /*recv_data*/ )
 
 void WorldSession::HandleSpellClick( WorldPacket & recv_data )
 {
-    uint64 guid;
+    ObjectGuid guid;
     recv_data >> guid;
 
-    Creature *unit = _player->GetMap()->GetAnyTypeCreature(guid);
-    if (!unit || unit->isInCombat())                        // client prevent click and set different icon at combat state
+    Creature *unit = ObjectAccessor::GetAnyTypeCreature(*_player, guid);
+
+    if(!_player->IsWithinDistInMap(unit, 10))
+
+    // cheater?
+    if(!unit->HasFlag(UNIT_NPC_FLAGS,UNIT_NPC_FLAG_SPELLCLICK))
         return;
 
     uint32 vehicleId = 0;
@@ -593,36 +605,29 @@ void WorldSession::HandleSpellClick( WorldPacket & recv_data )
     if(cainfo)
         vehicleId = cainfo->vehicle_id;
 
-    if (_player->isInCombat() && !unit->isVehicle() && !vehicleId)                              // client prevent click and set different icon at combat state
-        return;
-
-    if(!_player->IsWithinDistInMap(unit, 10))
-        return;
-
-    // cheater?
-    if(!unit->HasFlag(UNIT_NPC_FLAGS,UNIT_NPC_FLAG_SPELLCLICK))
-        return;
-
     // handled other (hacky) way to avoid overwriting auras
-    if(vehicleId || unit->isVehicle())
+    if(vehicleId || unit->IsVehicle())
     {
         if(!unit->isAlive())
+            return;
+
+        if(_player->GetVehicle())
             return;
 
         if(_player->GetVehicleGUID())
             return;
 
         // create vehicle if no one present and kill the original creature to avoid double, triple etc spawns
-        if(!unit->isVehicle())
+        if(!unit->IsVehicle())
         {
             Vehicle *v = _player->SummonVehicle(unit->GetEntry(), unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ(), unit->GetOrientation(), vehicleId);
             if(!v)
                 return;
-
+ 
             if(v->GetVehicleFlags() & VF_DESPAWN_NPC)
             {
                 v->SetSpawnDuration(unit->GetRespawnDelay()*IN_MILLISECONDS);
-                unit->setDeathState(JUST_DIED);
+                unit->SetDeathState(JUST_DIED);
                 unit->RemoveCorpse();
                 unit->SetHealth(0);
             }
@@ -645,101 +650,9 @@ void WorldSession::HandleSpellClick( WorldPacket & recv_data )
             {
                 Unit *caster = (itr->second.castFlags & 0x1) ? (Unit*)_player : (Unit*)unit;
                 Unit *target = (itr->second.castFlags & 0x2) ? (Unit*)_player : (Unit*)unit;
-                if(itr->second.castFlags & 0x4)
-                {
-                    unit->setDeathState(JUST_DIED);
-                    unit->RemoveCorpse();
-                    unit->SetHealth(0);
-                }
 
                 caster->CastSpell(target, itr->second.spellId, true);
             }
         }
     }
-}
-
-void WorldSession::HandleMirrorImageDataRequest( WorldPacket& recv_data )
-{
-    sLog.outDebug("WORLD: CMSG_GET_MIRRORIMAGE_DATA");
-    uint64 guid;
-    recv_data >> guid;
-
-    // Get unit for which data is needed by client
-    Unit *unit = ObjectAccessor::GetUnit(*_player, guid);
-    if (!unit)
-        return;
-
-    // Get creator of the unit
-    Unit *creator = ObjectAccessor::GetUnit(*_player, unit->GetCreatorGUID());
-    if (!creator)
-        creator = unit;
-
-    if (!creator)
-        return;
-
-    WorldPacket data(SMSG_MIRRORIMAGE_DATA, 68);
-    data << (uint64)guid;
-    data << (uint32)creator->GetDisplayId();
-    if (creator->GetTypeId() == TYPEID_PLAYER)
-    {
-        Player* pCreator = (Player *)creator;
-        data << (uint8)pCreator->getRace();                         // race
-        data << (uint8)pCreator->getGender();                       // gender
-        data << (uint8)pCreator->getClass();                        // class
-        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 0);     // skin
-        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 1);     // face
-        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 2);     // hair
-        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES, 3);     // haircolor
-        data << (uint8)pCreator->GetByteValue(PLAYER_BYTES_2, 0);   // facialhair
-
-        data << (uint32)0;                                          // unknown
-
-        static const EquipmentSlots ItemSlots[] =
-        {
-            EQUIPMENT_SLOT_HEAD,
-            EQUIPMENT_SLOT_SHOULDERS,
-            EQUIPMENT_SLOT_BODY,
-            EQUIPMENT_SLOT_CHEST,
-            EQUIPMENT_SLOT_WAIST,
-            EQUIPMENT_SLOT_LEGS,
-            EQUIPMENT_SLOT_FEET,
-            EQUIPMENT_SLOT_WRISTS,
-            EQUIPMENT_SLOT_HANDS,
-            EQUIPMENT_SLOT_BACK,
-            EQUIPMENT_SLOT_TABARD,
-            EQUIPMENT_SLOT_END
-        };
-
-        // Display items in visible slots
-        for (EquipmentSlots const* itr = &ItemSlots[0]; *itr != EQUIPMENT_SLOT_END; ++itr)
-            if (Item const* item =  pCreator->GetItemByPos(INVENTORY_SLOT_BAG_0, *itr))
-                data << (uint32)item->GetProto()->DisplayInfoID;    // display id
-            else
-                data << (uint32)0;                                  // no item found, so no id
-
-        if (Item const* item = pCreator->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_MAINHAND))
-            unit->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, item->GetProto()->ItemId);
-        if (Item const* item = pCreator->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND))
-            unit->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 1, item->GetProto()->ItemId);
-    }
-    else
-    {
-        // Skip player data for creatures
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-        data << (uint32)0;
-    }
-
-    SendPacket( &data );
 }

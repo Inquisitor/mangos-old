@@ -31,6 +31,7 @@
 #include "ArenaTeam.h"
 #include "Language.h"
 #include "ScriptCalls.h"
+#include "World.h"
 
 void WorldSession::HandleBattlemasterHelloOpcode(WorldPacket & recv_data)
 {
@@ -75,7 +76,7 @@ void WorldSession::SendBattlegGroundList( ObjectGuid guid, BattleGroundTypeId bg
 
 void WorldSession::HandleBattlemasterJoinOpcode( WorldPacket & recv_data )
 {
-    uint64 guid;
+    ObjectGuid guid;
     uint32 bgTypeId_;
     uint32 instanceId;
     uint8 joinAsGroup;
@@ -95,23 +96,14 @@ void WorldSession::HandleBattlemasterJoinOpcode( WorldPacket & recv_data )
 
     BattleGroundTypeId bgTypeId = BattleGroundTypeId(bgTypeId_);
 
-    DEBUG_LOG( "WORLD: Recvd CMSG_BATTLEMASTER_JOIN Message from (GUID: %u TypeId:%u)", GUID_LOPART(guid), GuidHigh2TypeId(GUID_HIPART(guid)));
+    DEBUG_LOG( "WORLD: Recvd CMSG_BATTLEMASTER_JOIN Message from %s", guid.GetString().c_str());
 
     // can do this, since it's battleground, not arena
     BattleGroundQueueTypeId bgQueueTypeId = BattleGroundMgr::BGQueueTypeId(bgTypeId, 0);
-    BattleGroundQueueTypeId bgQueueTypeIdRandom = BattleGroundMgr::BGQueueTypeId(BATTLEGROUND_RB, 0);
 
     // ignore if player is already in BG
     if (_player->InBattleGround())
         return;
-
-    // prevent joining from instances
-    uint32 mapid = _player->GetMapId();
-    if(mapid != 0 && mapid != 1 && mapid != 530 && mapid != 571)
-    {
-        SendNotification("You cannot join from here");
-        return;
-    }
 
     // get bg instance or bg template if instance not found
     BattleGround *bg = NULL;
@@ -142,34 +134,13 @@ void WorldSession::HandleBattlemasterJoinOpcode( WorldPacket & recv_data )
             _player->GetSession()->SendPacket(&data);
             return;
         }
-        if (_player->GetBattleGroundQueueIndex(bgQueueTypeIdRandom) < PLAYER_MAX_BATTLEGROUND_QUEUES)
-        {
-            //player is already in random queue
-            WorldPacket data;
-            sBattleGroundMgr.BuildGroupJoinedBattlegroundPacket(&data, ERR_IN_RANDOM_BG);
-            _player->GetSession()->SendPacket(&data);
-            return;
-        }
-        if(_player->InBattleGroundQueue() && bgTypeId == BATTLEGROUND_RB)
-        {
-            //player is already in queue, can't start random queue
-            WorldPacket data;
-            sBattleGroundMgr.BuildGroupJoinedBattlegroundPacket(&data, ERR_IN_NON_RANDOM_BG);
-            _player->GetSession()->SendPacket(&data);
-            return;
-        }
         // check if already in queue
         if (_player->GetBattleGroundQueueIndex(bgQueueTypeId) < PLAYER_MAX_BATTLEGROUND_QUEUES)
             //player is already in this queue
             return;
         // check if has free queue slots
         if (!_player->HasFreeBattleGroundQueueId())
-        {
-            WorldPacket data;
-            sBattleGroundMgr.BuildGroupJoinedBattlegroundPacket(&data, ERR_BATTLEGROUND_TOO_MANY_QUEUES);
-            _player->GetSession()->SendPacket(&data);
-             return;
-        }
+            return;
     }
     else
     {
@@ -180,7 +151,8 @@ void WorldSession::HandleBattlemasterJoinOpcode( WorldPacket & recv_data )
         if (grp->GetLeaderGuid() != _player->GetObjectGuid())
             return;
         err = grp->CanJoinBattleGroundQueue(bg, bgQueueTypeId, 0, bg->GetMaxPlayersPerTeam(), false, 0);
-        isPremade = (grp->GetMembersCount() >= bg->GetMinPlayersPerTeam());
+        isPremade = sWorld.getConfig(CONFIG_UINT32_BATTLEGROUND_PREMADE_GROUP_WAIT_FOR_MATCH) &&
+            (grp->GetMembersCount() >= bg->GetMinPlayersPerTeam());
     }
     // if we're here, then the conditions to join a bg are met. We can proceed in joining.
 
@@ -250,7 +222,7 @@ void WorldSession::HandleBattleGroundPlayerPositionsOpcode( WorldPacket & /*recv
     if(!bg)                                                 // can't be received if player not in battleground
         return;
 
-    switch( bg->GetTypeID(true) )
+    switch( bg->GetTypeID() )
     {
         case BATTLEGROUND_WS:
             {
@@ -590,7 +562,7 @@ void WorldSession::HandleAreaSpiritHealerQueryOpcode( WorldPacket & recv_data )
     if (!bg)
         return;
 
-    uint64 guid;
+    ObjectGuid guid;
     recv_data >> guid;
 
     Creature *unit = GetPlayer()->GetMap()->GetCreature(guid);
@@ -611,7 +583,7 @@ void WorldSession::HandleAreaSpiritHealerQueueOpcode( WorldPacket & recv_data )
     if (!bg)
         return;
 
-    uint64 guid;
+    ObjectGuid guid;
     recv_data >> guid;
 
     Creature *unit = GetPlayer()->GetMap()->GetCreature(guid);
@@ -629,7 +601,7 @@ void WorldSession::HandleBattlemasterJoinArena( WorldPacket & recv_data )
     DEBUG_LOG("WORLD: CMSG_BATTLEMASTER_JOIN_ARENA");
     //recv_data.hexlike();
 
-    uint64 guid;                                            // arena Battlemaster guid
+    ObjectGuid guid;                                        // arena Battlemaster guid
     uint8 arenaslot;                                        // 2v2, 3v3 or 5v5
     uint8 asGroup;                                          // asGroup
     uint8 isRated;                                          // isRated

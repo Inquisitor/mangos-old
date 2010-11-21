@@ -53,7 +53,7 @@ typedef std::map<uint32,ReputationRank> ForcedReactions;
 class Player;
 class QueryResult;
 
-class MANGOS_DLL_SPEC ReputationMgr
+class ReputationMgr
 {
     public:                                                 // constructors and global modifiers
         explicit ReputationMgr(Player* owner) : m_player(owner),
