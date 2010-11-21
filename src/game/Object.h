@@ -401,6 +401,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 
         virtual const char* GetNameForLocaleIdx(int32 /*locale_idx*/) const { return GetName(); }
 
+        float GetDistance(const float x, const float y, const float z, const float sx, const float sy, const float sz) const;
         float GetDistance( const WorldObject* obj ) const;
         float GetDistance(float x, float y, float z) const;
         float GetDistance2d(const WorldObject* obj) const;
@@ -489,7 +490,14 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         void RemoveFromClientUpdateList();
         void BuildUpdateData(UpdateDataMapType &);
 
+        GameObject* SummonGameObject(uint32 id, float x, float y, float z, float ang, uint32 despwtime);
         Creature* SummonCreature(uint32 id, float x, float y, float z, float ang,TempSummonType spwtype,uint32 despwtime, bool asActiveObject = false);
+
+        // helper functions to select units
+        Creature* GetClosestCreatureWithEntry(WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange);
+        GameObject* GetClosestGameObjectWithEntry(WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange);
+        void GetGameObjectListWithEntryInGrid(std::list<GameObject*>& lList, uint32 uiEntry, float fMaxSearchRange);
+        void GetCreatureListWithEntryInGrid(std::list<Creature*>& lList, uint32 uiEntry, float fMaxSearchRange);
 
         bool isActiveObject() const { return m_isActiveObject || m_viewPoint.hasViewers(); }
 
