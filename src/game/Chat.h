@@ -133,7 +133,6 @@ class ChatHandler
         bool HandleAccountPasswordCommand(char* args);
         bool HandleAccountSetAddonCommand(char* args);
         bool HandleAccountSetGmLevelCommand(char* args);
-        //bool HandleAccountSetPasswordCommand(char* args);
 
         bool HandleAuctionAllianceCommand(char* args);
         bool HandleAuctionGoblinCommand(char* args);
@@ -397,6 +396,7 @@ class ChatHandler
         bool HandleReloadGossipScriptsCommand(char* args);
         bool HandleReloadGOQuestRelationsCommand(char* args);
         bool HandleReloadGOQuestInvRelationsCommand(char* args);
+        bool HandleReloadItemConvertCommand(char* args);
         bool HandleReloadItemEnchantementsCommand(char* args);
         bool HandleReloadItemRequiredTragetCommand(char* args);
         bool HandleReloadLocalesAchievementRewardCommand(char* args);

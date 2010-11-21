@@ -1148,6 +1148,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint8 chatTag() const;
         std::string afkMsg;
         std::string dndMsg;
+        // used to whisper from cli to ingame characters
+        std::string rcGmName;
 
         uint32 GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 newfacialhair);
 
@@ -2393,6 +2395,14 @@ class MANGOS_DLL_SPEC Player : public Unit
         bool HasTitle(uint32 bitIndex);
         bool HasTitle(CharTitlesEntry const* title) { return HasTitle(title->bit_index); }
         void SetTitle(CharTitlesEntry const* title, bool lost = false);
+
+        /*********************************************************/
+        /***                ITEM REFUND SYSTEM                 ***/
+        /*********************************************************/
+
+        void AddRefundableItem(uint64 itemGUID,  uint32 extendedCost);
+        void RemoveRefundableItem(uint64 itemGUID);
+        uint32 LookupRefundableItem(uint64 itemGUID);
 
         bool canSeeSpellClickOn(Creature const* creature) const;
     protected:

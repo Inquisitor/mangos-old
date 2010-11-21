@@ -1221,3 +1221,29 @@ void Item::SetLootState( ItemLootUpdateState state )
     if (m_lootState != ITEM_LOOT_NONE && m_lootState != ITEM_LOOT_UNCHANGED && m_lootState != ITEM_LOOT_TEMPORARY)
         SetState(ITEM_CHANGED);
 }
+
+// "Stackable items (such as Frozen Orbs and gems) and 
+// charged items that can be purchased with an alternate currency are not eligible. "
+bool Item::IsEligibleForRefund()
+{
+    ItemPrototype const*proto = GetProto();
+
+    if (proto == NULL)
+        return false;
+
+    if (!(proto->Flags & ITEM_FLAG_REFUNDABLE))
+        return false;
+
+    if (proto->MaxCount > 1)
+        return false;
+
+    for(int i = 0; i < 5; ++i)
+    {
+        _Spell spell = proto->Spells[i];
+
+        if (spell.SpellCharges != -1  && spell.SpellCharges != 0)
+            return false;
+    }
+
+    return true;
+}

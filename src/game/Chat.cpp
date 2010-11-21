@@ -82,7 +82,6 @@ ChatCommand * ChatHandler::getCommandTable()
         { "onlinelist",     SEC_CONSOLE,        true,  &ChatHandler::HandleAccountOnlineListCommand,   "", NULL },
         { "lock",           SEC_PLAYER,         true,  &ChatHandler::HandleAccountLockCommand,         "", NULL },
         { "set",            SEC_ADMINISTRATOR,  true,  NULL,                                           "", accountSetCommandTable },
-        //{ "password",       SEC_PLAYER,         true,  &ChatHandler::HandleAccountPasswordCommand,     "", NULL },
         { "",               SEC_PLAYER,         true,  &ChatHandler::HandleAccountCommand,             "", NULL },
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
@@ -2050,9 +2049,9 @@ Unit* ChatHandler::getSelectedUnit()
     if(!m_session)
         return NULL;
 
-    uint64 guid = m_session->GetPlayer()->GetSelection();
+    ObjectGuid guid  = m_session->GetPlayer()->GetSelectionGuid();
 
-    if (guid == 0)
+    if (guid.IsEmpty())
         return m_session->GetPlayer();
 
     // can be selected player at another map

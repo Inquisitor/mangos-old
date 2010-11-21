@@ -22500,3 +22500,33 @@ void Player::SetRestType( RestType n_r_type, uint32 areaTriggerId /*= 0*/)
             SetFFAPvP(false);
     }
 }
+
+void Player::AddRefundableItem(uint64 itemGUID,  uint32 extendedcost)
+{
+    std::pair<uint64, uint32> RefundableItemInfo;
+    
+    if (Item *item = GetItemByGuid(itemGUID))
+    {
+        item->SetPlayedtimeField(GetTotalPlayedTime());
+
+        RefundableItemInfo.first = itemGUID;
+        RefundableItemInfo.second = extendedcost;
+
+        sObjectMgr.mItemRefundableMap.insert(RefundableItemInfo);
+    }
+}
+
+void Player::RemoveRefundableItem(uint64 itemGUID)
+{
+    sObjectMgr.mItemRefundableMap.erase(itemGUID);
+}
+
+uint32 Player::LookupRefundableItem(uint64 itemGUID)
+{
+    ItemRefundableMap::iterator itr = sObjectMgr.mItemRefundableMap.find(itemGUID);
+
+    if (itr != sObjectMgr.mItemRefundableMap.end())
+        return itr->second;
+
+    return 0;
+}

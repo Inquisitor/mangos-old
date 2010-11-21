@@ -52,6 +52,7 @@
 #include "InstanceData.h"
 #include "CreatureEventAIMgr.h"
 #include "DBCEnums.h"
+#include "GossipDef.h"
 
 //reload commands
 bool ChatHandler::HandleReloadAllCommand(char* /*args*/)
@@ -269,6 +270,14 @@ bool ChatHandler::HandleReloadCreatureQuestInvRelationsCommand(char* /*args*/)
     sLog.outString( "Loading Quests Relations... (`creature_involvedrelation`)" );
     sObjectMgr.LoadCreatureInvolvedRelations();
     SendGlobalSysMessage("DB table `creature_involvedrelation` (creature quest takers) reloaded.");
+    return true;
+}
+
+bool ChatHandler::HandleReloadGCNewsCommand(char*)
+{
+    sLog.outString( "Re-Loading `gc_news` Table!" );
+    sObjectMgr.LoadGCNews();
+    SendGlobalSysMessage("DB table `gc_news` reloaded.");
     return true;
 }
 
@@ -649,6 +658,22 @@ bool ChatHandler::HandleReloadSpellPetAurasCommand(char* /*args*/)
     return true;
 }
 
+bool ChatHandler::HandleReloadSpellStacksCommand(char*)
+{
+    sLog.outString( "Re-Loading Spell Stacking Rules...");
+    sSpellMgr.LoadSpellStackingRules();
+    SendGlobalSysMessage("DB table `spell_stacking` (spell stacking definitions) reloaded.");
+    return true;
+}
+
+bool ChatHandler::HandleReloadSpellDisabledCommand(char* /*arg*/)
+{
+    sLog.outString( "Re-Loading spell disabled table...");
+    sObjectMgr.LoadSpellDisabledEntrys();
+    SendGlobalSysMessage("DB table `spell_disabled` reloaded.");
+    return true;
+}
+
 bool ChatHandler::HandleReloadPageTextsCommand(char* /*args*/)
 {
     sLog.outString( "Re-Loading Page Texts..." );
@@ -999,58 +1024,6 @@ bool ChatHandler::HandleAccountSetGmLevelCommand(char* args)
 
     return true;
 }
-
-/// Set password for account
-bool ChatHandler::HandleAccountSetPasswordCommand(char* args)
-{
-    ///- Get the command line arguments
-    std::string account_name;
-    uint32 targetAccountId = ExtractAccountId(&args, &account_name);
-    if (!targetAccountId)
-        return false;
-
-    // allow or quoted string with possible spaces or literal without spaces
-    char *szPassword1 = ExtractQuotedOrLiteralArg(&args);
-    char *szPassword2 = ExtractQuotedOrLiteralArg(&args);
-    if (!szPassword1 || !szPassword2)
-        return false;
-
-    /// can set password only for target with less security
-    /// This is also reject self apply in fact
-    if(HasLowerSecurityAccount (NULL,targetAccountId,true))
-        return false;
-
-    if (strcmp(szPassword1,szPassword2))
-    {
-        SendSysMessage (LANG_NEW_PASSWORDS_NOT_MATCH);
-        SetSentErrorMessage (true);
-        return false;
-    }
-
-    AccountOpResult result = sAccountMgr.ChangePassword(targetAccountId, szPassword1);
-
-    switch(result)
-    {
-        case AOR_OK:
-            SendSysMessage(LANG_COMMAND_PASSWORD);
-            break;
-        case AOR_NAME_NOT_EXIST:
-            PSendSysMessage(LANG_ACCOUNT_NOT_EXIST,account_name.c_str());
-            SetSentErrorMessage(true);
-            return false;
-        case AOR_PASS_TOO_LONG:
-            SendSysMessage(LANG_PASSWORD_TOO_LONG);
-            SetSentErrorMessage(true);
-            return false;
-        default:
-            SendSysMessage(LANG_COMMAND_NOTCHANGEPASSWORD);
-            SetSentErrorMessage(true);
-            return false;
-    }
-
-    return true;
-}
-
 
 void ChatHandler::ShowAchievementCriteriaListHelper(AchievementCriteriaEntry const* criEntry, AchievementEntry const * achEntry, LocaleConstant loc, Player* target /*= NULL*/)
 {
@@ -4922,45 +4895,6 @@ bool ChatHandler::HandleResetTalentsCommand(char* args)
     return false;
 }
 
-bool ChatHandler::HandleResetAllCommand(char* args)
-{
-    if (!*args)
-        return false;
-
-    std::string casename = args;
-
-    AtLoginFlags atLogin;
-
-    // Command specially created as single command to prevent using short case names
-    if(casename=="spells")
-    {
-        atLogin = AT_LOGIN_RESET_SPELLS;
-        sWorld.SendWorldText(LANG_RESETALL_SPELLS);
-        if(!m_session)
-            SendSysMessage(LANG_RESETALL_SPELLS);
-    }
-    else if(casename=="talents")
-    {
-        atLogin = AtLoginFlags(AT_LOGIN_RESET_TALENTS | AT_LOGIN_RESET_PET_TALENTS);
-        sWorld.SendWorldText(LANG_RESETALL_TALENTS);
-        if(!m_session)
-            SendSysMessage(LANG_RESETALL_TALENTS);
-    }
-    else
-    {
-        PSendSysMessage(LANG_RESETALL_UNKNOWN_CASE, args);
-        SetSentErrorMessage(true);
-        return false;
-    }
-
-    CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login | '%u' WHERE (at_login & '%u') = '0'", atLogin, atLogin);
-    HashMapHolder<Player>::MapType const& plist = sObjectAccessor.GetPlayers();
-    for(HashMapHolder<Player>::MapType::const_iterator itr = plist.begin(); itr != plist.end(); ++itr)
-        itr->second->SetAtLoginFlag(atLogin);
-
-    return true;
-}
-
 bool ChatHandler::HandleServerShutDownCancelCommand(char* /*args*/)
 {
     sWorld.ShutdownCancel();
@@ -5044,6 +4978,66 @@ bool ChatHandler::HandleServerIdleShutDownCommand(char* args)
         return false;
 
     sWorld.ShutdownServ(delay, SHUTDOWN_MASK_IDLE, exitcode);
+    return true;
+}
+
+bool ChatHandler::HandleNewsGossipCommand(char* args)
+{
+    Player* player;
+    uint64 target_guid;
+
+    if (!ExtractPlayerTarget(&args,&player,&target_guid))
+        return false;
+    if (!player)
+        return false;
+
+    int news_id = 0;
+    char* cId = strtok(NULL, " ");
+    uint32 entry;
+
+    cId ? entry = atol(cId) : 0;
+
+    player->PlayerTalkClass->ClearMenus();
+    uint32 textId = 110001;
+    for( std::multimap<uint32,GCNewsData>::iterator itr = sObjectMgr.mGCNewsMap.begin(); itr != sObjectMgr.mGCNewsMap.end(); ++itr )
+    {
+        GCNewsData const& news = (*itr).second;
+        if(news.parent == entry)
+            switch (news.type)
+            {
+                case 3:
+                {
+                    // we add a level up item for that we need to know the parents parent.
+                    std::multimap<uint32,GCNewsData>::iterator itr2 = sObjectMgr.mGCNewsMap.find(entry);
+                    // if there actually is a parent
+                    if( itr2 != sObjectMgr.mGCNewsMap.end() )
+                        player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_BATTLE,news.textstring,1,(*itr2).second.parent,"",0);
+                    break;
+                }
+                case 2:
+                    // we add a icon that can be clicked
+                    player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_INTERACT_1,news.textstring,1,(*itr).first,"",0);
+                    break;
+                case 1:
+                    // we add normal text, on click it will lead to same menu.
+                    player->PlayerTalkClass->GetGossipMenu().AddMenuItem(GOSSIP_ICON_DOT,news.textstring,1,entry,"",0);
+                    break;
+                case 0:
+                    // we set the correct text
+                    textId = atoi(news.textstring.c_str());
+                    break;
+            }
+    }
+    player->PlayerTalkClass->SendTalking(textId);
+
+    if (player->PlayerTalkClass->GetGossipMenu().Empty())
+        player->PlayerTalkClass->CloseGossip();
+    else 
+    {
+        player->PlayerTalkClass->SendGossipMenu(textId, player->GetGUID());
+        player->PlayerTalkClass->SendGossipMenu(textId, player->GetGUID());
+        PSendSysMessage("Sending News Gossip nr. %u to player GUID: %u",entry,GUID_LOPART(target_guid));
+    }
     return true;
 }
 
@@ -6312,6 +6306,67 @@ bool ChatHandler::HandleInstanceUnbindCommand(char* args)
         }
     }
     PSendSysMessage("instances unbound: %d", counter);
+    return true;
+}
+
+bool ChatHandler::HandleInstanceSetDataCommand(char * args)
+{
+    Player* pl = m_session->GetPlayer();
+
+
+    Map* map = pl->GetMap();
+    if (!map->IsDungeon())
+    {
+        PSendSysMessage("Map is not a dungeon.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (!((InstanceMap*)map)->GetInstanceData())
+    {
+        PSendSysMessage("Map has no instance data.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    char* field_str = strtok ((char*) args, " ");
+    char* value_str = strtok (NULL, "");
+
+    if (!field_str || !value_str)
+        return false;
+
+    int32 field = atoi (field_str);
+    int32 value = atoi (value_str);
+
+    ((InstanceMap*)map)->GetInstanceData()->SetData(field, value);
+    PSendSysMessage("Instance data field %i is now set to %i.", field, value);
+    return true;
+}
+
+bool ChatHandler::HandleInstanceGetDataCommand(char * args)
+{
+    Player* pl = m_session->GetPlayer();
+
+
+    Map* map = pl->GetMap();
+    if (!map->IsDungeon())
+    {
+        PSendSysMessage("Map is not a dungeon.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (!((InstanceMap*)map)->GetInstanceData())
+    {
+        PSendSysMessage("Map has no instance data.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    int32 field = atoi (args);
+
+    int32 val = ((InstanceMap*)map)->GetInstanceData()->GetData(field);
+    PSendSysMessage("Instance data for field %i is %i.", field, val);
     return true;
 }
 
