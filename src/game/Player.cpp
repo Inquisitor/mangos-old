@@ -22588,3 +22588,13 @@ uint32 Player::LookupRefundableItem(uint64 itemGUID)
 
     return 0;
 }
+
+void Player::CompletedAchievement(AchievementEntry const* entry)
+{
+    GetAchievementMgr().CompletedAchievement(entry);
+}
+
+void Player::CompletedAchievement(uint32 uiAchievementID)
+{
+    GetAchievementMgr().CompletedAchievement(sAchievementStore.LookupEntry(uiAchievementID));
+}
