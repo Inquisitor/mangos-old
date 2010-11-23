@@ -650,6 +650,8 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
         case 64904:                                         // Hymn of Hope aura
         case 552:                                           // Abolish Disease
         case 59286:                                         // Opening
+        case 64343:                                         // Impact
+        case 12042:                                         // Arcane Power
             return true;
     }
     switch(spellproto->Effect[effIndex])
