@@ -172,6 +172,8 @@ bool ChatHandler::HandleReloadAllSpellCommand(char* /*args*/)
     HandleReloadSpellTargetPositionCommand((char*)"a");
     HandleReloadSpellThreatsCommand((char*)"a");
     HandleReloadSpellPetAurasCommand((char*)"a");
+    HandleReloadSpellStacksCommand((char*)"a");
+    HandleReloadSpellDisabledCommand((char*)"a");
     return true;
 }
 
