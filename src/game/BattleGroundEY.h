@@ -302,6 +302,7 @@ class BattleGroundEY : public BattleGround
         void SetTeamPoint(uint32 TeamID, uint32 Points = 0) { m_TeamScores[GetTeamIndexByTeamId(TeamID)] = Points; }
 
         uint32 m_HonorScoreTics[2];
+        uint32 m_ExperienceTics[2];
         uint32 m_TeamPointsCount[2];
 
         uint32 m_Points_Trigger[BG_EY_NODES_MAX];
