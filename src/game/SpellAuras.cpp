@@ -8452,7 +8452,7 @@ void SpellAuraHolder::_AddSpellAuraHolder()
 
         // Mechanic bleed aura state
         if(GetAllSpellMechanicMask(m_spellProto) & (1 << (MECHANIC_BLEED-1)))
-            m_target->ModifyAuraState(AURA_STATE_MECHANIC_BLEED, true);
+            m_target->ModifyAuraState(AURA_STATE_BLEEDING, true);
     }
 }
 
@@ -8509,7 +8509,7 @@ void SpellAuraHolder::_RemoveSpellAuraHolder()
 
         // Mechanic bleed aura state
         if(GetAllSpellMechanicMask(m_spellProto) & (1 << (MECHANIC_BLEED-1)))
-            m_target->ModifyAuraState(AURA_STATE_MECHANIC_BLEED, false);
+            m_target->ModifyAuraState(AURA_STATE_BLEEDING, false);
 
         uint32 removeState = 0;
         uint64 removeFamilyFlag = m_spellProto->SpellFamilyFlags;
