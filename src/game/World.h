@@ -611,6 +611,7 @@ class World
         void ResetDailyQuests();
         void ResetWeeklyQuests();
         void ResetMonthlyQuests();
+        void ResetRandomBG();
 
     private:
         void setConfig(eConfigUInt32Values index, char const* fieldname, uint32 defvalue);
