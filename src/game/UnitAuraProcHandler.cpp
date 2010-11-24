@@ -928,6 +928,18 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     target = this;
                     break;
                 }
+                // Health Leech (used by Bloodworms)
+                case 50453:
+                {
+                    Unit *owner = GetOwner();
+                    if (!owner)
+                        return SPELL_AURA_PROC_FAILED;
+
+                    triggered_spell_id = 50454;
+                    basepoints[0] = int32(damage*1.69);
+                    target = owner;
+                    break;
+                }
                 // Vampiric Touch (generic, used by some boss)
                 case 52723:
                 case 60501:
@@ -1100,6 +1112,35 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     triggered_spell_id = 12654;
                     break;
                 }
+                // Empowered Fire (mana regen)
+                case 12654:
+                {
+                    Unit* caster = triggeredByAura->GetCaster();
+                    // it should not be triggered from other ignites
+                    if (caster && pVictim && caster->GetGUID() == pVictim->GetGUID())
+                    {
+                        Unit::AuraList const& auras = caster->GetAurasByType(SPELL_AURA_ADD_FLAT_MODIFIER);
+                        for (Unit::AuraList::const_iterator i = auras.begin(); i != auras.end(); i++)
+                        {
+                            switch((*i)->GetId())
+                            {
+                                case 31656:
+                                case 31657:
+                                case 31658:
+                                {
+                                    if(roll_chance_i(int32((*i)->GetSpellProto()->procChance)))
+                                    {
+                                        caster->CastSpell(caster, 67545, true);
+                                        return SPELL_AURA_PROC_OK;
+                                    }
+                                    else
+                                        return SPELL_AURA_PROC_FAILED;
+                                }
+                            }
+                        } 
+                    }
+                    return SPELL_AURA_PROC_FAILED;
+                }
                 // Glyph of Ice Block
                 case 56372:
                 {
@@ -1110,6 +1151,24 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     ((Player*)this)->RemoveSpellCategoryCooldown(35, true);
                     return SPELL_AURA_PROC_OK;
                 }
+                // Glyph of Icy Veins
+                case 56374:
+                {
+                    Unit::AuraList const& hasteAuras = GetAurasByType(SPELL_AURA_MOD_CASTING_SPEED_NOT_STACK);
+                    for(Unit::AuraList::const_iterator i = hasteAuras.begin(); i != hasteAuras.end();)
+                    {
+                        if (!IsPositiveSpell((*i)->GetId()))
+                        {
+                            RemoveAurasDueToSpell((*i)->GetId());
+                            i = hasteAuras.begin();
+                        }
+                        else
+                            ++i;
+                    }
+                    RemoveSpellsCausingAura(SPELL_AURA_HASTE_SPELLS);
+                    RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
+                    return SPELL_AURA_PROC_OK;
+                }
                 // Glyph of Polymorph
                 case 56375:
                 {
@@ -1118,14 +1177,6 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
 
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_PERIODIC_DAMAGE);
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_PERIODIC_DAMAGE_PERCENT);
-                    return SPELL_AURA_PROC_OK;
-                }
-                // Glyph of Icy Veins
-                case 56374:
-                {
-                    pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_HASTE, true, false);
-                    pVictim->RemoveSpellsCausingAura(SPELL_AURA_HASTE_SPELLS, true, false);
-                    pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
                     return SPELL_AURA_PROC_OK;
                 }
                 // Blessing of Ancient Kings
@@ -1276,6 +1327,27 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     basepoints[0] = int32(damage*triggerAmount/100);
                     target = this;
                     triggered_spell_id = 30294;
+
+                    // check for Improved Soul Leech
+                    AuraList const& pDummyAuras = GetAurasByType(SPELL_AURA_DUMMY);
+                    for (AuraList::const_iterator itr = pDummyAuras.begin(); itr != pDummyAuras.end(); ++itr)
+                    {
+                       SpellEntry const* spellInfo = (*itr)->GetSpellProto();
+                       if (spellInfo->SpellFamilyName != SPELLFAMILY_WARLOCK || (*itr)->GetSpellProto()->SpellIconID != 3176)
+                            continue;
+                       if ((*itr)->GetEffIndex() == SpellEffectIndex(0))
+                       {
+                           // energize Proc pet (implicit target is pet)
+                           CastCustomSpell(this, 59118, &((*itr)->GetModifier()->m_amount), NULL, NULL, true, NULL, (*itr));
+                           // energize Proc master
+                           CastCustomSpell(this, 59117, &((*itr)->GetModifier()->m_amount), NULL, NULL, true, NULL, (*itr));
+                       }
+                       else if (roll_chance_i((*itr)->GetModifier()->m_amount))
+                       {
+                       // Replenishment proc
+                            CastSpell(this, 57669, true, NULL, (*itr));
+                        }
+                    }
                     break;
                 }
                 // Shadowflame (Voidheart Raiment set bonus)
@@ -1348,7 +1420,19 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                 // Divine Aegis
                 case 2820:
                 {
-                    basepoints[0] = damage * triggerAmount/100;
+                    if(!pVictim || !pVictim->isAlive())
+                        return SPELL_AURA_PROC_FAILED;
+
+                    // find Divine Aegis on the target and get absorb amount
+                    Aura* DivineAegis = pVictim->GetAura(47753,EFFECT_INDEX_0);
+                    if (DivineAegis)
+                        basepoints[0] = DivineAegis->GetModifier()->m_amount;
+                    basepoints[0] += damage * triggerAmount/100;
+
+                    // limit absorb amount
+                    int32 levelbonus = pVictim->getLevel()*125;
+                    if (basepoints[0] > levelbonus)
+                        basepoints[0] = levelbonus;
                     triggered_spell_id = 47753;
                     break;
                 }
@@ -1793,6 +1877,15 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
             {
                 triggered_spell_id = 35079;                 // 4 sec buff on self
                 target = this;
+                break;
+            }
+            // Guard Dog
+            else if (dummySpell->SpellIconID == 201 && procSpell->SpellIconID == 201)
+            {
+                triggered_spell_id = 54445;
+                target = this;
+                if (pVictim)
+                    pVictim->AddThreat(this,procSpell->EffectBasePoints[0] * triggerAmount / 100.0f);
                 break;
             }
             break;
@@ -2248,6 +2341,13 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                         return SPELL_AURA_PROC_FAILED;
 
                     target = this;
+                    break;
+                }
+                // Earthen Power
+                case 51523:
+                case 51524:
+                {
+                    triggered_spell_id = 63532;
                     break;
                 }
                 // Glyph of Healing Wave
@@ -3778,6 +3878,16 @@ SpellAuraProcResult Unit::HandleAddPctModifierAuraProc(Unit* /*pVictim*/, uint32
 
                 CastSpell(this, 28682, true, castItem, triggeredByAura);
                 return (procEx & PROC_EX_CRITICAL_HIT) ? SPELL_AURA_PROC_OK : SPELL_AURA_PROC_FAILED; // charge update only at crit hits, no hidden cooldowns
+            }
+            break;
+        }
+        case SPELLFAMILY_PRIEST:
+        {
+            // Serendipity
+            if (spellInfo->SpellIconID == 2900)
+            {
+                RemoveAurasDueToSpell(spellInfo->Id);
+                return SPELL_AURA_PROC_OK;
             }
             break;
         }
