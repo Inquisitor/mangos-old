@@ -22620,3 +22620,21 @@ void Player::CompletedAchievement(uint32 uiAchievementID)
 {
     GetAchievementMgr().CompletedAchievement(sAchievementStore.LookupEntry(uiAchievementID));
 }
+
+void Player::SetRandomWinner(bool isWinner)
+{
+    m_IsBGRandomWinner = isWinner;
+    if(m_IsBGRandomWinner)
+        CharacterDatabase.PExecute("INSERT INTO character_battleground_random (guid) VALUES ('%u')", GetGUIDLow());
+}
+
+void Player::_LoadRandomBGStatus(QueryResult *result)
+{
+    //QueryResult *result = CharacterDatabase.PQuery("SELECT guid FROM character_battleground_random WHERE guid = '%u'", GetGUIDLow());
+
+    if (result)
+    {
+        m_IsBGRandomWinner = true;
+        delete result;
+    }
+}
