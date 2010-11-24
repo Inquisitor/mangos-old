@@ -661,6 +661,12 @@ void ObjectMgr::LoadCreatureTemplates()
         if (!displayScaleEntry)
             sLog.outErrorDb("Creature (Entry: %u) has nonexistent modelid in modelid_1/modelid_2/modelid_3/modelid_4", cInfo->Entry);
 
+        if (cInfo->powerType >= MAX_POWERS)
+        {
+            sLog.outErrorDb("Creature (Entry: %u) has invalid power type (%u)", cInfo->Entry, cInfo->powerType);
+            const_cast<CreatureInfo*>(cInfo)->powerType = POWER_MANA;
+        }
+
         // use below code for 0-checks for unit_class
         if (!cInfo->unit_class)
             ERROR_DB_STRICT_LOG("Creature (Entry: %u) not has proper unit_class(%u) for creature_template", cInfo->Entry, cInfo->unit_class);
@@ -2693,8 +2699,8 @@ void ObjectMgr::LoadPetLevelInfo()
 {
     // Loading levels data
     {
-        //                                                 0               1      2   3     4    5    6    7     8    9
-        QueryResult *result  = WorldDatabase.Query("SELECT creature_entry, level, hp, mana, str, agi, sta, inte, spi, armor FROM pet_levelstats");
+        //                                                 0               1      2   3     4    5    6    7     8    9      10      11      12
+        QueryResult *result  = WorldDatabase.Query("SELECT creature_entry, level, hp, mana, str, agi, sta, inte, spi, armor, mindmg, maxdmg, attackpower FROM pet_levelstats");
 
         uint32 count = 0;
 
@@ -2751,6 +2757,9 @@ void ObjectMgr::LoadPetLevelInfo()
             pLevelInfo->health = fields[2].GetUInt16();
             pLevelInfo->mana   = fields[3].GetUInt16();
             pLevelInfo->armor  = fields[9].GetUInt16();
+            pLevelInfo->mindmg = fields[10].GetUInt32();
+            pLevelInfo->maxdmg = fields[11].GetUInt32();
+            pLevelInfo->attackpower = fields[12].GetUInt32();
 
             for (int i = 0; i < MAX_STATS; i++)
             {
@@ -2768,15 +2777,19 @@ void ObjectMgr::LoadPetLevelInfo()
         sLog.outString( ">> Loaded %u level pet stats definitions", count );
     }
 
+    PetLevelInfo* petBaseInfo = petInfo[1];
+
     // Fill gaps and check integrity
     for (PetLevelInfoMap::iterator itr = petInfo.begin(); itr != petInfo.end(); ++itr)
     {
+        if (itr->first == 1) continue; // No fill data for default pet! _Must_ be exist!
+
         PetLevelInfo* pInfo = itr->second;
 
-        // fatal error if no level 1 data
-        if(!pInfo || pInfo[0].health == 0 )
+        // fatal error if no level 1 and max health data
+        if(!pInfo || pInfo[0].health == 0 || pInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].health == 0 )
         {
-            sLog.outErrorDb("Creature %u does not have pet stats data for Level 1!",itr->first);
+            sLog.outErrorDb("Creature %u does not have pet stats data for Levels 1 or %u! Must be exist!",itr->first, sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL));
             Log::WaitBeforeContinueIfNeed();
             exit(1);
         }
@@ -2784,10 +2797,44 @@ void ObjectMgr::LoadPetLevelInfo()
         // fill level gaps
         for (uint32 level = 1; level < sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL); ++level)
         {
-            if(pInfo[level].health == 0)
+            if(   pInfo[level].health == 0
+               || pInfo[level].mana == 0
+               || pInfo[level].armor == 0
+               || pInfo[level].mindmg == 0
+               || pInfo[level].maxdmg == 0
+               || pInfo[level].stats[STAT_STRENGTH] == 0
+               || pInfo[level].stats[STAT_STAMINA] == 0
+               || pInfo[level].stats[STAT_AGILITY] == 0
+               || pInfo[level].stats[STAT_INTELLECT] == 0
+               || pInfo[level].stats[STAT_SPIRIT] == 0
+            )
             {
-                sLog.outErrorDb("Creature %u has no data for Level %i pet stats data, using data of Level %i.",itr->first,level+1, level);
-                pInfo[level] = pInfo[level-1];
+                DEBUG_LOG("Creature %u has no full data set for Level %i pet stats data, using approximated (from default pet progression) data",itr->first,level+1);
+
+                if(pInfo[level].health == 0)
+                    pInfo[level].health = uint16(pInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].health * (petBaseInfo[level].health / petBaseInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].health));
+
+                if(pInfo[level].mana == 0)
+                    pInfo[level].mana = uint16(pInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].mana * (petBaseInfo[level].mana / petBaseInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].mana));
+
+                if(pInfo[level].armor == 0)
+                    pInfo[level].armor = uint16(pInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].armor * (petBaseInfo[level].armor / petBaseInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].armor));
+
+                if(pInfo[level].mindmg == 0)
+                    pInfo[level].mindmg = uint16(pInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].mindmg * (petBaseInfo[level].mindmg / petBaseInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].mindmg));
+
+                if(pInfo[level].maxdmg == 0)
+                    pInfo[level].mana = uint16(pInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].maxdmg * (petBaseInfo[level].maxdmg / petBaseInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].maxdmg));
+
+                if(pInfo[level].attackpower == 0)
+                    pInfo[level].mana = uint16(pInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].attackpower * (petBaseInfo[level].attackpower / petBaseInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].attackpower));
+
+                for (int i = 0; i < MAX_STATS; i++)
+                {
+                    if(pInfo[level].stats[i] == 0)
+                        pInfo[level].stats[i] = uint16(pInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].stats[i] * (petBaseInfo[level].stats[i] / petBaseInfo[sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL)-1].stats[i]));
+                }
+
             }
         }
     }
@@ -2804,6 +2851,188 @@ PetLevelInfo const* ObjectMgr::GetPetLevelInfo(uint32 creature_id, uint32 level)
 
     return &itr->second[level-1];                           // data for level 1 stored in [0] array element, ...
 }
+
+void ObjectMgr::LoadPetScalingData()
+{
+    // Loading scaling data
+    //                                                 0               1     2           3       4          5       6    7    8    9     10
+    QueryResult *result  = WorldDatabase.Query("SELECT creature_entry, aura, healthbase, health, powerbase, power,  str, agi, sta, inte, spi,"
+    //                                          11     12           13           14           15           16           17
+                                               "armor, resistance1, resistance2, resistance3, resistance4, resistance5, resistance6," 
+    //                                          18      19           20           21      22           23        24   25         26           27    28
+                                               "apbase, apbasescale, attackpower, damage, spelldamage, spellhit, hit, expertize, attackspeed, crit, regen"
+                                               " FROM pet_scaling_data");
+
+    uint32 count = 0;
+
+    if (!result)
+    {
+        barGoLink bar(1);
+        bar.step();
+
+        sLog.outString();
+        sLog.outString(">> Loaded %u pet scaling data definitions", count);
+        sLog.outErrorDb("Error loading `pet_scaling_data` table or table is empty.");
+        return;
+    }
+
+    barGoLink bar( (int)result->GetRowCount() );
+
+    m_PetScalingData.clear();
+
+    do
+    {
+        Field* fields = result->Fetch();
+
+        uint32 creature_id = fields[0].GetUInt32();
+
+        if(creature_id && !sCreatureStorage.LookupEntry<CreatureInfo>(creature_id)) // in 0 creature_id storing default values. _must_ be exist.
+        {
+            sLog.outErrorDb("Wrong creature id %u in `pet_scaling_data` table, ignoring.",creature_id);
+            continue;
+        }
+
+        PetScalingDataList*& pScalingDataList = m_PetScalingData[creature_id];
+
+        if (pScalingDataList == NULL)
+                pScalingDataList =  new PetScalingDataList;
+
+        PetScalingData pScalingDataEntry;
+
+        pScalingDataEntry.creatureID = fields[0].GetUInt32();
+        pScalingDataEntry.requiredAura = fields[1].GetUInt32();
+        pScalingDataEntry.healthBasepoint = fields[2].GetInt32();
+        pScalingDataEntry.healthScale = fields[3].GetInt32();
+        pScalingDataEntry.powerBasepoint = fields[4].GetInt32();
+        pScalingDataEntry.powerScale = fields[5].GetInt32();
+        for (int i = 0; i < MAX_STATS; i++)
+        {
+            pScalingDataEntry.statScale[i] = fields[i+6].GetInt32();
+        }
+        for (int i = 0; i < MAX_SPELL_SCHOOL; i++)
+        {
+            pScalingDataEntry.resistanceScale[i] = fields[i+11].GetInt32();
+        }
+        pScalingDataEntry.APBasepoint = fields[18].GetInt32();
+        pScalingDataEntry.APBaseScale = fields[19].GetInt32();
+        pScalingDataEntry.attackpowerScale = fields[20].GetInt32();
+        pScalingDataEntry.damageScale = fields[21].GetInt32();
+        pScalingDataEntry.spelldamageScale = fields[22].GetInt32();
+        pScalingDataEntry.spellHitScale = fields[23].GetInt32();
+        pScalingDataEntry.meleeHitScale = fields[24].GetInt32();
+        pScalingDataEntry.expertizeScale = fields[25].GetInt32();
+        pScalingDataEntry.attackspeedScale = fields[26].GetInt32();
+        pScalingDataEntry.critScale = fields[27].GetInt32();
+        pScalingDataEntry.powerregenScale = fields[28].GetInt32();
+
+        pScalingDataList->push_back(pScalingDataEntry);
+
+        ++count;
+    }
+    while (result->NextRow());
+
+    delete result;
+
+    sLog.outString();
+    sLog.outString( ">> Loaded %u level pet scaling data definitions", count );
+}
+
+PetScalingDataList const* ObjectMgr::GetPetScalingData(uint32 creature_id) const
+{
+    PetScalingDataMap::const_iterator itr = m_PetScalingData.find(creature_id);
+
+    if (itr == m_PetScalingData.end())
+        return NULL;
+    else
+        return itr->second;
+}
+
+void ObjectMgr::LoadAntiCheatConfig()
+{
+    //                                                             0             1           2                 3           4
+    QueryResult *result  = CharacterDatabase.Query("SELECT checktype, check_period,alarmscount, disableoperation, messagenum,"
+    //                                                             5          6             7             8
+                                                           "intparam1, intparam2,  floatparam1,  floatparam2,"
+    //                                                            9              10        11             12
+                                                           "action1,   actionparam1,  action2,  actionparam2,"
+                                                           "description FROM anticheat_config");
+
+    uint32 count = 0;
+
+    if (!result)
+    {
+        barGoLink bar(1);
+        bar.step();
+
+        sLog.outString();
+        sLog.outString(">> Loaded %u anticheat config definitions", count);
+        sLog.outErrorDb("Error loading `anticheat_config` table or table is empty.");
+        return;
+    }
+
+    barGoLink bar( (int)result->GetRowCount() );
+
+    m_AntiCheatConfig.clear();
+
+    do
+    {
+        Field* fields = result->Fetch();
+
+        AntiCheatConfig AntiCheatConfigEntry;
+
+        AntiCheatConfigEntry.checkType = fields[0].GetUInt32();
+
+        if (AntiCheatConfigEntry.checkType > 9999)
+        {
+            sLog.outErrorDb("Wrong check type id %u in `anticheat_config` table, ignoring.",AntiCheatConfigEntry.checkType);
+            continue;
+        }
+
+        AntiCheatConfigEntry.checkPeriod = fields[1].GetUInt32();
+        AntiCheatConfigEntry.alarmsCount = fields[2].GetUInt32();
+        AntiCheatConfigEntry.disableOperation = fields[3].GetBool();
+        AntiCheatConfigEntry.messageNum  = fields[4].GetUInt32();
+
+        for (int i=0; i < ANTICHEAT_CHECK_PARAMETERS; ++i )
+        {
+            AntiCheatConfigEntry.checkParam[i] = fields[5+i].GetUInt32();
+        }
+
+        for (int i=0; i < ANTICHEAT_CHECK_PARAMETERS; ++i )
+        {
+            AntiCheatConfigEntry.checkFloatParam[i] = fields[5+ANTICHEAT_CHECK_PARAMETERS+i].GetFloat();
+        }
+
+        for (int i=0; i < ANTICHEAT_ACTIONS; ++i )
+        {
+            AntiCheatConfigEntry.actionType[i] = fields[5+ANTICHEAT_CHECK_PARAMETERS*2+i*2].GetUInt32();
+            AntiCheatConfigEntry.actionParam[i] = fields[6+ANTICHEAT_CHECK_PARAMETERS*2+i*2].GetUInt32();
+        };
+
+        AntiCheatConfigEntry.description  = fields[5+ANTICHEAT_CHECK_PARAMETERS*2+ANTICHEAT_ACTIONS*2].GetCppString();
+
+        m_AntiCheatConfig.insert(std::make_pair(AntiCheatConfigEntry.checkType, AntiCheatConfigEntry));
+
+        ++count;
+    }
+    while (result->NextRow());
+
+    delete result;
+
+    sLog.outString();
+    sLog.outString( ">> Loaded %u anticheat config definitions", count );
+
+}
+
+AntiCheatConfig const* ObjectMgr::GetAntiCheatConfig(uint32 checkType) const
+{
+    AntiCheatConfigMap::const_iterator itr = m_AntiCheatConfig.find(checkType);
+    if (itr == m_AntiCheatConfig.end())
+        return NULL;
+    else
+        return &itr->second;
+}
+
 
 void ObjectMgr::LoadPlayerInfo()
 {

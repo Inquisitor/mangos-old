@@ -76,6 +76,7 @@ struct CreatureInfo
     uint32  maxlevel;
     uint32  minhealth;
     uint32  maxhealth;
+    uint8   powerType;
     uint32  minmana;
     uint32  maxmana;
     uint32  armor;
@@ -124,7 +125,7 @@ struct CreatureInfo
     uint32  MovementType;
     uint32  InhabitType;
     float   unk16;
-    float   unk17;
+    float   power_mod;
     bool    RacialLeader;
     uint32  questItems[6];
     uint32  movementId;
@@ -646,6 +647,8 @@ class MANGOS_DLL_SPEC Creature : public Unit
 
         void SendAreaSpiritHealerQueryOpcode(Player *pl);
 
+        void LockAI(bool lock) { m_AI_locked = lock; }
+
     protected:
         bool CreateFromProto(uint32 guidlow,uint32 Entry,uint32 team, const CreatureData *data = NULL);
         bool InitEntry(uint32 entry, uint32 team=ALLIANCE, const CreatureData* data=NULL);
@@ -675,7 +678,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         float m_respawnradius;
 
         CreatureSubtype m_subtype;                          // set in Creatures subclasses for fast it detect without dynamic_cast use
-        void RegenerateMana();
+        void Regenerate(Powers power);
         void RegenerateHealth();
         MovementGeneratorType m_defaultMovementType;
         Cell m_currentCell;                                 // store current cell where creature listed

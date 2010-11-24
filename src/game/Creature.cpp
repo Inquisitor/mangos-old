@@ -169,7 +169,7 @@ void Creature::RemoveFromWorld()
 
 void Creature::RemoveCorpse()
 {
-    if ((getDeathState() != CORPSE && !m_isDeadByDefault) || (getDeathState() != ALIVE && m_isDeadByDefault))
+    if (((getDeathState() != CORPSE && getDeathState() != GHOULED) && !m_isDeadByDefault) || (getDeathState() != ALIVE && m_isDeadByDefault))
         return;
 
     m_corpseDecayTimer = 0;
@@ -266,6 +266,7 @@ bool Creature::InitEntry(uint32 Entry, uint32 team, const CreatureData *data )
     SetDisplayId(display_id);
 
     SetByteValue(UNIT_FIELD_BYTES_0, 2, minfo->gender);
+    SetByteValue(UNIT_FIELD_BYTES_0, 3, uint8(cinfo->powerType));
 
     // Load creature equipment
     if (!data || data->equipmentId == 0)
@@ -540,6 +541,10 @@ void Creature::Update(uint32 diff)
             // CORPSE/DEAD state will processed at next tick (in other case death timer will be updated unexpectedly)
             if(!isAlive())
                 break;
+
+            if (IsPet())                           // Regenerated before
+                break;
+
             if(m_regenTimer > 0)
             {
                 if(diff >= m_regenTimer)
@@ -553,9 +558,9 @@ void Creature::Update(uint32 diff)
             if (!isInCombat() || IsPolymorphed())
                 RegenerateHealth();
 
-            RegenerateMana();
-
+            Regenerate(getPowerType());
             m_regenTimer = REGEN_TIME_FULL;
+
             break;
         }
         case CORPSE_FALLING:
@@ -585,31 +590,78 @@ void Creature::StopGroupLoot()
     m_groupLootId = 0;
 }
 
-void Creature::RegenerateMana()
+void Creature::Regenerate(Powers power)
 {
-    uint32 curValue = GetPower(POWER_MANA);
-    uint32 maxValue = GetMaxPower(POWER_MANA);
+    uint32 curValue = GetPower(power);
+    uint32 maxValue = GetMaxPower(power);
 
     if (curValue >= maxValue)
         return;
 
-    uint32 addvalue = 0;
+    float addvalue = 0.0f;
 
-    // Combat and any controlled creature
-    if (isInCombat() || !GetCharmerOrOwnerGuid().IsEmpty())
+    switch(power)
     {
-        if(!IsUnderLastManaUseEffect())
+        case POWER_MANA:
         {
-            float ManaIncreaseRate = sWorld.getConfig(CONFIG_FLOAT_RATE_POWER_MANA);
-            float Spirit = GetStat(STAT_SPIRIT);
+            // Combat and any controlled creature
+            if (isInCombat() || !GetCharmerOrOwnerGuid().IsEmpty())
+            {
+                if(!IsUnderLastManaUseEffect())
+                {
+                    float ManaIncreaseRate = sWorld.getConfig(CONFIG_FLOAT_RATE_POWER_MANA);
+                    float Spirit = GetStat(STAT_SPIRIT);
 
-            addvalue = uint32((Spirit / 5.0f + 17.0f) * ManaIncreaseRate);
+                    addvalue = int32((Spirit / 5.0f + 17.0f) * ManaIncreaseRate);
+                }
+            }
+            else
+                addvalue = maxValue / 3;
+            break;
         }
-    }
-    else
-        addvalue = maxValue / 3;
+        case POWER_ENERGY:
+            if (GetObjectGuid().IsVehicle())
+            {
+                if (VehicleEntry const* vehicleInfo = sVehicleStore.LookupEntry(GetCreatureInfo()->VehicleId))
+                {
 
-    ModifyPower(POWER_MANA, addvalue);
+                    switch (vehicleInfo->m_powerType)
+                    {
+                        case ENERGY_TYPE_PYRITE:
+                        case ENERGY_TYPE_BLOOD:
+                        case ENERGY_TYPE_OOZE:
+                        break;
+
+                        case ENERGY_TYPE_STEAM:
+                        default:
+                            addvalue = 10 * sWorld.getConfig(CONFIG_FLOAT_RATE_POWER_ENERGY);
+                        break;
+                    }
+                }
+            }
+            else
+                addvalue = 20 * sWorld.getConfig(CONFIG_FLOAT_RATE_POWER_ENERGY);
+            break;
+        case POWER_FOCUS:
+            addvalue = 24 * sWorld.getConfig(CONFIG_FLOAT_RATE_POWER_FOCUS);
+            break;
+        default:
+            return;
+    }
+
+    // Apply modifiers (if any)
+
+    AuraList const& ModPowerRegenAuras = GetAurasByType(SPELL_AURA_MOD_POWER_REGEN);
+    for(AuraList::const_iterator i = ModPowerRegenAuras.begin(); i != ModPowerRegenAuras.end(); ++i)
+        if ((*i)->GetModifier()->m_miscvalue == power)
+            addvalue += (*i)->GetModifier()->m_amount;
+
+    AuraList const& ModPowerRegenPCTAuras = GetAurasByType(SPELL_AURA_MOD_POWER_REGEN_PERCENT);
+    for(AuraList::const_iterator i = ModPowerRegenPCTAuras.begin(); i != ModPowerRegenPCTAuras.end(); ++i)
+        if ((*i)->GetModifier()->m_miscvalue == power)
+            addvalue *= ((*i)->GetModifier()->m_amount + 100) / 100.0f;
+
+    ModifyPower(power, int32(addvalue));
 }
 
 void Creature::RegenerateHealth()
@@ -1098,19 +1150,33 @@ void Creature::SelectLevel(const CreatureInfo *cinfo, float percentHealth, float
     else
         SetHealthPercent(percentHealth);
 
-    // mana
-    uint32 minmana = std::min(cinfo->maxmana, cinfo->minmana);
-    uint32 maxmana = std::max(cinfo->maxmana, cinfo->minmana);
-    uint32 mana = minmana + uint32(rellevel * (maxmana - minmana));
-
-    SetCreateMana(mana);
-    SetMaxPower(POWER_MANA, mana);                          //MAX Mana
-    SetPower(POWER_MANA, mana);
-
-    // TODO: set UNIT_FIELD_POWER*, for some creature class case (energy, etc)
-
     SetModifierValue(UNIT_MOD_HEALTH, BASE_VALUE, float(health));
-    SetModifierValue(UNIT_MOD_MANA, BASE_VALUE, float(mana));
+
+    Powers powerType = Powers(cinfo->powerType);
+    uint32 maxPower = 0;
+
+    switch(powerType)
+    {
+        case POWER_MANA:
+        {
+            uint32 minmana = std::min(cinfo->maxmana, cinfo->minmana);
+            uint32 maxmana = std::max(cinfo->maxmana, cinfo->minmana);
+            maxPower = minmana + uint32(rellevel * (maxmana - minmana));
+
+            SetCreateMana(maxPower);
+            break;
+        }
+        case POWER_ENERGY:
+        {
+            maxPower = uint32(GetCreatePowers(powerType) * cinfo->power_mod);
+            break;
+        }
+    }
+
+    SetMaxPower(powerType, maxPower);
+    SetPower(powerType, maxPower);
+
+    SetModifierValue(UnitMods(UNIT_MOD_POWER_START + powerType), BASE_VALUE, float(maxPower));
 
     // damage
     float damagemod = _GetDamageMod(rank);

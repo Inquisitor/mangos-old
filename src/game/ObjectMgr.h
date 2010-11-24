@@ -487,6 +487,80 @@ struct PetLevelInfo
     uint16 health;
     uint16 mana;
     uint16 armor;
+    uint32 mindmg;
+    uint32 maxdmg;
+    uint32 attackpower;
+};
+
+struct PetScalingData
+{
+    PetScalingData() : creatureID(0), requiredAura(0),
+    healthBasepoint(0), healthScale(0), powerBasepoint(0), powerScale(0),
+    APBasepoint(0), APBaseScale(0), attackpowerScale(0), damageScale(0), spelldamageScale(0), spellHitScale(0),
+    meleeHitScale(0), expertizeScale(0), attackspeedScale(0), critScale(0), powerregenScale(0)
+    {
+        for(int i=0; i < MAX_STATS; ++i ) statScale[i] = 0;
+        for(int i=0; i < MAX_SPELL_SCHOOL; ++i ) resistanceScale[i] = 0;
+    }
+
+    uint32 creatureID;
+    uint32 requiredAura;
+    int32  healthBasepoint;
+    int32  healthScale;
+    int32  powerBasepoint;
+    int32  powerScale;
+    int32  APBasepoint;
+    int32  APBaseScale;
+    int32  statScale[MAX_STATS];
+    int32  resistanceScale[MAX_SPELL_SCHOOL];
+    int32  attackpowerScale;
+    int32  damageScale;
+    int32  spelldamageScale;
+    int32  spellHitScale;
+    int32  meleeHitScale;
+    int32  expertizeScale;
+    int32  attackspeedScale;
+    int32  critScale;
+    int32  powerregenScale;
+};
+
+typedef std::vector<PetScalingData> PetScalingDataList;
+
+#define ANTICHEAT_ACTIONS 2
+#define ANTICHEAT_CHECK_PARAMETERS 2
+
+struct AntiCheatConfig
+{
+    AntiCheatConfig() : checkType(0), alarmsCount(0),disableOperation(false), messageNum(0)
+    {
+        for (int i=0; i < ANTICHEAT_ACTIONS; ++i )
+        {
+            actionType[i] = 0;
+            actionParam[i] = 0;
+        };
+
+        for (int i=0; i < ANTICHEAT_CHECK_PARAMETERS; ++i )
+        {
+            checkParam[i] = 0;
+        }
+
+        for (int i=0; i < ANTICHEAT_CHECK_PARAMETERS; ++i )
+        {
+            checkFloatParam[i] = 0.0f;
+        }
+    }
+
+    uint32 checkType;
+    uint32 checkPeriod;
+    uint32 alarmsCount;
+    bool   disableOperation;
+    uint32 messageNum;
+    uint32 checkParam[ANTICHEAT_CHECK_PARAMETERS];
+    float  checkFloatParam[ANTICHEAT_CHECK_PARAMETERS];
+    uint32 actionType[ANTICHEAT_ACTIONS];
+    uint32 actionParam[ANTICHEAT_ACTIONS];
+    std::string description;
+
 };
 
 struct MailLevelReward
@@ -832,6 +906,8 @@ class ObjectMgr
 
         PetLevelInfo const* GetPetLevelInfo(uint32 creature_id, uint32 level) const;
 
+        PetScalingDataList const* GetPetScalingData(uint32 creature_id) const;
+
         PlayerClassInfo const* GetPlayerClassInfo(uint32 class_) const
         {
             if(class_ >= MAX_CLASSES) return NULL;
@@ -1009,6 +1085,7 @@ class ObjectMgr
 
         void LoadPlayerInfo();
         void LoadPetLevelInfo();
+        void LoadPetScalingData();
         void LoadExplorationBaseXP();
         void LoadPetNames();
         void LoadPetNumber();
@@ -1494,6 +1571,8 @@ class ObjectMgr
         // PetLevelInfoMap[creature_id][level]
         PetLevelInfoMap petInfo;                            // [creature_id][level]
 
+        typedef std::map<uint32, PetScalingDataList*> PetScalingDataMap;
+        PetScalingDataMap m_PetScalingData;                 // [creature_id]
         PlayerClassInfo playerClassInfo[MAX_CLASSES];
 
         void BuildPlayerLevelInfo(uint8 race, uint8 class_, uint8 level, PlayerLevelInfo* plinfo) const;

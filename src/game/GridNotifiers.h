@@ -529,21 +529,34 @@ namespace MaNGOS
     class RaiseDeadObjectCheck
     {
         public:
-            RaiseDeadObjectCheck(Player const* fobj, float range) : i_fobj(fobj), i_range(range) {}
+            RaiseDeadObjectCheck(WorldObject const* fobj, float range) : i_fobj(fobj), i_range(range) {}
             WorldObject const& GetFocusObject() const { return *i_fobj; }
+            bool operator()(Player* u)
+            {
+                if( u->isAlive() || u->IsTaxiFlying() )
+                    return false;
+
+                return i_fobj->IsWithinDistInMap(u, i_range);
+            }
+            bool operator()(Corpse* u)
+            {
+                // ignore bones
+                if(u->GetType() == CORPSE_BONES)
+                    return false;
+
+                return i_fobj->IsWithinDistInMap(u, i_range);
+            }
             bool operator()(Creature* u)
             {
-                if (i_fobj->isHonorOrXPTarget(u) ||
-                    u->getDeathState() != CORPSE || u->IsDeadByDefault() || u->IsTaxiFlying() ||
-                    ( u->GetCreatureTypeMask() & (1 << (CREATURE_TYPE_HUMANOID-1)) )==0 ||
-                    (u->GetDisplayId() != u->GetNativeDisplayId()))
+                if ( u->isAlive() || u->IsDeadByDefault() || u->IsTaxiFlying() ||
+                   ( u->GetCreatureTypeMask() & CREATURE_TYPEMASK_HUMANOID_OR_UNDEAD) == 0 )
                     return false;
 
                 return i_fobj->IsWithinDistInMap(u, i_range);
             }
             template<class NOT_INTERESTED> bool operator()(NOT_INTERESTED*) { return false; }
         private:
-            Player const* i_fobj;
+            WorldObject const* i_fobj;
             float i_range;
     };
 
@@ -554,8 +567,7 @@ namespace MaNGOS
             WorldObject const& GetFocusObject() const { return *i_fobj; }
             bool operator()(Player* u)
             {
-                if (u->getDeathState()!=CORPSE || u->IsTaxiFlying() ||
-                    u->HasAuraType(SPELL_AURA_GHOST) || (u->GetDisplayId() != u->GetNativeDisplayId()))
+                if( u->isAlive() || u->IsTaxiFlying() || u->HasAuraType(SPELL_AURA_GHOST)  )
                     return false;
 
                 return i_fobj->IsWithinDistInMap(u, i_range);
@@ -1070,7 +1082,7 @@ namespace MaNGOS
             WorldObject const& GetFocusObject() const { return i_obj; }
             bool operator()(Creature* u)
             {
-                if (u->GetEntry() == i_entry && (i_alive && u->isAlive() || !i_alive && u->IsCorpse()) && i_obj.IsWithinDistInMap(u, i_range))
+                if (u->GetEntry() == i_entry && u->GetObjectGuid() != i_obj.GetObjectGuid() &&(i_alive && u->isAlive() || !i_alive && u->IsCorpse()) && i_obj.IsWithinDistInMap(u, i_range))
                 {
                     i_range = i_obj.GetDistance(u);         // use found unit range as new range limit for next check
                     return true;
