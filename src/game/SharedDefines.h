@@ -1414,7 +1414,8 @@ enum TextEmotes
     TEXTEMOTE_ENCOURAGE            = 375,
     TEXTEMOTE_ENEMY                = 376,
     TEXTEMOTE_EYEBROW              = 377,
-    TEXTEMOTE_TOAST                = 378
+    TEXTEMOTE_TOAST                = 378,
+    TEXTEMOTE_TRAIN                = 379
 };
 
 enum Emote
@@ -2009,7 +2010,8 @@ enum HolidayIds
     HOLIDAY_PILGRIMS_BOUNTY          = 404,
     HOLIDAY_WOTLK_LAUNCH             = 406,
     HOLIDAY_DAY_OF_DEAD              = 409,
-    HOLIDAY_CALL_TO_ARMS_ISLE_OF_C   = 420
+    HOLIDAY_CALL_TO_ARMS_ISLE_OF_C   = 420,
+    HOLIDAY_KALUAK_FISHING_DERBY     = 424
 };
 
 // values based at QuestSort.dbc
