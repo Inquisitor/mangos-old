@@ -4218,7 +4218,7 @@ void Aura::HandleAuraModDisarm(bool apply, bool Real)
     else
         ((Player *)target)->SetRegularAttackTime();
 
-    target->UpdateDamagePhysical(BASE_ATTACK);
+    target->UpdateDamagePhysical(attack_type);
 }
 
 void Aura::HandleAuraModStun(bool apply, bool Real)
