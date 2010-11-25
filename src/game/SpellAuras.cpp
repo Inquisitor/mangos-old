@@ -227,7 +227,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleModSpellDamagePercentFromStat,             //174 SPELL_AURA_MOD_SPELL_DAMAGE_OF_STAT_PERCENT  implemented in Unit::SpellBaseDamageBonusDone
     &Aura::HandleModSpellHealingPercentFromStat,            //175 SPELL_AURA_MOD_SPELL_HEALING_OF_STAT_PERCENT implemented in Unit::SpellBaseHealingBonusDone
     &Aura::HandleSpiritOfRedemption,                        //176 SPELL_AURA_SPIRIT_OF_REDEMPTION   only for Spirit of Redemption spell, die at aura end
-    &Aura::HandleNULL,                                      //177 SPELL_AURA_AOE_CHARM (22 spells)
+    &Aura::HandleCharmConvert,                              //177 SPELL_AURA_AOE_CHARM (22 spells)
     &Aura::HandleNoImmediateEffect,                         //178 SPELL_AURA_MOD_DEBUFF_RESISTANCE          implemented in Unit::MagicSpellHitResult
     &Aura::HandleNoImmediateEffect,                         //179 SPELL_AURA_MOD_ATTACKER_SPELL_CRIT_CHANCE implemented in Unit::SpellCriticalBonus
     &Aura::HandleNoImmediateEffect,                         //180 SPELL_AURA_MOD_FLAT_SPELL_DAMAGE_VERSUS   implemented in Unit::SpellDamageBonusDone
@@ -9600,6 +9600,97 @@ void SpellAuraHolder::UnregisterSingleCastHolder()
             caster->GetSingleCastSpellTargets().erase(GetSpellProto());
 
         m_isSingleTarget = false;
+    }
+}
+
+
+void Aura::HandleCharmConvert(bool apply, bool Real)
+{
+    if(!Real)
+        return;
+
+    // At this moment effect is implemented only for Chains of Kel'thuzad.
+    if( GetId() != 28410 )
+        return;
+
+    // Get Caster
+    Unit * uCaster = GetCaster();
+    Unit * uTarget = GetTarget();
+    if (!uTarget || !uCaster)
+        return;
+
+    // Check types, target must be player and caster must be creature
+    if (uCaster->GetTypeId() != TYPEID_UNIT)
+        return;
+    if (uTarget->GetTypeId() != TYPEID_PLAYER)
+        return;
+
+    // Cast our object types
+    Creature * caster = static_cast<Creature*>(uCaster);
+    Player * target = static_cast<Player*>(uTarget);
+
+    if( apply )
+    {
+        target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
+        target->SetCharmerGUID(GetCasterGUID());
+        target->setFaction(caster->getFaction());
+        target->CastStop();
+        uCaster->SetCharm(uTarget);
+        target->SetClientControl(target, 0);
+
+        target->CombatStop();
+        target->DeleteThreatList();
+
+        // Check if caster can have threat list at all.
+        if( !uCaster->CanHaveThreatList() )
+            return;
+
+        ThreatList m_threatlist = uCaster->getThreatManager().getThreatList();
+        std::vector<Unit*> targetlist;
+
+        if( !m_threatlist.empty() )
+        {
+            for( ThreatList::iterator i = m_threatlist.begin(); i != m_threatlist.end(); ++i )
+            {
+                if( (*i)->getTarget() )
+                {
+                    Unit * mToAttack = (*i)->getTarget();
+                    if( mToAttack->GetTypeId() == TYPEID_PLAYER && mToAttack != target )
+                        targetlist.push_back(mToAttack);
+                }
+            }
+        }
+
+        if( !targetlist.empty() )
+        {
+            // Select random player to attack from caster threat list
+            Unit * selectedTarget = targetlist[int32(rand32())%targetlist.size()];
+            if (target->Attack(selectedTarget, true))
+            {
+                target->SetInCombatWith(selectedTarget);
+                target->GetMotionMaster()->MoveChase(selectedTarget);
+            }
+        }
+
+        //target->i_AI = new PlayerAI(target);
+    }
+    else
+    {
+        uTarget->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
+        target->SetCharmerGUID(0);
+        target->setFactionForRace(uTarget->getRace());
+        target->SetClientControl(uTarget, 1);
+        target->CombatStop();
+
+        uCaster->SetCharm(NULL);
+
+        /*
+        PlayerAI* tmpAI = target->i_AI;
+        target->i_AI = NULL;
+
+        if (tmpAI != NULL)
+            delete tmpAI;
+        */
     }
 }
 

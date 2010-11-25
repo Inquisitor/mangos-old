@@ -1326,6 +1326,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         bool IsHostileTo(Unit const* unit) const;
         bool IsHostileToPlayers() const;
         bool IsFriendlyTo(Unit const* unit) const;
+        bool IsInRaidWith(Unit const* unit) const;
+        bool IsInPartyWith(Unit const* unit) const;
         bool IsNeutralToAll() const;
         bool IsContestedGuard() const
         {

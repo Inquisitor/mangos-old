@@ -1777,6 +1777,35 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
     if ((spellInfo_1->Attributes & SPELL_ATTR_PASSIVE)!=(spellInfo_2->Attributes & SPELL_ATTR_PASSIVE))
         return false;
 
+    // Dispersion - stacks with everything
+     if ((spellInfo_1->Id == 47585 && spellInfo_2->Id == 60069) ||
+          (spellInfo_2->Id == 47585 && spellInfo_1->Id == 60069))
+          return false;
+
+    // Mistletoe debuff stack with everything
+     if (spellInfo_1->Id == 26218 || spellInfo_2->Id == 26218)
+         return false;
+
+     // Improved Mind Blast debuff stacks with everything
+     if (spellInfo_1->Id == 48301 || spellInfo_2->Id == 48301)
+         return false;
+
+     // Ardent Defender cooldown debuff stacks with everything
+    if (spellInfo_1->Id == 66233 || spellInfo_2->Id == 66233)
+        return false;
+
+    SpellStacksMap::const_iterator sitr = mSpellStacksMap.find(spellInfo_1->Id);
+    if(sitr != mSpellStacksMap.end())
+        for(std::set<uint32>::const_iterator idItr = (*sitr).second.begin(); idItr != (*sitr).second.end(); ++idItr)
+            if(spellInfo_2->Id == (*idItr))
+                return false;
+
+    SpellStacksMap::const_iterator sitr2 = mSpellStacksMap.find(spellInfo_2->Id);
+    if(sitr2 != mSpellStacksMap.end())
+        for(std::set<uint32>::const_iterator idItr = (*sitr2).second.begin(); idItr != (*sitr2).second.end(); ++idItr)
+            if(spellInfo_1->Id == (*idItr))
+                return false;
+
     // Specific spell family spells
     switch(spellInfo_1->SpellFamilyName)
     {
@@ -2015,12 +2044,21 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                     return false;
 
                 //StarShards and Shadow Word: Pain
-                if (((spellInfo_1->SpellFamilyFlags & UI64LIT(0x200000)) && (spellInfo_2->SpellFamilyFlags & UI64LIT(0x8000))) ||
-                    ((spellInfo_2->SpellFamilyFlags & UI64LIT(0x200000)) && (spellInfo_1->SpellFamilyFlags & UI64LIT(0x8000))))
+                if ((spellInfo_1->SpellFamilyFlags & UI64LIT(0x200000)) && (spellInfo_2->SpellFamilyFlags & UI64LIT(0x8000)) ||
+                    (spellInfo_2->SpellFamilyFlags & UI64LIT(0x200000)) && (spellInfo_1->SpellFamilyFlags & UI64LIT(0x8000)))
                     return false;
-                // Dispersion
-                if ((spellInfo_1->Id == 47585 && spellInfo_2->Id == 60069) ||
-                    (spellInfo_2->Id == 47585 && spellInfo_1->Id == 60069))
+
+                // Shadowform
+                if ((spellInfo_1->Id == 15473 && spellInfo_2->Id == 49868) ||
+                    (spellInfo_2->Id == 15473 && spellInfo_1->Id == 49868))
+                    return false;
+
+                if ((spellInfo_1->Id == 15473 && spellInfo_2->Id == 71167) ||
+                    (spellInfo_2->Id == 15473 && spellInfo_1->Id == 71167))
+                    return false;
+                
+                if ((spellInfo_1->Id == 49868 && spellInfo_2->Id == 71167) ||
+                    (spellInfo_2->Id == 49868 && spellInfo_1->Id == 71167))
                     return false;
             }
             break;
@@ -2035,6 +2073,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 //  Tree of Life (Shapeshift) and 34123 Tree of Life (Passive)
                 if ((spellId_1 == 33891 && spellId_2 == 34123) ||
                     (spellId_2 == 33891 && spellId_1 == 34123))
+                    return false;
+
+                //  Moonfire and Lacarate
+                if ((spellInfo_1->SpellIconID == 225 && spellInfo_2->SpellIconID == 2246) ||
+                    (spellInfo_2->SpellIconID == 225 && spellInfo_1->SpellIconID == 2246))
                     return false;
 
                 // Lifebloom and Wild Growth
@@ -2161,6 +2204,11 @@ bool SpellMgr::IsNoStackSpellDueToSpell(uint32 spellId_1, uint32 spellId_2) cons
                 // Seal of Corruption (caster/target parts stacking allow, other stacking checked by spell specs)
                 if (spellInfo_1->SpellIconID == 2292 && spellInfo_2->SpellIconID == 2292)
                     return false;
+
+                // Seal of Corruption/Vengeance DoT and Righteouss Fury
+                 if ((spellInfo_1->SpellIconID == 3025 && spellInfo_2->SpellIconID == 2292) ||
+                     (spellInfo_1->SpellIconID == 2292 && spellInfo_2->SpellIconID == 3025))
+                     return false;
 
                 // Divine Sacrifice and Divine Guardian
                 if (spellInfo_1->SpellIconID == 3837 && spellInfo_2->SpellIconID == 3837)
