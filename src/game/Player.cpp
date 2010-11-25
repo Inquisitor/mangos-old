@@ -644,7 +644,7 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
 {
     //FIXME: outfitId not used in player creating
 
-    Object::_Create(guidlow, 0, HIGHGUID_PLAYER);
+    Object::_Create(ObjectGuid(HIGHGUID_PLAYER, guidlow));
 
     m_name = name;
 
@@ -15166,7 +15166,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
         return false;
     }
 
-    Object::_Create( guid, 0, HIGHGUID_PLAYER );
+    Object::_Create(ObjectGuid(HIGHGUID_PLAYER, guid));
 
     m_name = fields[2].GetCppString();
 
@@ -21915,7 +21915,6 @@ void Player::UnsummonPetTemporaryIfAny()
                 _pet->Unsummon(PET_SAVE_NOT_IN_SLOT, this);
         }
     }
-
 }
 
 void Player::ResummonPetTemporaryUnSummonedIfAny()
@@ -22654,4 +22653,18 @@ void Player::_LoadRandomBGStatus(QueryResult *result)
         m_IsBGRandomWinner = true;
         delete result;
     }
+}
+
+std::string Player::GetKnownPetName(uint32 petnumber)
+{
+    KnownPetNames::const_iterator itr = m_knownPetNames.find(petnumber);
+    if (itr != m_knownPetNames.end())
+        return itr->second;
+
+    return "";
+}
+
+void Player::AddKnownPetName(uint32 petnumber, std::string name)
+{
+    m_knownPetNames[petnumber] = name;
 }
