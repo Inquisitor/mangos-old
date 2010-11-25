@@ -6179,10 +6179,20 @@ float Unit::GetCombatDistance( const Unit* target ) const
 
 void Unit::SetPet(Pet* pet)
 {
-    SetPetGuid(pet ? pet->GetObjectGuid() : ObjectGuid());
+    if (pet)
+    {
+        SetPetGuid(pet->GetObjectGuid()) ;  //Using last pet guid for player
 
-    if(pet && GetTypeId() == TYPEID_PLAYER)
-        ((Player*)this)->SendPetGUIDs();
+        AddPetToList(pet);
+
+        if(GetTypeId() == TYPEID_PLAYER)
+        {
+            ((Player*)this)->AddKnownPetName(pet->GetCharmInfo()->GetPetNumber(),pet->GetName());
+            ((Player*)this)->SendPetGUIDs();
+        }
+    }
+    else
+        SetPetGuid(ObjectGuid());
 }
 
 void Unit::SetCharm(Unit* pet)

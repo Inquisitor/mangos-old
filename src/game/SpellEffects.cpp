@@ -4574,6 +4574,11 @@ void Spell::EffectSummonType(SpellEffectIndex eff_idx)
                     //647: 52893, Anti-Magic Zone (npc used)
                     if (prop_id == 121 || prop_id == 647)
                         DoSummonTotem(eff_idx);
+                   // Snake trap exception
+                    else if (m_spellInfo->EffectMiscValueB[eff_idx] == 2301)
+                        DoSummonSnakes(eff_idx);
+                    else if (prop_id == 1021)
+                        DoSummonGuardian(eff_idx, summon_prop->FactionId);
                     else
                         DoSummonWild(eff_idx, summon_prop->FactionId);
                     break;
@@ -4630,12 +4635,12 @@ void Spell::EffectSummonType(SpellEffectIndex eff_idx)
                 case UNITNAME_SUMMON_TITLE_OPPONENT:
                 case UNITNAME_SUMMON_TITLE_LIGHTWELL:
                 case UNITNAME_SUMMON_TITLE_BUTLER:
+                case UNITNAME_SUMMON_TITLE_MOUNT:
                     DoSummonWild(eff_idx, summon_prop->FactionId);
                     break;
                 case UNITNAME_SUMMON_TITLE_VEHICLE:
-                case UNITNAME_SUMMON_TITLE_MOUNT:
                     // TODO
-                    EffectSummonVehicle(eff_idx);
+                    // EffectSummonVehicle(i);
                     break;
                 default:
                     sLog.outError("EffectSummonType: Unhandled summon title %u", summon_prop->Title);
@@ -4653,14 +4658,26 @@ void Spell::EffectSummonType(SpellEffectIndex eff_idx)
         }
         case SUMMON_PROP_GROUP_CONTROLLABLE:
         {
-            // no type here
-            // maybe wrong - but thats the handler currently used for those
-            DoSummonGuardian(eff_idx, summon_prop->FactionId);
+            switch(prop_id)
+            {
+                case 65:
+                case 428:
+                    EffectSummonPossessed(eff_idx);
+                    break;
+                default:
+                    DoSummonGuardian(eff_idx, summon_prop->FactionId);
+                break;
+            }
             break;
         }
         case SUMMON_PROP_GROUP_VEHICLE:
+        case SUMMON_PROP_GROUP_UNCONTROLLABLE_VEHICLE:
         {
-            EffectSummonVehicle(eff_idx);
+            // TODO
+            // EffectSummonVehicle(i);
+               EffectSummonVehicle(eff_idx/*, summon_prop->FactionId*/);
+//            sLog.outDebug("EffectSummonType: Unhandled summon group type SUMMON_PROP_GROUP_VEHICLE(%u)", summon_prop->Group);
+//            Mangos developers thinking - this summon is not supported. But in this his worked fine :)
             break;
         }
         default:

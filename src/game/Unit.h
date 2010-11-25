@@ -2116,8 +2116,17 @@ template<typename Func>
 void Unit::CallForAllControlledUnits(Func const& func, uint32 controlledMask)
 {
     if (controlledMask & CONTROLLED_PET)
-        if (Pet* pet = GetPet())
-            func(pet);
+    {
+        if (!m_groupPets.empty())
+        {
+            GroupPetList m_groupPetsTmp = GetPets();  // Original list may be modified in this function
+            for (GroupPetList::const_iterator itr = m_groupPetsTmp.begin(); itr != m_groupPetsTmp.end(); ++itr)
+            {
+                if (Pet* pet = _GetPet(*itr))
+                    func(pet);
+            }
+        }
+    }
 
     if (controlledMask & CONTROLLED_MINIPET)
         if (Unit* mini = GetMiniPet())
@@ -2140,16 +2149,17 @@ void Unit::CallForAllControlledUnits(Func const& func, uint32 controlledMask)
     if (controlledMask & CONTROLLED_CHARM)
         if (Unit* charm = GetCharm())
             func(charm);
-}
 
+}
 
 template<typename Func>
 bool Unit::CheckAllControlledUnits(Func const& func, uint32 controlledMask) const
 {
     if (controlledMask & CONTROLLED_PET)
-        if (Pet const* pet = GetPet())
-            if (func(pet))
-                return true;
+        for (GroupPetList::const_iterator itr = m_groupPets.begin(); itr != m_groupPets.end(); ++itr)
+           if (Pet* pet = _GetPet(*itr))
+               if (func(pet))
+                   return true;
 
     if (controlledMask & CONTROLLED_MINIPET)
         if(Unit const* mini = GetMiniPet())
