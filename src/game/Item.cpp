@@ -1091,10 +1091,6 @@ Item* Item::CloneItem( uint32 count, Player const* player ) const
 
 bool Item::IsBindedNotWith( Player const* player ) const
 {
-    // not binded item
-    if (!IsSoulBound())
-        return false;
-
     // own item
     if (GetOwnerGuid() == player->GetObjectGuid())
         return false;
@@ -1102,6 +1098,10 @@ bool Item::IsBindedNotWith( Player const* player ) const
     // has loot with diff owner
     if (HasGeneratedLoot())
         return true;
+
+    // not binded item
+    if (!IsSoulBound())
+        return false;
 
     // not BOA item case
     if (!IsBoundAccountWide())
