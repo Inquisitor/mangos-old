@@ -496,6 +496,44 @@ void LoadDBCStores(const std::string& dataPath)
         #endif
     }
 
+    //Surge of power spells should be longer
+    SpellEntry *sfix1 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(57407));
+    sfix1->DurationIndex = 28;
+    SpellEntry *sfix2 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(60936));
+    sfix2->DurationIndex = 28;
+
+    //Twilight Torment - relly dunno what blizzard intended to do
+    SpellEntry *sfix3 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(57935));
+    sfix3->AttributesEx = 0;
+    sfix3->AttributesEx4 = SPELL_ATTR_EX4_NOT_STEALABLE;
+    sfix3->CastingTimeIndex = 1;
+    sfix3->RecoveryTime = 0;
+    sfix3->procFlags = (PROC_FLAG_TAKEN_MELEE_HIT | PROC_FLAG_TAKEN_MELEE_SPELL_HIT | PROC_FLAG_TAKEN_RANGED_HIT | PROC_FLAG_TAKEN_RANGED_SPELL_HIT | PROC_FLAG_TAKEN_NEGATIVE_SPELL_HIT);
+    sfix3->procChance = 100;
+    sfix3->procCharges = 0;
+    sfix3->rangeIndex = 1;
+    sfix3->StackAmount = 0;
+    sfix3->Effect[EFFECT_INDEX_1] = 0;
+    sfix3->EffectDieSides[EFFECT_INDEX_1] = 0;
+    sfix3->EffectBasePoints[EFFECT_INDEX_0] = -1;
+    sfix3->EffectImplicitTargetA[EFFECT_INDEX_0] = 6;
+    sfix3->EffectImplicitTargetA[EFFECT_INDEX_1] = 0;
+    sfix3->EffectImplicitTargetB[EFFECT_INDEX_0] = 0;
+    sfix3->EffectImplicitTargetB[EFFECT_INDEX_1] = 0;
+    sfix3->EffectRadiusIndex[EFFECT_INDEX_0] = 0;
+    sfix3->EffectRadiusIndex[EFFECT_INDEX_1] = 0;
+    sfix3->EffectApplyAuraName[EFFECT_INDEX_0] = SPELL_AURA_PROC_TRIGGER_SPELL;
+    sfix3->EffectApplyAuraName[EFFECT_INDEX_1] = 0;
+    sfix3->EffectAmplitude[EFFECT_INDEX_0] = 0;
+    sfix3->EffectAmplitude[EFFECT_INDEX_1] = 0;
+    sfix3->EffectMiscValue[EFFECT_INDEX_0] = 0;
+    sfix3->EffectMiscValue[EFFECT_INDEX_1] = 0;
+    sfix3->EffectMiscValueB[EFFECT_INDEX_0] = 0;
+    sfix3->EffectMiscValueB[EFFECT_INDEX_1] = 0;
+    sfix3->EffectTriggerSpell[EFFECT_INDEX_0] = 57988;
+    sfix3->EffectTriggerSpell[EFFECT_INDEX_1] = 0;
+
+
     for (uint32 j = 0; j < sSkillLineAbilityStore.GetNumRows(); ++j)
     {
         SkillLineAbilityEntry const *skillLine = sSkillLineAbilityStore.LookupEntry(j);
