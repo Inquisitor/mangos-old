@@ -336,7 +336,7 @@ void Vehicle::RegeneratePower(Powers power)
     ModifyPower(power, (int32)addvalue);
 }
 
-bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, uint32 vehicleId, uint32 team, const CreatureData *data)
+bool Vehicle::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, uint32 vehicleId, Team team, const CreatureData *data)
 {
     SetMap(map);
     SetPhaseMask(phaseMask,false);
@@ -970,7 +970,7 @@ void Vehicle::InstallAllAccessories()
                 entry = data->id;
             }
 
-            if(!pPassenger->Create(guid, GetMap(), GetPhaseMask(), entry, 0))
+            if(!pPassenger->Create(guid, GetMap(), GetPhaseMask(), entry, TEAM_NONE))
                 continue;
             pPassenger->LoadFromDB(guid, GetMap());
             pPassenger->Relocate(GetPositionX(), GetPositionY(), GetPositionZ());

@@ -1590,7 +1590,7 @@ GroupJoinBattlegroundResult Group::CanJoinBattleGroundQueue(BattleGround const* 
         return ERR_BATTLEGROUND_JOIN_FAILED;
 
     uint32 arenaTeamId = reference->GetArenaTeamId(arenaSlot);
-    uint32 team = reference->GetTeam();
+    Team team = reference->GetTeam();
 
     BattleGroundQueueTypeId bgQueueTypeIdRandom = BattleGroundMgr::BGQueueTypeId(BATTLEGROUND_RB, 0);
     // check every member of the group to be able to join
