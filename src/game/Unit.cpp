@@ -365,6 +365,9 @@ void Unit::Update( uint32 p_time )
 
 bool Unit::haveOffhandWeapon() const
 {
+    if (!IsUseEquippedWeapon(OFF_ATTACK))
+        return false;
+
     if(GetTypeId() == TYPEID_PLAYER)
         return ((Player*)this)->GetWeaponForAttack(OFF_ATTACK,true,true);
     else
@@ -6777,17 +6780,31 @@ uint32 Unit::SpellDamageBonusDone(Unit *pVictim, SpellEntry const *spellProto, u
                         break;
                     }
                 }
-                if(!found)
-                    break;
 
-                // search for Glacier Rot dummy aura
+                // search for Glacier Rot and  Improved Icy Touch dummy aura
+                bool isIcyTouch=(spellProto->SpellFamilyFlags & UI64LIT(0x0000000000000002));
                 Unit::AuraList const& dummyAuras = GetAurasByType(SPELL_AURA_DUMMY);
                 for(Unit::AuraList::const_iterator i = dummyAuras.begin(); i != dummyAuras.end(); ++i)
                 {
-                    if ((*i)->GetSpellProto()->EffectMiscValue[(*i)->GetEffIndex()] == 7244)
+                    if ((found && (*i)->GetSpellProto()->EffectMiscValue[(*i)->GetEffIndex()] == 7244) || //Glacier Rot
+                        (isIcyTouch && (*i)->GetSpellProto()->SpellIconID == 2721))                       //Improved Icy Touch 
                     {
                         DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f) / 100.0f;
-                        break;
+                    }
+                }
+
+                // Icy Touch
+                if (spellProto->SpellFamilyFlags & UI64LIT(0x0000000000000002))
+                {
+                    // Improved Icy Touch
+                    Unit::AuraList const& dummyAuras = GetAurasByType(SPELL_AURA_DUMMY);
+                    for(Unit::AuraList::const_iterator i = dummyAuras.begin(); i != dummyAuras.end(); ++i)
+                    {
+                        if ((*i)->GetSpellProto()->SpellIconID == 2721)
+                        {
+                            DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f) / 100.0f;
+                            break;
+                        }
                     }
                 }
             }
@@ -9157,95 +9174,132 @@ int32 Unit::CalculateSpellDamage(Unit const* target, SpellEntry const* spellProt
     return value;
 }
 
-int32 Unit::CalculateSpellDuration(SpellEntry const* spellProto, SpellEffectIndex effect_index, Unit const* target)
+int32 Unit::CalculateBaseSpellDuration(SpellEntry const* spellProto, uint32* periodicTime)
 {
-    Player* unitPlayer;
+    int32 duration = GetSpellDuration(spellProto);
 
-    if(GetTypeId() == TYPEID_PLAYER)
-        unitPlayer = (Player*)this;
-    else if(((Creature*)this)->IsVehicle())
-        unitPlayer = (Player*)GetCharmer();
-    else
-        unitPlayer = NULL;
+    if (duration < 0)
+        return duration;
 
-    uint8 comboPoints = unitPlayer ? unitPlayer->GetComboPoints() : 0;
-
-    int32 minduration = GetSpellDuration(spellProto);
-    int32 maxduration = GetSpellMaxDuration(spellProto);
-
-    int32 duration;
-
-    if( minduration != -1 && minduration != maxduration )
-        duration = minduration + int32((maxduration - minduration) * comboPoints / 5);
-    else
-        duration = minduration;
-
-    if (duration > 0)
+    if (GetTypeId() == TYPEID_PLAYER)
     {
-        int32 mechanic = GetEffectMechanic(spellProto, effect_index);
-        // Find total mod value (negative bonus)
-        int32 durationMod_always = target->GetTotalAuraModifierByMiscValue(SPELL_AURA_MECHANIC_DURATION_MOD, mechanic);
-        // Modify from SPELL_AURA_MOD_DURATION_OF_EFFECTS_BY_DISPEL aura for negative effects (stack always ?)
-        if (!IsPositiveEffect(spellProto->Id, effect_index))
-            durationMod_always+=target->GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_DURATION_OF_EFFECTS_BY_DISPEL, spellProto->Dispel);
-        // Find max mod (negative bonus)
-        int32 durationMod_not_stack = target->GetMaxNegativeAuraModifierByMiscValue(SPELL_AURA_MECHANIC_DURATION_MOD_NOT_STACK, mechanic);
+        int32 maxduration = GetSpellMaxDuration(spellProto);
 
-        if (!IsPositiveSpell(spellProto->Id))
-            durationMod_always += target->GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_DURATION_OF_MAGIC_EFFECTS, spellProto->DmgClass);
-
-        int32 durationMod = 0;
-        // Select strongest negative mod
-        if (durationMod_always > durationMod_not_stack)
-            durationMod = durationMod_not_stack;
-        else
-            durationMod = durationMod_always;
-
-        if (durationMod != 0)
-            duration = int32(int64(duration) * (100+durationMod) /100);
-
-        if (duration < 0) duration = 0;
+        if (duration != maxduration)
+            duration += int32((maxduration - duration) * ((Player*)this)->GetComboPoints() / 5);
     }
 
-    switch(spellProto->SpellFamilyName)
-    {
-        case SPELLFAMILY_POTION:
-        {
-            // Mixology
-            if (HasAura(53042))
-                duration *= 2;
+    Player* modOwner = GetSpellModOwner();
 
-            break;
-        }
-        case SPELLFAMILY_DRUID:
+    if (modOwner)
+    {
+        modOwner->ApplySpellMod(spellProto->Id, SPELLMOD_DURATION, duration);
+
+        if (duration <= 0)
+            return 0;
+    }
+
+    bool applyHaste = (spellProto->AttributesEx5 & SPELL_ATTR_EX5_AFFECTED_BY_HASTE) != 0;
+
+    if (!applyHaste)
+    {
+        Unit::AuraList const& mModByHaste = GetAurasByType(SPELL_AURA_MOD_PERIODIC_HASTE);
+        for (Unit::AuraList::const_iterator itr = mModByHaste.begin(); itr != mModByHaste.end(); ++itr)
         {
-            if (spellProto->SpellFamilyFlags & UI64LIT(0x100))
+            if ((*itr)->isAffectedOnSpell(spellProto))
             {
-                // Glyph of Thorns
-                if (Aura * aur = GetAura(57862, EFFECT_INDEX_0))
-                    duration += aur->GetModifier()->m_amount * MINUTE * IN_MILLISECONDS;
+                applyHaste = true;
+                break;
             }
-            break;
         }
-        case SPELLFAMILY_PALADIN:
+    }
+
+    uint32 oldDuration = duration;
+
+    // Apply haste to duration
+    if (applyHaste)
+        duration = int32(duration * GetFloatValue(UNIT_MOD_CAST_SPEED));
+
+    uint32 _periodicTime = periodicTime ? *periodicTime : 0;
+
+    if (_periodicTime)
+    {
+        if (modOwner)
+            modOwner->ApplySpellMod(spellProto->Id, SPELLMOD_ACTIVATION_TIME, _periodicTime);
+
+        // Calculate new periodic timer
+        if (applyHaste)
         {
-            if (spellProto->SpellFamilyFlags & UI64LIT(0x00000002))
-            {
-                // Glyph of Blessing of Might
-                if (Aura * aur = GetAura(57958, EFFECT_INDEX_0))
-                    duration += aur->GetModifier()->m_amount * MINUTE * IN_MILLISECONDS;
-            }
-            else if (spellProto->SpellFamilyFlags & UI64LIT(0x00010000))
-            {
-                // Glyph of Blessing of Wisdom
-                if (Aura * aur = GetAura(57979, EFFECT_INDEX_0))
-                    duration += aur->GetModifier()->m_amount * MINUTE * IN_MILLISECONDS;
-            }
-            break;
+            int32 ticks = oldDuration / _periodicTime;
+            _periodicTime = duration / ticks;
         }
+
+        *periodicTime = _periodicTime;
     }
 
     return duration;
+}
+
+uint32 Unit::CalculateSpellDuration(Unit const* caster, uint32 baseDuration, SpellEntry const* spellProto, SpellEffectIndex effect_index)
+{
+    int32 mechanic = GetEffectMechanic(spellProto, effect_index);
+    // Find total mod value (negative bonus)
+    int32 durationMod_always = GetTotalAuraModifierByMiscValue(SPELL_AURA_MECHANIC_DURATION_MOD, mechanic);
+    // Modify from SPELL_AURA_MOD_DURATION_OF_EFFECTS_BY_DISPEL aura for negative effects (stack always ?)
+    if (!IsPositiveEffect(spellProto->Id, effect_index))
+        durationMod_always += GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_DURATION_OF_EFFECTS_BY_DISPEL, spellProto->Dispel);
+    // Find max mod (negative bonus)
+    int32 durationMod_not_stack = GetMaxNegativeAuraModifierByMiscValue(SPELL_AURA_MECHANIC_DURATION_MOD_NOT_STACK, mechanic);
+
+    if (!IsPositiveSpell(spellProto->Id))
+        durationMod_always += GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_DURATION_OF_MAGIC_EFFECTS, spellProto->Dispel);
+
+    int32 durationMod = 0;
+
+    // Select strongest negative mod
+    if (durationMod_always > durationMod_not_stack)
+        durationMod = durationMod_not_stack;
+    else
+        durationMod = durationMod_always;
+
+    if (caster == this)
+    {
+        switch(spellProto->SpellFamilyName)
+        {
+            case SPELLFAMILY_DRUID:
+                if (spellProto->SpellFamilyFlags & UI64LIT(0x100))
+                {
+                    // Glyph of Thorns
+                    if (Aura *aur = GetAura(57862, EFFECT_INDEX_0))
+                        baseDuration += aur->GetModifier()->m_amount * MINUTE * IN_MILLISECONDS;
+                }
+                break;
+            case SPELLFAMILY_PALADIN:
+                if (spellProto->SpellIconID == 298 && spellProto->SpellFamilyFlags & UI64LIT(0x00000002))
+                {
+                    // Glyph of Blessing of Might
+                    if (Aura *aur = GetAura(57958, EFFECT_INDEX_0))
+                        baseDuration += aur->GetModifier()->m_amount * MINUTE * IN_MILLISECONDS;
+                }
+                else if (spellProto->SpellIconID == 306 && spellProto->SpellFamilyFlags & UI64LIT(0x00010000))
+                {
+                    // Glyph of Blessing of Wisdom
+                    if (Aura *aur = GetAura(57979, EFFECT_INDEX_0))
+                        baseDuration += aur->GetModifier()->m_amount * MINUTE * IN_MILLISECONDS;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    if (durationMod != 0)
+    {
+        int32 duration = int32(int64(baseDuration) * (100+durationMod) / 100);
+        return duration < 0 ? 0 : duration;
+    }
+
+    return baseDuration;
 }
 
 DiminishingLevels Unit::GetDiminishing(DiminishingGroup group)
@@ -11057,14 +11111,31 @@ void Unit::AddPetAura(PetAura const* petSpell)
 {
     m_petAuras.insert(petSpell);
     if(Pet* pet = GetPet())
-        pet->CastPetAura(petSpell);
+    {
+        GroupPetList m_groupPets = GetPets();
+        if (!m_groupPets.empty())
+        {
+            for (GroupPetList::const_iterator itr = m_groupPets.begin(); itr != m_groupPets.end(); ++itr)
+                if (Pet* _pet = GetMap()->GetPet(*itr))
+                    _pet->CastPetAura(petSpell);
+        }
+    }
+
 }
 
 void Unit::RemovePetAura(PetAura const* petSpell)
 {
     m_petAuras.erase(petSpell);
     if(Pet* pet = GetPet())
-        pet->RemoveAurasDueToSpell(petSpell->GetAura(pet->GetEntry()));
+    {
+        GroupPetList m_groupPets = GetPets();
+        if (!m_groupPets.empty())
+        {
+            for (GroupPetList::const_iterator itr = m_groupPets.begin(); itr != m_groupPets.end(); ++itr)
+                if (Pet* _pet = GetMap()->GetPet(*itr))
+                    _pet->RemoveAurasDueToSpell(petSpell->GetAura(_pet->GetEntry()));
+        }
+    }
 }
 
 void Unit::RemoveAurasAtMechanicImmunity(uint32 mechMask, uint32 exceptSpellId, bool non_positive /*= false*/)

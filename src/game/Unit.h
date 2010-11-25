@@ -69,7 +69,7 @@ enum SpellAuraInterruptFlags
     AURA_INTERRUPT_FLAG_NOT_UNDERWATER              = 0x00000100,   // 8    removed by leaving water
     AURA_INTERRUPT_FLAG_NOT_SHEATHED                = 0x00000200,   // 9    removed by unsheathing
     AURA_INTERRUPT_FLAG_UNK10                       = 0x00000400,   // 10
-    AURA_INTERRUPT_FLAG_UNK11                       = 0x00000800,   // 11
+    AURA_INTERRUPT_FLAG_CAST                        = 0x00000800,   // 11   removed by casting a spell
     AURA_INTERRUPT_FLAG_UNK12                       = 0x00001000,   // 12   removed by attack?
     AURA_INTERRUPT_FLAG_UNK13                       = 0x00002000,   // 13
     AURA_INTERRUPT_FLAG_UNK14                       = 0x00004000,   // 14
@@ -1212,6 +1212,23 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         uint32 getAttackTimer(WeaponAttackType type) const { return m_attackTimer[type]; }
         bool isAttackReady(WeaponAttackType type = BASE_ATTACK) const { return m_attackTimer[type] == 0; }
         bool haveOffhandWeapon() const;
+        bool IsUseEquippedWeapon(WeaponAttackType attackType) const
+        {
+            bool disarmed = false;
+            switch(attackType)
+            {
+                case BASE_ATTACK:
+                    disarmed = HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISARMED);
+                break;
+                case OFF_ATTACK:
+                    disarmed = HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_DISARM_OFFHAND);
+                break;
+                case RANGED_ATTACK:
+                    disarmed = HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_DISARM_RANGED);
+                break;
+            }
+            return !IsInFeralForm() && !disarmed;
+        }
         bool canReachWithAttack(Unit *pVictim) const;
         uint32 m_extraAttacks;
 
@@ -1945,7 +1962,9 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
 
         uint32 CalcNotIgnoreAbsorbDamage( uint32 damage, SpellSchoolMask damageSchoolMask, SpellEntry const* spellInfo = NULL);
         uint32 CalcNotIgnoreDamageRedunction( uint32 damage, SpellSchoolMask damageSchoolMask);
-        int32 CalculateSpellDuration(SpellEntry const* spellProto, SpellEffectIndex effect_index, Unit const* target);
+        int32 CalculateBaseSpellDuration(SpellEntry const* spellProto, uint32* periodicTime = NULL);
+        uint32 CalculateSpellDuration(Unit const* caster, uint32 baseDuration, SpellEntry const* spellProto, SpellEffectIndex effect_index);
+        float CalculateLevelPenalty(SpellEntry const* spellProto) const;
 
         void addFollower(FollowerReference* pRef) { m_FollowingRefManager.insertFirst(pRef); }
         void removeFollower(FollowerReference* /*pRef*/ ) { /* nothing to do yet */ }

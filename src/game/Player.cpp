@@ -1494,8 +1494,14 @@ void Player::SetDeathState(DeathState s)
         // remove form before other mods to prevent incorrect stats calculation
         RemoveAurasDueToSpell(m_ShapeShiftFormSpellId);
 
+        if (Pet* pet = GetPet())
+        {
+            if(pet->isControlled())
+                SetTemporaryUnsummonedPetNumber(pet->GetCharmInfo()->GetPetNumber());
+
         //FIXME: is pet dismissed at dying or releasing spirit? if second, add SetDeathState(DEAD) to HandleRepopRequestOpcode and define pet unsummon here with (s == DEAD)
-        RemovePet(PET_SAVE_REAGENTS);
+            RemovePet(PET_SAVE_REAGENTS);
+        }
 
         // save value before aura remove in Unit::SetDeathState
         ressSpellId = GetUInt32Value(PLAYER_SELF_RES_SPELL);
@@ -1861,8 +1867,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
             }
 
             // remove pet on map change
-            if (pet)
-                UnsummonPetTemporaryIfAny();
+            UnsummonPetTemporaryIfAny();
 
             // remove all dyn objects
             RemoveAllDynObjects();
@@ -7264,7 +7269,7 @@ void Player::_ApplyItemBonuses(ItemPrototype const *proto, uint8 slot, bool appl
             ApplyFeralAPBonus(feral_bonus, apply);
     }
 
-    if(!IsUseEquippedWeapon(slot==EQUIPMENT_SLOT_MAINHAND))
+    if (!IsUseEquippedWeapon(attType))
         return;
 
     if (proto->Delay)
@@ -9070,7 +9075,7 @@ Item* Player::GetWeaponForAttack(WeaponAttackType attackType, bool nonbroken, bo
     if (!item || item->GetProto()->Class != ITEM_CLASS_WEAPON)
         return NULL;
 
-    if (useable && !IsUseEquippedWeapon(attackType==BASE_ATTACK))
+    if (useable && !IsUseEquippedWeapon(attackType))
         return NULL;
 
     if (nonbroken && item->IsBroken())
@@ -9085,10 +9090,10 @@ Item* Player::GetShield(bool useable) const
     if (!item || item->GetProto()->Class != ITEM_CLASS_ARMOR)
         return NULL;
 
-    if(!useable)
+    if (!useable)
         return item;
 
-    if( item->IsBroken())
+    if (item->IsBroken() || !IsUseEquippedWeapon(OFF_ATTACK))
         return NULL;
 
     return item;
@@ -22271,10 +22276,13 @@ void Player::ActivateSpec(uint8 specNum)
     if(specNum >= GetSpecsCount())
         return;
 
+    if (getClass() == CLASS_HUNTER || getClass() == CLASS_WARLOCK)
+        UnsummonPetTemporaryIfAny();
+    else if (Pet* pet = GetPet())
+        pet->Unsummon(PET_SAVE_NOT_IN_SLOT, this);
     if (GetBattleGround() && GetBattleGround()->GetStatus() == STATUS_IN_PROGRESS)
         return;
 
-    UnsummonPetTemporaryIfAny();
     UnsummonAllTotems();
     ClearComboPointHolders(); 	
     ClearAllReactives();
