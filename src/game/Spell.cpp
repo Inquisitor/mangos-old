@@ -888,12 +888,12 @@ void Spell::AddUnitTarget(Unit* pVictim, SpellEffectIndex effIndex)
     target.processed  = false;                              // Effects not apply on target
 
     // Calculate hit result
-    
-    // Procs can miss, weapon enchants can miss, triggered spells and effects cannot miss (miss already calculated in triggering spell)
+    target.missCondition = m_caster->SpellHitResult(pVictim, m_spellInfo, m_canReflect);
+    /*// Procs can miss, weapon enchants can miss, triggered spells and effects cannot miss (miss already calculated in triggering spell)
     bool canMiss = (m_triggeredByAuraSpell || !m_IsTriggeredSpell);
-    if(m_caster->GetTypeId() != TYPEID_PLAYER && ((Creature*)m_caster)->isVehicle())
+    if(m_caster->GetTypeId() != TYPEID_PLAYER && ((Creature*)m_caster)->IsVehicle())
         canMiss = false;
-    target.missCondition = m_caster->SpellHitResult(pVictim, m_spellInfo, m_canReflect, canMiss);
+    target.missCondition = m_caster->SpellHitResult(pVictim, m_spellInfo, m_canReflect, canMiss);*/
 
     // spell fly from visual cast object
     WorldObject* affectiveObject = GetAffectiveCasterObject();
@@ -6016,7 +6016,7 @@ SpellCastResult Spell::CheckItems()
         if(!proto)
             return SPELL_FAILED_ITEM_NOT_FOUND;
 
-        if(proto->Flags & ITEM_FLAGS_ENCHANT_SCROLL)
+        if(proto->Flags & ITEM_FLAG_ENCHANT_SCROLL)
             isScrollItem = true;
 
         for (int i = 0; i < 5; ++i)
