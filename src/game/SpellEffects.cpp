@@ -2229,7 +2229,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 case 48610:                                 // Q:Shredder Repair
                 {
                     if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->IsVehicle())
-                        ((Vehicle*)m_caster)->RemoveAllPassengers();
+                        ((Vehicle*)m_caster)->Dismiss();
 
                     return;
                 }
