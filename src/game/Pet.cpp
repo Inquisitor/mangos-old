@@ -2240,6 +2240,8 @@ void Pet::ApplyAttackPowerScalingBonus(bool apply)
                 case CLASS_WARLOCK:
                 {
                     newAPBonus = std::max(owner->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_SHADOW),owner->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_FIRE));
+                    if(GetEntry() == 17252 && owner->HasAura(56246)) // Glyph of Felguard
+                        newAPBonus *= 1.2;
                     break;
                 }
                 case CLASS_DEATH_KNIGHT:
