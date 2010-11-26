@@ -2806,6 +2806,19 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
         }
         case SPELLFAMILY_PRIEST:
         {
+            // Penance - set target if noone is selected
+            if (GetSpellProto()->SpellIconID == 225 || GetSpellProto()->SpellIconID == 2818)
+            {
+                if (Unit* caster = GetCaster())
+                {
+                    if (caster->GetTypeId() == TYPEID_PLAYER)
+                    {
+                        if (apply && target)     
+                           ((Player*)caster)->SetSelection(target->GetGUID()); 
+                        return;
+                    }
+                }
+            }
             // Pain and Suffering
             if (GetSpellProto()->SpellIconID == 2874 && target->GetTypeId()==TYPEID_PLAYER)
             {
@@ -6983,7 +6996,7 @@ void Aura::PeriodicTick()
                 {
                     case 43093: case 31956: case 38801:
                     case 35321: case 38363: case 39215:
-                    case 48920:
+                    case 48920: case 59262: case 58517:
                     {
                         if(target->GetHealth() == target->GetMaxHealth() )
                         {

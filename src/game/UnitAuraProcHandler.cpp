@@ -418,10 +418,19 @@ bool Unit::IsTriggeredAtSpellProcEvent(Unit *pVictim, SpellAuraHolder* holder, S
     if(spellProcEvent && spellProcEvent->customChance)
         chance = spellProcEvent->customChance;
     // If PPM exist calculate chance from PPM
-    if(!isVictim && spellProcEvent && spellProcEvent->ppmRate != 0)
+    if(spellProcEvent && spellProcEvent->ppmRate != 0)
     {
-        uint32 WeaponSpeed = GetAttackTime(attType);
-        chance = GetPPMProcChance(WeaponSpeed, spellProcEvent->ppmRate);
+        uint32 WeaponSpeed;
+        if(!isVictim)
+        {
+            WeaponSpeed = GetAttackTime(attType);
+            chance = GetPPMProcChance(WeaponSpeed, spellProcEvent->ppmRate);
+        }
+        else
+        {
+            WeaponSpeed = pVictim->GetAttackTime(attType);
+            chance = pVictim->GetPPMProcChance(WeaponSpeed, spellProcEvent->ppmRate);
+        }
     }
     // Apply chance modifier aura
     if(Player* modOwner = GetSpellModOwner())
@@ -1981,7 +1990,15 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                 case 20185:
                 {
                     if (pVictim == this)
-                       return SPELL_AURA_PROC_FAILED;
+                        return SPELL_AURA_PROC_FAILED;
+
+                    // PPM per victim
+                    float ppmJoL = 15.0f; // must be hard-coded + 100% proc chance in DB
+                    WeaponAttackType attType = BASE_ATTACK; // TODO: attack type based? 
+                    uint32 WeaponSpeed = pVictim->GetAttackTime(attType);
+                    float chanceForVictim = pVictim->GetPPMProcChance(WeaponSpeed, ppmJoL);
+                    if (!roll_chance_f(chanceForVictim))
+                        return SPELL_AURA_PROC_FAILED;
 
                     basepoints[0] = int32( pVictim->GetMaxHealth() * triggeredByAura->GetModifier()->m_amount / 100 );
                     pVictim->CastCustomSpell(pVictim, 20267, &basepoints[0], NULL, NULL, true, NULL, triggeredByAura);
@@ -1992,6 +2009,14 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                 {
                     if (pVictim->getPowerType() == POWER_MANA)
                     {
+                        // PPM per victim
+                        float ppmJoW = 15.0f; // must be hard-coded + 100% proc chance in DB
+                        WeaponAttackType attType = BASE_ATTACK; // TODO: attack type based? 
+                        uint32 WeaponSpeed = pVictim->GetAttackTime(attType);
+                        float chanceForVictim = pVictim->GetPPMProcChance(WeaponSpeed, ppmJoW);
+                        if (!roll_chance_f(chanceForVictim))
+                            return SPELL_AURA_PROC_FAILED;
+
                         // 2% of maximum base mana
                         basepoints[0] = int32(pVictim->GetCreateMana() * 2 / 100);
                         pVictim->CastCustomSpell(pVictim, 20268, &basepoints[0], NULL, NULL, true, NULL, triggeredByAura);
@@ -2722,6 +2747,13 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                 triggered_spell_id = 61607;
                 break;
             }
+            // Unholy Blight
+            if (dummySpell->Id == 49194)
+            {
+                basepoints[0] = triggerAmount * damage / 1000;
+                triggered_spell_id = 50536;
+                break;
+            }
             // Vendetta
             if (dummySpell->SpellFamilyFlags & UI64LIT(0x0000000000010000))
             {
@@ -3296,22 +3328,6 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
             break;
         case SPELLFAMILY_PALADIN:
         {
-            /*
-            // Blessed Life
-            if (auraSpellInfo->SpellIconID == 2137)
-            {
-                switch (auraSpellInfo->Id)
-                {
-                    case 31828:                         // Rank 1
-                    case 31829:                         // Rank 2
-                    case 31830:                         // Rank 3
-                        break;
-                    default:
-                        sLog.outError("Unit::HandleProcTriggerSpellAuraProc: Spell %u miss posibly Blessed Life", auraSpellInfo->Id);
-                        return SPELL_AURA_PROC_FAILED;
-                }
-            }
-            */
             // Healing Discount
             if (auraSpellInfo->Id==37705)
             {
@@ -3807,6 +3823,57 @@ SpellAuraProcResult Unit::HandleOverrideClassScriptAuraProc(Unit *pVictim, uint3
         case 6953:                                          // Warbringer
             RemoveAurasAtMechanicImmunity(IMMUNE_TO_ROOT_AND_SNARE_MASK,0,true);
             return SPELL_AURA_PROC_OK;
+        case 7282: // Crypt Fever and Ebon Plaguebringer
+        {
+            if (!procSpell || pVictim == this) // Here we prevent selfcasting C.F. and E.P.
+                return SPELL_AURA_PROC_FAILED;
+            switch (triggeredByAura->GetSpellProto()->Id)
+            {
+                case 49032: // C.F. Rank 1
+                {
+                    // C.F. rank 2-3 or E.P. any rank is already on victim -> do not allow cast
+                    if ( !(pVictim->HasAura(50509,EFFECT_INDEX_0) || pVictim->HasAura(50510,EFFECT_INDEX_0) ||
+                        pVictim->GetAura(SPELL_AURA_MOD_MECHANIC_DAMAGE_TAKEN_PERCENT,SPELLFAMILY_DEATHKNIGHT,UI64LIT(0x80000000000))) )
+                        triggered_spell_id = 50508;
+                    break;
+                }
+                case 49631: // C.F. Rank 2
+                {
+                    // C.F. rank 3 or E.P. any rank is already on victim -> do not allow cast
+                    if ( !(pVictim->HasAura(50510,EFFECT_INDEX_0) ||
+                        pVictim->GetAura(SPELL_AURA_MOD_MECHANIC_DAMAGE_TAKEN_PERCENT,SPELLFAMILY_DEATHKNIGHT,UI64LIT(0x80000000000))) )
+                        triggered_spell_id = 50509;
+                    break;
+                }
+                case 49632: // C.F. Rank 3
+                {
+                    // E.P. any rank is already on victim -> do not allow cast
+                    if ( !(pVictim->GetAura(SPELL_AURA_MOD_MECHANIC_DAMAGE_TAKEN_PERCENT,SPELLFAMILY_DEATHKNIGHT,UI64LIT(0x80000000000))) )
+                        triggered_spell_id = 50510;
+                    break;
+                }
+                case 51099: // E.P. Rank 1
+                {
+                    // E.P. rank 2-3 is already on victim -> do not allow cast
+                    if ( !(pVictim->HasAura(51734,EFFECT_INDEX_0) || pVictim->HasAura(51735,EFFECT_INDEX_0)) )
+                        triggered_spell_id = 51726;
+                    break;
+                }
+                case 51160: // E.P. Rank 2
+                {
+                    // E.P. rank 3 is already on victim -> do not allow cast
+                    if ( !(pVictim->HasAura(51735,EFFECT_INDEX_0)) )
+                        triggered_spell_id = 51734;
+                    break;
+                }
+                case 51161: // E.P. Rank 3
+                {
+                    triggered_spell_id = 51735;
+                    break;
+                }
+            }
+            break;
+        }
         case 7010:                                          // Revitalize (rank 1)
         case 7011:                                          // Revitalize (rank 2)
         case 7012:                                          // Revitalize (rank 3)
