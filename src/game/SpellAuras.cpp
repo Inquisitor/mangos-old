@@ -2814,7 +2814,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     if (caster->GetTypeId() == TYPEID_PLAYER)
                     {
                         if (apply && target)     
-                           ((Player*)caster)->SetSelection(target->GetGUID()); 
+                            ((Player*)caster)->SetSelectionGuid(target->GetObjectGuid()); 
                         return;
                     }
                 }
