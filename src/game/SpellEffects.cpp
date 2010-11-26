@@ -3412,6 +3412,14 @@ void Spell::EffectTriggerSpell(SpellEffectIndex effIndex)
                 pet->CastSpell(pet, 28305, true);
             return;
         }
+        // Mirror Image
+        case 58832:
+        {
+            // Glyph of Mirror Image
+            if (m_caster->HasAura(63093))
+                m_caster->CastSpell(m_caster, 65047, true); // Mirror Image
+            break;
+        }
         // Empower Rune Weapon
         case 53258:
         {
