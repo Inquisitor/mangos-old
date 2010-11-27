@@ -17478,6 +17478,15 @@ void Player::_SaveMail()
             ++itr;
     }
 
+    // Movement safety Checks
+    m_anti_lastmovetime = 0;        // Time of last movement
+    m_anti_NextLenCheck = 0;
+    m_anti_MovedLen = 0.0f;         // Distance of movement
+    //m_anti_BeginFallZ = INVALID_HEIGHT;
+    m_anti_lastalarmtime = 0;       // Time of last warn-check trigger
+    m_anti_alarmcount = 0;          // Count of warn-check triggers
+    m_anti_TeleTime = 0;            // Time of last teleport
+
     m_mailsUpdated = false;
 }
 
