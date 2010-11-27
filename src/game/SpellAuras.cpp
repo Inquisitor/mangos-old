@@ -4897,9 +4897,11 @@ void Aura::HandleModMechanicImmunity(bool apply, bool /*Real*/)
         if (target->GetTypeId() != TYPEID_PLAYER)
             return;
         if (apply)
-            if (GameObject* obj = target->GetGameObject(48018) )
-                if (target->IsWithinDist(obj,GetSpellMaxRange(sSpellRangeStore.LookupEntry(GetSpellProto()->rangeIndex))))
-                    ((Player*)target)->TeleportTo(obj->GetMapId(),obj->GetPositionX(),obj->GetPositionY(),obj->GetPositionZ(),obj->GetOrientation());
+        {
+            GameObject* obj = target->GetGameObject(48018);
+            if (obj)
+                ((Player*)target)->TeleportTo(obj->GetMapId(),obj->GetPositionX(),obj->GetPositionY(),obj->GetPositionZ(),obj->GetOrientation());
+        }
     }
 
     // Bestial Wrath
@@ -7891,6 +7893,25 @@ void Aura::PeriodicDummyTick()
             }
             break;
         }
+        case SPELLFAMILY_WARLOCK:
+            switch (spell->Id)
+            {
+                case 48018:
+                    GameObject* obj = target->GetGameObject(spell->Id);
+                    if (!obj)
+                    {
+                         target->RemoveAurasDueToSpell(spell->Id);
+                         target->RemoveAurasDueToSpell(62388);
+                         return;
+                    }
+                    // We must take a range of teleport spell, not summon.
+                    const SpellEntry* goToCircleSpell = sSpellStore.LookupEntry(48020);
+                    if (target->IsWithinDist(obj,GetSpellMaxRange(sSpellRangeStore.LookupEntry(goToCircleSpell->rangeIndex))))
+                        target->CastSpell(target, 62388, true);
+                    else
+                        target->RemoveAurasDueToSpell(62388);
+            }
+            break;
         case SPELLFAMILY_ROGUE:
         {
             switch (spell->Id)
