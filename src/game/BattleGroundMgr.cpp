@@ -1811,8 +1811,8 @@ void BattleGroundMgr::BuildBattleGroundListPacket(WorldPacket *data, ObjectGuid 
     uint32 win_arena = plr->GetRandomWinner() ? BG_REWARD_WINNER_ARENA_LAST : BG_REWARD_WINNER_ARENA_FIRST;
     uint32 loos_kills = plr->GetRandomWinner() ? BG_REWARD_LOOSER_HONOR_LAST : BG_REWARD_LOOSER_HONOR_FIRST;
 
-    win_kills = (uint32)MaNGOS::Honor::hk_honor_at_level(plr->getLevel(), win_kills*4);
-    loos_kills = (uint32)MaNGOS::Honor::hk_honor_at_level(plr->getLevel(), loos_kills*4);
+    win_kills = (uint32)MaNGOS::Honor::hk_honor_at_level(plr->getLevel(), win_kills);
+    loos_kills = (uint32)MaNGOS::Honor::hk_honor_at_level(plr->getLevel(), loos_kills);
 
     data->Initialize(SMSG_BATTLEFIELD_LIST);
     *data << guid;                                          // battlemaster guid
@@ -1822,20 +1822,20 @@ void BattleGroundMgr::BuildBattleGroundListPacket(WorldPacket *data, ObjectGuid 
     *data << uint8(0);                                      // unk
 
     // Rewards
-    *data << uint8( plr->GetRandomWinner() );               // 3.3.3 hasWin
-    *data << uint32( win_kills );                           // 3.3.3 winHonor
-    *data << uint32( win_arena );                           // 3.3.3 winArena
-    *data << uint32( loos_kills );                          // 3.3.3 lossHonor
+    *data << uint8(plr->GetRandomWinner());               // 3.3.3 hasWin
+    *data << uint32(win_kills);                           // 3.3.3 winHonor
+    *data << uint32(0/*win_arena*/);                      // 3.3.3 winArena - CHANGE ME: Enable win_arena when AP from BG will be enabled.
+    *data << uint32(loos_kills);                          // 3.3.3 lossHonor
 
     uint8 isRandom = bgTypeId == BATTLEGROUND_RB;
     *data << uint8(isRandom);                               // 3.3.3 isRandom
     if(isRandom)
     {
         // Rewards (random)
-        *data << uint8( plr->GetRandomWinner() );           // 3.3.3 hasWin_Random
-        *data << uint32( win_kills );                       // 3.3.3 winHonor_Random
-        *data << uint32( win_arena );                       // 3.3.3 winArena_Random
-        *data << uint32( loos_kills );                      // 3.3.3 lossHonor_Random
+        *data << uint8(plr->GetRandomWinner());           // 3.3.3 hasWin_Random
+        *data << uint32(win_kills);                       // 3.3.3 winHonor_Random
+        *data << uint32(0/*win_arena*/);                  // 3.3.3 winArena_Random - CHANGE ME: Enable win_arena when AP from BG will be enabled.
+        *data << uint32(loos_kills);                      // 3.3.3 lossHonor_Random
     }
 
     if(bgTypeId == BATTLEGROUND_AA)                         // arena
