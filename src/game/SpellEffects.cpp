@@ -537,6 +537,21 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                         else damage = 0;
                         break;
                     }
+                    // Loken Pulsing Shockwave
+                    case 59837:
+                    case 52942:
+                    {
+                        // don't damage self and only players
+                        if(unitTarget->GetGUID() == m_caster->GetGUID() || unitTarget->GetTypeId() != TYPEID_PLAYER)
+                            return;
+                        
+                        float radius = sSpellRadiusStore.LookupEntry(m_spellInfo->EffectRadiusIndex[0])->Radius2;
+                        if (!radius)
+                            return;
+                        float distance = m_caster->GetDistance2d(unitTarget);
+                        damage = (distance > radius) ? 0 : int32(m_spellInfo->EffectBasePoints[0]*distance);
+                        break;
+                    }
                 }
                 break;
             }
