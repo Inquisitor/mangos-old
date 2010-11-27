@@ -5310,7 +5310,7 @@ void ObjectMgr::LoadSpellScripts()
             if (!spellInfo->Effect[i])
                 continue;
 
-            if (spellInfo->Effect[i] == SPELL_EFFECT_SCRIPT_EFFECT)
+            if (spellInfo->Effect[i] == SPELL_EFFECT_SCRIPT_EFFECT || spellInfo->Effect[i] == SPELL_EFFECT_SEND_EVENT || spellInfo->Effect[i] == SPELL_EFFECT_DUMMY)
             {
                 found =  true;
                 break;
