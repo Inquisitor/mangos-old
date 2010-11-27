@@ -1062,7 +1062,20 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
         // mark effects that were already handled in Spell::HandleDelayedSpellLaunch on spell launch as processed
         for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
             if (IsEffectHandledOnDelayedSpellLaunch(m_spellInfo, SpellEffectIndex(i)))
-                mask &= ~(1<<i);
+            {
+                if(missInfo == SPELL_MISS_REFLECT)
+                {
+                    // Fill base damage struct (unitTarget - is real spell target)
+                    SpellNonMeleeDamage damageInfo(caster, unitTarget, m_spellInfo->Id, m_spellSchoolMask);
+                    caster->CalculateSpellDamage(&damageInfo, m_damage, m_spellInfo, m_attackType);
+                    unitTarget->CalculateAbsorbResistBlock(caster, &damageInfo, m_spellInfo);
+                    caster->DealDamageMods(damageInfo.target, damageInfo.damage, &damageInfo.absorb);
+                     m_damage += damageInfo.damage;
+                    
+                }
+                else
+                    mask &= ~(1<<i);
+            }
 
         // maybe used in effects that are handled on hit
         m_damage += target->damage;
