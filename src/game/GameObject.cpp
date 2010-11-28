@@ -62,6 +62,8 @@ GameObject::GameObject() : WorldObject()
 
     m_DBTableGuid = 0;
     m_rotation = 0;
+
+    m_health = 0;
 }
 
 GameObject::~GameObject()
@@ -153,6 +155,13 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
     SetGoType(GameobjectTypes(goinfo->type));
     SetGoArtKit(0);                                         // unknown what this is
     SetGoAnimProgress(animprogress);
+
+    if (goinfo->type == GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING)
+    {
+        m_health = GetMaxHealth();
+        // destructible GO's show their "HP" as their animprogress
+        SetGoAnimProgress(255);
+    }
 
     //Notify the map's instance data.
     //Only works if you create the object in it, not if it is moves to that map.
@@ -1500,6 +1509,60 @@ void GameObject::Use(Unit* user)
     targets.setUnitTarget(user);
 
     spell->prepare(&targets);
+}
+
+void GameObject::DamageTaken(Unit* pDoneBy, uint32 damage)
+{
+    if (GetGoType() != GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING || !m_health)
+        return;
+
+    DEBUG_FILTER_LOG(LOG_FILTER_DAMAGE, "GO damage taken: %u to health %u", damage, m_health);
+
+    if (m_health > damage)
+        m_health -= damage;
+    else
+        m_health = 0;
+
+    if (HasFlag(GAMEOBJECT_FLAGS, GO_FLAG_DAMAGED)) // from damaged to destroyed
+    {
+        if (!m_health)
+        {
+            RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_DAMAGED);
+            SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_DESTROYED);
+            SetUInt32Value(GAMEOBJECT_DISPLAYID, m_goInfo->destructibleBuilding.destroyedDisplayId);
+        }
+    }
+    else                                            // from intact to damaged
+    {
+        if (m_health <= m_goInfo->destructibleBuilding.damagedNumHits)
+        {
+            SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_DAMAGED);
+            SetUInt32Value(GAMEOBJECT_DISPLAYID, m_goInfo->destructibleBuilding.damagedDisplayId);
+            // if we have a "dead" display we can "kill" the building after its damaged
+            if (m_goInfo->destructibleBuilding.destroyedDisplayId)
+            {
+                m_health = m_goInfo->destructibleBuilding.damagedNumHits;
+                if (!m_health)
+                    m_health = 1;
+            }
+            // otherwise we just handle it as "destroyed"
+            else
+                m_health = 0;
+         }
+    }
+    SetGoAnimProgress(m_health * 255 / GetMaxHealth());
+}
+
+void GameObject::Rebuild(Unit* pWho)
+{
+    if (GetGoType() != GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING)
+        return;
+
+    RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_DAMAGED | GO_FLAG_DESTROYED);
+    SetUInt32Value(GAMEOBJECT_DISPLAYID, m_goInfo->displayId);
+    m_health = GetMaxHealth();
+
+    SetGoAnimProgress(255);
 }
 
 // overwrite WorldObject function for proper name localization
