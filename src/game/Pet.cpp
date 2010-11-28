@@ -499,7 +499,10 @@ void Pet::Update(uint32 diff)
                 return;
             }
 
-            if (isControlled() && !IsWithinDistInMap(owner, GetMap()->GetVisibilityDistance()))
+            !IsWithinDistInMap(owner, GetMap()->GetVisibilityDistance()) && (owner->GetCharmGUID() && (owner->GetCharmGUID() != GetGUID())) && GetEntry() != 4277)
++		    || (isControlled() && !owner->GetPetGUID()
+
+            if (isControlled() && !IsWithinDistInMap(owner, GetMap()->GetVisibilityDistance()) && GetEntry() != 4277) // Eye of kilrogg should _never_ disappear when out of range
             {
                 DEBUG_LOG("Pet %d lost control, removed. Owner = %d, distance = %d, pet GUID = ", GetGUID(),owner->GetGUID(), GetDistance2d(owner), owner->GetPetGuid().GetCounter());
                 Unsummon(PET_SAVE_REAGENTS);
