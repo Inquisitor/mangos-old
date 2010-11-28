@@ -27,9 +27,9 @@ extern DatabaseMysql  WorldDatabase;
 
 const char CreatureInfosrcfmt[]="iiiiiiiiiisssiiiiibiiiiiifffiffiifiiiiiiiiiiffiiiiiiiiiiiiiiiiiiiisiiffliiiiiiiliiiis";
 const char CreatureInfodstfmt[]="iiiiiiiiiisssiiiiibiiiiiifffiffiifiiiiiiiiiiffiiiiiiiiiiiiiiiiiiiisiiffliiiiiiiliiiii";
-const char CreatureDataAddonInfofmt[]="iiiiiiiss";
+const char CreatureDataAddonInfofmt[]="iiilliiiiss";
 const char CreatureModelfmt[]="iffbii";
-const char CreatureInfoAddonInfofmt[]="iiiiiiiss";
+const char CreatureInfoAddonInfofmt[]="iiilliiiiss";
 const char EquipmentInfofmt[]="iiii";
 const char GameObjectInfosrcfmt[]="iiissssiifiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis";
 const char GameObjectInfodstfmt[]="iiissssiifiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii";
@@ -67,7 +67,7 @@ void SQLStorage::EraseEntry(uint32 id)
         else
             offset += 4;
 
-    reinterpret_cast<void*&>(pIndex[id]) = NULL;
+    pIndex[id] = NULL;
 }
 
 void SQLStorage::Free ()
