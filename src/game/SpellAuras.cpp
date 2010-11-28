@@ -452,10 +452,6 @@ m_isPersistent(false), m_in_use(0), m_spellAuraHolder(holder)
         m_periodicTimer += m_modifier.periodictime;
 
     m_stacking = IsEffectStacking();
-    if(!m_stacking)
-        printf("\n ! m_stacking is false ! \n ");
-    else
-        printf("\n ! m_stacking is true ! \n ");
 }
 
 Aura::~Aura()
