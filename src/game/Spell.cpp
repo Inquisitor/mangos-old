@@ -4647,6 +4647,23 @@ SpellCastResult Spell::CheckCast(bool strict)
                 return SPELL_FAILED_CASTER_AURASTATE;
         }
 
+        if(IsDispelSpell(m_spellInfo) && target->IsFriendlyTo(m_caster))
+        {
+            bool foundNeg = false;
+            Unit::SpellAuraHolderMap const& auras = target->GetSpellAuraHolderMap();
+            for(Unit::SpellAuraHolderMap::const_iterator itr = auras.begin(); itr != auras.end(); ++itr)
+            {
+                SpellAuraHolder *holder = itr->second;
+                if (!holder->IsPositive())
+                {
+                    foundNeg = true;
+                    break;
+                }
+            }
+            if (!foundNeg)
+                return SPELL_FAILED_NOTHING_TO_DISPEL;
+        }
+
         bool non_caster_target = target != m_caster && !IsSpellWithCasterSourceTargetsOnly(m_spellInfo);
 
         if(non_caster_target)
