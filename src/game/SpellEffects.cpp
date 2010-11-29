@@ -5137,6 +5137,11 @@ void Spell::EffectDispel(SpellEffectIndex eff_idx)
                 data << uint32(dispelledHolder->GetId());   // Spell Id
                 data << uint8(0);                           // 0 - dispelled !=0 cleansed
                 unitTarget->RemoveAuraHolderDueToSpellByDispel(dispelledHolder->GetId(), j->second, dispelledHolder->GetCasterGUID(), m_caster);
+                if(m_caster->IsHostileTo(unitTarget))
+                {
+                    m_caster->SetInCombatWith(unitTarget);
+                    unitTarget->SetInCombatWith(m_caster);
+                }
             }
             m_caster->SendMessageToSet(&data, true);
 
