@@ -4336,15 +4336,20 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
 
                 break;
             }
-            case 6358: // Glyph of Seduction
+            case 6358: // Seduction
             {
                 if (Unit* caster = GetCaster())
                 {
-                    if (caster->GetOwner() && caster->GetOwner()->HasAura(56250))
+                    if(!apply)
                     {
-                        target->RemoveSpellsCausingAura(SPELL_AURA_PERIODIC_DAMAGE);
-                        target->RemoveSpellsCausingAura(SPELL_AURA_PERIODIC_DAMAGE_PERCENT);
+                        if (caster->GetOwner() && caster->GetOwner()->HasAura(56250)) // Glyph of Seduction
+                        {
+                            target->RemoveSpellsCausingAura(SPELL_AURA_PERIODIC_DAMAGE);
+                            target->RemoveSpellsCausingAura(SPELL_AURA_PERIODIC_DAMAGE_PERCENT);
+                        }
                     }
+                    else
+                        caster->InterruptSpell(CURRENT_CHANNELED_SPELL, false);
                 }
                 break;
             }
