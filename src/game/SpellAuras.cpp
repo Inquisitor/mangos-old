@@ -9855,11 +9855,11 @@ bool Aura::IsEffectStacking()
 
 void Aura::HandleCharmConvert(bool apply, bool Real)
 {
-    if(!Real)
+    if (!Real)
         return;
 
     // At this moment effect is implemented only for Chains of Kel'thuzad.
-    if( GetId() != 28410 )
+    if (GetId() != 28410)
         return;
 
     // Get Caster
@@ -9869,16 +9869,14 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
         return;
 
     // Check types, target must be player and caster must be creature
-    if (uCaster->GetTypeId() != TYPEID_UNIT)
-        return;
-    if (uTarget->GetTypeId() != TYPEID_PLAYER)
+    if (uCaster->GetTypeId() != TYPEID_UNIT || uTarget->GetTypeId() != TYPEID_PLAYER)
         return;
 
     // Cast our object types
     Creature * caster = static_cast<Creature*>(uCaster);
     Player * target = static_cast<Player*>(uTarget);
 
-    if( apply )
+    if (apply)
     {
         target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
         target->SetCharmerGuid(GetCasterGuid());
@@ -9897,20 +9895,20 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
         ThreatList m_threatlist = uCaster->getThreatManager().getThreatList();
         std::vector<Unit*> targetlist;
 
-        if( !m_threatlist.empty() )
+        if (!m_threatlist.empty())
         {
-            for( ThreatList::iterator i = m_threatlist.begin(); i != m_threatlist.end(); ++i )
+            for (ThreatList::iterator i = m_threatlist.begin(); i != m_threatlist.end(); ++i )
             {
-                if( (*i)->getTarget() )
+                if ((*i)->getTarget())
                 {
                     Unit * mToAttack = (*i)->getTarget();
-                    if( mToAttack->GetTypeId() == TYPEID_PLAYER && mToAttack != target )
+                    if (mToAttack->GetTypeId() == TYPEID_PLAYER && mToAttack != target)
                         targetlist.push_back(mToAttack);
                 }
             }
         }
 
-        if( !targetlist.empty() )
+        if (!targetlist.empty())
         {
             // Select random player to attack from caster threat list
             Unit * selectedTarget = targetlist[int32(rand32())%targetlist.size()];
@@ -9925,7 +9923,7 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
     }
     else
     {
-        uTarget->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
+        target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
         target->SetCharmerGuid(ObjectGuid());
         target->setFactionForRace(uTarget->getRace());
         target->SetClientControl(uTarget, 1);
