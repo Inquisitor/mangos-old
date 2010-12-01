@@ -9771,8 +9771,7 @@ bool Aura::IsEffectStacking()
         // Flametongue Totem / Totem of Wrath / Strength of Earth Totem / Fel Intelligence / Leader of the Pack
         // Moonkin Aura / Mana Spring Totem / Tree of Life Aura / Improved Devotion Aura / Improved Icy Talons / Trueshot Aura
         // Improved Moonkin Form / Sanctified Retribution Aura / Blood Pact
-    for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i) 
-        if (GetSpellProto()->Effect[i] == SPELL_EFFECT_APPLY_AREA_AURA_RAID)
+        if (GetSpellProto()->Effect[m_effIndex] == SPELL_EFFECT_APPLY_AREA_AURA_RAID)
             return false;
 
         if(GetModifier())
@@ -9889,7 +9888,7 @@ void Aura::HandleCharmConvert(bool apply, bool Real)
         target->DeleteThreatList();
 
         // Check if caster can have threat list at all.
-        if( !uCaster->CanHaveThreatList() )
+        if (!uCaster->CanHaveThreatList())
             return;
 
         ThreatList m_threatlist = uCaster->getThreatManager().getThreatList();
