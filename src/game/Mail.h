@@ -34,6 +34,7 @@
 
 #include "Common.h"
 #include <map>
+#include "ObjectGuid.h"
 
 struct AuctionEntry;
 class Item;
