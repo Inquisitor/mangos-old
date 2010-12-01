@@ -15385,7 +15385,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     {
         BattleGround *currentBg = sBattleGroundMgr.GetBattleGround(m_bgData.bgInstanceID, BATTLEGROUND_TYPE_NONE);
 
-        bool player_at_bg = currentBg && currentBg->IsPlayerInBattleGround(GetGUID());
+        bool player_at_bg = currentBg && currentBg->IsPlayerInBattleGround(GetObjectGuid());
 
         if(player_at_bg && currentBg->GetStatus() != STATUS_WAIT_LEAVE)
         {
@@ -15395,7 +15395,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
             m_bgData.bgTypeID = currentBg->GetTypeID();
 
             //join player to battleground group
-            currentBg->EventPlayerLoggedIn(this, GetGUID());
+            currentBg->EventPlayerLoggedIn(this, GetObjectGuid());
             currentBg->AddOrSetPlayerToCorrectBgGroup(this, GetObjectGuid(), m_bgData.bgTeam);
 
             SetInviteForBattleGroundQueueType(bgQueueTypeId,currentBg->GetInstanceID());
@@ -15404,7 +15404,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
         {
             // leave bg
             if (player_at_bg)
-                currentBg->RemovePlayerAtLeave(GetGUID(), false, true);
+                currentBg->RemovePlayerAtLeave(GetObjectGuid(), false, true);
 
             // move to bg enter point
             const WorldLocation& _loc = GetBattleGroundEntryPoint();
@@ -16603,7 +16603,7 @@ void Player::_LoadSpells(QueryResult *result)
             if(GetTalentSpellPos(spell_id))
             {
                 sLog.outError("Player::_LoadSpells: %s has talent spell %u in character_spell, removing it.",
-                    GetObjectGuid().GetString().c_str(), spell_id);
+                    GetGuidStr().c_str(), spell_id);
                 CharacterDatabase.PExecute("DELETE FROM character_spell WHERE spell = '%u'", spell_id);
                 continue;
             }
@@ -16763,7 +16763,7 @@ void Player::_LoadBoundInstances(QueryResult *result)
             if(!perm && group)
             {
                 sLog.outError("_LoadBoundInstances: %s is in group (Id: %d) but has a non-permanent character bind to map %d,%d,%d",
-                    GetObjectGuid().GetString().c_str(), group->GetId(), mapId, instanceId, difficulty);
+                    GetGuidStr().c_str(), group->GetId(), mapId, instanceId, difficulty);
                 CharacterDatabase.PExecute("DELETE FROM character_instance WHERE guid = '%u' AND instance = '%u'",
                     GetGUIDLow(), instanceId);
                 continue;
@@ -19538,7 +19538,7 @@ void Player::LeaveBattleground(bool teleportToEntryPoint)
 {
     if(BattleGround *bg = GetBattleGround())
     {
-        bg->RemovePlayerAtLeave(GetGUID(), teleportToEntryPoint, true);
+        bg->RemovePlayerAtLeave(GetObjectGuid(), teleportToEntryPoint, true);
 
         // call after remove to be sure that player resurrected for correct cast
         if( bg->isBattleGround() && !isGameMaster() && sWorld.getConfig(CONFIG_BOOL_BATTLEGROUND_CAST_DESERTER) )
@@ -19748,7 +19748,7 @@ void Player::UpdateVisibilityOf(WorldObject const* viewPoint, T* target, UpdateD
             target->BuildOutOfRangeUpdateBlock(&data);
             m_clientGUIDs.erase(t_guid);
 
-            DEBUG_FILTER_LOG(LOG_FILTER_VISIBILITY_CHANGES, "%s is out of range for %s. Distance = %f", t_guid.GetString().c_str(), GetObjectGuid().GetString().c_str(), GetDistance(target));
+            DEBUG_FILTER_LOG(LOG_FILTER_VISIBILITY_CHANGES, "%s is out of range for %s. Distance = %f", t_guid.GetString().c_str(), GetGuidStr().c_str(), GetDistance(target));
         }
     }
     else
@@ -19759,7 +19759,7 @@ void Player::UpdateVisibilityOf(WorldObject const* viewPoint, T* target, UpdateD
             target->BuildCreateUpdateBlockForPlayer(&data, this);
             UpdateVisibilityOf_helper(m_clientGUIDs,target);
 
-            DEBUG_FILTER_LOG(LOG_FILTER_VISIBILITY_CHANGES, "%s is visible now for %s. Distance = %f", target->GetObjectGuid().GetString().c_str(), GetObjectGuid().GetString().c_str(), GetDistance(target));
+            DEBUG_FILTER_LOG(LOG_FILTER_VISIBILITY_CHANGES, "%s is visible now for %s. Distance = %f", target->GetGuidStr().c_str(), GetGuidStr().c_str(), GetDistance(target));
         }
     }
 }
