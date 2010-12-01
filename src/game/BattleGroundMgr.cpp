@@ -927,8 +927,14 @@ void BattleGroundQueue::Update(BattleGroundTypeId bgTypeId, BattleGroundBracketI
         }
 
         //set rating range
-        uint32 arenaMinRating = (arenaRating <= sBattleGroundMgr.GetMaxRatingDifference()) ? 0 : arenaRating - sBattleGroundMgr.GetMaxRatingDifference();
-        uint32 arenaMaxRating = arenaRating + sBattleGroundMgr.GetMaxRatingDifference();
+        if(arenaRating > 1000)
+        {
+            uint32 arenaMinRating = (arenaRating <= sBattleGroundMgr.GetMaxRatingDifference()) ? 0 : arenaRating - sBattleGroundMgr.GetMaxRatingDifference();
+            uint32 arenaMaxRating = arenaRating + sBattleGroundMgr.GetMaxRatingDifference();
+        } else {
+            uint32 arenaMinRating = 0;
+            uint32 arenaMaxRating = 1000 + sBattleGroundMgr.GetMaxRatingDifference();
+        }
         // if max rating difference is set and the time past since server startup is greater than the rating discard time
         // (after what time the ratings aren't taken into account when making teams) then
         // the discard time is current_time - time_to_discard, teams that joined after that, will have their ratings taken into account
