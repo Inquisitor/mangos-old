@@ -15242,7 +15242,7 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder *holder )
         return false;
     }
 
-    Object::_Create(ObjectGuid(HIGHGUID_PLAYER, guid));
+    Object::_Create(guid);
     // Feanor: to check smth
     //Object::_Create(guid.GetCounter(), 0, HIGHGUID_PLAYER );
 
