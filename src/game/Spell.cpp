@@ -467,7 +467,7 @@ bool Spell::FillCustomTargetMap(SpellEffectIndex i, UnitList &targetUnitMap)
                             break;
                         case TYPEID_CORPSE:
                             m_targets.setCorpseTarget((Corpse*)result);
-                            if (Player* owner = ObjectAccessor::FindPlayer(((Corpse*)result)->GetOwnerGUID()))
+                            if (Player* owner = ObjectAccessor::FindPlayer(((Corpse*)result)->GetOwnerGuid()))
                                 targetUnitMap.push_back(owner);
                             break;
                         default:

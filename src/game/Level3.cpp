@@ -4986,7 +4986,7 @@ bool ChatHandler::HandleServerIdleShutDownCommand(char* args)
 bool ChatHandler::HandleNewsGossipCommand(char* args)
 {
     Player* player;
-    uint64 target_guid;
+    ObjectGuid target_guid;
 
     if (!ExtractPlayerTarget(&args,&player,&target_guid))
         return false;
@@ -5038,7 +5038,7 @@ bool ChatHandler::HandleNewsGossipCommand(char* args)
     {
         player->PlayerTalkClass->SendGossipMenu(textId, player->GetGUID());
         player->PlayerTalkClass->SendGossipMenu(textId, player->GetGUID());
-        PSendSysMessage("Sending News Gossip nr. %u to player GUID: %u",entry,GUID_LOPART(target_guid));
+        PSendSysMessage("Sending News Gossip nr. %u to player GUID: %s",entry,target_guid.GetString().c_str());
     }
     return true;
 }
