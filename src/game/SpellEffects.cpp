@@ -3098,7 +3098,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     {
                         if ((*itr)->GetSpellProto()->SpellFamilyName==SPELLFAMILY_SHAMAN &&
                             ((*itr)->GetSpellProto()->SpellFamilyFlags & UI64LIT(0x0000000000200000)) &&
-                            (*itr)->GetCastItemGUID() == item->GetGUID())
+                            (*itr)->GetCastItemGuid() == item->GetObjectGuid())
                         {
                             m_damage += m_damage * damage / 100;
                             return;
@@ -7925,7 +7925,7 @@ void Spell::EffectDuel(SpellEffectIndex eff_idx)
     Player *target = (Player*)unitTarget;
 
     // caster or target already have requested duel
-    if( caster->duel || target->duel || !target->GetSocial() || target->GetSocial()->HasIgnore(caster->GetGUIDLow()) )
+    if( caster->duel || target->duel || !target->GetSocial() || target->GetSocial()->HasIgnore(caster->GetObjectGuid()) )
         return;
 
     // Players can only fight a duel with each other outside (=not inside dungeons and not in capital cities)
@@ -9378,7 +9378,7 @@ void Spell::EffectBind(SpellEffectIndex eff_idx)
         loc.mapid       = st->target_mapId;
         loc.coord_x     = st->target_X;
         loc.coord_y     = st->target_Y;
-        loc.coord_z     = st->target_Y;
+        loc.coord_z     = st->target_Z;
         loc.orientation = st->target_Orientation;
         area_id = sTerrainMgr.GetAreaId(loc.mapid, loc.coord_x, loc.coord_y, loc.coord_z);
     }
