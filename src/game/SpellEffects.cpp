@@ -1815,7 +1815,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 }
                 case 51858:                                 // Siphon of Acherus - Complete Quest
                 {
-                    if (!m_caster || !m_caster->isAlive())
+                    if (!m_caster || !m_caster->isAlive() || !m_originalCaster || !m_originalCaster->GetCharmer() || m_originalCaster->GetCharmer()->GetTypeId() != TYPEID_PLAYER)
                         return;
 
                     ((Player*)m_originalCaster->GetCharmer())->KilledMonsterCredit(m_caster->GetEntry(), m_caster->GetGUID());
