@@ -1813,14 +1813,14 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     ((Creature*)unitTarget)->ForcedDespawn(5000);
                     return;
                 }
-                case 51858:                                 // Siphon of Acherus - Complete Quest
+                /*case 51858:                                 // Siphon of Acherus - Complete Quest
                 {
                     if (!m_caster || !m_caster->isAlive() || !m_originalCaster || !m_originalCaster->GetCharmer() || m_originalCaster->GetCharmer()->GetTypeId() != TYPEID_PLAYER)
                         return;
 
                     ((Player*)m_originalCaster->GetCharmer())->KilledMonsterCredit(m_caster->GetEntry(), m_caster->GetGUID());
                         return;
-                }
+                }*/
                 case 51866:                                 // Kick Nass
                 {
                     // It is possible that Nass Heartbeat (spell id 61438) is involved in this
@@ -7014,7 +7014,7 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     }
                     return;
                 }
-                case 52694:                                 // Recall Eye of Acherus
+                /*case 52694:                                 // Recall Eye of Acherus
                 {
                     if(!m_caster || m_caster->GetTypeId() != TYPEID_UNIT)
                         return;
@@ -7035,7 +7035,7 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     m_caster->CleanupsBeforeDelete();
                     m_caster->AddObjectToRemoveList();
                         return;
-                }
+                }*/
                 case 52751:                                 // Death Gate
                 {
                     if (!unitTarget || unitTarget->getClass() != CLASS_DEATH_KNIGHT)
