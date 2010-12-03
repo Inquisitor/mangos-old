@@ -2893,7 +2893,7 @@ void Map::ScriptsProcess()
                 if (q_status.uState != QUEST_NEW) 
                     q_status.uState = QUEST_CHANGED;
 
-                user->SendQuestUpdateAddCreatureOrGo(pQuest, ObjectGuid(), x, oldCount, increment);
+                user->SendQuestUpdateAddCreatureOrGo(pQuest, ObjectGuid(), x, oldCount + increment);
                 if (user->CanCompleteQuest(QuestID))
                     user->CompleteQuest(QuestID);
 

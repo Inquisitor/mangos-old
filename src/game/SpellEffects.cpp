@@ -2109,7 +2109,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                             if (q_status.uState != QUEST_NEW) q_status.uState = QUEST_CHANGED;
 
-                            pPlr->SendQuestUpdateAddCreatureOrGo(pQuest, ObjectGuid(), 0, oldCount, m_counted);
+                            pPlr->SendQuestUpdateAddCreatureOrGo(pQuest, ObjectGuid(), 0, oldCount + m_counted);
                             if (pPlr->CanCompleteQuest(QuestID))
                                 pPlr->CompleteQuest(QuestID);
                         }
