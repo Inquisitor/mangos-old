@@ -462,7 +462,18 @@ void BattleGround::Update(uint32 diff)
 
                 for(BattleGroundPlayerMap::const_iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
                     if (Player *plr = sObjectMgr.GetPlayer(itr->first))
+                    {
+                        for(Unit::SpellAuraHolderMap::const_iterator iter = plr->GetSpellAuraHolderMap().begin(); iter != plr->GetSpellAuraHolderMap().end();)
+                        {
+                            if (!iter->second->IsPassive() && iter->second->IsPositive() && iter->second->GetId() != 32612)
+                                for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
+                                    if (Aura *aura = iter->second->GetAuraByEffectIndex(SpellEffectIndex(i)))
+                                        if (uint32(aura->GetAuraMaxDuration()) < 30000)
+                                             plr->RemoveAurasDueToSpell(iter->second->GetId());
+                        }
+
                         plr->RemoveAurasDueToSpell(SPELL_ARENA_PREPARATION);
+                    }
 
                 CheckArenaWinConditions();
             }
