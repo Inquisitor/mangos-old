@@ -644,7 +644,7 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
 {
     //FIXME: outfitId not used in player creating
 
-    Object::_Create(ObjectGuid(HIGHGUID_PLAYER, guidlow));
+    Object::_Create(guidlow, 0, HIGHGUID_PLAYER);
 
     m_name = name;
 
