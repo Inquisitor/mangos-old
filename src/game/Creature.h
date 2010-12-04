@@ -652,7 +652,7 @@ class MANGOS_DLL_SPEC Creature : public Unit
         void LockAI(bool lock) { m_AI_locked = lock; }
 
     protected:
-        bool CreateFromProto(ObjectGuid guid,uint32 Entry, Team team, const CreatureData *data = NULL);
+        bool CreateFromProto(uint32 guidlow,uint32 Entry, Team team, const CreatureData *data = NULL);
         bool InitEntry(uint32 entry, const CreatureData* data=NULL);
         void RelocationNotify();
 

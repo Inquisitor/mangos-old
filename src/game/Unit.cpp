@@ -9531,6 +9531,14 @@ uint32 Unit::CalculateSpellDuration(Unit const* caster, uint32 baseDuration, Spe
                         baseDuration += aur->GetModifier()->m_amount * MINUTE * IN_MILLISECONDS;
                 }
                 break;
+            case SPELLFAMILY_POTION:
+            {
+                // Mixology
+                if (HasAura(53042))
+                    baseDuration *= 2;
+
+                break;
+            }
             default:
                 break;
         }

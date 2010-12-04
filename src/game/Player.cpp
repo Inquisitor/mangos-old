@@ -644,7 +644,7 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
 {
     //FIXME: outfitId not used in player creating
 
-    Object::_Create(ObjectGuid(HIGHGUID_PLAYER, guidlow));
+    Object::_Create(guidlow, 0, HIGHGUID_PLAYER);
 
     m_name = name;
 
@@ -15242,9 +15242,7 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder *holder )
         return false;
     }
 
-    Object::_Create(guid);
-    // Feanor: to check smth
-    //Object::_Create(guid.GetCounter(), 0, HIGHGUID_PLAYER );
+    Object::_Create(guid.GetCounter(), 0, HIGHGUID_PLAYER );
 
     m_name = fields[2].GetCppString();
 
