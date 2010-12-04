@@ -463,7 +463,7 @@ void BattleGround::Update(uint32 diff)
                 for(BattleGroundPlayerMap::const_iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
                     if (Player *plr = sObjectMgr.GetPlayer(itr->first))
                     {
-                        for(Unit::SpellAuraHolderMap::const_iterator iter = plr->GetSpellAuraHolderMap().begin(); iter != plr->GetSpellAuraHolderMap().end();)
+                        for(Unit::SpellAuraHolderMap::const_iterator iter = plr->GetSpellAuraHolderMap().begin(); iter != plr->GetSpellAuraHolderMap().end(); ++iter)
                         {
                             if (!iter->second->IsPassive() && iter->second->IsPositive() && iter->second->GetId() != 32612)
                                 for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
