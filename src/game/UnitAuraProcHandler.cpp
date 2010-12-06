@@ -572,6 +572,7 @@ SpellAuraProcResult Unit::HandleSpellCritChanceAuraProc(Unit *pVictim, uint32 /*
 
 SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura* triggeredByAura, SpellEntry const * procSpell, uint32 procFlag, uint32 procEx, uint32 cooldown)
 {
+    printf("\n ! spellprooc for %i ! \n ", triggeredByAura ? triggeredByAura->GetSpellProto ()->Id : 0);
     SpellEntry const *dummySpell = triggeredByAura->GetSpellProto ();
     SpellEffectIndex effIndex = triggeredByAura->GetEffIndex();
     int32  triggerAmount = triggeredByAura->GetModifier()->m_amount;
@@ -1934,6 +1935,8 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
             // Glyph of Mend Pet
             if(dummySpell->Id == 57870)
             {
+                printf("\n ! glyph of mend pet ! \n ");
+                pVictim->MonsterSay("im victim of mp!", 0);
                 pVictim->CastSpell(pVictim, 57894, true, NULL, NULL, GetGUID());
                 return SPELL_AURA_PROC_OK;
             }
@@ -3185,10 +3188,14 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
             }
             else if(auraSpellInfo->Id == 71761)             // Deep Freeze Immunity State
             {
+                printf("\n ! deep freeze immunity state ! \n ");
                 // spell applied only to permanent immunes to stun targets (bosses)
                 if (pVictim->GetTypeId() != TYPEID_UNIT ||
                     (((Creature*)pVictim)->GetCreatureInfo()->MechanicImmuneMask & (1 << (MECHANIC_STUN - 1))) == 0)
+                {
+                    printf("\n ! proc failed ! \n ");
                     return SPELL_AURA_PROC_FAILED;
+                }
             }
             break;
         case SPELLFAMILY_WARRIOR:
@@ -3729,7 +3736,9 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
         case 56453:
         {
             // Proc only from trap activation (from periodic proc another aura of this spell)
-            if (!(procFlags & PROC_FLAG_ON_TRAP_ACTIVATION) || !roll_chance_i(triggerAmount))
+            // because some spells have both flags (ON_TRAP_ACTIVATION and ON_PERIODIC), but should only proc ON_PERIODIC!!
+            if (!(procFlags & PROC_FLAG_ON_TRAP_ACTIVATION) || !procSpell ||
+                !(procSpell->SchoolMask & SPELL_SCHOOL_MASK_FROST) || !roll_chance_i(triggerAmount))
                 return SPELL_AURA_PROC_FAILED;
             break;
         }

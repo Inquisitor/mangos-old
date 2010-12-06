@@ -9765,92 +9765,68 @@ void SpellAuraHolder::UnregisterSingleCastHolder()
 
 bool Aura::IsEffectStacking()
 {
-    //for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i) 
-   // {
+    // Flametongue Totem / Totem of Wrath / Strength of Earth Totem / Fel Intelligence / Leader of the Pack
+    // Moonkin Aura / Mana Spring Totem / Tree of Life Aura / Improved Devotion Aura / Improved Icy Talons / Trueshot Aura
+    // Improved Moonkin Form / Sanctified Retribution Aura / Blood Pact
+    if (GetSpellProto()->Effect[m_effIndex] == SPELL_EFFECT_APPLY_AREA_AURA_RAID)
+        return false;
 
-        // Flametongue Totem / Totem of Wrath / Strength of Earth Totem / Fel Intelligence / Leader of the Pack
-        // Moonkin Aura / Mana Spring Totem / Tree of Life Aura / Improved Devotion Aura / Improved Icy Talons / Trueshot Aura
-        // Improved Moonkin Form / Sanctified Retribution Aura / Blood Pact
-        if (GetSpellProto()->Effect[m_effIndex] == SPELL_EFFECT_APPLY_AREA_AURA_RAID)
+    if (GetSpellSpecific(GetSpellProto()->Id) == SPELL_SCROLL)
+        return false;
+
+    switch(GetModifier()->m_auraname)
+    {
+        case SPELL_AURA_MOD_HEALING_DONE:                               // Demonic Pact
+        case SPELL_AURA_MOD_DAMAGE_DONE:                                // Demonic Pact
+        case SPELL_AURA_HASTE_ALL:                                      // Imp. Moonkin Aur / Swift Retribution
+        case SPELL_AURA_MOD_HASTE:                                      // Improved Icy Talons
+        case SPELL_AURA_MOD_ATTACK_POWER_PCT:                           // Abomination's Might / Unleashed Rage
+        case SPELL_AURA_MOD_RANGED_ATTACK_POWER_PCT:
+        case SPELL_AURA_MOD_ATTACK_POWER:                               // (Greater) Blessing of Might / Battle Shout
+        case SPELL_AURA_MOD_RANGED_ATTACK_POWER:
+        case SPELL_AURA_MOD_POWER_REGEN:                                // (Greater) Blessing of Wisdom
+        case SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN:                       // Renewed Hope / (Greater) Blessing of Sanctuary / Vigilance // Glyph of Salvation / Pain Suppression / Safeguard ?
+            if (GetSpellProto()->AttributesEx6 & SPELL_ATTR_EX6_UNK26)
+                return false;
+            break;
+        case SPELL_AURA_MOD_STAT:
+            // Horn of Winter / Arcane Intellect / Divine Spirit
+            if (GetSpellProto()->AttributesEx6 & SPELL_ATTR_EX6_UNK26 &&
+                (GetSpellProto()->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT ||
+                GetSpellProto()->SpellFamilyName == SPELLFAMILY_MAGE ||
+                GetSpellProto()->SpellFamilyName == SPELLFAMILY_PRIEST) )
+                return false;
+            break;
+        case SPELL_AURA_MOD_CRIT_PERCENT:
+            // Rampage
+            if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_WARRIOR && GetSpellProto()->SpellIconID == 2006)
+                return false;
+            break;
+        case SPELL_AURA_MOD_SPELL_CRIT_CHANCE:
+            // Elemental Oath
+            if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_SHAMAN && GetSpellProto()->AttributesEx6 & SPELL_ATTR_EX6_UNK26)
+                return false;
+            break;
+        case SPELL_AURA_MOD_RESISTANCE_PCT:
+            // Ancestral Healing / Inspiration
+            if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_SHAMAN ||
+                GetSpellProto()->SpellFamilyName == SPELLFAMILY_PRIEST)
+                return false;
+            break;
+        // case SPELL_AURA_MOD_HEALING_PCT:
+            // break;
+        case SPELL_AURA_MOD_RESISTANCE_EXCLUSIVE:
+            return false;
+        case SPELL_AURA_MOD_PARTY_MAX_HEALTH:
+            // Commanding Shout
             return false;
 
-        if(GetModifier())
-        {
-            if(GetModifier()->m_auraname)
-            {
-                switch(GetModifier()->m_auraname)
-                {
-                    // case SPELL_AURA_MOD_DAMAGE_DONE:
-                    // case SPELL_AURA_MOD_HEALING_DONE:
-                        // break;
-                    case SPELL_AURA_MOD_STAT:
-                        // Horn of Winter / Arcane Intellect / Divine Spirit
-                        if (GetSpellProto()->AttributesEx6 & SPELL_ATTR_EX6_UNK26 &&
-                            (GetSpellProto()->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT ||
-                            GetSpellProto()->SpellFamilyName == SPELLFAMILY_MAGE ||
-                            GetSpellProto()->SpellFamilyName == SPELLFAMILY_PRIEST) )
-                            return false;
-                        break;
-                    case SPELL_AURA_MOD_CRIT_PERCENT:
-                        // Rampage
-                        if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_WARRIOR && GetSpellProto()->SpellIconID == 2006)
-                            return false;
-                        break;
-                    case SPELL_AURA_MOD_SPELL_CRIT_CHANCE:
-                        // Elemental Oath
-                        if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_SHAMAN && GetSpellProto()->AttributesEx6 & SPELL_ATTR_EX6_UNK26)
-                            return false;
-                        break;
-                    case SPELL_AURA_MOD_POWER_REGEN:
-                        // (Greater) Blessing of Wisdom
-                        if (GetSpellProto()->AttributesEx6 & SPELL_ATTR_EX6_UNK26)
-                            return false;
-                        break;
-                    case SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN:
-                        // Renewed Hope / (Greater) Blessing of Sanctuary / Vigilance
-                        // Glyph of Salvation / Pain Suppression / Safeguard ?
-                        if (GetSpellProto()->AttributesEx6 & SPELL_ATTR_EX6_UNK26)
-                            return false;
-                        break;
-                    case SPELL_AURA_MOD_ATTACK_POWER:
-                    case SPELL_AURA_MOD_RANGED_ATTACK_POWER:
-                        // (Greater) Blessing of Might / Battle Shout
-                        if (GetSpellProto()->AttributesEx6 & SPELL_ATTR_EX6_UNK26)
-                            return false;
-                        break;
-                    case SPELL_AURA_MOD_RESISTANCE_PCT:
-                        // Ancestral Healing / Inspiration
-                        if (GetSpellProto()->SpellFamilyName == SPELLFAMILY_SHAMAN ||
-                            GetSpellProto()->SpellFamilyName == SPELLFAMILY_PRIEST)
-                            return false;
-                        break;
-                    case SPELL_AURA_MOD_HASTE:
-                        // Improved Icy Talons
-                        if (GetSpellProto()->AttributesEx6 & SPELL_ATTR_EX6_UNK26)
-                            return false;
-                        break;
-                    // case SPELL_AURA_MOD_HEALING_PCT:
-                        // break;
-                    case SPELL_AURA_MOD_RESISTANCE_EXCLUSIVE:
-                        return false;
-                    case SPELL_AURA_MOD_ATTACK_POWER_PCT:
-                    case SPELL_AURA_MOD_RANGED_ATTACK_POWER_PCT:
-                        // Abomination's Might / Unleashed Rage
-                        if (GetSpellProto()->AttributesEx6 & SPELL_ATTR_EX6_UNK26)
-                            return false;
-                        break;
-                    // case SPELL_AURA_MELEE_SLOW:
-                        // break;
-                    case SPELL_AURA_MOD_PARTY_MAX_HEALTH:
-                        // Commanding Shout
-                        return false;
-                }
-            }
-        }
-   // }
-
+        default:
+            return true;
+    }
     return true;
 }
+
 
 void Aura::HandleCharmConvert(bool apply, bool Real)
 {

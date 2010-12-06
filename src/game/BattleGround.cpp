@@ -462,7 +462,18 @@ void BattleGround::Update(uint32 diff)
 
                 for(BattleGroundPlayerMap::const_iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
                     if (Player *plr = sObjectMgr.GetPlayer(itr->first))
+                    {
+                        for(Unit::SpellAuraHolderMap::const_iterator iter = plr->GetSpellAuraHolderMap().begin(); iter != plr->GetSpellAuraHolderMap().end(); ++iter)
+                        {
+                            if (!iter->second->IsPassive() && iter->second->IsPositive() && iter->second->GetId() != 32612)
+                                for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
+                                    if (Aura *aura = iter->second->GetAuraByEffectIndex(SpellEffectIndex(i)))
+                                        if (uint32(aura->GetAuraMaxDuration()) < 30000)
+                                             plr->RemoveAurasDueToSpell(iter->second->GetId());
+                        }
+
                         plr->RemoveAurasDueToSpell(SPELL_ARENA_PREPARATION);
+                    }
 
                 CheckArenaWinConditions();
             }
@@ -873,7 +884,7 @@ void BattleGround::EndBattleGround(Team winner)
 
             if (IsRandom() || BattleGroundMgr::IsBGWeekend(GetTypeID()))
             {
-                UpdatePlayerScore(plr, SCORE_BONUS_HONOR, GetBonusHonorFromKill(win_kills*4));
+                UpdatePlayerScore(plr, SCORE_BONUS_HONOR, GetBonusHonorFromKill(win_kills));
                 //plr->ModifyArenaPoints(win_arena); // CHANGE ME: When AP from BG will be enabled
                 if(!plr->GetRandomWinner())
                     plr->SetRandomWinner(true);
@@ -885,7 +896,7 @@ void BattleGround::EndBattleGround(Team winner)
         {
             RewardMark(plr,ITEM_LOSER_COUNT);
             if (IsRandom() || BattleGroundMgr::IsBGWeekend(GetTypeID()))
-                UpdatePlayerScore(plr, SCORE_BONUS_HONOR, GetBonusHonorFromKill(loos_kills*4));
+                UpdatePlayerScore(plr, SCORE_BONUS_HONOR, GetBonusHonorFromKill(loos_kills));
         }
 
         plr->CombatStopWithPets(true);

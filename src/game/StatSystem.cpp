@@ -114,8 +114,11 @@ void Player::UpdateSpellDamageAndHealingBonus()
     for(int i = SPELL_SCHOOL_HOLY; i < MAX_SPELL_SCHOOL; ++i)
         SetStatInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS+i, SpellBaseDamageBonusDone(SpellSchoolMask(1 << i)) - GetInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_NEG+i));
 
-    CallForAllControlledUnits(ApplyScalingBonusWithHelper(SCALING_TARGET_ATTACKPOWER, 0, false),CONTROLLED_PET|CONTROLLED_GUARDIANS);
-    CallForAllControlledUnits(ApplyScalingBonusWithHelper(SCALING_TARGET_SPELLDAMAGE, 0, false),CONTROLLED_PET|CONTROLLED_GUARDIANS);
+    if(IsInWorld())
+    {
+        CallForAllControlledUnits(ApplyScalingBonusWithHelper(SCALING_TARGET_ATTACKPOWER, 0, false),CONTROLLED_PET|CONTROLLED_GUARDIANS);
+        CallForAllControlledUnits(ApplyScalingBonusWithHelper(SCALING_TARGET_SPELLDAMAGE, 0, false),CONTROLLED_PET|CONTROLLED_GUARDIANS);
+    }
 }
 
 bool Player::UpdateAllStats()
@@ -160,7 +163,8 @@ void Player::UpdateResistances(uint32 school)
     else
         UpdateArmor();
 
-    CallForAllControlledUnits(ApplyScalingBonusWithHelper(SCALING_TARGET_RESISTANCE, school, false),CONTROLLED_PET|CONTROLLED_GUARDIANS);
+    if(IsInWorld())
+        CallForAllControlledUnits(ApplyScalingBonusWithHelper(SCALING_TARGET_RESISTANCE, school, false),CONTROLLED_PET|CONTROLLED_GUARDIANS);
 }
 
 void Player::UpdateArmor()
@@ -616,8 +620,9 @@ void Player::UpdateMeleeHitChances()
 {
     m_modMeleeHitChance = GetTotalAuraModifier(SPELL_AURA_MOD_HIT_CHANCE);
     m_modMeleeHitChance+=  GetRatingBonusValue(CR_HIT_MELEE);
-
-    CallForAllControlledUnits(ApplyScalingBonusWithHelper(SCALING_TARGET_HIT, 0, false),CONTROLLED_PET|CONTROLLED_GUARDIANS);
+    
+    if(IsInWorld())
+        CallForAllControlledUnits(ApplyScalingBonusWithHelper(SCALING_TARGET_HIT, 0, false),CONTROLLED_PET|CONTROLLED_GUARDIANS);
 }
 
 void Player::UpdateRangedHitChances()
