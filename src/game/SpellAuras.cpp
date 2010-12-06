@@ -4310,13 +4310,10 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
             target->SetStandState(UNIT_STAND_STATE_STAND);// in 1.5 client
         }
 
-        if(!target->hasUnitState(UNIT_STAT_ON_VEHICLE))
-        {
-            WorldPacket data(SMSG_FORCE_MOVE_ROOT, 8);
-            data << target->GetPackGUID();
-            data << uint32(0);
-            target->SendMessageToSet(&data,true);
-        }
+        WorldPacket data(SMSG_FORCE_MOVE_ROOT, 8);
+        data << target->GetPackGUID();
+        data << uint32(0);
+        target->SendMessageToSet(&data, true);
 
         // Summon the Naj'entus Spine GameObject on target if spell is Impaling Spine
         switch(GetId())

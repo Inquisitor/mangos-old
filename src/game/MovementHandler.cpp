@@ -335,8 +335,6 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     data << mover->GetPackGUID();             // write guid
     movementInfo.Write(data);                               // write data
     mover->SendMessageToSetExcept(&data, _player);
-    mover->m_movementInfo = movementInfo;
-    mover->SetPosition(movementInfo.GetPos()->x, movementInfo.GetPos()->y, movementInfo.GetPos()->z, movementInfo.GetPos()->o);
 }
 
 void WorldSession::HandleForceSpeedChangeAckOpcodes(WorldPacket &recv_data)

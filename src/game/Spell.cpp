@@ -43,6 +43,7 @@
 #include "VMapFactory.h"
 #include "BattleGround.h"
 #include "Util.h"
+#include "Vehicle.h"
 
 #define SPELL_CHANNEL_UPDATE_INTERVAL (1 * IN_MILLISECONDS)
 
@@ -2133,6 +2134,11 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 if( target->GetTypeId() == TYPEID_UNIT && ((Creature*)target)->IsPet() && ((Pet*)target)->getPetType() == MINI_PET)
                     targetUnitMap.push_back(target);
             break;
+        case TARGET_OWNED_VEHICLE:
+            if (VehicleKit* vehicle = m_caster->GetVehicle())
+                if (Unit* target = vehicle->GetBase())
+                    targetUnitMap.push_back(target);
+            break;
         case TARGET_CASTER_COORDINATES:
         {
             // Check original caster is GO - set its coordinates as dst cast
@@ -3511,7 +3517,7 @@ void Spell::update(uint32 difftime)
                         for(std::list<TargetInfo>::iterator ihit = m_UniqueTargetInfo.begin(); ihit != m_UniqueTargetInfo.end(); ++ihit)
                         {
                             TargetInfo* target = &*ihit;
-                            if(!target->targetGUID.IsCreature())
+                            if(!target->targetGUID.IsCreatureOrVehicle())
                                 continue;
 
                             Unit* unit = m_caster->GetObjectGuid() == target->targetGUID ? m_caster : ObjectAccessor::GetUnit(*m_caster, target->targetGUID);
@@ -3622,12 +3628,7 @@ void Spell::finish(bool ok)
             }
         }
         if (needDrop)
-        {
-            if(m_caster->GetTypeId() == TYPEID_PLAYER)
-                ((Player*)m_caster)->ClearComboPoints();
-            else
-                ((Player*)m_caster->GetCharmer())->ClearComboPoints();
-        }
+            ((Player*)m_caster)->ClearComboPoints();
     }
 
     // potions disabled by client, send event "not in combat" if need
