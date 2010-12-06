@@ -2286,18 +2286,11 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     return;
                 }
                 case 48610:                                 // Q:Shredder Repair
-                {
-                    //if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->IsVehicle())
-                        //((Vehicle*)m_caster)->Dismiss();
-
-                    return;
-                }
                 case 52264:                                 // Q:Grand Theft Palomino
                 case 45877:                                 // Q:Bring 'Em Back Alive
                 {
-                   // if (m_caster->GetVehicleGUID() != 0)
-                    //    m_caster->ExitVehicle();
-
+                   if(m_caster->GetObjectGuid().IsVehicle())
+                        ((Creature*)m_caster)->ForcedDespawn();
                     return;
                 }
 
