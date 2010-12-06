@@ -453,6 +453,12 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                         damage = unitTarget->GetMaxHealth() / 2;
                         break;
                     }
+                    case 50341:
+                    {
+                        if(effect_idx == EFFECT_INDEX_2)
+                            damage = unitTarget->GetHealth() * 0.3;
+                        break;
+                    }
                     // Explode
                     case 47496:
                     {
