@@ -5442,6 +5442,12 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
                 }
                 break;
             }
+            case SPELLFAMILY_GENERIC:
+            { 	
+                if(spellProto->Id == 50344)
+                    m_modifier.m_amount = caster->GetMaxHealth() * 0.05;
+                break;
+            }
             default:
                 break;
         }
