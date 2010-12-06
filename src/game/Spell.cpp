@@ -3606,7 +3606,7 @@ void Spell::finish(bool ok)
         m_caster->resetAttackTimer(RANGED_ATTACK);*/
 
     // Clear combo at finish state
-    if((m_caster->GetTypeId() == TYPEID_PLAYER || ((Creature*)m_caster)->IsVehicle()) && NeedsComboPoints(m_spellInfo))
+    if(m_caster->GetTypeId() == TYPEID_PLAYER && NeedsComboPoints(m_spellInfo))
     {
         // Not drop combopoints if negative spell and if any miss on enemy exist
         bool needDrop = true;
@@ -4859,17 +4859,20 @@ SpellCastResult Spell::CheckCast(bool strict)
     if (locRes != SPELL_CAST_OK)
         return locRes;
 
+    bool castOnVehicleAllowed = false;
+
+    if (m_caster->GetVehicle())
+        if ( VehicleSeatEntry const* seatInfo = m_caster->GetVehicle()->GetSeatInfo(m_caster))
+            if (seatInfo->m_flags & SEAT_FLAG_CAN_CAST || seatInfo->m_flags & SEAT_FLAG_CAN_ATTACK)
+                castOnVehicleAllowed = true;
+
+
     // not let players cast spells at mount (and let do it to creatures)
-    if ((m_caster->IsMounted() || m_caster->GetVehicle() || m_caster->GetVehicleGUID()) && m_caster->GetTypeId()==TYPEID_PLAYER && !m_IsTriggeredSpell &&
+    if ((m_caster->IsMounted() || (m_caster->GetVehicle() && !castOnVehicleAllowed)) && m_caster->GetTypeId() == TYPEID_PLAYER && !m_IsTriggeredSpell && 
         !IsPassiveSpell(m_spellInfo) && !(m_spellInfo->Attributes & SPELL_ATTR_CASTABLE_WHILE_MOUNTED))
     {
         if (m_caster->IsTaxiFlying())
             return SPELL_FAILED_NOT_ON_TAXI;
-        else if(m_caster->GetVehicleGUID() || m_caster->GetVehicle())
-        {
-            if(!(m_caster->m_movementInfo.GetVehicleSeatFlags() & SF_CAN_CAST))
-                return SPELL_FAILED_NOT_MOUNTED;
-        }
         else
             return SPELL_FAILED_NOT_MOUNTED;
     }
@@ -5455,6 +5458,10 @@ SpellCastResult Spell::CheckCast(bool strict)
                     if(BattleGround const *bg = ((Player*)m_caster)->GetBattleGround())
                         if(bg->GetStatus() != STATUS_IN_PROGRESS)
                             return SPELL_FAILED_TRY_AGAIN;
+
+                    if(((Player*)m_caster)->HasMovementFlag(MOVEFLAG_ONTRANSPORT))
+                        return SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
+
                 break;
             }
             case SPELL_EFFECT_STEAL_BENEFICIAL_BUFF:

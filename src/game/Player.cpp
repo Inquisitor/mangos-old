@@ -406,8 +406,6 @@ UpdateMask Player::updateVisualBits;
 
 Player::Player (WorldSession *session): Unit(), m_mover(this), m_camera(this), m_achievementMgr(this), m_reputationMgr(this)
 {
-    m_transport = 0;
-
     m_speakTime = 0;
     m_speakCount = 0;
 
@@ -613,9 +611,7 @@ Player::~Player ()
     delete PlayerTalkClass;
 
     if (m_transport)
-    {
         m_transport->RemovePassenger(this);
-    }
 
     for(size_t x = 0; x < ItemSetEff.size(); x++)
         if(ItemSetEff[x])
@@ -644,7 +640,7 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
 {
     //FIXME: outfitId not used in player creating
 
-    Object::_Create(guidlow, 0, HIGHGUID_PLAYER);
+    Object::_Create(ObjectGuid(HIGHGUID_PLAYER, guidlow));
 
     m_name = name;
 
@@ -1757,7 +1753,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
     if (!(options & TELE_TO_NOT_LEAVE_TRANSPORT) && m_transport)
     {
         m_transport->RemovePassenger(this);
-        m_transport = NULL;
+        SetTransport(NULL);
         m_movementInfo.ClearTransportData();
     }
 
@@ -1779,7 +1775,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
     // reset movement flags at teleport, because player will continue move with these flags after teleport
     m_movementInfo.SetMovementFlags(MOVEFLAG_NONE);
 
-    if ((GetMapId() == mapid) && (!m_transport))
+    if (GetMapId() == mapid && !m_transport)
     {
         //lets reset far teleport flag if it wasn't reset during chained teleports
         SetSemaphoreTeleportFar(false);
@@ -2240,11 +2236,11 @@ Creature* Player::GetNPCIfCanInteractWith(ObjectGuid guid, uint32 npcflagmask)
         return NULL;
 
     // not in interactive state
-    if (hasUnitState(UNIT_STAT_CAN_NOT_REACT_OR_LOST_CONTROL))
+    if (hasUnitState(UNIT_STAT_CAN_NOT_REACT_OR_LOST_CONTROL)  && !hasUnitState(UNIT_STAT_ON_VEHICLE))
         return NULL;
 
     // exist (we need look pets also for some interaction (quest/etc)
-    Creature *unit = ObjectAccessor::GetAnyTypeCreature(*this,guid);
+    Creature *unit = GetMap()->GetAnyTypeCreature(guid);
     if (!unit)
         return NULL;
 
@@ -2294,7 +2290,7 @@ GameObject* Player::GetGameObjectIfCanInteractWith(ObjectGuid guid, uint32 gameo
         return NULL;
 
     // not in interactive state
-    if (hasUnitState(UNIT_STAT_CAN_NOT_REACT_OR_LOST_CONTROL))
+    if (hasUnitState(UNIT_STAT_CAN_NOT_REACT_OR_LOST_CONTROL) && !hasUnitState(UNIT_STAT_ON_VEHICLE))
         return NULL;
 
     if (GameObject *go = GetMap()->GetGameObject(guid))
@@ -2522,6 +2518,9 @@ void Player::GiveXP(uint32 xp, Unit* victim)
     if(HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_XP_USER_DISABLED))
         return;
 
+    if(hasUnitState(UNIT_STAT_ON_VEHICLE))
+        return;
+
     uint32 level = getLevel();
 
     //prevent Northrend Level Leeching :P
@@ -2662,6 +2661,12 @@ void Player::UpdateFreeTalentPoints(bool resetIfNeed)
     }
     else
     {
+        if (m_specsCount == 0)
+        {
+            m_specsCount = 1;
+            m_activeSpec = 0;
+        }
+
         uint32 talentPointsForLevel = CalculateTalentsPoints();
 
         // if used more that have then reset
@@ -3810,6 +3815,8 @@ bool Player::resetTalents(bool no_cost, bool all_specs)
             return false;
         }
     }
+
+    RemoveAllEnchantments(TEMP_ENCHANTMENT_SLOT);
 
     for (PlayerTalentMap::iterator iter = m_talents[m_activeSpec].begin(); iter != m_talents[m_activeSpec].end();)
     {
@@ -6054,12 +6061,6 @@ bool Player::SetPosition(float x, float y, float z, float orientation, bool tele
     if(!Unit::SetPosition(x, y, z, orientation, teleport))
         return false;
 
-    if(!MaNGOS::IsValidMapCoord(x,y,z,orientation))
-    {
-        DEBUG_LOG("Player::SetPosition(%f, %f, %f, %f, %d) .. bad coordinates for player %d!",x,y,z,orientation,teleport,GetGUIDLow());
-        return false;
-    }
-
     Map *m = GetMap();
 
     const float old_x = GetPositionX();
@@ -8051,6 +8052,7 @@ void Player::SendLoot(ObjectGuid guid, LootType loot_type)
             break;
         }
         case HIGHGUID_UNIT:
+        case HIGHGUID_VEHICLE:
         {
             Creature *creature = GetMap()->GetCreature(guid);
 
@@ -13235,8 +13237,7 @@ void Player::PrepareQuestMenu(ObjectGuid guid)
     QuestRelationsMapBounds irbounds;
 
     // pets also can have quests
-    Creature *pCreature = ObjectAccessor::GetAnyTypeCreature(*this, guid);
-    if (pCreature)
+    if (Creature *pCreature = GetMap()->GetAnyTypeCreature(guid))
     {
         rbounds = sObjectMgr.GetCreatureQuestRelationsMapBounds(pCreature->GetEntry());
         irbounds = sObjectMgr.GetCreatureQuestInvolvedRelationsMapBounds(pCreature->GetEntry());
@@ -13338,8 +13339,7 @@ void Player::SendPreparedQuest(ObjectGuid guid)
         std::string title = "";
 
         // need pet case for some quests
-        Creature *pCreature = ObjectAccessor::GetAnyTypeCreature(*this,guid);
-        if (pCreature)
+        if (Creature *pCreature = GetMap()->GetAnyTypeCreature(guid))
         {
             uint32 textid = GetGossipTextId(pCreature);
 
@@ -13410,8 +13410,7 @@ Quest const* Player::GetNextQuest(ObjectGuid guid, Quest const *pQuest)
 {
     QuestRelationsMapBounds rbounds;
 
-    Creature *pCreature = ObjectAccessor::GetAnyTypeCreature(*this,guid);
-    if( pCreature )
+    if (Creature *pCreature = GetMap()->GetAnyTypeCreature(guid))
     {
         rbounds = sObjectMgr.GetCreatureQuestRelationsMapBounds(pCreature->GetEntry());
     }
@@ -14677,7 +14676,7 @@ void Player::KilledMonsterCredit( uint32 entry, ObjectGuid guid )
 
 void Player::CastedCreatureOrGO( uint32 entry, ObjectGuid guid, uint32 spell_id, bool original_caster )
 {
-    bool isCreature = guid.IsCreature();
+    bool isCreature = guid.IsCreatureOrVehicle();
 
     uint32 addCastCount = 1;
     for(int i = 0; i < MAX_QUEST_LOG_SIZE; ++i)
@@ -15242,7 +15241,7 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder *holder )
         return false;
     }
 
-    Object::_Create(guid.GetCounter(), 0, HIGHGUID_PLAYER );
+    Object::_Create(guid);
 
     m_name = fields[2].GetCppString();
 
@@ -15457,19 +15456,21 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder *holder )
     {
         for (MapManager::TransportSet::const_iterator iter = sMapMgr.m_Transports.begin(); iter != sMapMgr.m_Transports.end(); ++iter)
         {
-            if( (*iter)->GetGUIDLow() == transGUID)
+            Transport* transport = *iter;
+
+            if (transport->GetGUIDLow() == transGUID)
             {
-                MapEntry const* transMapEntry = sMapStore.LookupEntry((*iter)->GetMapId());
+                MapEntry const* transMapEntry = sMapStore.LookupEntry(transport->GetMapId());
                 // client without expansion support
                 if(GetSession()->Expansion() < transMapEntry->Expansion())
                 {
-                    DEBUG_LOG("Player %s using client without required expansion tried login at transport at non accessible map %u", GetName(), (*iter)->GetMapId());
+                    DEBUG_LOG("Player %s using client without required expansion tried login at transport at non accessible map %u", GetName(), transport->GetMapId());
                     break;
                 }
 
-                m_transport = *iter;
-                m_transport->AddPassenger(this);
-                SetLocationMapId(m_transport->GetMapId());
+                SetTransport(transport);
+                transport->AddPassenger(this);
+                SetLocationMapId(transport->GetMapId());
                 break;
             }
         }
@@ -18209,6 +18210,59 @@ void Player::PossessSpellInitialize()
     GetSession()->SendPacket(&data);
 }
 
+void Player::VehicleSpellInitialize()
+{
+    Creature* charm = (Creature*)GetCharm();
+
+    if (!charm)
+        return;
+
+    CharmInfo *charmInfo = charm->GetCharmInfo();
+
+    if (!charmInfo)
+    {
+        sLog.outError("Player::VehicleSpellInitialize(): vehicle (GUID: %u) has no charminfo!", charm->GetGUIDLow());
+        return;
+    }
+
+    size_t cooldownsCount = charm->m_CreatureSpellCooldowns.size() + charm->m_CreatureCategoryCooldowns.size();
+
+    WorldPacket data(SMSG_PET_SPELLS, 8+2+4+4+4*MAX_UNIT_ACTION_BAR_INDEX+1+1+cooldownsCount*(4+2+4+4));
+    data << charm->GetObjectGuid();
+    data << uint16(0);
+    data << uint32(0);
+    data << uint32(0x08000101);                             // react state
+
+    charmInfo->BuildActionBar(&data);
+
+    data << uint8(0);                                       // additional spells count
+    data << uint8(cooldownsCount);
+
+    time_t curTime = time(NULL);
+
+    for (CreatureSpellCooldowns::const_iterator itr = charm->m_CreatureSpellCooldowns.begin(); itr != charm->m_CreatureSpellCooldowns.end(); ++itr)
+    {
+        time_t cooldown = (itr->second > curTime) ? (itr->second - curTime) * IN_MILLISECONDS : 0;
+
+        data << uint32(itr->first);                         // spellid
+        data << uint16(0);                                  // spell category?
+        data << uint32(cooldown);                           // cooldown
+        data << uint32(0);                                  // category cooldown
+    }
+
+    for (CreatureSpellCooldowns::const_iterator itr = charm->m_CreatureCategoryCooldowns.begin(); itr != charm->m_CreatureCategoryCooldowns.end(); ++itr)
+    {
+        time_t cooldown = (itr->second > curTime) ? (itr->second - curTime) * IN_MILLISECONDS : 0;
+
+        data << uint32(itr->first);                         // spellid
+        data << uint16(0);                                  // spell category?
+        data << uint32(0);                                  // cooldown
+        data << uint32(cooldown);                           // category cooldown
+    }
+
+    GetSession()->SendPacket(&data);
+}
+
 void Player::CharmSpellInitialize()
 {
     Unit* charm = GetCharm();
@@ -18529,7 +18583,7 @@ bool Player::ActivateTaxiPathTo(std::vector<uint32> const& nodes, Creature* npc 
     if(npc)
     {
         // not let cheating with start flight mounted
-        if(IsMounted() || GetVehicle() || GetVehicleGUID())
+        if(IsMounted() || GetVehicle())
         {
             WorldPacket data(SMSG_ACTIVATETAXIREPLY, 4);
             data << uint32(ERR_TAXIPLAYERALREADYMOUNTED);
@@ -19781,22 +19835,13 @@ void Player::InitPrimaryProfessions()
 void Player::SendComboPoints()
 {
     Unit *combotarget = ObjectAccessor::GetUnit(*this, m_comboTargetGuid);
-    if (!combotarget)
-        return;
-
-    WorldPacket data;
-    if(!GetVehicleGUID())
-        data.Initialize(SMSG_UPDATE_COMBO_POINTS, combotarget->GetPackGUID().size()+1);
-    else{
-       if(Unit *vehicle = ObjectAccessor::GetUnit(*this, GetVehicleGUID()))
-       {
-           data.Initialize(SMSG_PET_UPDATE_COMBO_POINTS, vehicle->GetPackGUID().size()+combotarget->GetPackGUID().size()+1);
-           data << vehicle->GetPackGUID();
-       }else return;
+    if (combotarget)
+    {
+        WorldPacket data(SMSG_UPDATE_COMBO_POINTS, combotarget->GetPackGUID().size()+1);
+        data << combotarget->GetPackGUID();
+        data << uint8(m_comboPoints);
+        GetSession()->SendPacket(&data);
     }
-    data << combotarget->GetPackGUID();
-    data << uint8(m_comboPoints);
-    GetSession()->SendPacket(&data);
 }
 
 void Player::AddComboPoints(Unit* target, int8 count)
@@ -19964,11 +20009,11 @@ void Player::SendInitialPacketsAfterAddToMap()
         SendMessageToSet(&data2,true);
     }
 
-    if(GetVehicle() || GetVehicleGUID())
+    if(GetVehicle())
     {
         WorldPacket data3(SMSG_FORCE_MOVE_ROOT, 10);
         data3 << GetPackGUID();
-        data3 << (uint32)((m_movementInfo.GetVehicleSeatFlags() & SF_CAN_CAST) ? 2 : 0);
+        data3 << uint32((m_movementInfo.GetVehicleSeatFlags() & SEAT_FLAG_CAN_CAST) ? 2 : 0);
         SendMessageToSet(&data3,true);
     }
 
@@ -20465,7 +20510,7 @@ void Player::UpdateForQuestWorldObjects()
         }
         else if (itr->IsCreatureOrVehicle())
         {
-            Creature *obj = ObjectAccessor::GetAnyTypeCreature(*this, *itr);
+            Creature *obj = GetMap()->GetAnyTypeCreature(*itr);
             if(!obj)
                 continue;
 
@@ -20739,7 +20784,7 @@ void Player::RewardSinglePlayerAtKill(Unit* pVictim)
     RewardHonor(pVictim,1);
 
     // xp and reputation only in !PvP case and not in vehicle
-    if(!PvP && !(GetVehicleGUID() && (m_movementInfo.GetVehicleFlags() & VF_GIVE_EXP)))
+    if(!PvP)
     {
         RewardReputation(pVictim,1);
         GiveXP(xp, pVictim);
@@ -21267,47 +21312,6 @@ void Player::ApplyGlyphs(bool apply)
         ApplyGlyph(i,apply);
 }
 
-void Player::SendEnterVehicle(Vehicle *vehicle)
-{
-    if(m_transport)                                         // if we were on a transport, leave
-    {
-        m_transport->RemovePassenger(this);
-        m_transport = NULL;
-    }
-    // vehicle is our transport from now, if we get to zeppelin or boat
-    // with vehicle, ONLY my vehicle will be passenger on that transport
-    // player ----> vehicle ----> zeppelin
-
-    WorldPacket data(SMSG_ON_CANCEL_EXPECTED_RIDE_VEHICLE_AURA, 0);
-    GetSession()->SendPacket(&data);
-
-    data.Initialize(MSG_MOVE_TELEPORT_ACK, 30);
-    data << GetPackGUID();
-    data << uint32(0);                                      // counter?
-    data << uint32(MOVEFLAG_ONTRANSPORT);                   // transport
-    data << uint16(0);                                      // special flags
-    data << uint32(getMSTime());                            // time
-    data << vehicle->GetPositionX();                        // x
-    data << vehicle->GetPositionY();                        // y
-    data << vehicle->GetPositionZ();                        // z
-    data << vehicle->GetOrientation();                      // o
-    // transport part, TODO: load/calculate seat offsets
-    data << vehicle->GetObjectGuid();                       // transport guid
-    data << float(m_movementInfo.GetTransportPos()->x);     // transport offsetX
-    data << float(m_movementInfo.GetTransportPos()->y);     // transport offsetY
-    data << float(m_movementInfo.GetTransportPos()->z);     // transport offsetZ
-    data << float(m_movementInfo.GetTransportPos()->o);     // transport orientation
-    data << uint32(getMSTime());                            // transport time
-    data << uint8(0);                                       // seat
-    // end of transport part
-    data << uint32(0);                                      // fall time
-    GetSession()->SendPacket(&data);
-
-    /*data.Initialize(SMSG_UNKNOWN_1191, 12);
-+    data << uint64(GetGUID());
-+    data << uint64(vehicle->GetVehicleId());                      // not sure
-+    SendMessageToSet(&data, true);*/
- }
 
 bool Player::isTotalImmune()
 {
@@ -22680,16 +22684,13 @@ Object* Player::GetObjectByTypeMask(ObjectGuid guid, TypeMask typemask)
                 return GetMap()->GetGameObject(guid);
             break;
         case HIGHGUID_UNIT:
+        case HIGHGUID_VEHICLE:
             if ((typemask & TYPEMASK_UNIT) && IsInWorld())
                 return GetMap()->GetCreature(guid);
             break;
         case HIGHGUID_PET:
             if ((typemask & TYPEMASK_UNIT) && IsInWorld())
                 return GetMap()->GetPet(guid);
-            break;
-        case HIGHGUID_VEHICLE:
-            if ((typemask & TYPEMASK_UNIT) && IsInWorld())
-                return GetMap()->GetVehicle(guid);
             break;
         case HIGHGUID_DYNAMICOBJECT:
             if ((typemask & TYPEMASK_DYNAMICOBJECT) && IsInWorld())

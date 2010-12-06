@@ -47,11 +47,9 @@ class Channel;
 class DynamicObject;
 class Creature;
 class PlayerMenu;
-class Transport;
 class UpdateMask;
 class SpellCastTargets;
 class PlayerSocial;
-class Vehicle;
 class InstanceSave;
 class Spell;
 class Item;
@@ -1630,6 +1628,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void SendPetGUIDs();
         void CharmSpellInitialize();
         void PossessSpellInitialize();
+        void VehicleSpellInitialize();
         void RemovePetActionBar();
 
         bool HasSpell(uint32 spell) const;
@@ -2250,9 +2249,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         Unit* GetMover() const { return m_mover; }
         bool IsSelfMover() const { return m_mover == this; }// normal case for player not controlling other unit
 
-        // vehicle system
-        void SendEnterVehicle(Vehicle *vehicle);
-
         ObjectGuid const& GetFarSightGuid() const { return GetGuidValue(PLAYER_FARSIGHT); }
 
         // Movement checks
@@ -2263,17 +2259,6 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint32 m_anti_lastalarmtime;    //last time when alarm generated
         uint32 m_anti_alarmcount;       //alarm counter
         uint32 m_anti_TeleTime;
-
-        // Transports
-        Transport * GetTransport() const { return m_transport; }
-        void SetTransport(Transport * t) { m_transport = t; }
-
-        float GetTransOffsetX() const { return m_movementInfo.GetTransportPos()->x; }
-        float GetTransOffsetY() const { return m_movementInfo.GetTransportPos()->y; }
-        float GetTransOffsetZ() const { return m_movementInfo.GetTransportPos()->z; }
-        float GetTransOffsetO() const { return m_movementInfo.GetTransportPos()->o; }
-        uint32 GetTransTime() const { return m_movementInfo.GetTransportTime(); }
-        int8 GetTransSeat() const { return m_movementInfo.GetTransportSeat(); }
 
         uint32 GetSaveTimer() const { return m_nextSave; }
         void   SetSaveTimer(uint32 timer) { m_nextSave = timer; }
@@ -2624,7 +2609,8 @@ class MANGOS_DLL_SPEC Player : public Unit
         ////////////////////Rest System/////////////////////
 
         // Transports
-        Transport * m_transport;
+//        Transport * m_transport;
+
 
         uint32 m_resetTalentsCost;
         time_t m_resetTalentsTime;

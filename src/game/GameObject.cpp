@@ -123,7 +123,7 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
         return false;
     }
 
-    Object::_Create(guidlow, goinfo->id, HIGHGUID_GAMEOBJECT);
+    Object::_Create(ObjectGuid(HIGHGUID_GAMEOBJECT, goinfo->id, guidlow));
 
     m_goInfo = goinfo;
 
@@ -169,6 +169,13 @@ bool GameObject::Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMa
     if(map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
     {
         ((InstanceMap*)map)->GetInstanceData()->OnObjectCreate(this);
+    }
+
+    if (goinfo->type == GAMEOBJECT_TYPE_TRANSPORT)
+    {
+        SetUInt32Value(GAMEOBJECT_LEVEL, goinfo->transport.pause);
+        if (goinfo->transport.startOpen)
+            SetGoState(GO_STATE_ACTIVE);
     }
 
     return true;
@@ -691,6 +698,15 @@ bool GameObject::IsTransport() const
     return gInfo->type == GAMEOBJECT_TYPE_TRANSPORT || gInfo->type == GAMEOBJECT_TYPE_MO_TRANSPORT;
 }
 
+// is Dynamic transport = non-stop Transport
+bool GameObject::IsDynTransport() const
+{
+    // If something is marked as a transport, don't transmit an out of range packet for it.
+    GameObjectInfo const * gInfo = GetGOInfo();
+    if(!gInfo) return false;
+    return gInfo->type == GAMEOBJECT_TYPE_MO_TRANSPORT || (gInfo->type == GAMEOBJECT_TYPE_TRANSPORT && !gInfo->transport.pause);
+}
+
 Unit* GameObject::GetOwner() const
 {
     return ObjectAccessor::GetUnit(*this, GetOwnerGuid());
@@ -796,7 +812,7 @@ bool GameObject::ActivateToQuest(Player *pTarget)const
                 //look for battlegroundAV for some objects which are only activated after mine gots captured by own team
                 if (GetEntry() == BG_AV_OBJECTID_MINE_N || GetEntry() == BG_AV_OBJECTID_MINE_S)
                     if (BattleGround *bg = pTarget->GetBattleGround())
-                        if (bg->GetTypeID() == BATTLEGROUND_AV && !(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(GetEntry(),pTarget->GetTeam())))
+                        if (bg->GetTypeID(true) == BATTLEGROUND_AV && !(((BattleGroundAV*)bg)->PlayerCanDoMineQuest(GetEntry(),pTarget->GetTeam())))
                             return false;
                 return true;
             }
@@ -1399,6 +1415,8 @@ void GameObject::Use(Unit* user)
                 BattleGround *bg = player->GetBattleGround();
                 if (!bg)
                     return;
+                if (player->GetVehicle())
+                    return;
                 // BG flag click
                 // AB:
                 // 15001
@@ -1435,6 +1453,8 @@ void GameObject::Use(Unit* user)
                 BattleGround *bg = player->GetBattleGround();
                 if (!bg)
                     return;
+                if (player->GetVehicle())
+                    return;
                 // BG flag dropped
                 // WS:
                 // 179785 - Silverwing Flag
@@ -1448,15 +1468,15 @@ void GameObject::Use(Unit* user)
                     {
                         case 179785:                        // Silverwing Flag
                             // check if it's correct bg
-                            if (bg->GetTypeID() == BATTLEGROUND_WS)
+                            if (bg->GetTypeID(true) == BATTLEGROUND_WS)
                                 bg->EventPlayerClickedOnFlag(player, this);
                             break;
                         case 179786:                        // Warsong Flag
-                            if (bg->GetTypeID() == BATTLEGROUND_WS)
+                            if (bg->GetTypeID(true) == BATTLEGROUND_WS)
                                 bg->EventPlayerClickedOnFlag(player, this);
                             break;
                         case 184142:                        // Netherstorm Flag
-                            if (bg->GetTypeID() == BATTLEGROUND_EY)
+                            if (bg->GetTypeID(true) == BATTLEGROUND_EY)
                                 bg->EventPlayerClickedOnFlag(player, this);
                             break;
                     }

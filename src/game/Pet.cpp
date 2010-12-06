@@ -1815,7 +1815,7 @@ uint8 Pet::GetMaxTalentPointsForLevel(uint32 level)
 
 void Pet::ToggleAutocast(uint32 spellid, bool apply)
 {
-    if(IsPassiveSpell(spellid))
+    if(IsPassiveSpell(spellid) || !isControlled() || !IsInWorld())
         return;
 
     PetSpellMap::iterator itr = m_spells.find(spellid);
@@ -1904,7 +1904,7 @@ bool Pet::Create(uint32 guidlow, Map *map, uint32 phaseMask, uint32 Entry, uint3
     if (!pet_number)
         pet_number = sObjectMgr.GeneratePetNumber();
 
-    Object::_Create(guidlow, pet_number, HIGHGUID_PET);
+    Object::_Create(ObjectGuid(HIGHGUID_PET, pet_number, guidlow));
 
     m_DBTableGuid = guidlow;
     m_originalEntry = Entry;

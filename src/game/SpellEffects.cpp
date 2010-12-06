@@ -2287,16 +2287,16 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 }
                 case 48610:                                 // Q:Shredder Repair
                 {
-                    if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->IsVehicle())
-                        ((Vehicle*)m_caster)->Dismiss();
+                    //if (m_caster->GetTypeId() == TYPEID_UNIT && ((Creature*)m_caster)->IsVehicle())
+                        //((Vehicle*)m_caster)->Dismiss();
 
                     return;
                 }
                 case 52264:                                 // Q:Grand Theft Palomino
                 case 45877:                                 // Q:Bring 'Em Back Alive
                 {
-                    if (m_caster->GetVehicleGUID() != 0)
-                        m_caster->ExitVehicle();
+                   // if (m_caster->GetVehicleGUID() != 0)
+                    //    m_caster->ExitVehicle();
 
                     return;
                 }
@@ -4833,7 +4833,7 @@ void Spell::EffectSummonType(SpellEffectIndex eff_idx)
         {
             // TODO
             // EffectSummonVehicle(i);
-               EffectSummonVehicle(eff_idx/*, summon_prop->FactionId*/);
+               DoSummonVehicle(eff_idx, summon_prop->FactionId);
 //            sLog.outDebug("EffectSummonType: Unhandled summon group type SUMMON_PROP_GROUP_VEHICLE(%u)", summon_prop->Group);
 //            Mangos developers thinking - this summon is not supported. But in this his worked fine :)
             break;
@@ -5486,6 +5486,62 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
 
         DEBUG_LOG("Guardian pet (guidlow %d, entry %d) summoned (default). Counter is %d ", spawnCreature->GetGUIDLow(), spawnCreature->GetEntry(), spawnCreature->GetPetCounter());
     }
+}
+
+void Spell::DoSummonVehicle(SpellEffectIndex eff_idx, uint32 forceFaction)
+{
+    if (!m_caster)
+        return;
+
+    if (m_caster->hasUnitState(UNIT_STAT_ON_VEHICLE))
+    {
+        if (m_spellInfo->Attributes & SPELL_ATTR_UNK7)
+            m_caster->RemoveSpellsCausingAura(SPELL_AURA_CONTROL_VEHICLE);
+        else 
+            return;
+    }
+
+    uint32 vehicle_entry = m_spellInfo->EffectMiscValue[eff_idx];
+
+    if (!vehicle_entry)
+        return;
+
+    uint32 mountSpellID = (m_spellInfo->EffectBasePoints[eff_idx] <= 1) ?
+                           46598 : m_spellInfo->EffectBasePoints[eff_idx]+1;
+    // Used MiscValue mount spell, if not present - hardcoded (by Blzz).
+
+    float px, py, pz;
+    // If dest location present
+    if (m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION)
+    {
+        px = m_targets.m_destX;
+        py = m_targets.m_destY;
+        pz = m_targets.m_destZ;
+    }
+    // Summon if dest location not present near caster
+    else
+        m_caster->GetClosePoint(px, py, pz,m_caster->GetObjectBoundingRadius());
+
+    TempSummonType summonType = (GetSpellDuration(m_spellInfo) == 0) ? TEMPSUMMON_DEAD_DESPAWN : TEMPSUMMON_TIMED_OR_DEAD_DESPAWN;
+
+    Creature* vehicle = m_caster->SummonCreature(vehicle_entry,px,py,pz,m_caster->GetOrientation(),summonType,GetSpellDuration(m_spellInfo),true);
+
+    if (vehicle && !vehicle->GetObjectGuid().IsVehicle())
+    {
+        sLog.outError("DoSommonVehicle: Creature (guidlow %d, entry %d) summoned, but this is not vehicle. Correct VehicleId in creature_template.", vehicle->GetGUIDLow(), vehicle->GetEntry());
+        vehicle->ForcedDespawn();
+        return;
+    }
+
+    if (vehicle)
+    {
+        vehicle->setFaction(forceFaction ? forceFaction : m_caster->getFaction());
+        vehicle->SetUInt32Value(UNIT_CREATED_BY_SPELL,m_spellInfo->Id);
+        m_caster->CastSpell(vehicle, mountSpellID, true);
+        DEBUG_LOG("Caster (guidlow %d) summon vehicle (guidlow %d, entry %d) and mounted with spell %d ", m_caster->GetGUIDLow(), vehicle->GetGUIDLow(), vehicle->GetEntry(), mountSpellID);
+    }
+    else
+        sLog.outError("Vehicle (guidlow %d, entry %d) NOT summoned by undefined reason. ", vehicle->GetGUIDLow(), vehicle->GetEntry());
 }
 
 void Spell::EffectTeleUnitsFaceCaster(SpellEffectIndex eff_idx)
@@ -7929,15 +7985,13 @@ void Spell::EffectAddComboPoints(SpellEffectIndex /*eff_idx*/)
     if(!unitTarget)
         return;
 
+    if(m_caster->GetTypeId() != TYPEID_PLAYER)
+        return;
+
     if(damage <= 0)
         return;
 
-    if(m_caster->GetTypeId() != TYPEID_PLAYER)
-    {
-        if(((Creature*)m_caster)->IsVehicle())
-            ((Player*)m_caster->GetCharmer())->AddComboPoints(unitTarget, damage);
-    }else
-        ((Player*)m_caster)->AddComboPoints(unitTarget, damage);
+    ((Player*)m_caster)->AddComboPoints(unitTarget, damage);
 }
 
 void Spell::EffectDuel(SpellEffectIndex eff_idx)
@@ -8026,42 +8080,6 @@ void Spell::EffectDuel(SpellEffectIndex eff_idx)
 
     caster->SetUInt64Value(PLAYER_DUEL_ARBITER, pGameObj->GetGUID());
     target->SetUInt64Value(PLAYER_DUEL_ARBITER, pGameObj->GetGUID());
-}
-
-void Spell::EffectSummonVehicle(SpellEffectIndex eff_idx)
-{
-    uint32 creature_entry = m_spellInfo->EffectMiscValue[eff_idx];
-    if(!creature_entry)
-        return;
-
-    float px, py, pz;
-    // If dest location if present
-    if (m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION)
-    {
-        // Summon unit in dest location
-        px = m_targets.m_destX;
-        py = m_targets.m_destY;
-        pz = m_targets.m_destZ;
-    }
-    // Summon if dest location not present near caster
-    else
-        m_caster->GetClosePoint(px, py, pz, 1.0f);
-
-    Vehicle *v = m_caster->SummonVehicle(creature_entry, px, py, pz, m_caster->GetOrientation());
-    if(!v)
-        return;
-
-    v->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
-    v->SetCreatorGuid(m_caster->GetGUID());
-
-    if(damage)
-    {
-        m_caster->CastSpell(v, damage, true);
-        m_caster->EnterVehicle(v, 0);
-    }
-    int32 duration = GetSpellMaxDuration(m_spellInfo);
-    if(duration > 0)
-        v->SetSpawnDuration(duration);
 }
 
 void Spell::EffectStuck(SpellEffectIndex /*eff_idx*/)

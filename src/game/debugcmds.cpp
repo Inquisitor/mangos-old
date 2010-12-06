@@ -647,7 +647,7 @@ bool ChatHandler::HandleDebugArenaCommand(char* /*args*/)
 
 bool ChatHandler::HandleDebugSpawnVehicleCommand(char* args)
 {
-    uint32 entry;
+    /*uint32 entry;
     if (!ExtractUInt32(&args, entry))
         return false;
 
@@ -686,7 +686,7 @@ bool ChatHandler::HandleDebugSpawnVehicleCommand(char* args)
 
     map->Add((Creature*)v);
     v->AIM_Initialize();
-
+    */
     return true;
 }
 
