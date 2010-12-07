@@ -1455,6 +1455,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\game\VehicleHandler.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\Vehicle.h"
 				>
 			</File>
