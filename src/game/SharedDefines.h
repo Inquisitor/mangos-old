@@ -146,6 +146,17 @@ enum Powers
 
 #define MAX_POWERS                        7
 
+enum EnergyType
+{
+    ENERGY_TYPE_UNK0      = 0,                          // Possible mana or flat energy.
+    ENERGY_TYPE_UNK1      = 1,                          // 2 vehicles in 3.3.5a
+    ENERGY_TYPE_PYRITE    = 41,                         // 2 vehicles in 3.3.5a
+    ENERGY_TYPE_STEAM     = 61,                         // 9 vehicles in 3.3.5a
+    ENERGY_TYPE_OOZE      = 121,                        // 1 vehicle  in 3.3.5a
+    ENERGY_TYPE_BLOOD     = 141,                        // 1 vehicle  in 3.3.5a
+    ENERGY_TYPE_UNK142    = 142,                        // 1 vehicle  in 3.3.5a
+};
+
 enum SpellSchools
 {
     SPELL_SCHOOL_NORMAL                 = 0,
@@ -265,7 +276,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX_NEGATIVE                    0x00000080            // 7
 #define SPELL_ATTR_EX_NOT_IN_COMBAT_TARGET        0x00000100            // 8 Spell req target not to be in combat state
 #define SPELL_ATTR_EX_UNK9                        0x00000200            // 9
-#define SPELL_ATTR_EX_NO_INITIAL_AGGRO            0x00000400            // 10 no generates threat on cast 100%
+#define SPELL_ATTR_EX_NO_INITIAL_AGGRO            0x00000400            // 10 no generates threat on cast 100% (UNUSED changed to SPELL_ATTR_EX3_NO_INITIAL_AGGRO)
 #define SPELL_ATTR_EX_UNK11                       0x00000800            // 11
 #define SPELL_ATTR_EX_UNK12                       0x00001000            // 12
 #define SPELL_ATTR_EX_UNK13                       0x00002000            // 13
@@ -275,9 +286,9 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX_UNK17                       0x00020000            // 17 for auras SPELL_AURA_TRACK_CREATURES, SPELL_AURA_TRACK_RESOURCES and SPELL_AURA_TRACK_STEALTHED select non-stacking tracking spells
 #define SPELL_ATTR_EX_UNK18                       0x00040000            // 18
 #define SPELL_ATTR_EX_UNK19                       0x00080000            // 19
-#define SPELL_ATTR_EX_REQ_COMBO_POINTS1           0x00100000            // 20 Req combo points on target
+#define SPELL_ATTR_EX_REQ_TARGET_COMBO_POINTS     0x00100000            // 20 Req combo points on target
 #define SPELL_ATTR_EX_UNK21                       0x00200000            // 21
-#define SPELL_ATTR_EX_REQ_COMBO_POINTS2           0x00400000            // 22 Req combo points on target
+#define SPELL_ATTR_EX_REQ_COMBO_POINTS            0x00400000            // 22 Use combo points (in 4.x not required combo point target selected)
 #define SPELL_ATTR_EX_UNK23                       0x00800000            // 23
 #define SPELL_ATTR_EX_UNK24                       0x01000000            // 24 Req fishing pole??
 #define SPELL_ATTR_EX_UNK25                       0x02000000            // 25
@@ -338,7 +349,7 @@ const uint32 ItemQualityColors[MAX_ITEM_QUALITY] = {
 #define SPELL_ATTR_EX3_UNK14                      0x00004000            // 14 "Honorless Target" only this spells have this flag
 #define SPELL_ATTR_EX3_UNK15                      0x00008000            // 15 Auto Shoot, Shoot, Throw,  - this is autoshot flag
 #define SPELL_ATTR_EX3_UNK16                      0x00010000            // 16 no triggers effects that trigger on casting a spell??
-#define SPELL_ATTR_EX3_UNK17                      0x00020000            // 17 no triggers effects that trigger on casting a spell??
+#define SPELL_ATTR_EX3_NO_INITIAL_AGGRO           0x00020000            // 17 Soothe Animal, 39758, Mind Soothe
 #define SPELL_ATTR_EX3_UNK18                      0x00040000            // 18
 #define SPELL_ATTR_EX3_UNK19                      0x00080000            // 19
 #define SPELL_ATTR_EX3_DEATH_PERSISTENT           0x00100000            // 20 Death persistent spells
@@ -520,20 +531,17 @@ enum Language
 
 #define LANGUAGES_COUNT   19
 
+// In fact !=0 values is alliance/horde root faction ids
 enum Team
 {
+    TEAM_NONE           = 0,                                // used when team value unknown or not set, 0 is also meaning that can be used !team check
     HORDE               = 67,
     ALLIANCE            = 469,
-    //TEAM_STEAMWHEEDLE_CARTEL = 169,                       // not used in code
-    //TEAM_ALLIANCE_FORCES     = 891,
-    //TEAM_HORDE_FORCES        = 892,
-    //TEAM_SANCTUARY           = 936,
-    //TEAM_OUTLAND             = 980,
-    //TEAM_OTHER               = 0,                         // if ReputationListId > 0 && Flags != FACTION_FLAG_TEAM_HEADER
 };
 
 enum SpellEffects
 {
+    SPELL_EFFECT_NONE                      = 0,
     SPELL_EFFECT_INSTAKILL                 = 1,
     SPELL_EFFECT_SCHOOL_DAMAGE             = 2,
     SPELL_EFFECT_DUMMY                     = 3,
@@ -623,7 +631,7 @@ enum SpellEffects
     SPELL_EFFECT_WMO_DAMAGE                = 87,
     SPELL_EFFECT_WMO_REPAIR                = 88,
     SPELL_EFFECT_WMO_CHANGE                = 89,
-    SPELL_EFFECT_KILL_CREDIT               = 90,
+    SPELL_EFFECT_KILL_CREDIT_PERSONAL      = 90,
     SPELL_EFFECT_THREAT_ALL                = 91,
     SPELL_EFFECT_ENCHANT_HELD_ITEM         = 92,
     SPELL_EFFECT_BREAK_PLAYER_TARGETING    = 93,
@@ -667,7 +675,7 @@ enum SpellEffects
     SPELL_EFFECT_131                       = 131,
     SPELL_EFFECT_PLAY_MUSIC                = 132,
     SPELL_EFFECT_UNLEARN_SPECIALIZATION    = 133,
-    SPELL_EFFECT_KILL_CREDIT2              = 134,
+    SPELL_EFFECT_KILL_CREDIT_GROUP         = 134,
     SPELL_EFFECT_CALL_PET                  = 135,
     SPELL_EFFECT_HEAL_PCT                  = 136,
     SPELL_EFFECT_ENERGIZE_PCT              = 137,
@@ -682,11 +690,11 @@ enum SpellEffects
     SPELL_EFFECT_ACTIVATE_RUNE             = 146,
     SPELL_EFFECT_QUEST_FAIL                = 147,
     SPELL_EFFECT_148                       = 148,
-    SPELL_EFFECT_149                       = 149,
-    SPELL_EFFECT_150                       = 150,
+    SPELL_EFFECT_CHARGE2                   = 149,
+    SPELL_EFFECT_QUEST_START               = 150,
     SPELL_EFFECT_TRIGGER_SPELL_2           = 151,
     SPELL_EFFECT_152                       = 152,
-    SPELL_EFFECT_153                       = 153,
+    SPELL_EFFECT_CREATE_PET                = 153,
     SPELL_EFFECT_TEACH_TAXI_NODE           = 154,
     SPELL_EFFECT_TITAN_GRIP                = 155,
     SPELL_EFFECT_ENCHANT_ITEM_PRISMATIC    = 156,
@@ -697,7 +705,7 @@ enum SpellEffects
     SPELL_EFFECT_TALENT_SPEC_COUNT         = 161,
     SPELL_EFFECT_TALENT_SPEC_SELECT        = 162,
     SPELL_EFFECT_163                       = 163,
-    SPELL_EFFECT_164                       = 164,
+    SPELL_EFFECT_REMOVE_AURA               = 164,
     TOTAL_SPELL_EFFECTS                    = 165
 };
 
@@ -902,7 +910,7 @@ enum AuraState
     AURA_STATE_DEFENSE                      = 1,            // C   |
     AURA_STATE_HEALTHLESS_20_PERCENT        = 2,            // CcT |
     AURA_STATE_BERSERKING                   = 3,            // C T |
-    AURA_STATE_FROZEN                       = 4,            //  c t| frozen target
+    AURA_STATE_FROZEN                       = 4,            //  cT | frozen target
     AURA_STATE_JUDGEMENT                    = 5,            // C   |
     //AURA_STATE_UNKNOWN6                   = 6,            //     | not used
     AURA_STATE_HUNTER_PARRY                 = 7,            // C   |
@@ -1030,13 +1038,18 @@ enum WeaponAttackType
 {
     BASE_ATTACK   = 0,
     OFF_ATTACK    = 1,
-    RANGED_ATTACK = 2
+    RANGED_ATTACK = 2,
+
+    // leave these greater than or equal to MAX_ATTACK
+    NONSTACKING_MOD_MELEE = 3,
+    NONSTACKING_MOD_ALL = 4
 };
 
 #define MAX_ATTACK  3
 
 enum Targets
 {
+    TARGET_NONE                        = 0,
     TARGET_SELF                        = 1,
     TARGET_RANDOM_ENEMY_CHAIN_IN_AREA  = 2,                 // only one spell has that, but regardless, it's a target type after all
     TARGET_RANDOM_FRIEND_CHAIN_IN_AREA = 3,
@@ -1216,8 +1229,8 @@ enum GameObjectFlags
     GO_FLAG_TRIGGERED       = 0x00000040,                   //typically, summoned objects. Triggered by spell or other events
     GO_FLAG_UNK_8           = 0x00000080,
     GO_FLAG_UNK_9           = 0x00000100,                   //? Seen on type 33, possible meaning "destruct in progress"
-    GO_FLAG_UNK_10          = 0x00000200,                   //? Seen on type 33
-    GO_FLAG_UNK_11          = 0x00000400                    //? Seen on type 33, possibly meaning "destructed"
+    GO_FLAG_DAMAGED         = 0x00000200,                   //Seen on type 33
+    GO_FLAG_DESTROYED       = 0x00000400                    //Seen on type 33, meaning "destroyed"
 };
 
 enum GameObjectDynamicLowFlags
@@ -1954,6 +1967,9 @@ enum CreatureTypeFlags
     CREATURE_TYPEFLAGS_UNK27            = 0x04000000,       // creature has no type, or forces creature to be considered as in party, may be related to creature assistance
     CREATURE_TYPEFLAGS_UNK28            = 0x08000000,       // used in Lua_ForceGossip
     CREATURE_TYPEFLAGS_UNK29            = 0x10000000,       // no idea, but it used by client
+    CREATURE_TYPEFLAGS_UNK30            = 0x20000000,
+    CREATURE_TYPEFLAGS_UNK31            = 0x40000000,
+    CREATURE_TYPEFLAGS_QUEST_BOSS       = 0x80000000,       // Lua_UnitIsQuestBoss
 };
 
 enum CreatureEliteType
@@ -2486,9 +2502,8 @@ enum CustomVehicleFLags
     VF_CAN_BE_HEALED                = 0x0010,                   // vehicle can be healed
     VF_GIVE_EXP                     = 0x0020,                   // vehicle will give exp for killing enemies
     VF_MOVEMENT                     = 0x0040,                   // vehicle will move on its own, not depending on rider, however rider can cast spells
-    VF_NON_SELECTABLE               = 0x0080,                    // vehicle will be not selectable after rider enter
-    VF_ALLOW_MELEE                  = 0x0100                    // Allow melee for players on vehicle   
-    //VF_HAS_FUEL                     = 0x0200,                   // TODO : find out what energy type is fuel and implement this
+    VF_NON_SELECTABLE               = 0x0080                    // vehicle will be not selectable after rider enter
+    //VF_HAS_FUEL                     = 0x0100,                   // TODO : find out what energy type is fuel and implement this
 };
 
 enum CustomVehicleSeatFLags
@@ -2497,6 +2512,16 @@ enum CustomVehicleSeatFLags
     SF_UNATTACKABLE                 = 0x0002,                   // hided inside, and unatackable until vehicle is destroyed
     SF_CAN_CAST                     = 0x0004,                   // player/npc can rotate, and cast OWN spells
     SF_UNACCESSIBLE                 = 0x0008                    // player cant enter this seat by normal way (only by script)
+};
+
+enum InstanceResetMethod
+{
+    INSTANCE_RESET_ALL,
+    INSTANCE_RESET_CHANGE_DIFFICULTY,
+    INSTANCE_RESET_GLOBAL,
+    INSTANCE_RESET_GROUP_DISBAND,
+    INSTANCE_RESET_GROUP_JOIN,
+    INSTANCE_RESET_RESPAWN_DELAY
 };
 
 enum ResponseCodes
@@ -2678,6 +2703,44 @@ enum MailResponseResult
     MAIL_ERR_TOO_MANY_ATTACHMENTS      = 18,
     MAIL_ERR_MAIL_ATTACHMENT_INVALID   = 19,
     MAIL_ERR_ITEM_HAS_EXPIRED          = 21,
+};
+
+enum CalendarResponseResult
+{
+    CALENDAR_ERROR_GUILD_EVENTS_EXCEEDED        = 1,
+    CALENDAR_ERROR_EVENTS_EXCEEDED              = 2,        // max of 20 (?) exceeded
+    CALENDAR_ERROR_SELF_INVITES_EXCEEDED        = 3,
+    CALENDAR_ERROR_OTHER_INVITES_EXCEEDED       = 4,        // std::string
+    CALENDAR_ERROR_PERMISSIONS                  = 5,
+    CALENDAR_ERROR_EVENT_INVALID                = 6,        // Event not found.
+    CALENDAR_ERROR_NOT_INVITED                  = 7,
+    CALENDAR_ERROR_INTERNAL                     = 8,
+    CALENDAR_ERROR_GUILD_PLAYER_NOT_IN_GUILD    = 9,
+    CALENDAR_ERROR_ALREADY_INVITED_TO_EVENT_S   = 10,       // std::string
+    CALENDAR_ERROR_PLAYER_NOT_FOUND             = 11,
+    CALENDAR_ERROR_NOT_ALLIED                   = 12,
+    CALENDAR_ERROR_IGNORING_YOU_S               = 13,       // std::string
+    CALENDAR_ERROR_INVITES_EXCEEDED             = 14,
+    // 15 ?
+    CALENDAR_ERROR_INVALID_DATE                 = 16,
+    CALENDAR_ERROR_INVALID_TIME                 = 17,
+    // 18 ?
+    CALENDAR_ERROR_NEEDS_TITLE                  = 19,
+    CALENDAR_ERROR_EVENT_PASSED                 = 20,
+    CALENDAR_ERROR_EVENT_LOCKED                 = 21,
+    CALENDAR_ERROR_DELETE_CREATOR_FAILED        = 22,
+    CALENDAR_ERROR_SYSTEM_DISABLED              = 24,
+    CALENDAR_ERROR_RESTRICTED_ACCOUNT           = 25,
+    CALENDAR_ERROR_ARENA_EVENTS_EXCEEDED        = 26,
+    CALENDAR_ERROR_RESTRICTED_LEVEL             = 27,
+    CALENDAR_ERROR_USER_SQUELCHED               = 28,
+    CALENDAR_ERROR_NO_INVITE                    = 29,
+    // 30-35 ?
+    CALENDAR_ERROR_EVENT_WRONG_SERVER           = 36,
+    CALENDAR_ERROR_INVITE_WRONG_SERVER          = 37,
+    CALENDAR_ERROR_NO_GUILD_INVITES             = 38,
+    CALENDAR_ERROR_INVALID_SIGNUP               = 39,
+    CALENDAR_ERROR_NO_MODERATOR                 = 40,
 };
 
 // reasons for why pet tame may fail

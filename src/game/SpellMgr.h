@@ -106,6 +106,7 @@ enum SpellSpecific
     SPELL_DRINK             = 21,
     SPELL_FOOD_AND_DRINK    = 22,
     SPELL_UA_IMMOLATE       = 23,                           // Unstable Affliction and Immolate
+    SPELL_SCROLL            = 30,
 };
 
 SpellSpecific GetSpellSpecific(uint32 spellId);
@@ -453,6 +454,11 @@ inline bool IsAutoRepeatRangedSpell(SpellEntry const* spellInfo)
     return (spellInfo->Attributes & SPELL_ATTR_RANGED) && (spellInfo->AttributesEx2 & SPELL_ATTR_EX2_AUTOREPEAT_FLAG);
 }
 
+inline bool IsSpellRequiresRangedAP(SpellEntry const* spellInfo)
+{
+    return (spellInfo->SpellFamilyName == SPELLFAMILY_HUNTER && spellInfo->DmgClass != SPELL_DAMAGE_CLASS_MELEE);
+}
+
 SpellCastResult GetErrorAtShapeshiftedCast (SpellEntry const *spellInfo, uint32 form);
 
 inline bool IsChanneledSpell(SpellEntry const* spellInfo)
@@ -462,7 +468,7 @@ inline bool IsChanneledSpell(SpellEntry const* spellInfo)
 
 inline bool NeedsComboPoints(SpellEntry const* spellInfo)
 {
-    return (spellInfo->AttributesEx & (SPELL_ATTR_EX_REQ_COMBO_POINTS1 | SPELL_ATTR_EX_REQ_COMBO_POINTS2));
+    return (spellInfo->AttributesEx & (SPELL_ATTR_EX_REQ_TARGET_COMBO_POINTS | SPELL_ATTR_EX_REQ_COMBO_POINTS));
 }
 
 inline SpellSchoolMask GetSpellSchoolMask(SpellEntry const* spellInfo)
@@ -556,7 +562,9 @@ enum ProcFlags
     PROC_FLAG_ON_TRAP_ACTIVATION            = 0x00200000,   // 21 On trap activation
 
     PROC_FLAG_TAKEN_OFFHAND_HIT             = 0x00400000,   // 22 Taken off-hand melee attacks(not used)
-    PROC_FLAG_SUCCESSFUL_OFFHAND_HIT        = 0x00800000    // 23 Successful off-hand melee attacks
+    PROC_FLAG_SUCCESSFUL_OFFHAND_HIT        = 0x00800000,    // 23 Successful off-hand melee attacks
+
+    PROC_FLAG_ON_DEATH                      = 0x01000000    // 24 On caster's death
 };
 
 #define MELEE_BASED_TRIGGER_MASK (PROC_FLAG_SUCCESSFUL_MELEE_HIT        | \
@@ -613,10 +621,10 @@ struct SpellProcEventEntry
 
 struct SpellBonusEntry
 {
-    SpellBonusEntry() : direct_damage(0.0f), dot_damage(0.0f), ap_bonus(0.0f) {}
     float  direct_damage;
     float  dot_damage;
     float  ap_bonus;
+    float  ap_dot_bonus;
 };
 
 typedef UNORDERED_MAP<uint32, SpellProcEventEntry> SpellProcEventMap;
@@ -717,6 +725,8 @@ class PetAura
         int32 damage;
 };
 typedef std::map<uint32, PetAura> SpellPetAuraMap;
+typedef std::vector<PetAura> PetPassiveAuraList;
+typedef std::map<uint32, PetPassiveAuraList> SpellPetPassiveAuraMap;
 
 struct SpellArea
 {
@@ -1024,7 +1034,7 @@ class SpellMgr
             return mSpellScriptTarget.equal_range(spell_id);
         }
 
-        // Spell correctess for client using
+        // Spell correctness for client using
         static bool IsSpellValid(SpellEntry const * spellInfo, Player* pl = NULL, bool msg = true);
 
         SkillLineAbilityMapBounds GetSkillLineAbilityMapBounds(uint32 spell_id) const
@@ -1036,6 +1046,15 @@ class SpellMgr
         {
             SpellPetAuraMap::const_iterator itr = mSpellPetAuraMap.find((spell_id<<8) + eff);
             if(itr != mSpellPetAuraMap.end())
+                return &itr->second;
+            else
+                return NULL;
+        }
+
+        PetPassiveAuraList const* GetPetPassiveAuraList(uint32 creature_id)
+        {
+            SpellPetPassiveAuraMap::const_iterator itr = mSpellPetPassiveAuraMap.find(creature_id);
+            if(itr != mSpellPetPassiveAuraMap.end())
                 return &itr->second;
             else
                 return NULL;
@@ -1130,6 +1149,7 @@ class SpellMgr
         SpellBonusMap      mSpellBonusMap;
         SkillLineAbilityMap mSkillLineAbilityMap;
         SpellPetAuraMap     mSpellPetAuraMap;
+        SpellPetPassiveAuraMap     mSpellPetPassiveAuraMap;
         PetLevelupSpellMap  mPetLevelupSpellMap;
         PetDefaultSpellsMap mPetDefaultSpellsMap;           // only spells not listed in related mPetLevelupSpellMap entry
         SpellAreaMap         mSpellAreaMap;

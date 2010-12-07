@@ -20,6 +20,7 @@
 
 #include "SpellAuraDefines.h"
 #include "DBCEnums.h"
+#include "ObjectGuid.h"
 
 struct Modifier
 {
@@ -51,6 +52,7 @@ class MANGOS_DLL_SPEC SpellAuraHolder
         void ApplyAuraModifiers(bool apply, bool real = false);
         void _AddSpellAuraHolder();
         void _RemoveSpellAuraHolder();
+
         void SendAuraUpdate(bool remove);
         void HandleSpellSpecificBoosts(bool apply);
         void CleanupTriggeredSpells();
@@ -67,15 +69,16 @@ class MANGOS_DLL_SPEC SpellAuraHolder
         uint32 GetId() const { return m_spellProto->Id; }
         SpellEntry const* GetSpellProto() const { return m_spellProto; }
 
-        uint64 const& GetCasterGUID() const { return m_caster_guid; }
-        void SetCasterGUID(uint64 guid) { m_caster_guid = guid; }
-        uint64 GetCastItemGUID() const { return m_castItemGuid; }
+        uint64 const& GetCasterGUID() const { return m_casterGuid.GetRawValue(); }
+        ObjectGuid const& GetCasterGuid() const { return m_casterGuid; }
+        void SetCasterGuid(ObjectGuid guid) { m_casterGuid = guid; }
+        ObjectGuid const& GetCastItemGuid() const { return m_castItemGuid; }
         Unit* GetCaster() const;
         Unit* GetTarget() const { return m_target; }
         void SetTarget(Unit* target) { m_target = target; }
 
         bool IsPermanent() const { return m_permanent; }
-		void SetPermanent (bool permanent) { m_permanent = permanent; }
+        void SetPermanent (bool permanent) { m_permanent = permanent; }
         bool IsPassive() const { return m_isPassive; }
         bool IsDeathPersistent() const { return m_isDeathPersist; }
         bool IsPersistent() const;
@@ -104,7 +107,7 @@ class MANGOS_DLL_SPEC SpellAuraHolder
         void UpdateHolder(uint32 diff) { SetInUse(true); Update(diff); SetInUse(false); }
         void Update(uint32 diff);
         void RefreshHolder();
-        
+
         bool IsSingleTarget() {return m_isSingleTarget; }
         void SetIsSingleTarget(bool val) { m_isSingleTarget = val; }
         void UnregisterSingleCastHolder();
@@ -143,10 +146,10 @@ class MANGOS_DLL_SPEC SpellAuraHolder
 
         void SetVisibleAura(bool remove) { m_target->SetVisibleAura(m_auraSlot, remove ? 0 : GetId()); }
         void SetRemoveMode(AuraRemoveMode mode) { m_removeMode = mode; }
-        void SetLoadedState(uint64 casterGUID, ObjectGuid itemGUID, int32 stackAmount, int32 charges)
+        void SetLoadedState(ObjectGuid casterGUID, ObjectGuid itemGUID, int32 stackAmount, int32 charges)
         {
-            m_caster_guid = casterGUID;
-            m_castItemGuid = itemGUID.GetRawValue();
+            m_casterGuid = casterGUID;
+            m_castItemGuid = itemGUID;
             m_procCharges = charges;
             m_stackAmount = stackAmount;
         }
@@ -157,8 +160,8 @@ class MANGOS_DLL_SPEC SpellAuraHolder
         ~SpellAuraHolder();
     private:
         Unit* m_target;
-        uint64 m_caster_guid;
-        uint64 m_castItemGuid;                              // it is NOT safe to keep a pointer to the item because it may get deleted
+        ObjectGuid m_casterGuid;
+        ObjectGuid m_castItemGuid;                          // it is NOT safe to keep a pointer to the item because it may get deleted
         time_t m_applyTime;
 
         SpellEntry const* m_spellProto;
@@ -363,9 +366,8 @@ class MANGOS_DLL_SPEC Aura
         void HandleModTargetArmorPct(bool Apply, bool Real);
         void HandleAuraModAllCritChance(bool Apply, bool Real);
         void HandleAuraOpenStable(bool apply, bool Real);
-        void HandleAuraInitializeImages(bool Apply, bool Real);
-        void HandleAuraCloneCaster(bool Apply, bool Real);
         void HandleCharmConvert(bool apply, bool Real);
+        void HandleAuraMirrorImage(bool Apply, bool Real);
 
         virtual ~Aura();
 
@@ -374,13 +376,14 @@ class MANGOS_DLL_SPEC Aura
         Modifier const* GetModifier() const { return &m_modifier; }
         int32 GetMiscValue() const { return m_spellAuraHolder->GetSpellProto()->EffectMiscValue[m_effIndex]; }
         int32 GetMiscBValue() const { return m_spellAuraHolder->GetSpellProto()->EffectMiscValueB[m_effIndex]; }
-        
-        SpellEntry const* GetSpellProto() const { return GetHolder()->GetSpellProto(); }
-        uint32 GetId() const{ return GetHolder()->GetSpellProto()->Id; }
-        uint64 GetCastItemGUID() const { return GetHolder()->GetCastItemGUID(); }
-        uint64 const& GetCasterGUID() const { return GetHolder()->GetCasterGUID(); }
-        Unit* GetCaster() const { return GetHolder()->GetCaster(); }
-        Unit* GetTarget() const { return GetHolder()->GetTarget(); }
+
+        SpellEntry const* GetSpellProto() const { return ( GetHolder() ? GetHolder()->GetSpellProto() : NULL); }
+        uint32 GetId() const{ return ( GetHolder() ? GetHolder()->GetSpellProto()->Id : 0 ); }
+        ObjectGuid GetCastItemGuid() const { return ( GetHolder() ? GetHolder()->GetCastItemGuid() : ObjectGuid()); }
+        uint64 const& GetCasterGUID() const { return GetHolder()->GetCasterGUID(); }//can't be easy replaced by GetCasterGuid until AuraHolders backporting ig we don't want create additional problems for this.
+        ObjectGuid GetCasterGuid() const { return ( GetHolder() ? GetHolder()->GetCasterGuid() : ObjectGuid()); }
+        Unit* GetCaster() const { return ( GetHolder() ? GetHolder()->GetCaster() : NULL); }
+        Unit* GetTarget() const { return ( GetHolder() ? GetHolder()->GetTarget() : NULL); }
 
         SpellEffectIndex GetEffIndex() const{ return m_effIndex; }
         int32 GetBasePoints() const { return m_currentBasePoints; }
@@ -392,7 +395,8 @@ class MANGOS_DLL_SPEC Aura
         time_t GetAuraApplyTime() const { return m_applyTime; }
         uint32 GetAuraTicks() const { return m_periodicTick; }
         uint32 GetAuraMaxTicks() const { return m_maxduration > 0 && m_modifier.periodictime > 0 ? m_maxduration / m_modifier.periodictime : 0; }
-        uint32 GetStackAmount() const { return GetHolder()->GetStackAmount(); }
+        uint32 GetStackAmount() const { return ( GetHolder() ? GetHolder()->GetStackAmount() : 0); }
+        void SetAuraPeriodicTimer (int32 timer) { m_periodicTimer = timer; }
 
         void SetLoadedState(int32 damage,int32 maxduration,int32 duration)
         {
@@ -408,6 +412,7 @@ class MANGOS_DLL_SPEC Aura
         bool IsAreaAura() const { return m_isAreaAura; }
         bool IsPeriodic() const { return m_isPeriodic; }
         bool IsInUse() const { return m_in_use; }
+        bool IsStacking() const { return m_stacking;}
 
         void SetInUse(bool state)
         {
@@ -436,6 +441,7 @@ class MANGOS_DLL_SPEC Aura
         uint32 const *getAuraSpellClassMask() const { return  m_spellAuraHolder->GetSpellProto()->GetEffectSpellClassMask(m_effIndex); }
         bool isAffectedOnSpell(SpellEntry const *spell) const;
         bool CanProcFrom(SpellEntry const *spell, uint32 EventProcEx, uint32 procEx, bool active) const;
+        bool IsEffectStacking();
 
         //SpellAuraHolder const* GetHolder() const { return m_spellHolder; }
         SpellAuraHolder* GetHolder() { return m_spellAuraHolder; }
@@ -475,6 +481,7 @@ class MANGOS_DLL_SPEC Aura
         bool m_isPeriodic:1;
         bool m_isAreaAura:1;
         bool m_isPersistent:1;
+        bool m_stacking:1;                                  // Aura is not overwritten, but effects are not cumulative with similar effects
 
         uint32 m_in_use;                                    // > 0 while in Aura::ApplyModifier call/Aura::Update/etc
 
@@ -514,7 +521,7 @@ class MANGOS_DLL_SPEC SingleEnemyTargetAura : public Aura
 
     protected:
         SingleEnemyTargetAura(SpellEntry const* spellproto, SpellEffectIndex eff, int32 *currentBasePoints, SpellAuraHolder *holder, Unit *target, Unit *caster  = NULL, Item* castItem = NULL);
-        uint64 m_casters_target_guid;
+        ObjectGuid m_castersTargetGuid;
 };
 
 MANGOS_DLL_SPEC Aura* CreateAura(SpellEntry const* spellproto, SpellEffectIndex eff, int32 *currentBasePoints, SpellAuraHolder *holder, Unit *target, Unit *caster = NULL, Item* castItem = NULL);

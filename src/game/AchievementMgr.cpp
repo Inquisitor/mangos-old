@@ -36,6 +36,7 @@
 #include "MapManager.h"
 #include "BattleGround.h"
 #include "BattleGroundAB.h"
+#include "BattleGroundAV.h"
 #include "Map.h"
 #include "InstanceData.h"
 
@@ -400,7 +401,7 @@ void AchievementMgr::Reset()
 
     m_completedAchievements.clear();
     m_criteriaProgress.clear();
-    DeleteFromDB(m_player->GetGUIDLow());
+    DeleteFromDB(m_player->GetObjectGuid());
 
     // re-fill data
     CheckAllAchievementCriteria();
@@ -479,11 +480,12 @@ void AchievementMgr::ResetAchievementCriteria(AchievementCriteriaTypes type, uin
     }
 }
 
-void AchievementMgr::DeleteFromDB(uint32 lowguid)
+void AchievementMgr::DeleteFromDB(ObjectGuid guid)
 {
+    uint32 lowguid = guid.GetCounter();
     CharacterDatabase.BeginTransaction ();
-    CharacterDatabase.PExecute("DELETE FROM character_achievement WHERE guid = %u",lowguid);
-    CharacterDatabase.PExecute("DELETE FROM character_achievement_progress WHERE guid = %u",lowguid);
+    CharacterDatabase.PExecute("DELETE FROM character_achievement WHERE guid = %u", lowguid);
+    CharacterDatabase.PExecute("DELETE FROM character_achievement_progress WHERE guid = %u", lowguid);
     CharacterDatabase.CommitTransaction ();
 }
 
@@ -559,8 +561,15 @@ void AchievementMgr::SaveToDB()
                 ssdel << iter->first;
             }
 
-            // store data only for real progress
-            if(iter->second.counter != 0)
+            // store data only for real progress, exceptions are timedCriterias, they are also stored for counter == 0
+            bool needSave = iter->second.counter != 0;
+            if (!needSave)
+            {
+                AchievementCriteriaEntry const* criteria = sAchievementCriteriaStore.LookupEntry(iter->first);
+                needSave = criteria && criteria->timeLimit > 0;
+            }
+
+            if (needSave)
             {
                 /// first new/changed record prefix
                 if(!need_execute_ins)
@@ -633,13 +642,27 @@ void AchievementMgr::LoadFromDB(QueryResult *achievementResult, QueryResult *cri
                 continue;
             }
 
-            if (criteria->timeLimit && time_t(date + criteria->timeLimit) < time(NULL))
-                continue;
-
             CriteriaProgress& progress = m_criteriaProgress[id];
             progress.counter = counter;
             progress.date    = date;
             progress.changed = false;
+            progress.timedCriteriaFailed = false;
+
+            // A failed achievement will be removed on next tick - TODO: Possible that timer 2 is reseted
+            if (criteria->timeLimit)
+            {
+                AchievementEntry const* achievement = sAchievementStore.LookupEntry(criteria->referredAchievement);
+
+                // Add not-completed achievements to time map
+                if (!IsCompletedCriteria(criteria, achievement))
+                {
+                    time_t failTime = time_t(progress.date + criteria->timeLimit);
+                    m_criteriaFailTimes[criteria->ID] = failTime;
+                    // A failed Achievement - will be removed by DoFailedTimedAchievementCriterias on next tick for player
+                    if (failTime <= time(NULL))
+                        progress.timedCriteriaFailed = true;
+                }
+            }
 
             // check intergiry with max allowed counter value
             if (uint32 maxcounter = GetCriteriaProgressMaxCounter(criteria))
@@ -707,14 +730,15 @@ void AchievementMgr::SendCriteriaUpdate(uint32 id, CriteriaProgress const* progr
     WorldPacket data(SMSG_CRITERIA_UPDATE, 8+4+8);
     data << uint32(id);
 
+    time_t now = time(NULL);
     // the counter is packed like a packed Guid
     data.appendPackGUID(progress->counter);
 
     data << GetPlayer()->GetPackGUID();
-    data << uint32(0);
-    data << uint32(secsToTimeBitFields(progress->date));
-    data << uint32(0);  // timer 1
-    data << uint32(0);  // timer 2
+    data << uint32(progress->timedCriteriaFailed ? 1 : 0);
+    data << uint32(secsToTimeBitFields(now));
+    data << uint32(now - progress->date);                   // timer 1
+    data << uint32(now - progress->date);                   // timer 2
     GetPlayer()->SendDirectMessage(&data);
 }
 
@@ -798,8 +822,55 @@ void AchievementMgr::StartTimedAchievementCriteria(AchievementCriteriaTypes type
 
         // Start with given startTime or now
         progress->date = startTime ? startTime : time(NULL);
+        progress->timedCriteriaFailed = false;
+
+        // Add to timer map
+        m_criteriaFailTimes[achievementCriteria->ID] = time_t(progress->date + achievementCriteria->timeLimit);
 
         SendCriteriaUpdate(achievementCriteria->ID, progress);
+    }
+}
+
+/**
+ * this function will be called whenever there could be a timed achievement criteria failed because of ellapsed time
+ */
+void AchievementMgr::DoFailedTimedAchievementCriterias()
+{
+    if (m_criteriaFailTimes.empty())
+        return;
+
+    time_t now = time(NULL);
+    for (AchievementCriteriaFailTimeMap::iterator iter = m_criteriaFailTimes.begin(); iter != m_criteriaFailTimes.end();)
+    {
+        if (iter->second > now)
+        {
+            ++iter;
+            continue;
+        }
+
+        // Possible failed achievement criteria found
+        AchievementCriteriaEntry const* criteria = sAchievementCriteriaStore.LookupEntry(iter->first);
+        AchievementEntry const* achievement = sAchievementStore.LookupEntry(criteria->referredAchievement);
+
+        // Send Fail for failed criterias
+        if (!IsCompletedCriteria(criteria, achievement))
+        {
+            DETAIL_FILTER_LOG(LOG_FILTER_ACHIEVEMENT_UPDATES, "AchievementMgr::DoFailedTimedAchievementCriterias for criteria %u", criteria->ID);
+
+            CriteriaProgressMap::iterator pro_iter = m_criteriaProgress.find(criteria->ID);
+            MANGOS_ASSERT(pro_iter != m_criteriaProgress.end());
+
+            CriteriaProgress* progress = &pro_iter->second;
+
+            // Set to failed, and send to client
+            progress->timedCriteriaFailed = true;
+            SendCriteriaUpdate(criteria->ID, progress);
+
+            // Remove failed progress
+            m_criteriaProgress.erase(pro_iter);
+        }
+
+        m_criteriaFailTimes.erase(iter++);
     }
 }
 
@@ -894,6 +965,10 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 if (achievementCriteria->win_bg.bgMapID != GetPlayer()->GetMapId())
                     continue;
 
+                BattleGround* bg = GetPlayer()->GetBattleGround();
+                if (!bg)
+                    continue;
+
                 if (achievementCriteria->win_bg.additionalRequirement1_type || achievementCriteria->win_bg.additionalRequirement2_type)
                 {
                     // some hardcoded requirements
@@ -904,14 +979,23 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                         case 159:              // AB, win under 6 minutes
                         {
                             // set 8 minutes because there is 2 minutes long preparation
-                            if(GetPlayer()->GetBattleGround()->GetStartTime() > (8 * MINUTE * IN_MILLISECONDS))
+                            if(bg->GetStartTime() > (8 * MINUTE * IN_MILLISECONDS))
                                 continue;     
                             break;
                         }
                         case 201:              // WS, win under 7 minutes
                         {
                             // set 9 minutes because there is 2 minutes long preparation
-                            if(GetPlayer()->GetBattleGround()->GetStartTime() > (9 * MINUTE * IN_MILLISECONDS))
+                            if(bg->GetStartTime() > (9 * MINUTE * IN_MILLISECONDS))
+                                continue;
+                            break;
+                        }
+                        case 1164:             // AV, own both mines (horde)
+                        case 225:              // AV, own both mines (alliance)
+                        {
+
+                            int8 team = bg->GetTeamIndexByTeamId(GetPlayer()->GetTeam());
+                            if(!((BattleGroundAV*)bg)->IsMineOwnedBy(BG_AV_NORTH_MINE,team) || !((BattleGroundAV*)bg)->IsMineOwnedBy(BG_AV_SOUTH_MINE,team))
                                 continue;
                             break;
                         }
@@ -928,9 +1012,6 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 // some hardcoded requirements
                 else
                 {
-                    BattleGround* bg = GetPlayer()->GetBattleGround();
-                    if (!bg)
-                        continue;
 
                     switch(achievementCriteria->referredAchievement)
                     {
@@ -938,7 +1019,7 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                         {
                             if (bg->GetTypeID(true) != BATTLEGROUND_AB)
                                 continue;
-                            if(!((BattleGroundAB*)bg)->IsTeamScores500Disadvantage(GetPlayer()->GetTeam()))
+                            if (!((BattleGroundAB*)bg)->IsTeamScores500Disadvantage(GetPlayer()->GetTeam()))
                                 continue;
                             break;
                         }
@@ -1173,7 +1254,7 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                     continue;
 
                 // if team check required: must kill by opposition faction
-                if(achievement->ID==318 && miscvalue2==GetPlayer()->GetTeam())
+                if(achievement->ID==318 && miscvalue2==uint32(GetPlayer()->GetTeam()))
                     continue;
 
                 change = 1;
@@ -1886,6 +1967,8 @@ uint32 AchievementMgr::GetCriteriaProgressMaxCounter(AchievementCriteriaEntry co
             return achievementCriteria->honorable_kill_at_area.killCount;
         case ACHIEVEMENT_CRITERIA_TYPE_BG_OBJECTIVE_CAPTURE:
             return achievementCriteria->objective_capture.captureCount;
+        case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_PERSONAL_RATING:
+            return achievementCriteria->highest_personal_rating.teamrating;
 
         // handle all statistic-only criteria here
         case ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_BATTLEGROUND:
@@ -2055,13 +2138,24 @@ void AchievementMgr::SetCriteriaProgress(AchievementCriteriaEntry const* criteri
         if(changeValue == 0)
             return;
 
-        // not start manually started timed achievements - must be same check as below (ie possible on player logout between start and finish)
+        // not start manually started timed achievements
         if (criteria->IsExplicitlyStartedTimedCriteria())
             return;
 
         progress = &m_criteriaProgress[criteria->ID];
-        newValue = changeValue;
+
         progress->date = time(NULL);
+        progress->timedCriteriaFailed = false;
+
+        // timed criterias are added to fail-timer map, and send the starting with counter=0
+        if (criteria->timeLimit)
+        {
+            m_criteriaFailTimes[criteria->ID] = time_t(progress->date + criteria->timeLimit);
+            progress->counter = 0;
+            SendCriteriaUpdate(criteria->ID, progress);
+        }
+
+        newValue = changeValue;
     }
     else
     {
@@ -2087,27 +2181,6 @@ void AchievementMgr::SetCriteriaProgress(AchievementCriteriaEntry const* criteri
         // not update (not mark as changed) if counter will have same value
         if(progress->counter == newValue)
             return;
-    }
-
-    progress->changed = true;
-
-    if(criteria->timeLimit)
-    {
-        time_t now = time(NULL);
-
-        // too later, need restart from 1 auto-started or just fail explcit started
-        if (time_t(progress->date + criteria->timeLimit) < now)
-        {
-            // Do not reset timer for requirements that are started manually, also reset their counter, same check as above
-            if (criteria->IsExplicitlyStartedTimedCriteria())
-                newValue = 0;
-            else
-            {
-                newValue = 1;
-                // This is used as start time of the achievement, and hence only updated on fail
-                progress->date = now;
-            }
-        }
     }
 
     progress->counter = newValue;
@@ -2301,15 +2374,16 @@ void AchievementMgr::BuildAllDataPacket(WorldPacket *data)
     }
     *data << int32(-1);
 
+    time_t now = time(NULL);
     for(CriteriaProgressMap::const_iterator iter = m_criteriaProgress.begin(); iter!=m_criteriaProgress.end(); ++iter)
     {
         *data << uint32(iter->first);
         data->appendPackGUID(iter->second.counter);
         *data << GetPlayer()->GetPackGUID();
-        *data << uint32(0);
-        *data << uint32(secsToTimeBitFields(iter->second.date));
-        *data << uint32(0);
-        *data << uint32(0);
+        *data << uint32(iter->second.timedCriteriaFailed ? 1 : 0);
+        *data << uint32(secsToTimeBitFields(now));
+        *data << uint32(now - iter->second.date);
+        *data << uint32(now - iter->second.date);
     }
 
     *data << int32(-1);
@@ -2775,4 +2849,3 @@ void AchievementGlobalMgr::LoadRewardLocales()
     sLog.outString();
     sLog.outString( ">> Loaded %lu achievement reward locale strings", (unsigned long)m_achievementRewardLocales.size() );
 }
-

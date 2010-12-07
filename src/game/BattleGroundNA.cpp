@@ -67,12 +67,12 @@ void BattleGroundNA::AddPlayer(Player *plr)
     //create score and add it to map, default values are set in constructor
     BattleGroundNAScore* sc = new BattleGroundNAScore;
 
-    m_PlayerScores[plr->GetGUID()] = sc;
+    m_PlayerScores[plr->GetObjectGuid()] = sc;
 
     UpdateArenaWorldState();
 }
 
-void BattleGroundNA::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
+void BattleGroundNA::RemovePlayer(Player* /*plr*/, ObjectGuid /*guid*/)
 {
     if (GetStatus() == STATUS_WAIT_LEAVE)
         return;

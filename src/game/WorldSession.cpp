@@ -369,15 +369,15 @@ void WorldSession::LogoutPlayer(bool Save)
             if(BattleGroundQueueTypeId bgQueueTypeId = _player->GetBattleGroundQueueTypeId(i))
             {
                 _player->RemoveBattleGroundQueueId(bgQueueTypeId);
-                sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(_player->GetGUID(), true);
+                sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(_player->GetObjectGuid(), true);
                 if( bgQueueTypeId == BATTLEGROUND_QUEUE_2v2 || bgQueueTypeId == BATTLEGROUND_QUEUE_3v3 || bgQueueTypeId == BATTLEGROUND_QUEUE_5v5 )
-                    if (Group* group = ((Player*)_player)->GetGroup())
+                    if (Group* group = _player->GetGroup())
                         for(GroupReference *itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
                             if (Player* member = itr->getSource())
                                 if(BattleGroundQueueTypeId bgQueueTypeId = member->GetBattleGroundQueueTypeId(i))
                                 {
                                     member->RemoveBattleGroundQueueId(bgQueueTypeId);
-                                    sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(member->GetGUID(), true);
+                                    sBattleGroundMgr.m_BattleGroundQueues[ bgQueueTypeId ].RemovePlayer(member->GetObjectGuid(), true);
                                 }
             }
         }
@@ -400,7 +400,9 @@ void WorldSession::LogoutPlayer(bool Save)
         }
 
         ///- Remove pet
-        _player->RemovePet(NULL, PET_SAVE_AS_CURRENT, true);
+        _player->RemovePet(PET_SAVE_AS_CURRENT);
+
+        _player->InterruptNonMeleeSpells(true);
 
         ///- empty buyback items and save the player in the database
         // some save parts only correctly work in case player present in map/player_lists (pets, etc)
@@ -433,7 +435,7 @@ void WorldSession::LogoutPlayer(bool Save)
             _player->GetGroup()->SendUpdate();
 
         ///- Broadcast a logout message to the player's friends
-        sSocialMgr.SendFriendStatus(_player, FRIEND_OFFLINE, _player->GetGUIDLow(), true);
+        sSocialMgr.SendFriendStatus(_player, FRIEND_OFFLINE, _player->GetObjectGuid(), true);
         sSocialMgr.RemovePlayerSocial (_player->GetGUIDLow ());
 
         ///- Remove the player from the world
@@ -713,6 +715,8 @@ void WorldSession::SaveTutorialsData()
         case TUTORIALDATA_NEW:
             CharacterDatabase.PExecute("INSERT INTO character_tutorial (account,tut0,tut1,tut2,tut3,tut4,tut5,tut6,tut7) VALUES ('%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u', '%u')",
                 GetAccountId(), m_Tutorials[0], m_Tutorials[1], m_Tutorials[2], m_Tutorials[3], m_Tutorials[4], m_Tutorials[5], m_Tutorials[6], m_Tutorials[7]);
+            break;
+        case TUTORIALDATA_UNCHANGED:
             break;
     }
 

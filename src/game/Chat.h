@@ -110,7 +110,7 @@ class ChatHandler
         virtual LocaleConstant GetSessionDbcLocale() const;
         virtual int GetSessionDbLocaleIndex() const;
 
-        bool HasLowerSecurity(Player* target, uint64 guid, bool strong = false);
+        bool HasLowerSecurity(Player* target, ObjectGuid guid = ObjectGuid(), bool strong = false);
         bool HasLowerSecurityAccount(WorldSession* target, uint32 account, bool strong = false);
 
         void SendGlobalSysMessage(const char *str);
@@ -133,7 +133,6 @@ class ChatHandler
         bool HandleAccountPasswordCommand(char* args);
         bool HandleAccountSetAddonCommand(char* args);
         bool HandleAccountSetGmLevelCommand(char* args);
-        //bool HandleAccountSetPasswordCommand(char* args);
 
         bool HandleAuctionAllianceCommand(char* args);
         bool HandleAuctionGoblinCommand(char* args);
@@ -340,7 +339,6 @@ class ChatHandler
         bool HandleNpcSetPhaseCommand(char* args);
         bool HandleNpcSpawnDistCommand(char* args);
         bool HandleNpcSpawnTimeCommand(char* args);
-        bool HandleNpcTameCommand(char* args);
         bool HandleNpcTextEmoteCommand(char* args);
         bool HandleNpcUnFollowCommand(char* args);
         bool HandleNpcWhisperCommand(char* args);
@@ -397,6 +395,7 @@ class ChatHandler
         bool HandleReloadGossipScriptsCommand(char* args);
         bool HandleReloadGOQuestRelationsCommand(char* args);
         bool HandleReloadGOQuestInvRelationsCommand(char* args);
+        bool HandleReloadItemConvertCommand(char* args);
         bool HandleReloadItemEnchantementsCommand(char* args);
         bool HandleReloadItemRequiredTragetCommand(char* args);
         bool HandleReloadLocalesAchievementRewardCommand(char* args);
@@ -614,7 +613,7 @@ class ChatHandler
         GameTele const* ExtractGameTeleFromLink(char** text);
         bool   ExtractLocationFromLink(char** text, uint32& mapid, float& x, float& y, float& z);
         std::string ExtractPlayerNameFromLink(char** text);
-        bool ExtractPlayerTarget(char** args, Player** player, uint64* player_guid = NULL, std::string* player_name = NULL);
+        bool ExtractPlayerTarget(char** args, Player** player, ObjectGuid* player_guid = NULL, std::string* player_name = NULL);
                                                             // select by arg (name/link) or in-game selection online/offline player
 
         std::string playerLink(std::string const& name) const { return m_session ? "|cffffffff|Hplayer:"+name+"|h["+name+"]|h|r" : name; }
@@ -639,7 +638,7 @@ class ChatHandler
         bool HandleBanHelper(BanMode mode, char* args);
         bool HandleBanInfoHelper(uint32 accountid, char const* accountname);
         bool HandleUnBanHelper(BanMode mode, char* args);
-        void HandleCharacterLevel(Player* player, uint64 player_guid, uint32 oldlevel, uint32 newlevel);
+        void HandleCharacterLevel(Player* player, ObjectGuid player_guid, uint32 oldlevel, uint32 newlevel);
         void HandleLearnSkillRecipesHelper(Player* player,uint32 skill_id);
         bool HandleGoHelper(Player* _player, uint32 mapid, float x, float y, float const* zPtr = NULL, float const* ortPtr = NULL);
         bool HandleGetValueHelper(Object* target, uint32 field, char* typeStr);

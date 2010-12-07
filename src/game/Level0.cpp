@@ -185,59 +185,6 @@ bool ChatHandler::HandleGMListIngameCommand(char* /*args*/)
 
 bool ChatHandler::HandleAccountPasswordCommand(char* args)
 {
-    /*
-    // allow use from RA, but not from console (not have associated account id)
-    if (!GetAccountId())
-    {
-        SendSysMessage (LANG_RA_ONLY_COMMAND);
-        SetSentErrorMessage (true);
-        return false;
-    }
-
-    // allow or quoted string with possible spaces or literal without spaces
-    char *old_pass = ExtractQuotedOrLiteralArg(&args);
-    char *new_pass = ExtractQuotedOrLiteralArg(&args);
-    char *new_pass_c = ExtractQuotedOrLiteralArg(&args);
-
-    if (!old_pass || !new_pass || !new_pass_c)
-        return false;
-
-    std::string password_old = old_pass;
-    std::string password_new = new_pass;
-    std::string password_new_c = new_pass_c;
-
-    if (password_new != password_new_c)
-    {
-        SendSysMessage (LANG_NEW_PASSWORDS_NOT_MATCH);
-        SetSentErrorMessage (true);
-        return false;
-    }
-
-    if (!sAccountMgr.CheckPassword (GetAccountId(), password_old))
-    {
-        SendSysMessage (LANG_COMMAND_WRONGOLDPASSWORD);
-        SetSentErrorMessage (true);
-        return false;
-    }
-
-    AccountOpResult result = sAccountMgr.ChangePassword(GetAccountId(), password_new);
-
-    switch(result)
-    {
-        case AOR_OK:
-            SendSysMessage(LANG_COMMAND_PASSWORD);
-            break;
-        case AOR_PASS_TOO_LONG:
-            SendSysMessage(LANG_PASSWORD_TOO_LONG);
-            SetSentErrorMessage(true);
-            return false;
-        case AOR_NAME_NOT_EXIST:                            // not possible case, don't want get account name for output
-        default:
-            SendSysMessage(LANG_COMMAND_NOTCHANGEPASSWORD);
-            SetSentErrorMessage(true);
-            return false;
-    }*/
-
     PSendSysMessage("Due to security reasons you can only change your password through the forum. Please visit http://gamingconsortium.org/ for more information.");
     SetSentErrorMessage(true);
 
@@ -264,12 +211,12 @@ bool ChatHandler::HandleAccountLockCommand(char* args)
 
     if (value)
     {
-        LoginDatabase.PExecute( "UPDATE account SET locked = '1' WHERE id = '%d'",GetAccountId());
+        LoginDatabase.PExecute( "UPDATE account SET locked = '1' WHERE id = '%u'", GetAccountId());
         PSendSysMessage(LANG_COMMAND_ACCLOCKLOCKED);
     }
     else
     {
-        LoginDatabase.PExecute( "UPDATE account SET locked = '0' WHERE id = '%d'",GetAccountId());
+        LoginDatabase.PExecute( "UPDATE account SET locked = '0' WHERE id = '%u'", GetAccountId());
         PSendSysMessage(LANG_COMMAND_ACCLOCKUNLOCKED);
     }
 

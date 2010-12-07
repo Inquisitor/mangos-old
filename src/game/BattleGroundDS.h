@@ -39,21 +39,12 @@ class BattleGroundDS : public BattleGround
 
         /* inherited from BattlegroundClass */
         virtual void AddPlayer(Player *plr);
-        virtual void Reset();
-        virtual void FillInitialWorldStates(WorldPacket &d);
         virtual void StartingEventCloseDoors();
         virtual void StartingEventOpenDoors();
 
-        void RemovePlayer(Player *plr, uint64 guid);
+        void RemovePlayer(Player *plr, ObjectGuid guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
         bool SetupBattleGround();
         void HandleKillPlayer(Player* player, Player *killer);
-        bool HandlePlayerUnderMap(Player * plr);
-
-        bool teleportCheck;
-        uint32 m_uiTeleport;
-
-        bool pushbackCheck;
-        uint32 m_uiKnockback;
 };
 #endif

@@ -361,26 +361,26 @@ struct GameObjectInfo
             uint32 creditProxyCreature;                     //1
             uint32 empty1;                                  //2
             uint32 intactEvent;                             //3
-            uint32 empty2;                                  //4
+            uint32 damagedDisplayId;                        //4
             uint32 damagedNumHits;                          //5
-            uint32 empty3;                                  //6
-            uint32 empty4;                                  //7
-            uint32 empty5;                                  //8
+            uint32 empty2;                                  //6
+            uint32 empty3;                                  //7
+            uint32 empty4;                                  //8
             uint32 damagedEvent;                            //9
-            uint32 empty6;                                  //10
-            uint32 empty7;                                  //11
-            uint32 empty8;                                  //12
-            uint32 empty9;                                  //13
+            uint32 destroyedDisplayId;                      //10
+            uint32 empty5;                                  //11
+            uint32 empty6;                                  //12
+            uint32 empty7;                                  //13
             uint32 destroyedEvent;                          //14
-            uint32 empty10;                                 //15
+            uint32 empty8;                                  //15
             uint32 debuildingTimeSecs;                      //16
-            uint32 empty11;                                 //17
+            uint32 empty9;                                  //17
             uint32 destructibleData;                        //18
             uint32 rebuildingEvent;                         //19
-            uint32 empty12;                                 //20
-            uint32 empty13;                                 //21
+            uint32 empty10;                                 //20
+            uint32 empty11;                                 //21
             uint32 damageEvent;                             //22
-            uint32 empty14;                                 //23
+            uint32 empty12;                                 //23
         } destructibleBuilding;
         //34 GAMEOBJECT_TYPE_GUILDBANK - empty
         //35 GAMEOBJECT_TYPE_TRAPDOOR
@@ -578,7 +578,6 @@ class Unit;
 #define FISHING_BOBBER_READY_TIME 5
 
 #define GO_ANIMPROGRESS_DEFAULT 0xFF
-
 class MANGOS_DLL_SPEC GameObject : public WorldObject
 {
     public:
@@ -598,12 +597,6 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         void UpdateRotationFields(float rotation2 = 0.0f, float rotation3 = 0.0f);
 
-        void Say(int32 textId, uint32 language, uint64 TargetGuid) { MonsterSay(textId,language,TargetGuid); }
-        void Yell(int32 textId, uint32 language, uint64 TargetGuid) { MonsterYell(textId,language,TargetGuid); }
-        void TextEmote(int32 textId, uint64 TargetGuid) { MonsterTextEmote(textId,TargetGuid); }
-        void Whisper(int32 textId, uint64 receiver) { MonsterWhisper(textId,receiver); }
-        void YellToZone(int32 textId, uint32 language, uint64 TargetGuid) { MonsterYellToZone(textId,language,TargetGuid); }
-
         // overwrite WorldObject function for proper name localization
         const char* GetNameForLocaleIdx(int32 locale_idx) const;
 
@@ -615,12 +608,12 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         bool LoadFromDB(uint32 guid, Map *map);
         void DeleteFromDB();
 
-        void SetOwnerGUID(uint64 owner)
+        void SetOwnerGuid(ObjectGuid ownerGuid)
         {
             m_spawnedByDefault = false;                     // all object with owner is despawned after delay
-            SetUInt64Value(OBJECT_FIELD_CREATED_BY, owner);
+            SetGuidValue(OBJECT_FIELD_CREATED_BY, ownerGuid);
         }
-        uint64 GetOwnerGUID() const { return GetUInt64Value(OBJECT_FIELD_CREATED_BY); }
+        ObjectGuid const& GetOwnerGuid() const { return GetGuidValue(OBJECT_FIELD_CREATED_BY); }
         Unit* GetOwner() const;
 
         void SetSpellId(uint32 id)
@@ -694,8 +687,8 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         Loot        loot;
 
-        bool hasQuest(uint32 quest_id) const;
-        bool hasInvolvedQuest(uint32 quest_id) const;
+        bool HasQuest(uint32 quest_id) const;
+        bool HasInvolvedQuest(uint32 quest_id) const;
         bool ActivateToQuest(Player *pTarget) const;
         void UseDoorOrButton(uint32 time_to_restore = 0, bool alternative = false);
                                                             // 0 = use `gameobject`.`spawntimesecs`
@@ -714,6 +707,14 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         GridReference<GameObject> &GetGridRef() { return m_gridRef; }
 
         uint64 GetRotation() const { return m_rotation; }
+
+        bool IsInRange(float x, float y, float z, float radius) const;
+        void DamageTaken(Unit *pDoneBy, uint32 uiDamage);
+        void Rebuild(Unit *pWho);
+
+        uint32 GetHealth() const { return m_health; }
+        uint32 GetMaxHealth() const { return m_goInfo->destructibleBuilding.intactNumHits + m_goInfo->destructibleBuilding.damagedNumHits; }
+
     protected:
         uint32      m_spellId;
         time_t      m_respawnTime;                          // (secs) time of next respawn (or despawn if GO have owner()),
@@ -722,6 +723,7 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         bool        m_spawnedByDefault;
         time_t      m_cooldownTime;                         // used as internal reaction delay time store (not state change reaction).
                                                             // For traps this: spell casting cooldown, for doors/buttons: reset time.
+        uint32      m_health;
 
         typedef std::set<ObjectGuid> GuidsSet;
 

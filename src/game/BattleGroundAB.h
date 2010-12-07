@@ -135,9 +135,9 @@ enum BG_AB_Sounds
     BG_AB_SOUND_NEAR_VICTORY            = 8456
 };
 
-#define BG_AB_NotABBGWeekendHonorTicks      260
-#define BG_AB_ABBGWeekendHonorTicks         160
-#define BG_AB_NotABBGWeekendReputationTicks 160
+#define BG_AB_NotABBGWeekendHonorTicks      330
+#define BG_AB_ABBGWeekendHonorTicks         200
+#define BG_AB_NotABBGWeekendReputationTicks 200
 #define BG_AB_ABBGWeekendReputationTicks    150
 #define BG_AB_ExperiencesTicks              260
 
@@ -185,11 +185,11 @@ class BattleGroundAB : public BattleGround
         void AddPlayer(Player *plr);
         virtual void StartingEventCloseDoors();
         virtual void StartingEventOpenDoors();
-        void RemovePlayer(Player *plr,uint64 guid);
+        void RemovePlayer(Player *plr, ObjectGuid guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
         virtual bool SetupBattleGround();
         virtual void Reset();
-        void EndBattleGround(uint32 winner);
+        void EndBattleGround(Team winner);
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(Player* player);
 
         /* Scorekeeping */
@@ -201,8 +201,8 @@ class BattleGroundAB : public BattleGround
         virtual void EventPlayerClickedOnFlag(Player *source, GameObject* target_obj);
 
         /* achievement req. */
-        bool IsAllNodesConrolledByTeam(uint32 team) const;  // overwrited
-        bool IsTeamScores500Disadvantage(uint32 team) const { return m_TeamScores500Disadvantage[GetTeamIndexByTeamId(team)]; }
+        bool IsAllNodesConrolledByTeam(Team team) const;    // overwrited
+        bool IsTeamScores500Disadvantage(Team team) const { return m_TeamScores500Disadvantage[GetTeamIndexByTeamId(team)]; }
     private:
         /* Gameobject spawning/despawning */
         void _CreateBanner(uint8 node, uint8 type, uint8 teamIndex, bool delay);

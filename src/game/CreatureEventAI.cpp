@@ -134,38 +134,38 @@ bool CreatureEventAI::ProcessEvent(CreatureEventAIHolder& pHolder, Unit* pAction
     if (pHolder.Event.event_inverse_phase_mask & (1 << m_Phase))
         return false;
 
-    switch( pHolder.Event.event_requirement_type )
+    switch (pHolder.Event.event_requirement_type)
     {
         case REQUIREMENT_T_HP_PERCENT:
-            if( m_creature->GetHealth() * 100 / m_creature->GetMaxHealth() > pHolder.Event.event_requirement_value )
+            if (m_creature->GetHealth() * 100 / m_creature->GetMaxHealth() > pHolder.Event.event_requirement_value)
                 return false;
             break;
         case REQUIREMENT_T_MANA_PERCENT:
-            if( m_creature->GetPower(POWER_MANA) * 100 / m_creature->GetMaxPower(POWER_MANA) > pHolder.Event.event_requirement_value )
+            if (m_creature->GetPower(POWER_MANA) * 100 / m_creature->GetMaxPower(POWER_MANA) > pHolder.Event.event_requirement_value)
                 return false;
             break;
         case REQUIREMENT_T_AURA:
-            if( !m_creature->HasAura( pHolder.Event.event_requirement_value ) )
+            if (!m_creature->HasAura( pHolder.Event.event_requirement_value))
                 return false;
             break;
         case REQUIREMENT_T_INVOKER_AURA:
-            if( !pActionInvoker || !pActionInvoker->HasAura( pHolder.Event.event_requirement_value ) )
+            if(!pActionInvoker || !pActionInvoker->HasAura( pHolder.Event.event_requirement_value))
                 return false;
             break;
         case REQUIREMENT_T_ZONE:
-            if( m_creature->GetZoneId() != pHolder.Event.event_requirement_value )
+            if (m_creature->GetZoneId() != pHolder.Event.event_requirement_value)
                 return false;
             break;
         case REQUIREMENT_T_QUEST:
-            if( !pActionInvoker || pActionInvoker->GetTypeId() != TYPEID_PLAYER || ((Player*)pActionInvoker)->GetQuestStatus( pHolder.Event.event_requirement_value) != QUEST_STATUS_INCOMPLETE )
+            if (!pActionInvoker || pActionInvoker->GetTypeId() != TYPEID_PLAYER || ((Player*)pActionInvoker)->GetQuestStatus( pHolder.Event.event_requirement_value) != QUEST_STATUS_INCOMPLETE)
                 return false;
             break;
         case REQUIREMENT_T_HAS_NO_AURA:
-            if( m_creature->HasAura( pHolder.Event.event_requirement_value ) )
+            if (m_creature->HasAura( pHolder.Event.event_requirement_value))
                 return false;
             break;
         case REQUIREMENT_T_INVOKER_HAS_NO_AURA:
-            if( !pActionInvoker || pActionInvoker->HasAura( pHolder.Event.event_requirement_value ) )
+            if (!pActionInvoker || pActionInvoker->HasAura( pHolder.Event.event_requirement_value))
                 return false;
             break;
     }
@@ -576,10 +576,14 @@ void CreatureEventAI::ProcessAction(CreatureEventAI_Action const& action, uint32
                                 m_creature->GetMotionMaster()->Clear(false);
                                 m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), m_AttackDistance, m_AttackAngle);
                                 break;
+                            default:
+                                break;
                         }
                     }
                     break;
                 }
+                default:
+                    break;
             }
 
             break;
@@ -1147,13 +1151,13 @@ void CreatureEventAI::MoveInLineOfSight(Unit *who)
         }
     }
 
-    if (m_creature->isCivilian() || m_creature->IsNeutralToAll())
+    if (m_creature->IsCivilian() || m_creature->IsNeutralToAll())
         return;
 
     if (m_creature->CanInitiateAttack() && who->isTargetableForAttack() &&
         m_creature->IsHostileTo(who) && who->isInAccessablePlaceFor(m_creature))
     {
-        if (!m_creature->canFly() && m_creature->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
+        if (!m_creature->CanFly() && m_creature->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
             return;
 
         float attackRadius = m_creature->GetAttackDistance(who);
@@ -1394,31 +1398,31 @@ void CreatureEventAI::DoScriptText(int32 textEntry, WorldObject* pSource, Unit* 
     switch((*i).second.Type)
     {
         case CHAT_TYPE_SAY:
-            pSource->MonsterSay(textEntry, (*i).second.Language, target ? target->GetGUID() : 0);
+            pSource->MonsterSay(textEntry, (*i).second.Language, target);
             break;
         case CHAT_TYPE_YELL:
-            pSource->MonsterYell(textEntry, (*i).second.Language, target ? target->GetGUID() : 0);
+            pSource->MonsterYell(textEntry, (*i).second.Language, target);
             break;
         case CHAT_TYPE_TEXT_EMOTE:
-            pSource->MonsterTextEmote(textEntry, target ? target->GetGUID() : 0);
+            pSource->MonsterTextEmote(textEntry, target);
             break;
         case CHAT_TYPE_BOSS_EMOTE:
-            pSource->MonsterTextEmote(textEntry, target ? target->GetGUID() : 0, true);
+            pSource->MonsterTextEmote(textEntry, target, true);
             break;
         case CHAT_TYPE_WHISPER:
         {
             if (target && target->GetTypeId() == TYPEID_PLAYER)
-                pSource->MonsterWhisper(textEntry, target->GetGUID());
+                pSource->MonsterWhisper(textEntry, target);
             else sLog.outErrorDb("CreatureEventAI: DoScriptText entry %i cannot whisper without target unit (TYPEID_PLAYER).", textEntry);
         }break;
         case CHAT_TYPE_BOSS_WHISPER:
         {
             if (target && target->GetTypeId() == TYPEID_PLAYER)
-                pSource->MonsterWhisper(textEntry, target->GetGUID(), true);
+                pSource->MonsterWhisper(textEntry, target, true);
             else sLog.outErrorDb("CreatureEventAI: DoScriptText entry %i cannot whisper without target unit (TYPEID_PLAYER).", textEntry);
         }break;
         case CHAT_TYPE_ZONE_YELL:
-            pSource->MonsterYellToZone(textEntry, (*i).second.Language, target ? target->GetGUID() : 0);
+            pSource->MonsterYellToZone(textEntry, (*i).second.Language, target);
             break;
     }
 }
@@ -1449,7 +1453,7 @@ bool CreatureEventAI::CanCast(Unit* Target, SpellEntry const *Spell, bool Trigge
         return false;
 
     //Check for power
-    if (!Triggered && m_creature->GetPower((Powers)Spell->powerType) < Spell->manaCost)
+    if (!Triggered && m_creature->GetPower((Powers)Spell->powerType) < Spell::CalculatePowerCost(Spell, m_creature))
         return false;
 
     SpellRangeEntry const *TempRange = NULL;

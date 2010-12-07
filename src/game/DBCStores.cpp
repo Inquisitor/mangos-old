@@ -98,6 +98,7 @@ DBCStorage <GtChanceToMeleeCritBaseEntry> sGtChanceToMeleeCritBaseStore(GtChance
 DBCStorage <GtChanceToMeleeCritEntry>     sGtChanceToMeleeCritStore(GtChanceToMeleeCritfmt);
 DBCStorage <GtChanceToSpellCritBaseEntry> sGtChanceToSpellCritBaseStore(GtChanceToSpellCritBasefmt);
 DBCStorage <GtChanceToSpellCritEntry>     sGtChanceToSpellCritStore(GtChanceToSpellCritfmt);
+DBCStorage <GtOCTClassCombatRatingScalarEntry> sGtOCTClassCombatRatingScalarStore(GtOCTClassCombatRatingScalarfmt);
 DBCStorage <GtOCTRegenHPEntry>            sGtOCTRegenHPStore(GtOCTRegenHPfmt);
 //DBCStorage <GtOCTRegenMPEntry>            sGtOCTRegenMPStore(GtOCTRegenMPfmt);  -- not used currently
 DBCStorage <GtRegenHPPerSptEntry>         sGtRegenHPPerSptStore(GtRegenHPPerSptfmt);
@@ -154,7 +155,7 @@ DBCStorage <SpellFocusObjectEntry> sSpellFocusObjectStore(SpellFocusObjectfmt);
 DBCStorage <SpellRadiusEntry> sSpellRadiusStore(SpellRadiusfmt);
 DBCStorage <SpellRangeEntry> sSpellRangeStore(SpellRangefmt);
 DBCStorage <SpellRuneCostEntry> sSpellRuneCostStore(SpellRuneCostfmt);
-DBCStorage <SpellShapeshiftEntry> sSpellShapeshiftStore(SpellShapeshiftfmt);
+DBCStorage <SpellShapeshiftFormEntry> sSpellShapeshiftFormStore(SpellShapeshiftFormfmt);
 DBCStorage <StableSlotPricesEntry> sStableSlotPricesStore(StableSlotPricesfmt);
 DBCStorage <SummonPropertiesEntry> sSummonPropertiesStore(SummonPropertiesfmt);
 DBCStorage <TalentEntry> sTalentStore(TalentEntryfmt);
@@ -176,6 +177,7 @@ DBCStorage <TaxiPathEntry> sTaxiPathStore(TaxiPathEntryfmt);
 TaxiPathNodesByPath sTaxiPathNodesByPath;
 static DBCStorage <TaxiPathNodeEntry> sTaxiPathNodeStore(TaxiPathNodeEntryfmt);
 
+DBCStorage <TeamContributionPoints> sTeamContributionPoints(TeamContributionPointsfmt);
 DBCStorage <TotemCategoryEntry> sTotemCategoryStore(TotemCategoryEntryfmt);
 DBCStorage <VehicleEntry> sVehicleStore(VehicleEntryfmt);
 DBCStorage <VehicleSeatEntry> sVehicleSeatStore(VehicleSeatEntryfmt);
@@ -190,7 +192,7 @@ bool IsAcceptableClientBuild(uint32 build)
 {
     int accepted_versions[] = EXPECTED_MANGOSD_CLIENT_BUILD;
     for(int i = 0; accepted_versions[i]; ++i)
-        if(build == accepted_versions[i])
+        if(int(build) == accepted_versions[i])
             return true;
 
     return false;
@@ -342,10 +344,10 @@ inline void LoadDBC(LocalData& localeData,barGoLink& bar, StoreProblemList& errl
         }
         else
             errlist.push_back(dbc_filename);
-
-        if (sql)
-            delete sql;
     }
+
+    if (sql)
+        delete sql;
 }
 
 void LoadDBCStores(const std::string& dataPath)
@@ -365,7 +367,7 @@ void LoadDBCStores(const std::string& dataPath)
         exit(1);
     }
 
-    const uint32 DBCFilesCount = 87;
+    const uint32 DBCFilesCount = 89;
 
     barGoLink bar( (int)DBCFilesCount );
 
@@ -438,6 +440,7 @@ void LoadDBCStores(const std::string& dataPath)
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sGtChanceToSpellCritBaseStore, dbcPath,"gtChanceToSpellCritBase.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sGtChanceToSpellCritStore, dbcPath,"gtChanceToSpellCrit.dbc");
 
+    LoadDBC(availableDbcLocales,bar,bad_dbc_files,sGtOCTClassCombatRatingScalarStore,dbcPath,"gtOCTClassCombatRatingScalar.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sGtOCTRegenHPStore,        dbcPath,"gtOCTRegenHP.dbc");
     //LoadDBC(availableDbcLocales,bar,bad_dbc_files,sGtOCTRegenMPStore,        dbcPath,"gtOCTRegenMP.dbc");       -- not used currently
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sGtRegenHPPerSptStore,     dbcPath,"gtRegenHPPerSpt.dbc");
@@ -499,61 +502,37 @@ void LoadDBCStores(const std::string& dataPath)
     SpellEntry *sfix2 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(60936));
     sfix2->DurationIndex = 28;
 
-    /*//Lifebloom final heal
-    SpellEntry *sfix3 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(33778));
-    sfix3->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;*/
-
     //Twilight Torment - relly dunno what blizzard intended to do
-    SpellEntry *sfix4 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(57935));
-    sfix4->AttributesEx = 0;
-    sfix4->AttributesEx4 = SPELL_ATTR_EX4_NOT_STEALABLE;
-    sfix4->CastingTimeIndex = 1;
-    sfix4->RecoveryTime = 0;
-    sfix4->procFlags = (PROC_FLAG_TAKEN_MELEE_HIT | PROC_FLAG_TAKEN_MELEE_SPELL_HIT | PROC_FLAG_TAKEN_RANGED_HIT | PROC_FLAG_TAKEN_RANGED_SPELL_HIT | PROC_FLAG_TAKEN_NEGATIVE_SPELL_HIT);
-    sfix4->procChance = 100;
-    sfix4->procCharges = 0;
-    sfix4->rangeIndex = 1;
-    sfix4->StackAmount = 0;
-    sfix4->Effect[EFFECT_INDEX_1] = 0;
-    sfix4->EffectDieSides[EFFECT_INDEX_1] = 0;
-    sfix4->EffectBasePoints[EFFECT_INDEX_0] = -1;
-    sfix4->EffectImplicitTargetA[EFFECT_INDEX_0] = 6;
-    sfix4->EffectImplicitTargetA[EFFECT_INDEX_1] = 0;
-    sfix4->EffectImplicitTargetB[EFFECT_INDEX_0] = 0;
-    sfix4->EffectImplicitTargetB[EFFECT_INDEX_1] = 0;
-    sfix4->EffectRadiusIndex[EFFECT_INDEX_0] = 0;
-    sfix4->EffectRadiusIndex[EFFECT_INDEX_1] = 0;
-    sfix4->EffectApplyAuraName[EFFECT_INDEX_0] = SPELL_AURA_PROC_TRIGGER_SPELL;
-    sfix4->EffectApplyAuraName[EFFECT_INDEX_1] = 0;
-    sfix4->EffectAmplitude[EFFECT_INDEX_0] = 0;
-    sfix4->EffectAmplitude[EFFECT_INDEX_1] = 0;
-    sfix4->EffectMiscValue[EFFECT_INDEX_0] = 0;
-    sfix4->EffectMiscValue[EFFECT_INDEX_1] = 0;
-    sfix4->EffectMiscValueB[EFFECT_INDEX_0] = 0;
-    sfix4->EffectMiscValueB[EFFECT_INDEX_1] = 0;
-    sfix4->EffectTriggerSpell[EFFECT_INDEX_0] = 57988;
-    sfix4->EffectTriggerSpell[EFFECT_INDEX_1] = 0;
+    SpellEntry *sfix3 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(57935));
+    sfix3->AttributesEx = 0;
+    sfix3->AttributesEx4 = SPELL_ATTR_EX4_NOT_STEALABLE;
+    sfix3->CastingTimeIndex = 1;
+    sfix3->RecoveryTime = 0;
+    sfix3->procFlags = (PROC_FLAG_TAKEN_MELEE_HIT | PROC_FLAG_TAKEN_MELEE_SPELL_HIT | PROC_FLAG_TAKEN_RANGED_HIT | PROC_FLAG_TAKEN_RANGED_SPELL_HIT | PROC_FLAG_TAKEN_NEGATIVE_SPELL_HIT);
+    sfix3->procChance = 100;
+    sfix3->procCharges = 0;
+    sfix3->rangeIndex = 1;
+    sfix3->StackAmount = 0;
+    sfix3->Effect[EFFECT_INDEX_1] = 0;
+    sfix3->EffectDieSides[EFFECT_INDEX_1] = 0;
+    sfix3->EffectBasePoints[EFFECT_INDEX_0] = -1;
+    sfix3->EffectImplicitTargetA[EFFECT_INDEX_0] = 6;
+    sfix3->EffectImplicitTargetA[EFFECT_INDEX_1] = 0;
+    sfix3->EffectImplicitTargetB[EFFECT_INDEX_0] = 0;
+    sfix3->EffectImplicitTargetB[EFFECT_INDEX_1] = 0;
+    sfix3->EffectRadiusIndex[EFFECT_INDEX_0] = 0;
+    sfix3->EffectRadiusIndex[EFFECT_INDEX_1] = 0;
+    sfix3->EffectApplyAuraName[EFFECT_INDEX_0] = SPELL_AURA_PROC_TRIGGER_SPELL;
+    sfix3->EffectApplyAuraName[EFFECT_INDEX_1] = 0;
+    sfix3->EffectAmplitude[EFFECT_INDEX_0] = 0;
+    sfix3->EffectAmplitude[EFFECT_INDEX_1] = 0;
+    sfix3->EffectMiscValue[EFFECT_INDEX_0] = 0;
+    sfix3->EffectMiscValue[EFFECT_INDEX_1] = 0;
+    sfix3->EffectMiscValueB[EFFECT_INDEX_0] = 0;
+    sfix3->EffectMiscValueB[EFFECT_INDEX_1] = 0;
+    sfix3->EffectTriggerSpell[EFFECT_INDEX_0] = 57988;
+    sfix3->EffectTriggerSpell[EFFECT_INDEX_1] = 0;
 
-    // Rune Strike
-    SpellEntry *sfix5 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(56817));
-    sfix5->Id = 56817;
-    sfix5->Attributes = 384;
-    sfix5->CastingTimeIndex = 1;
-    sfix5->procFlags = 16;
-    sfix5->procChance = 100;
-    sfix5->procCharges = 1;
-    sfix5->baseLevel = 67;
-    sfix5->spellLevel = 67;
-    sfix5->DurationIndex = 1;
-    sfix5->powerType = 6;
-    sfix5->rangeIndex = 2;
-    sfix5->EquippedItemClass = -1;
-    sfix5->Effect[EFFECT_INDEX_0] = 6;
-    sfix5->EffectImplicitTargetA[EFFECT_INDEX_0] = 1;
-    sfix5->EffectApplyAuraName[EFFECT_INDEX_0] = 4;
-    sfix5->SpellName[0] = "Rune Strike";
-    sfix5->SpellFamilyName = SPELLFAMILY_DEATHKNIGHT;
-    sfix5->SchoolMask = 1;
 
     for (uint32 j = 0; j < sSkillLineAbilityStore.GetNumRows(); ++j)
     {
@@ -589,7 +568,7 @@ void LoadDBCStores(const std::string& dataPath)
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSpellRadiusStore,         dbcPath,"SpellRadius.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSpellRangeStore,          dbcPath,"SpellRange.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSpellRuneCostStore,       dbcPath,"SpellRuneCost.dbc");
-    LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSpellShapeshiftStore,     dbcPath,"SpellShapeshiftForm.dbc");
+    LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSpellShapeshiftFormStore, dbcPath,"SpellShapeshiftForm.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sStableSlotPricesStore,    dbcPath,"StableSlotPrices.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sSummonPropertiesStore,    dbcPath,"SummonProperties.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sTalentStore,              dbcPath,"Talent.dbc");
@@ -699,9 +678,14 @@ void LoadDBCStores(const std::string& dataPath)
             // old continent node (+ nodes virtually at old continents, check explicitly to avoid loading map files for zone info)
             if (node->map_id < 2 || i == 82 || i == 83 || i == 93 || i == 94)
                 sOldContinentsNodesMask[field] |= submask;
+
+            // fix DK node at Ebon Hold
+            if (i == 315)
+               ((TaxiNodesEntry*)node)->MountCreatureID[1] = 32981;
         }
     }
 
+    LoadDBC(availableDbcLocales,bar,bad_dbc_files,sTeamContributionPoints,   dbcPath,"TeamContributionPoints.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sTotemCategoryStore,       dbcPath,"TotemCategory.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sVehicleStore,             dbcPath,"Vehicle.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sVehicleSeatStore,         dbcPath,"VehicleSeat.dbc");
@@ -995,7 +979,7 @@ bool IsPointInAreaTriggerZone(AreaTriggerEntry const* atEntry, uint32 mapid, flo
         // rotate the players position instead of rotating the whole cube, that way we can make a simplified
         // is-in-cube check and we have to calculate only one point instead of 4
 
-        // 2PI = 360 , keep in mind that ingame orientation is counter-clockwise
+        // 2PI = 360, keep in mind that ingame orientation is counter-clockwise
         double rotation = 2*M_PI-atEntry->box_orientation;
         double sinVal = sin(rotation);
         double cosVal = cos(rotation);
