@@ -1753,7 +1753,7 @@ void Map::ScriptsProcess()
 
         Object* source = NULL;
 
-        if (step.sourceGuid.IsEmpty())
+        if (!step.sourceGuid.IsEmpty())
         {
             switch(step.sourceGuid.GetHigh())
             {
