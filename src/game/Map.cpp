@@ -1752,15 +1752,14 @@ void Map::ScriptsProcess()
 
         Object* source = NULL;
 
-        if (step.sourceGuid.IsEmpty())
+        if (!step.sourceGuid.IsEmpty())
         {
             switch(step.sourceGuid.GetHigh())
             {
                 case HIGHGUID_ITEM:
                 // case HIGHGUID_CONTAINER: ==HIGHGUID_ITEM
                 {
-                    Player* player = HashMapHolder<Player>::Find(step.sourceGuid);
-                    if(player)
+                    if (Player* player = HashMapHolder<Player>::Find(step.ownerGuid))
                         source = player->GetItemByGuid(step.sourceGuid);
                     break;
                 }
