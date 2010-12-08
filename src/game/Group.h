@@ -215,7 +215,7 @@ class MANGOS_DLL_SPEC Group
         bool   LoadGroupFromDB(Field *fields);
         bool   LoadMemberFromDB(uint32 guidLow, uint8 subgroup, bool assistant);
         bool   AddInvite(Player *player);
-        uint32 RemoveInvite(Player *player);
+        void   RemoveInvite(Player *player);
         void   RemoveAllInvites();
         bool   AddLeaderInvite(Player *player);
         bool   AddMember(ObjectGuid guid, const char* name);
