@@ -211,7 +211,6 @@ ChatCommand * ChatHandler::getCommandTable()
         { "setvalue",       SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugSetValueCommand,            "", NULL },
         { "spellcheck",     SEC_CONSOLE,        true,  &ChatHandler::HandleDebugSpellCheckCommand,          "", NULL },
         { "spellmods",      SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugSpellModsCommand,           "", NULL },
-        { "spawnvehicle",   SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugSpawnVehicleCommand,        "", NULL },
         { "uws",            SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugUpdateWorldStateCommand,    "", NULL },
         { NULL,             0,                  false, NULL,                                                "", NULL }
     };
@@ -2045,7 +2044,7 @@ Unit* ChatHandler::getSelectedUnit()
     if(!m_session)
         return NULL;
 
-    ObjectGuid guid  = m_session->GetPlayer()->GetSelectionGuid();
+    ObjectGuid guid = m_session->GetPlayer()->GetSelectionGuid();
 
     if (guid.IsEmpty())
         return m_session->GetPlayer();
