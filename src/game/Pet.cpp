@@ -1368,8 +1368,6 @@ bool Pet::addSpell(uint32 spell_id,ActiveStates active /*= ACT_DECIDE*/, PetSpel
             return false;
     }
 
-    uint32 oldspell_id = 0;
-
     PetSpell newspell;
     newspell.state = state;
     newspell.type = type;
@@ -1419,7 +1417,6 @@ bool Pet::addSpell(uint32 spell_id,ActiveStates active /*= ACT_DECIDE*/, PetSpel
                     if(newspell.active == ACT_ENABLED)
                         ToggleAutocast(itr2->first, false);
 
-                    oldspell_id = itr2->first;
                     unlearnSpell(itr2->first,false,false);
                     break;
                 }
