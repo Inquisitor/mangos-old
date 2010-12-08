@@ -347,6 +347,9 @@ inline void LoadDBC(LocalData& localeData,barGoLink& bar, StoreProblemList& errl
         else
             errlist.push_back(dbc_filename);
     }
+
+    if (sql)
+        delete sql;
 }
 
 void LoadDBCStores(const std::string& dataPath)
