@@ -8904,7 +8904,7 @@ void Unit::UpdateSpeed(UnitMoveType mtype, bool forced, float ratio)
     }
 
     // Remove Druid Dash bonus if not in Cat Form
-    if (m_form != FORM_CAT)
+    if (GetShapeshiftForm() != FORM_CAT)
     {
         AuraList const& speed_increase_auras = GetAurasByType(SPELL_AURA_MOD_INCREASE_SPEED);
         for(AuraList::const_iterator itr = speed_increase_auras.begin(); itr != speed_increase_auras.end(); ++itr)
