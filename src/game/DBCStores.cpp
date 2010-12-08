@@ -22,7 +22,6 @@
 #include "ProgressBar.h"
 #include "SharedDefines.h"
 #include "ObjectGuid.h"
-#include "SpellMgr.h"
 
 #include "DBCfmt.h"
 
@@ -127,6 +126,7 @@ MapDifficultyMap sMapDifficultyMap;
 
 DBCStorage <MovieEntry> sMovieStore(MovieEntryfmt);
 
+DBCStorage <OverrideSpellDataEntry> sOverrideSpellDataStore(OverrideSpellDatafmt);
 DBCStorage <QuestFactionRewardEntry> sQuestFactionRewardStore(QuestFactionRewardfmt);
 DBCStorage <QuestSortEntry> sQuestSortStore(QuestSortEntryfmt);
 DBCStorage <QuestXPLevel> sQuestXPLevelStore(QuestXPLevelfmt);
@@ -287,9 +287,11 @@ inline void LoadDBC(LocalData& localeData,barGoLink& bar, StoreProblemList& errl
     MANGOS_ASSERT(DBCFileLoader::GetFormatRecordSize(storage.GetFormat()) == sizeof(T) || LoadDBC_assert_print(DBCFileLoader::GetFormatRecordSize(storage.GetFormat()),sizeof(T),filename));
 
     std::string dbc_filename = dbc_path + filename;
-    SqlDbc * sql = NULL; 	
+
+    SqlDbc * sql = NULL;
+
     if (custom_entries)
-        sql = new SqlDbc(&filename,custom_entries,idname,storage.GetFormat());	
+        sql = new SqlDbc(&filename,custom_entries,idname,storage.GetFormat());
 
     if(storage.Load(dbc_filename.c_str(),sql))
     {
@@ -345,9 +347,6 @@ inline void LoadDBC(LocalData& localeData,barGoLink& bar, StoreProblemList& errl
         else
             errlist.push_back(dbc_filename);
     }
-
-    if (sql)
-        delete sql;
 }
 
 void LoadDBCStores(const std::string& dataPath)
@@ -367,7 +366,7 @@ void LoadDBCStores(const std::string& dataPath)
         exit(1);
     }
 
-    const uint32 DBCFilesCount = 89;
+    const uint32 DBCFilesCount = 90;
 
     barGoLink bar( (int)DBCFilesCount );
 
@@ -467,6 +466,7 @@ void LoadDBCStores(const std::string& dataPath)
     sMapDifficultyStore.Clear();
 
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sMovieStore,               dbcPath,"Movie.dbc");
+    LoadDBC(availableDbcLocales,bar,bad_dbc_files,sOverrideSpellDataStore,   dbcPath,"OverrideSpellData.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sQuestFactionRewardStore,  dbcPath,"QuestFactionReward.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sQuestSortStore,           dbcPath,"QuestSort.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sQuestXPLevelStore,        dbcPath,"QuestXP.dbc");
@@ -495,44 +495,6 @@ void LoadDBCStores(const std::string& dataPath)
         std::swap(*((uint32*)(&spell->SpellFamilyFlags)),*(((uint32*)(&spell->SpellFamilyFlags))+1));
         #endif
     }
-
-    //Surge of power spells should be longer
-    SpellEntry *sfix1 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(57407));
-    sfix1->DurationIndex = 28;
-    SpellEntry *sfix2 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(60936));
-    sfix2->DurationIndex = 28;
-
-    //Twilight Torment - relly dunno what blizzard intended to do
-    SpellEntry *sfix3 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(57935));
-    sfix3->AttributesEx = 0;
-    sfix3->AttributesEx4 = SPELL_ATTR_EX4_NOT_STEALABLE;
-    sfix3->CastingTimeIndex = 1;
-    sfix3->RecoveryTime = 0;
-    sfix3->procFlags = (PROC_FLAG_TAKEN_MELEE_HIT | PROC_FLAG_TAKEN_MELEE_SPELL_HIT | PROC_FLAG_TAKEN_RANGED_HIT | PROC_FLAG_TAKEN_RANGED_SPELL_HIT | PROC_FLAG_TAKEN_NEGATIVE_SPELL_HIT);
-    sfix3->procChance = 100;
-    sfix3->procCharges = 0;
-    sfix3->rangeIndex = 1;
-    sfix3->StackAmount = 0;
-    sfix3->Effect[EFFECT_INDEX_1] = 0;
-    sfix3->EffectDieSides[EFFECT_INDEX_1] = 0;
-    sfix3->EffectBasePoints[EFFECT_INDEX_0] = -1;
-    sfix3->EffectImplicitTargetA[EFFECT_INDEX_0] = 6;
-    sfix3->EffectImplicitTargetA[EFFECT_INDEX_1] = 0;
-    sfix3->EffectImplicitTargetB[EFFECT_INDEX_0] = 0;
-    sfix3->EffectImplicitTargetB[EFFECT_INDEX_1] = 0;
-    sfix3->EffectRadiusIndex[EFFECT_INDEX_0] = 0;
-    sfix3->EffectRadiusIndex[EFFECT_INDEX_1] = 0;
-    sfix3->EffectApplyAuraName[EFFECT_INDEX_0] = SPELL_AURA_PROC_TRIGGER_SPELL;
-    sfix3->EffectApplyAuraName[EFFECT_INDEX_1] = 0;
-    sfix3->EffectAmplitude[EFFECT_INDEX_0] = 0;
-    sfix3->EffectAmplitude[EFFECT_INDEX_1] = 0;
-    sfix3->EffectMiscValue[EFFECT_INDEX_0] = 0;
-    sfix3->EffectMiscValue[EFFECT_INDEX_1] = 0;
-    sfix3->EffectMiscValueB[EFFECT_INDEX_0] = 0;
-    sfix3->EffectMiscValueB[EFFECT_INDEX_1] = 0;
-    sfix3->EffectTriggerSpell[EFFECT_INDEX_0] = 57988;
-    sfix3->EffectTriggerSpell[EFFECT_INDEX_1] = 0;
-
 
     for (uint32 j = 0; j < sSkillLineAbilityStore.GetNumRows(); ++j)
     {
@@ -1014,4 +976,3 @@ MANGOS_DLL_SPEC DBCStorage <ItemEntry>          const* GetItemDisplayStore()    
 MANGOS_DLL_SPEC DBCStorage <CreatureDisplayInfoEntry> const* GetCreatureDisplayStore() { return &sCreatureDisplayInfoStore; }
 MANGOS_DLL_SPEC DBCStorage <EmotesEntry>        const* GetEmotesStore()         { return &sEmotesStore;         }
 MANGOS_DLL_SPEC DBCStorage <EmotesTextEntry>    const* GetEmotesTextStore()     { return &sEmotesTextStore;     }
-MANGOS_DLL_SPEC DBCStorage <AchievementEntry>   const* GetAchievementStore()    { return &sAchievementStore;    }

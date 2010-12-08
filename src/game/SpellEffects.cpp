@@ -724,7 +724,7 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                     m_caster->CastCustomSpell(m_caster, 32409, &back_damage, 0, 0, true);
                 }
                 // Improved Mind Blast (Mind Blast in shadow form bonus)
-                else if (m_caster->m_form == FORM_SHADOW && (m_spellInfo->SpellFamilyFlags & UI64LIT(0x00002000)))
+                else if (m_caster->GetShapeshiftForm() == FORM_SHADOW && (m_spellInfo->SpellFamilyFlags & UI64LIT(0x00002000)))
                 {
                     Unit::AuraList const& ImprMindBlast = m_caster->GetAurasByType(SPELL_AURA_ADD_FLAT_MODIFIER);
                     for(Unit::AuraList::const_iterator i = ImprMindBlast.begin(); i != ImprMindBlast.end(); ++i)
@@ -6118,30 +6118,22 @@ void Spell::EffectWeaponDmg(SpellEffectIndex eff_idx)
         }
         case SPELLFAMILY_WARRIOR:
         {
-            // Devastate bonus and sunder armor refresh
+            // Devastate
             if(m_spellInfo->SpellVisual[0] == 12295 && m_spellInfo->SpellIconID == 1508)
             {
-                uint32 stack = 0;
-                // Need refresh all Sunder Armor auras from this caster
-                Unit::SpellAuraHolderMap& suAuras = unitTarget->GetSpellAuraHolderMap();
-                SpellEntry const *spellInfo;
-                for(Unit::SpellAuraHolderMap::iterator itr = suAuras.begin(); itr != suAuras.end(); ++itr)
+                // Sunder Armor
+                Aura* sunder = unitTarget->GetAura(SPELL_AURA_MOD_RESISTANCE_PCT, SPELLFAMILY_WARRIOR, UI64LIT(0x0000000000004000), 0x00000000, m_caster->GetObjectGuid());
+
+                // Devastate bonus and sunder armor refresh
+                if (sunder)
                 {
-                    spellInfo = (*itr).second->GetSpellProto();
-                    if( spellInfo->SpellFamilyName == SPELLFAMILY_WARRIOR &&
-                        (spellInfo->SpellFamilyFlags & UI64LIT(0x0000000000004000)) &&
-                        (*itr).second->GetCasterGUID() == m_caster->GetGUID())
-                    {
-                        (*itr).second->RefreshHolder();
-                        stack = (*itr).second->GetStackAmount();
-                        break;
-                    }
+                    sunder->GetHolder()->RefreshHolder();
+                    spell_bonus += sunder->GetStackAmount() * CalculateDamage(EFFECT_INDEX_2, unitTarget);
                 }
-                if (stack)
-                    spell_bonus += stack * CalculateDamage(EFFECT_INDEX_2, unitTarget);
-                if (!stack || stack < spellInfo->StackAmount)
-                    // Devastate causing Sunder Armor Effect
-                    // and no need to cast over max stack amount
+
+                // Devastate causing Sunder Armor Effect
+                // and no need to cast over max stack amount
+                if (!sunder || sunder->GetStackAmount() < sunder->GetSpellProto()->StackAmount)
                     m_caster->CastSpell(unitTarget, 58567, true);
                     if (Aura *aura = m_caster->GetDummyAura(58388))
                         m_caster->CastSpell (unitTarget, 58567, true);
@@ -6564,6 +6556,31 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
                     return;
                 }
+                case 22539:                                 // Shadow Flame (All script effects, not just end ones to
+                case 22972:                                 // prevent player from dodging the last triggered spell)
+                case 22975:
+                case 22976:
+                case 22977:
+                case 22978:
+                case 22979:
+                case 22980:
+                case 22981:
+                case 22982:
+                case 22983:
+                case 22984:
+                case 22985:
+                {
+                    if (!unitTarget || !unitTarget->isAlive())
+                        return;
+
+                    // Onyxia Scale Cloak
+                    if (unitTarget->GetDummyAura(22683))
+                        return;
+
+                    // Shadow Flame
+                    m_caster->CastSpell(unitTarget, 22682, true);
+                    return;
+                }
                 case 24590:                                 // Brittle Armor - need remove one 24575 Brittle Armor aura
                     unitTarget->RemoveAuraHolderFromStack(24575);
                     return;
@@ -6583,9 +6600,6 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, iTmpSpellId, true);
                     return;
                 }
-                case 26465:                                 // Mercurial Shield - need remove one 26464 Mercurial Shield aura
-                    unitTarget->RemoveAuraHolderFromStack(26464);
-                    return;
                 case 25140:                                 // Orb teleport spells
                 case 25143:
                 case 25650:
@@ -6616,31 +6630,19 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget,spellid,false);
                     return;
                 }
-                case 22539:                                 // Shadow Flame (All script effects, not just end ones to
-                case 22972:                                 // prevent player from dodging the last triggered spell)
-                case 22975:
-                case 22976:
-                case 22977:
-                case 22978:
-                case 22979:
-                case 22980:
-                case 22981:
-                case 22982:
-                case 22983:
-                case 22984:
-                case 22985:
+                case 26218:                                 // Mistletoe
                 {
-                    if (!unitTarget || !unitTarget->isAlive())
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
                         return;
 
-                    // Onyxia Scale Cloak
-                    if (unitTarget->GetDummyAura(22683))
-                        return;
+                    uint32 spells[3] = {26206, 26207, 45036};
 
-                    // Shadow Flame
-                    m_caster->CastSpell(unitTarget, 22682, true);
+                    m_caster->CastSpell(unitTarget, spells[urand(0, 2)], true);
                     return;
                 }
+                case 26465:                                 // Mercurial Shield - need remove one 26464 Mercurial Shield aura
+                    unitTarget->RemoveAuraHolderFromStack(26464);
+                    return;
                 case 26656:                                 // Summon Black Qiraji Battle Tank
                 {
                     if (!unitTarget)
