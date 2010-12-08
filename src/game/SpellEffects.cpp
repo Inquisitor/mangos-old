@@ -480,10 +480,6 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                     case 67485:
                         damage += uint32(0.5f * m_caster->GetTotalAttackPowerValue(BASE_ATTACK));
                         break;
-                    case 74607:
-                    // SPELL_FIERY_COMBUSTION_EXPLODE - Ruby sanctum boss Halion,
-                    // damage proportional number of mark (74567, dummy), after cast summon NPC 40001
-                    // Defile damage depending from scale.
                     case 72754:
                     case 73708:
                     case 73709:
@@ -524,10 +520,6 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                         else damage = 0;
                         break;
                     }
-                    case 74799:
-                    // SPELL_SOUL_CONSUMPTION_EXPLODE - Ruby sanctum boss Halion,
-                    // damage proportional number of mark (74795, dummy), after cast summon NPC 40135
-                    // Blade of Twilight
                     case 74769:
                     case 77844:
                     case 77845:
@@ -974,16 +966,6 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
             {
                 // Blood Boil - bonus for diseased targets
                 if (m_spellInfo->SpellFamilyFlags & 0x00040000 && unitTarget->GetAura(SPELL_AURA_PERIODIC_DAMAGE, SPELLFAMILY_DEATHKNIGHT, 0, 0x00000002, m_caster->GetGUID()))
-                {
-                    damage += damage / 2;
-                    damage += int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK)* 0.035f);
-                }
-                break;
-            }
-            case SPELLFAMILY_DEATHKNIGHT:
-            {
-                // Blood Boil - bonus for diseased targets
-                if (m_spellInfo->SpellFamilyFlags & UI64LIT(0x00040000) && unitTarget->GetAura(SPELL_AURA_PERIODIC_DAMAGE, SPELLFAMILY_DEATHKNIGHT, 0, 0x00000002, m_caster->GetGUID()))
                 {
                     damage += damage / 2;
                     damage += int32(m_caster->GetTotalAttackPowerValue(BASE_ATTACK)* 0.035f);

@@ -1806,6 +1806,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     basepoints[0] = int32(triggerAmount * damage / 100);
                     basepoints[0] = int32(basepoints[0] / 2);
                     triggered_spell_id = 71023;
+                }
                 // Glyph of Starfire
                 case 54845:
                 {
