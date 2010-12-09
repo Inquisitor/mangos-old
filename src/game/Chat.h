@@ -186,7 +186,6 @@ class ChatHandler
         bool HandleDebugSetAuraStateCommand(char* args);
         bool HandleDebugSetItemValueCommand(char* args);
         bool HandleDebugSetValueCommand(char* args);
-        bool HandleDebugSpawnVehicleCommand(char* args);
         bool HandleDebugSpellCheckCommand(char* args);
         bool HandleDebugSpellModsCommand(char* args);
         bool HandleDebugUpdateWorldStateCommand(char* args);
@@ -452,9 +451,6 @@ class ChatHandler
         bool HandleReloadSpellPetAurasCommand(char* args);
         bool HandleReloadSpellStacksCommand(char* args);
         bool HandleReloadSpellDisabledCommand(char* args);
-        bool HandleReloadVehicleDataCommand(char* args);
-        bool HandleReloadVehicleSeatDataCommand(char* args);
-
 
         bool HandleResetAchievementsCommand(char* args);
         //bool HandleResetAllCommand(char* args);

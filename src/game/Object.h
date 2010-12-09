@@ -70,7 +70,6 @@ class Map;
 class UpdateMask;
 class InstanceData;
 class TerrainInfo;
-class Vehicle;
 
 typedef UNORDERED_MAP<Player*, UpdateData> UpdateDataMapType;
 
@@ -297,7 +296,7 @@ class MANGOS_DLL_SPEC Object
         Object ( );
 
         void _InitValues();
-        void _Create (uint32 guidlow, uint32 entry, HighGuid guidhigh);
+        void _Create(ObjectGuid guid);
 
         virtual void _SetUpdateBits(UpdateMask *updateMask, Player *target) const;
 
@@ -347,7 +346,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 
         virtual void Update ( uint32 /*time_diff*/ ) { }
 
-        void _Create( uint32 guidlow, HighGuid guidhigh, uint32 phaseMask);
+        void _Create(ObjectGuid guid, uint32 phaseMask);
 
         void Relocate(float x, float y, float z, float orientation);
         void Relocate(float x, float y, float z);
@@ -501,8 +500,6 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         void GetCreatureListWithEntryInGrid(std::list<Creature*>& lList, uint32 uiEntry, float fMaxSearchRange);
 
         bool isActiveObject() const { return m_isActiveObject || m_viewPoint.hasViewers(); }
-
-        Vehicle* SummonVehicle(uint32 id, float x, float y, float z, float ang, uint32 vehicleId = NULL);
 
         ViewPoint& GetViewPoint() { return m_viewPoint; }
     protected:

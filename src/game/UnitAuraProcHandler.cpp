@@ -171,7 +171,7 @@ pAuraProcHandler AuraProcHandler[TOTAL_AURAS]=
     &Unit::HandleNULLProc,                                  //135 SPELL_AURA_MOD_HEALING_DONE
     &Unit::HandleNULLProc,                                  //136 SPELL_AURA_MOD_HEALING_DONE_PERCENT
     &Unit::HandleNULLProc,                                  //137 SPELL_AURA_MOD_TOTAL_STAT_PERCENTAGE
-    &Unit::HandleHasteAuraProc,                             //138 SPELL_AURA_MOD_HASTE
+    &Unit::HandleHasteAuraProc,                             //138 SPELL_AURA_MOD_MELEE_HASTE
     &Unit::HandleNULLProc,                                  //139 SPELL_AURA_FORCE_REACTION
     &Unit::HandleNULLProc,                                  //140 SPELL_AURA_MOD_RANGED_HASTE
     &Unit::HandleNULLProc,                                  //141 SPELL_AURA_MOD_RANGED_AMMO_HASTE
@@ -1173,7 +1173,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                 // Glyph of Icy Veins
                 case 56374:
                 {
-                    pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_HASTE, true, false);
+                    pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_MELEE_HASTE, true, false);
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_HASTE_SPELLS, true, false);
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
                     return SPELL_AURA_PROC_OK;
@@ -1836,7 +1836,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
             {
                 // "refresh your Slice and Dice duration to its 5 combo point maximum"
                 // lookup Slice and Dice
-                AuraList const& sd = GetAurasByType(SPELL_AURA_MOD_HASTE);
+                AuraList const& sd = GetAurasByType(SPELL_AURA_MOD_MELEE_HASTE);
                 for(AuraList::const_iterator itr = sd.begin(); itr != sd.end(); ++itr)
                 {
                     SpellEntry const *spellProto = (*itr)->GetSpellProto();
@@ -3322,7 +3322,7 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
             // Druid Forms Trinket
             if (auraSpellInfo->Id==37336)
             {
-                switch(m_form)
+                switch(GetShapeshiftForm())
                 {
                     case FORM_NONE:     trigger_spell_id = 37344;break;
                     case FORM_CAT:      trigger_spell_id = 37341;break;
@@ -3337,7 +3337,7 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
             // Druid T9 Feral Relic (Lacerate, Swipe, Mangle, and Shred)
             else if (auraSpellInfo->Id==67353)
             {
-                switch(m_form)
+                switch(GetShapeshiftForm())
                 {
                     case FORM_CAT:      trigger_spell_id = 67355; break;
                     case FORM_BEAR:
@@ -3863,57 +3863,6 @@ SpellAuraProcResult Unit::HandleOverrideClassScriptAuraProc(Unit *pVictim, uint3
         case 6953:                                          // Warbringer
             RemoveAurasAtMechanicImmunity(IMMUNE_TO_ROOT_AND_SNARE_MASK,0,true);
             return SPELL_AURA_PROC_OK;
-        case 7282: // Crypt Fever and Ebon Plaguebringer
-        {
-            if (!procSpell || pVictim == this) // Here we prevent selfcasting C.F. and E.P.
-                return SPELL_AURA_PROC_FAILED;
-            switch (triggeredByAura->GetSpellProto()->Id)
-            {
-                case 49032: // C.F. Rank 1
-                {
-                    // C.F. rank 2-3 or E.P. any rank is already on victim -> do not allow cast
-                    if ( !(pVictim->HasAura(50509,EFFECT_INDEX_0) || pVictim->HasAura(50510,EFFECT_INDEX_0) ||
-                        pVictim->GetAura(SPELL_AURA_MOD_MECHANIC_DAMAGE_TAKEN_PERCENT,SPELLFAMILY_DEATHKNIGHT,UI64LIT(0x80000000000))) )
-                        triggered_spell_id = 50508;
-                    break;
-                }
-                case 49631: // C.F. Rank 2
-                {
-                    // C.F. rank 3 or E.P. any rank is already on victim -> do not allow cast
-                    if ( !(pVictim->HasAura(50510,EFFECT_INDEX_0) ||
-                        pVictim->GetAura(SPELL_AURA_MOD_MECHANIC_DAMAGE_TAKEN_PERCENT,SPELLFAMILY_DEATHKNIGHT,UI64LIT(0x80000000000))) )
-                        triggered_spell_id = 50509;
-                    break;
-                }
-                case 49632: // C.F. Rank 3
-                {
-                    // E.P. any rank is already on victim -> do not allow cast
-                    if ( !(pVictim->GetAura(SPELL_AURA_MOD_MECHANIC_DAMAGE_TAKEN_PERCENT,SPELLFAMILY_DEATHKNIGHT,UI64LIT(0x80000000000))) )
-                        triggered_spell_id = 50510;
-                    break;
-                }
-                case 51099: // E.P. Rank 1
-                {
-                    // E.P. rank 2-3 is already on victim -> do not allow cast
-                    if ( !(pVictim->HasAura(51734,EFFECT_INDEX_0) || pVictim->HasAura(51735,EFFECT_INDEX_0)) )
-                        triggered_spell_id = 51726;
-                    break;
-                }
-                case 51160: // E.P. Rank 2
-                {
-                    // E.P. rank 3 is already on victim -> do not allow cast
-                    if ( !(pVictim->HasAura(51735,EFFECT_INDEX_0)) )
-                        triggered_spell_id = 51734;
-                    break;
-                }
-                case 51161: // E.P. Rank 3
-                {
-                    triggered_spell_id = 51735;
-                    break;
-                }
-            }
-            break;
-        }
         case 7010:                                          // Revitalize (rank 1)
         case 7011:                                          // Revitalize (rank 2)
         case 7012:                                          // Revitalize (rank 3)
@@ -3929,6 +3878,40 @@ SpellAuraProcResult Unit::HandleOverrideClassScriptAuraProc(Unit *pVictim, uint3
                 case POWER_RUNIC_POWER: triggered_spell_id = 48543; break;
                 default: return SPELL_AURA_PROC_FAILED;
             }
+            break;
+        }
+        case 7282:                                          // Crypt Fever & Ebon Plaguebringer
+        {
+            if (!procSpell || pVictim == this)
+                return SPELL_AURA_PROC_FAILED;
+
+            bool HasEP = false;
+            Unit::AuraList const& scriptAuras = GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
+            for(Unit::AuraList::const_iterator i = scriptAuras.begin(); i != scriptAuras.end(); ++i)
+            {
+                if ((*i)->GetSpellProto()->SpellIconID == 1766)
+                {
+                    HasEP = true;
+                    break;
+                }
+            }
+
+            if (!HasEP)
+                switch(triggeredByAura->GetId())
+                {
+                    case 49032: triggered_spell_id = 50508; break;
+                    case 49631: triggered_spell_id = 50509; break;
+                    case 49632: triggered_spell_id = 50510; break;
+                    default: return SPELL_AURA_PROC_FAILED;
+                }
+            else
+                switch(triggeredByAura->GetId())
+                {
+                    case 51099: triggered_spell_id = 51726; break;
+                    case 51160: triggered_spell_id = 51734; break;
+                    case 51161: triggered_spell_id = 51735; break;
+                    default: return SPELL_AURA_PROC_FAILED;
+                }
             break;
         }
     }

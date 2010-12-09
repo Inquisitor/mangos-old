@@ -433,23 +433,54 @@ enum SpellEffectIndex
 
 #define MAX_EFFECT_INDEX 3
 
+enum SpellFamily
+{
+    SPELLFAMILY_GENERIC     = 0,
+    SPELLFAMILY_UNK1        = 1,                            // events, holidays
+    // 2 - unused
+    SPELLFAMILY_MAGE        = 3,
+    SPELLFAMILY_WARRIOR     = 4,
+    SPELLFAMILY_WARLOCK     = 5,
+    SPELLFAMILY_PRIEST      = 6,
+    SPELLFAMILY_DRUID       = 7,
+    SPELLFAMILY_ROGUE       = 8,
+    SPELLFAMILY_HUNTER      = 9,
+    SPELLFAMILY_PALADIN     = 10,
+    SPELLFAMILY_SHAMAN      = 11,
+    SPELLFAMILY_UNK2        = 12,                           // 2 spells (silence resistance)
+    SPELLFAMILY_POTION      = 13,
+    // 14 - unused
+    SPELLFAMILY_DEATHKNIGHT = 15,
+    // 16 - unused
+    SPELLFAMILY_PET         = 17
+};
+
 enum VehicleFlags
 {
+    VEHICLE_FLAG_NO_STRAFE          = 0x00000001,           // Sets MOVEFLAG2_NO_STRAFE
+    VEHICLE_FLAG_NO_JUMPING         = 0x00000002,           // Sets MOVEFLAG2_NO_JUMPING
+    VEHICLE_FLAG_FULLSPEEDTURNING   = 0x00000004,           // Sets MOVEFLAG2_FULLSPEEDTURNING
+    VEHICLE_FLAG_ALLOW_PITCHING     = 0x00000010,           // Sets MOVEFLAG2_ALLOW_PITCHING
+    VEHICLE_FLAG_FULLSPEEDPITCHING  = 0x00000020,           // Sets MOVEFLAG2_FULLSPEEDPITCHING
+    VEHICLE_FLAG_CUSTOM_PITCH       = 0x00000040,           // If set use pitchMin and pitchMax from DBC, otherwise pitchMin = -pi/2, pitchMax = pi/2
     VEHICLE_FLAG_ADJUST_AIM_ANGLE   = 0x00000400,           // Lua_IsVehicleAimAngleAdjustable
     VEHICLE_FLAG_ADJUST_AIM_POWER   = 0x00000800,           // Lua_IsVehicleAimPowerAdjustable
-    VEHICLE_FLAG_CUSTOM_PITCH       = 0x00000040,           // If set use pitchMin and pitchMax from DBC, otherwise pitchMin = -pi/2, pitchMax = pi/2
+    VEHICLE_FLAG_DISABLE_SWITCH     = 0x00400000,           // Can't change seats, VEHICLE_ID = 335 chopper
+    VEHICLE_FLAG_NOT_DISMISS        = 0x10000000,           // Vehicle not dismissed after eject passenger?
 };
 
 enum VehicleSeatFlags
 {
-    SEAT_FREE                       = 0x01,                 // free seat
-    SEAT_FULL                       = 0x02,                 // seat occupied by player/creature
-    // special cases
-    SEAT_VEHICLE_FREE               = 0x04,                 // seat occupied by vehicle, but that vehicle is free
-    SEAT_VEHICLE_FULL               = 0x08,                 // seat occupied by vehicle and that vehicle is full too
-
+    SEAT_FLAG_NONE                  = 0x00000000,           //
+    SEAT_FLAG_UNK1                  = 0x00000001,           //
+    SEAT_FLAG_UNK2                  = 0x00000002,           //
+    SEAT_FLAG_UNK3                  = 0x00000004,           //
+    SEAT_FLAG_UNK4                  = 0x00000008,           //
+    SEAT_FLAG_UNK5                  = 0x00000010,           //
+    SEAT_FLAG_UNK6                  = 0x00000020,           //
     SEAT_FLAG_HIDE_PASSENGER        = 0x00000200,           // Passenger is hidden
     SEAT_FLAG_CAN_CONTROL           = 0x00000800,           // Lua_UnitInVehicleControlSeat
+    SEAT_FLAG_UNCONTROLLED          = 0x00002000,           // Seat uncontrolled for passenger?
     SEAT_FLAG_CAN_ATTACK            = 0x00004000,           // Can attack, cast spells and use items from vehicle?
     SEAT_FLAG_USABLE                = 0x02000000,           // Lua_CanExitVehicle
     SEAT_FLAG_CAN_SWITCH            = 0x04000000,           // Lua_CanSwitchVehicleSeats

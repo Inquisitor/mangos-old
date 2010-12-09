@@ -181,6 +181,8 @@ libmangosgame_a_SOURCES = \
 	Map.h \
 	MapManager.cpp \
 	MapManager.h \
+	MapUpdater.cpp \
+	MapUpdater.h \
 	MapReference.h \
 	MapRefManager.h \
 	MiscHandler.cpp \
@@ -252,6 +254,8 @@ libmangosgame_a_SOURCES = \
 	SocialMgr.h \
 	SpellMgr.cpp \
 	SpellMgr.h \
+	SQLStorages.cpp \
+	SQLStorages.h \
 	StatSystem.cpp \
 	TargetedMovementGenerator.cpp \
 	TargetedMovementGenerator.h \
@@ -277,6 +281,7 @@ libmangosgame_a_SOURCES = \
 	UpdateFields.h \
 	UpdateMask.h \
 	Vehicle.cpp \
+	VehicleHandler.cpp \
 	Vehicle.h \
 	VoiceChatHandler.cpp \
 	WaypointManager.cpp \

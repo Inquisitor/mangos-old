@@ -357,8 +357,7 @@ void WorldSession::HandleGossipSelectOptionOpcode( WorldPacket & recv_data )
         }
     }
 
-    // can vehicle have gossip? If so, need check for this also.
-    if (guid.IsCreatureOrPet())
+    if (guid.IsAnyTypeCreature())
     {
         Creature *pCreature = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_NONE);
 

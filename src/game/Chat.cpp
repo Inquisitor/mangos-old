@@ -211,7 +211,6 @@ ChatCommand * ChatHandler::getCommandTable()
         { "setvalue",       SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugSetValueCommand,            "", NULL },
         { "spellcheck",     SEC_CONSOLE,        true,  &ChatHandler::HandleDebugSpellCheckCommand,          "", NULL },
         { "spellmods",      SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugSpellModsCommand,           "", NULL },
-        { "spawnvehicle",   SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugSpawnVehicleCommand,        "", NULL },
         { "uws",            SEC_ADMINISTRATOR,  false, &ChatHandler::HandleDebugUpdateWorldStateCommand,    "", NULL },
         { NULL,             0,                  false, NULL,                                                "", NULL }
     };
@@ -533,9 +532,6 @@ ChatCommand * ChatHandler::getCommandTable()
         { "spell_threats",               SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadSpellThreatsCommand,            "", NULL },
         { "spell_stacks",                SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadSpellStacksCommand,             "", NULL },
         { "spell_disabled",              SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadSpellDisabledCommand,           "", NULL },
-        { "vehicle_data",                SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadVehicleDataCommand,             "", NULL },
-        { "vehicle_seat_data",           SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadVehicleSeatDataCommand,         "", NULL },
-
         { NULL,                          0,                 false, NULL,                                                     "", NULL }
     };
 
@@ -2048,7 +2044,7 @@ Unit* ChatHandler::getSelectedUnit()
     if(!m_session)
         return NULL;
 
-    ObjectGuid guid  = m_session->GetPlayer()->GetSelectionGuid();
+    ObjectGuid guid = m_session->GetPlayer()->GetSelectionGuid();
 
     if (guid.IsEmpty())
         return m_session->GetPlayer();
@@ -2062,7 +2058,7 @@ Creature* ChatHandler::getSelectedCreature()
     if(!m_session)
         return NULL;
 
-    return ObjectAccessor::GetAnyTypeCreature(*m_session->GetPlayer(),m_session->GetPlayer()->GetSelectionGuid());
+    return m_session->GetPlayer()->GetMap()->GetAnyTypeCreature(m_session->GetPlayer()->GetSelectionGuid());
 }
 
 /**

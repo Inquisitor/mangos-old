@@ -42,6 +42,8 @@
 INSTANTIATE_SINGLETON_2(ObjectAccessor, CLASS_LOCK);
 INSTANTIATE_CLASS_MUTEX(ObjectAccessor, ACE_Thread_Mutex);
 
+ACE_Thread_Mutex ObjectAccessor::m_Lock;
+
 ObjectAccessor::ObjectAccessor() {}
 ObjectAccessor::~ObjectAccessor()
 {
@@ -50,21 +52,6 @@ ObjectAccessor::~ObjectAccessor()
         itr->second->RemoveFromWorld();
         delete itr->second;
     }
-}
-
-Creature*
-ObjectAccessor::GetAnyTypeCreature(WorldObject const &u, ObjectGuid guid)
-{
-    if(guid.IsPlayer() || !u.IsInWorld())
-        return NULL;
-
-    if(guid.IsPet())
-        return u.GetMap()->GetPet(guid);
-
-    if(guid.IsVehicle())
-        return u.GetMap()->GetVehicle(guid);
-
-    return u.GetMap()->GetCreature(guid);
 }
 
 Unit*
@@ -76,7 +63,10 @@ ObjectAccessor::GetUnit(WorldObject const &u, ObjectGuid guid)
     if(guid.IsPlayer())
         return FindPlayer(guid);
 
-    return GetAnyTypeCreature(u, guid);
+    if (!u.IsInWorld())
+        return NULL;
+
+    return u.GetMap()->GetAnyTypeCreature(guid);
 }
 
 Corpse* ObjectAccessor::GetCorpseInMap(ObjectGuid guid, uint32 mapid)
@@ -129,6 +119,15 @@ void ObjectAccessor::KickPlayer(ObjectGuid guid)
         s->KickPlayer();                            // mark session to remove at next session list update
         s->LogoutPlayer(false);                     // logout player without waiting next session list update
     }
+}
+
+Pet* ObjectAccessor::FindPet(ObjectGuid guid)
+{
+    Pet * pet = HashMapHolder<Pet>::Find(guid);
+    if(!pet || !pet->IsInWorld())
+        return NULL;
+
+    return pet;
 }
 
 Corpse*
