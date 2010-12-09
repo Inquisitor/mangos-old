@@ -3195,6 +3195,15 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell)
         }
         return SPELL_MISS_NONE;
     }
+        // Melee attack can be deflected from anywhere with SPELL_AURA_DEFLECT_SPELLS
+    if (attType != RANGED_ATTACK)
+    {
+        int32 deflect_chance = pVictim->GetTotalAuraModifier(SPELL_AURA_DEFLECT_SPELLS)*100;
+        tmp+=deflect_chance;
+        if (roll < tmp)
+            return SPELL_MISS_PARRY;
+        return SPELL_MISS_NONE;
+    }
 
     // Check for attack from behind
     if (!pVictim->HasInArc(M_PI_F,this))
