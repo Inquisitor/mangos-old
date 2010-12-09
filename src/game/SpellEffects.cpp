@@ -1686,7 +1686,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
                     return;
                 }
-                case 49634:                                 // Sergeant's Flare
+                /*case 49634:                                 // Sergeant's Flare
                 {
                     if (!unitTarget || unitTarget->GetTypeId() != TYPEID_UNIT)
                         return;
@@ -1716,7 +1716,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     }
 
                     return;
-                }
+                }*/
                 case 50133:                                 // Scourging Crystal Controller
                 {
                     if (!unitTarget || unitTarget->GetTypeId() != TYPEID_UNIT)

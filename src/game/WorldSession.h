@@ -32,6 +32,7 @@ struct AuctionEntry;
 struct AuctionHouseEntry;
 struct DeclinedName;
 
+class WorldSession;
 class ObjectGuid;
 class Creature;
 class Item;
