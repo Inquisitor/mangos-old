@@ -1173,7 +1173,7 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                 // Glyph of Icy Veins
                 case 56374:
                 {
-                    pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_HASTE, true, false);
+                    pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_MELEE_HASTE, true, false);
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_HASTE_SPELLS, true, false);
                     pVictim->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
                     return SPELL_AURA_PROC_OK;
