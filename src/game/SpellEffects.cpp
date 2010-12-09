@@ -7977,17 +7977,16 @@ void Spell::EffectSanctuary(SpellEffectIndex /*eff_idx*/)
 
 void Spell::EffectAddComboPoints(SpellEffectIndex /*eff_idx*/)
 {
-    if(!unitTarget)
+    if (!unitTarget)
         return;
 
-    if(damage <= 0)
+    if (damage <= 0)
         return;
 
-    if(m_caster->GetTypeId() == TYPEID_PLAYER)
-        ((Player*)m_caster)->AddComboPoints(unitTarget, damage);
-    else if(m_caster->GetObjectGuid().IsVehicle())
-        if(Unit * ncaster = m_caster->GetVehicleKit()->GetPassenger(0)) // 0 is always set (0, 1, 2...)
-            ((Player*)ncaster)->AddComboPoints(unitTarget, damage);
+    if (!m_caster->m_movedPlayer)
+        return;
+
+    m_caster->m_movedPlayer->AddComboPoints(unitTarget, damage);
 }
 
 void Spell::EffectDuel(SpellEffectIndex eff_idx)
