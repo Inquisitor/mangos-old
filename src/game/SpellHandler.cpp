@@ -626,6 +626,9 @@ void WorldSession::HandleMirrorImageDataRequest( WorldPacket & recv_data )
     if (!unit->GetAurasByType(SPELL_AURA_MIRROR_IMAGE).empty())
         creator = unit->GetAurasByType(SPELL_AURA_MIRROR_IMAGE).front()->GetCaster();
 
+    if(!creator)  // How can this be NULL ?
+        return;
+
     WorldPacket data(SMSG_MIRRORIMAGE_DATA, 68);
     data << (uint64)guid;
     data << (uint32)creator->GetDisplayId();
