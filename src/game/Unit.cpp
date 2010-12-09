@@ -183,7 +183,7 @@ void GlobalCooldownMgr::CancelGlobalCooldown(SpellEntry const* spellInfo)
 // Methods of class Unit
 
 Unit::Unit()
-: WorldObject(), i_motionMaster(this), m_ThreatManager(this), m_HostileRefManager(this)
+: WorldObject(), m_movedPlayer(NULL), i_motionMaster(this), m_ThreatManager(this), m_HostileRefManager(this)
 {
     m_objectType |= TYPEMASK_UNIT;
     m_objectTypeId = TYPEID_UNIT;
@@ -9388,7 +9388,7 @@ bool Unit::SelectHostileTarget()
 
 int32 Unit::CalculateSpellDamage(Unit const* target, SpellEntry const* spellProto, SpellEffectIndex effect_index, int32 const* effBasePoints)
 {
-    Player* unitPlayer = (GetTypeId() == TYPEID_PLAYER) ? (Player*)this : NULL;
+    Player* unitPlayer = m_movedPlayer ? m_movedPlayer : NULL;
 
     uint8 comboPoints = unitPlayer ? unitPlayer->GetComboPoints() : 0;
 
@@ -9467,12 +9467,13 @@ int32 Unit::CalculateBaseSpellDuration(SpellEntry const* spellProto, uint32* per
     if (duration < 0)
         return duration;
 
-    if (GetTypeId() == TYPEID_PLAYER)
+    
+    if (m_movedPlayer)
     {
         int32 maxduration = GetSpellMaxDuration(spellProto);
 
         if (duration != maxduration)
-            duration += int32((maxduration - duration) * ((Player*)this)->GetComboPoints() / 5);
+            duration += int32((maxduration - duration) * m_movedPlayer->GetComboPoints() / 5);
     }
 
     Player* modOwner = GetSpellModOwner();
