@@ -2404,6 +2404,9 @@ class MANGOS_DLL_SPEC Player : public Unit
         uint32 LookupRefundableItem(uint64 itemGUID);
 
         bool canSeeSpellClickOn(Creature const* creature) const;
+
+        float GetAverageItemLevel();
+
     protected:
 
         uint32 m_contestedPvPTimer;
