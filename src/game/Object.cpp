@@ -258,7 +258,7 @@ void Object::BuildMovementUpdate(ByteBuffer * data, uint16 updateFlags) const
                     if (!((Creature*)unit)->hasUnitState(UNIT_STAT_MOVING))
                     {
                         // (ok) possibly some "hover" mode
-                        unit->m_movementInfo.AddMovementFlag(MOVEFLAG_ROOT);
+                        //unit->m_movementInfo.AddMovementFlag(MOVEFLAG_ROOT);
                     }
                     else
                     {
