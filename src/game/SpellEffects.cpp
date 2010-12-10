@@ -5403,7 +5403,7 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
     PetType petType = propEntry->Title == UNITNAME_SUMMON_TITLE_COMPANION ? PROTECTOR_PET : GUARDIAN_PET;
 
     // second cast unsummon guardian(s) (guardians without like functionality have cooldown > spawn time)
-    if (m_caster->GetTypeId() == TYPEID_PLAYER)
+    if (m_caster->GetTypeId() == TYPEID_PLAYER && pet_entry != 31216)
     {
         bool found = false;
         // including protector
@@ -5418,7 +5418,7 @@ void Spell::DoSummonGuardian(SpellEffectIndex eff_idx, uint32 forceFaction)
     }
 
     // protectors allowed only in single amount
-    if (petType = PROTECTOR_PET)
+    if (petType == PROTECTOR_PET && pet_entry != 31216)
         if (Pet* old_protector = m_caster->GetProtectorPet())
             old_protector->Unsummon(PET_SAVE_AS_DELETED, m_caster);
 

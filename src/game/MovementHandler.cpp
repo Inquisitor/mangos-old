@@ -263,9 +263,6 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     recv_data >> movementInfo;
     /*----------------*/
 
-    if(!plMover)
-        return;
-
     if (!VerifyMovementInfo(movementInfo, guid))
         return;
 
