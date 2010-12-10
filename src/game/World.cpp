@@ -764,6 +764,9 @@ void World::LoadConfigSettings(bool reload)
 
     setConfig(CONFIG_BOOL_PET_UNSUMMON_AT_MOUNT,      "PetUnsummonAtMount", true);
 
+    Map::relocation_ai_notify_delay = sConfig.GetIntDefault("Visibility.AIRelocationNotifyDelay",1000u);
+    Map::relocation_lower_limit_sq  = pow(sConfig.GetFloatDefault("Visibility.RelocationLoverLimit",10.f), 2);
+
     m_VisibleUnitGreyDistance = sConfig.GetFloatDefault("Visibility.Distance.Grey.Unit", 1);
     if(m_VisibleUnitGreyDistance >  MAX_VISIBILITY_DISTANCE)
     {
