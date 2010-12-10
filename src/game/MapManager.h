@@ -25,6 +25,7 @@
 #include "ace/Recursive_Thread_Mutex.h"
 #include "Map.h"
 #include "GridStates.h"
+#include "MapUpdater.h"
 
 class Transport;
 class BattleGround;
@@ -173,6 +174,8 @@ class MANGOS_DLL_DECL MapManager : public MaNGOS::Singleton<MapManager, MaNGOS::
 
         uint32 i_gridCleanUpDelay;
         MapMapType i_maps;
+
+        MapUpdater m_updater;
         IntervalTimer i_timer;
 };
 

@@ -136,7 +136,7 @@ template<>
 void Map::AddToGrid(Creature* obj, NGridType *grid, Cell const& cell)
 {
     // add to world object registry in grid
-    if(obj->IsPet() || obj->IsVehicle())
+    if(obj->IsPet())
     {
         (*grid)(cell.CellX(), cell.CellY()).AddWorldObject<Creature>(obj);
         obj->SetCurrentCell(cell);
@@ -180,7 +180,7 @@ template<>
 void Map::RemoveFromGrid(Creature* obj, NGridType *grid, Cell const& cell)
 {
     // remove from world object registry in grid
-    if(obj->IsPet() || obj->IsVehicle())
+    if(obj->IsPet())
     {
         (*grid)(cell.CellX(), cell.CellY()).RemoveWorldObject<Creature>(obj);
     }
@@ -213,13 +213,13 @@ void Map::AddNotifier(T* , Cell const& , CellPair const& )
 template<>
 void Map::AddNotifier(Player* obj, Cell const& cell, CellPair const& cellpair)
 {
-    PlayerRelocationNotify(obj,cell,cellpair);
+    obj->SheduleAINotify(0);
 }
 
 template<>
 void Map::AddNotifier(Creature* obj, Cell const&, CellPair const&)
 {
-    obj->SetNeedNotify();
+    obj->SheduleAINotify(0);
 }
 
 void
@@ -462,6 +462,20 @@ bool Map::loaded(const GridPair &p) const
 
 void Map::Update(const uint32 &t_diff)
 {
+    /// update worldsessions for existing players
+    for(m_mapRefIter = m_mapRefManager.begin(); m_mapRefIter != m_mapRefManager.end(); ++m_mapRefIter)
+    {
+        Player* plr = m_mapRefIter->getSource();
+        if(plr && plr->IsInWorld())
+        {
+            //plr->Update(t_diff);
+            WorldSession * pSession = plr->GetSession();
+            MapSessionFilter updater(pSession);
+
+            pSession->Update(t_diff, updater);
+        }
+    }
+
     /// update players at tick
     for(m_mapRefIter = m_mapRefManager.begin(); m_mapRefIter != m_mapRefManager.end(); ++m_mapRefIter)
     {
@@ -661,6 +675,28 @@ Map::Remove(T *obj, bool remove)
     }
 }
 
+float  Map::relocation_lower_limit_sq   = 10.f * 10.f;
+uint32 Map::relocation_ai_notify_delay  = 1000u;
+
+inline void _F_optimized(Unit & u)
+{
+    float dx = u.m_last_notified_position.x - u.GetPositionX();
+    float dy = u.m_last_notified_position.y - u.GetPositionY();
+    float dz = u.m_last_notified_position.z - u.GetPositionZ();
+    float distsq = dx*dx+dy*dy+dz*dz;
+
+    if (distsq > Map::relocation_lower_limit_sq)
+    {
+        u.m_last_notified_position.x = u.GetPositionX();
+        u.m_last_notified_position.y = u.GetPositionY();
+        u.m_last_notified_position.z = u.GetPositionZ();
+
+        u.SheduleVisibilityUpdate();
+    }
+
+    u.SheduleAINotify(Map::relocation_ai_notify_delay);
+}
+
 void
 Map::PlayerRelocation(Player *player, float x, float y, float z, float orientation)
 {
@@ -690,10 +726,7 @@ Map::PlayerRelocation(Player *player, float x, float y, float z, float orientati
         player->GetViewPoint().Event_GridChanged(&(*newGrid)(new_cell.CellX(),new_cell.CellY()));
     }
 
-    player->GetViewPoint().Call_UpdateVisibilityForOwner();
-    // if move then update what player see and who seen
-    UpdateObjectVisibility(player, new_cell, new_val);
-    PlayerRelocationNotify(player,new_cell,new_val);
+    _F_optimized(*player);
 
     NGridType* newGrid = getNGrid(new_cell.GridX(), new_cell.GridY());
     if( !same_cell && newGrid->GetGridState()!= GRID_STATE_ACTIVE )
@@ -713,39 +746,23 @@ Map::CreatureRelocation(Creature *creature, float x, float y, float z, float ang
     CellPair new_val = MaNGOS::ComputeCellPair(x, y);
     Cell new_cell(new_val);
 
-    // delay creature move for grid/cell to grid/cell moves
+    bool moved_to_resp = false;
     if (old_cell.DiffCell(new_cell) || old_cell.DiffGrid(new_cell))
     {
         DEBUG_FILTER_LOG(LOG_FILTER_CREATURE_MOVES, "Creature (GUID: %u Entry: %u) added to moving list from grid[%u,%u]cell[%u,%u] to grid[%u,%u]cell[%u,%u].", creature->GetGUIDLow(), creature->GetEntry(), old_cell.GridX(), old_cell.GridY(), old_cell.CellX(), old_cell.CellY(), new_cell.GridX(), new_cell.GridY(), new_cell.CellX(), new_cell.CellY());
 
-        // do move or do move to respawn or remove creature if previous all fail
-        if(CreatureCellRelocation(creature,new_cell))
+        // try to move to the new cell or move it to respawn -- do nothing if both operations failed
+        if (!CreatureCellRelocation(creature,new_cell) && !(moved_to_resp = CreatureRespawnRelocation(creature)))
         {
-            // update pos
-            creature->Relocate(x, y, z, ang);
-
-            // in diffcell/diffgrid case notifiers called in Creature::Update
-            creature->SetNeedNotify();
-        }
-        else
-        {
-            // if creature can't be move in new cell/grid (not loaded) move it to repawn cell/grid
-            // creature coordinates will be updated and notifiers send
-            if(!CreatureRespawnRelocation(creature))
-            {
-                // ... or unload (if respawn grid also not loaded)
-                DEBUG_FILTER_LOG(LOG_FILTER_CREATURE_MOVES, "Creature (GUID: %u Entry: %u ) can't be move to unloaded respawn grid.",creature->GetGUIDLow(),creature->GetEntry());
-                creature->SetNeedNotify();
-            }
+            DEBUG_FILTER_LOG(LOG_FILTER_CREATURE_MOVES, "Creature (GUID: %u Entry: %u ) can't be move to unloaded respawn grid.",creature->GetGUIDLow(),creature->GetEntry());
+            return;
         }
     }
-    else
-    {
+
+    if (!moved_to_resp)
         creature->Relocate(x, y, z, ang);
-        creature->SetNeedNotify();
-    }
 
-    creature->GetViewPoint().Call_UpdateVisibilityForOwner();
+    _F_optimized(*creature);
     MANGOS_ASSERT(CheckGridIntegrity(creature,true));
 }
 
@@ -829,7 +846,6 @@ bool Map::CreatureRespawnRelocation(Creature *c)
     {
         c->Relocate(resp_x, resp_y, resp_z, resp_o);
         c->GetMotionMaster()->Initialize();                 // prevent possible problems with default move generators
-        c->SetNeedNotify();
         return true;
     }
     else
@@ -1055,7 +1071,8 @@ void Map::AddObjectToRemoveList(WorldObject *obj)
 {
     MANGOS_ASSERT(obj->GetMapId()==GetId() && obj->GetInstanceId()==GetInstanceId());
 
-    obj->CleanupsBeforeDelete();                            // remove or simplify at least cross referenced links
+    // need clean references at end of update cycle, NOT during it! called at Map::Remove
+    // obj->CleanupsBeforeDelete();                            // remove or simplify at least cross referenced links
 
     i_objectsToRemove.insert(obj);
     //DEBUG_LOG("Object (GUID: %u TypeId: %u ) added to removing list.",obj->GetGUIDLow(),obj->GetTypeId());
@@ -1770,7 +1787,7 @@ void Map::ScriptsProcess()
                     source = GetPet(step.sourceGuid);
                     break;
                 case HIGHGUID_VEHICLE:
-                    source = GetVehicle(step.sourceGuid);
+                    source = GetCreature(step.sourceGuid);
                     break;
                 case HIGHGUID_PLAYER:
                     source = HashMapHolder<Player>::Find(step.sourceGuid);
@@ -1803,9 +1820,9 @@ void Map::ScriptsProcess()
                     target = GetPet(step.targetGuid);
                     break;
                 case HIGHGUID_VEHICLE:
-                    target = GetVehicle(step.targetGuid);
+                    target = GetCreature(step.targetGuid);
                     break;
-                case HIGHGUID_PLAYER:                       // empty GUID case also
+                case HIGHGUID_PLAYER:
                     target = HashMapHolder<Player>::Find(step.targetGuid);
                     break;
                 case HIGHGUID_GAMEOBJECT:
@@ -3009,7 +3026,7 @@ Player* Map::GetPlayer(ObjectGuid guid)
 }
 
 /**
- * Function return creature (non-pet and then most summoned by spell creatures, and not vehicle) that in world at CURRENT map
+ * Function return creature (non-pet and then most summoned by spell creatures) that in world at CURRENT map 
  *
  * @param guid must be creature guid (HIGHGUID_UNIT)
  */
@@ -3019,17 +3036,6 @@ Creature* Map::GetCreature(ObjectGuid guid)
 }
 
 /**
- * Function return vehicle that in world at CURRENT map
- *
- * @param guid must be vehicle guid (HIGHGUID_VEHICLE)
- */
-Vehicle* Map::GetVehicle(ObjectGuid guid)
-{
-    return m_objectsStore.find<Vehicle>(guid.GetRawValue(), (Vehicle*)NULL);
-}
-
-/**
- * Function return pet that in world at CURRENT map
  *
  * @param guid must be pet guid (HIGHGUID_PET)
  */
@@ -3060,9 +3066,9 @@ Creature* Map::GetAnyTypeCreature(ObjectGuid guid)
 {
     switch(guid.GetHigh())
     {
-        case HIGHGUID_UNIT:         return GetCreature(guid);
+        case HIGHGUID_UNIT:
+        case HIGHGUID_VEHICLE:      return GetCreature(guid);
         case HIGHGUID_PET:          return GetPet(guid);
-        case HIGHGUID_VEHICLE:      return GetVehicle(guid);
         default:                    break;
     }
 
@@ -3114,9 +3120,9 @@ WorldObject* Map::GetWorldObject(ObjectGuid guid)
     {
         case HIGHGUID_PLAYER:       return GetPlayer(guid);
         case HIGHGUID_GAMEOBJECT:   return GetGameObject(guid);
-        case HIGHGUID_UNIT:         return GetCreature(guid);
+        case HIGHGUID_UNIT:
+        case HIGHGUID_VEHICLE:      return GetCreature(guid);
         case HIGHGUID_PET:          return GetPet(guid);
-        case HIGHGUID_VEHICLE:      return GetVehicle(guid);
         case HIGHGUID_DYNAMICOBJECT:return GetDynamicObject(guid);
         case HIGHGUID_CORPSE:
         {
@@ -3161,8 +3167,6 @@ uint32 Map::GenerateLocalLowGuid(HighGuid guidhigh)
             return m_DynObjectGuids.Generate();
         case HIGHGUID_PET:
             return m_PetGuids.Generate();
-        case HIGHGUID_VEHICLE:
-            return m_VehicleGuids.Generate();
         default:
             MANGOS_ASSERT(0);
     }

@@ -969,7 +969,6 @@ void WorldSession::HandleGuildBankSwapItems( WorldPacket & recv_data )
     uint8 BankTabDst, BankTabSlotDst, unk2;
     uint8 ToChar = 1;
     uint32 ItemEntry, unk1;
-    uint32 AutoStoreCount = 0;
     uint32 SplitedAmount = 0;
 
     recv_data >> GoGuid >> BankToBank;
@@ -1016,7 +1015,7 @@ void WorldSession::HandleGuildBankSwapItems( WorldPacket & recv_data )
         recv_data >> AutoStore;
         if (AutoStore)
         {
-            recv_data >> AutoStoreCount;
+            recv_data.read_skip<uint32>();                  // autoStoreCount
             recv_data.read_skip<uint8>();                   // ToChar (?), always and expected to be 1 (autostore only triggered in guild->ToChar)
             recv_data.read_skip<uint32>();                  // unknown, always 0
         }

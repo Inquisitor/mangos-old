@@ -68,7 +68,8 @@ namespace ACE_Based
             //! Gets the next result in the queue, if any.
             bool next(T& result)
             {
-                ACE_Guard<LockType> g(this->_lock);
+                //ACE_Guard<LockType> g(this->_lock);
+                ACE_GUARD_RETURN (LockType, g, this->_lock, false);
 
                 if (_queue.empty())
                     return false;
@@ -79,6 +80,22 @@ namespace ACE_Based
                 result = _queue.front();
                 _queue.pop_front();
 
+                return true;
+            }
+
+            template<class Checker>
+            bool next(T& result, Checker& check)
+            {
+                ACE_Guard<LockType> g(this->_lock);
+
+                if (_queue.empty())
+                    return false;
+
+                result = _queue.front();
+                if(!check.Process(result))
+                    return false;
+
+                _queue.pop_front();
                 return true;
             }
 
@@ -120,6 +137,20 @@ namespace ACE_Based
             void unlock()
             {
                 this->_lock.release();
+            }
+
+            ///! Calls pop_front of the queue
+            void pop_front()
+            {
+                ACE_GUARD (LockType, g, this->_lock);
+                _queue.pop_front();
+            }
+            
+            ///! Checks if we're empty or not with locks held
+            bool empty()
+            {
+                ACE_GUARD_RETURN (LockType, g, this->_lock, false);
+                return _queue.empty();
             }
     };
 }
