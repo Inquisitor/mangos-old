@@ -3039,9 +3039,11 @@ Creature* Map::GetCreature(ObjectGuid guid)
  *
  * @param guid must be pet guid (HIGHGUID_PET)
  */
+
 Pet* Map::GetPet(ObjectGuid guid)
 {
-    return m_objectsStore.find<Pet>(guid.GetRawValue(), (Pet*)NULL);
+    Pet* pet = ObjectAccessor::FindPet(guid);         // return only in world pets
+    return pet && pet->GetMap() == this ? pet : NULL;
 }
 
 /**

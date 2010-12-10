@@ -68,8 +68,9 @@ Pet::~Pet()
 void Pet::AddToWorld()
 {
     ///- Register the pet for guid lookup
-    if (!((Creature*)this)->IsInWorld())
-        GetMap()->GetObjectsStore().insert<Pet>(GetGUID(), (Pet*)this);
+    if(!IsInWorld())
+        sObjectAccessor.AddObject(this);
+        //GetMap()->GetObjectsStore().insert<Pet>(GetGUID(), (Pet*)this);
 
     Unit::AddToWorld();
 }
