@@ -68,8 +68,10 @@ Pet::~Pet()
 void Pet::AddToWorld()
 {
     ///- Register the pet for guid lookup
-    if(!IsInWorld())
-        sObjectAccessor.AddObject(this);
+    if (!((Creature*)this)->IsInWorld())
+        GetMap()->GetObjectsStore().insert<Pet>(GetGUID(), (Pet*)this);
+    /*if(!IsInWorld())
+        sObjectAccessor.AddObject(this);*/
         //GetMap()->GetObjectsStore().insert<Pet>(GetGUID(), (Pet*)this);
 
     Unit::AddToWorld();
@@ -78,8 +80,10 @@ void Pet::AddToWorld()
 void Pet::RemoveFromWorld()
 {
     ///- Remove the pet from the accessor
-    if(IsInWorld())
-        sObjectAccessor.RemoveObject(this);
+    if (((Creature*)this)->IsInWorld())
+        GetMap()->GetObjectsStore().erase<Pet>(GetGUID(), (Pet*)NULL);
+    /*if(IsInWorld())
+        sObjectAccessor.RemoveObject(this);*/
 
     ///- Don't call the function for Creature, normal mobs + totems go in a different storage
     Unit::RemoveFromWorld();
