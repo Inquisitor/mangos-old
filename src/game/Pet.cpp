@@ -908,21 +908,6 @@ bool Pet::InitStatsForLevel(uint32 petlevel, Unit* owner)
             if (!pInfo)         //If no pet levelstats in DB - use 1 for default hunter pet
                 pInfo = sObjectMgr.GetPetLevelInfo(1, petlevel);
 
-            CreatureFamilyEntry const* cFamily = sCreatureFamilyStore.LookupEntry(cinfo->family);
-            if(cFamily && cFamily->minScale > 0.0f && getPetType()==HUNTER_PET)
-            {
-                float scale;
-                if (getLevel() >= cFamily->maxScaleLevel)
-                    scale = cFamily->maxScale;
-                else if (getLevel() <= cFamily->minScaleLevel)
-                    scale = cFamily->minScale;
-                else
-                    scale = cFamily->minScale + float(getLevel() - cFamily->minScaleLevel) / cFamily->maxScaleLevel * (cFamily->maxScale - cFamily->minScale);
-
-                SetObjectScale(scale);
-                UpdateModelData();
-            }
-
             SetUInt32Value(UNIT_FIELD_PETNEXTLEVELEXP, sObjectMgr.GetXPForPetLevel(petlevel));
             setPowerType(POWER_FOCUS);
             break;
@@ -1016,6 +1001,22 @@ bool Pet::InitStatsForLevel(uint32 petlevel, Unit* owner)
     SetAttackTime(OFF_ATTACK, BASE_ATTACK_TIME);
     SetFloatValue(UNIT_MOD_CAST_SPEED, 1.0f);
 
+    //scale
+    CreatureFamilyEntry const* cFamily = sCreatureFamilyStore.LookupEntry(cinfo->family);
+    if (cFamily && cFamily->minScale > 0.0f && getPetType() == HUNTER_PET)
+    {
+        float scale;
+        if (getLevel() >= cFamily->maxScaleLevel)
+            scale = cFamily->maxScale;
+        else if (getLevel() <= cFamily->minScaleLevel)
+            scale = cFamily->minScale;
+        else
+            scale = cFamily->minScale + float(getLevel() - cFamily->minScaleLevel) / cFamily->maxScaleLevel * (cFamily->maxScale - cFamily->minScale);
+
+        scale += GetObjectScale();
+        SetObjectScale(scale);
+        UpdateModelData();
+    }
 
     UpdateAllStats();
 
