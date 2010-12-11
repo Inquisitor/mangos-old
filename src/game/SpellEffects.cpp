@@ -2635,7 +2635,12 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     return;
 
                 // dummy cast itself ignored by client in logs
-                m_caster->CastCustomSpell(unitTarget,50782,&damage,NULL,NULL,true);
+                if(const SpellEntry* spellInfo = sSpellStore.LookupEntry(50782))
+                {
+                    const_cast<SpellEntry*>(spellInfo)->manaCost = 0;
+                    const_cast<SpellEntry*>(spellInfo)->CastingTimeIndex = 1;
+                    m_caster->CastCustomSpell(unitTarget,50782,&damage,NULL,NULL,true);
+                }
                 return;
             }
             // Concussion Blow
