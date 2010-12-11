@@ -41,7 +41,7 @@ void WorldSession::HandleDismissControlledVehicle(WorldPacket &recv_data)
 
     bool dismiss = true;
 
-    if (GetPlayer()->GetVehicle()->GetVehicleInfo()->m_flags & (VEHICLE_FLAG_NOT_DISMISS | SEAT_FLAG_HIDE_PASSENGER))
+    if (GetPlayer()->GetVehicle()->GetVehicleInfo()->m_flags & (VEHICLE_FLAG_NOT_DISMISS | VEHICLE_FLAG_ACCESSORY))
         dismiss = false;
 
     GetPlayer()->m_movementInfo = mi;

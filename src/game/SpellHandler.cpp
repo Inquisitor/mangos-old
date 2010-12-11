@@ -622,9 +622,6 @@ void WorldSession::HandleMirrorImageDataRequest( WorldPacket & recv_data )
     // Get creator of the unit
     Unit *creator = unit;
 
-    if(!creator) // How can it be NULL ?
-        return;
-
     // Get SPELL_AURA_247 caster
     if (!unit->GetAurasByType(SPELL_AURA_MIRROR_IMAGE).empty())
         creator = unit->GetAurasByType(SPELL_AURA_MIRROR_IMAGE).front()->GetCaster();
