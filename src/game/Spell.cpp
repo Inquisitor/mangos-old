@@ -2141,19 +2141,17 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
             else if (m_spellInfo->Id == 59725)              // Improved Spell Reflection
             {
                 if (m_caster->HasAura(23920, EFFECT_INDEX_0) )
-                    m_caster->RemoveAurasDueToSpell(23920); // will be replaced by imp. spell refl. aura
+                    m_caster->RemoveAurasDueToSpell(23920);                     // remove single-target reflect aura
 
                 Unit::AuraList const& lDummyAuras = m_caster->GetAurasByType(SPELL_AURA_DUMMY);
                 for(Unit::AuraList::const_iterator i = lDummyAuras.begin(); i != lDummyAuras.end(); ++i)
                 {
                     if((*i)->GetSpellProto()->SpellIconID == 1935)
                     {
-                        unMaxTargets = (*i)->GetModifier()->m_amount + 1;   // +1 because we are also applying this to the caster
+                        unMaxTargets = (*i)->GetModifier()->m_amount + 1;       // +1 because we are also applying this to the caster
                         break;
                     }
                 }
-
-                radius = 20.0f;     // as mentioned in the spell's tooltip (data doesn't appear in dbc)
 
                 FillRaidOrPartyTargets(targetUnitMap, m_caster, m_caster, radius, false, false, true);
                 targetUnitMap.sort(TargetDistanceOrder(m_caster));

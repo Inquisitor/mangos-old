@@ -3436,6 +3436,14 @@ SpellMissInfo Unit::SpellHitResult(Unit *pVictim, SpellEntry const *spell, bool 
         for(Unit::AuraList::const_iterator i = mReflectSpellsSchool.begin(); i != mReflectSpellsSchool.end(); ++i)
             if((*i)->GetModifier()->m_miscvalue & GetSpellSchoolMask(spell))
                 reflectchance += (*i)->GetModifier()->m_amount;
+
+        // Improved Spell Reflection
+        // HACK! tooltip says 20yards, but no such spell in dbc with such data :/
+        if (Aura *aura = pVictim->GetAura(59725, EFFECT_INDEX_0))
+            if (Unit *aura_caster = GetMap()->GetUnit(aura->GetCasterGUID()))
+                if (!pVictim->IsInRange(aura_caster, 0.0f, 20.0f))
+                    reflectchance -= aura->GetModifier()->m_amount;
+
         if (reflectchance > 0 && roll_chance_i(reflectchance))
         {
             // Start triggers for remove charges if need (trigger only for victim, and mark as active spell)
@@ -10863,9 +10871,9 @@ void Unit::ProcDamageAndSpellFor( bool isVictim, Unit * pTarget, uint32 procFlag
                 if (Group* group = ((Player*)pImpSRCaster)->GetGroup())
                     for(GroupReference *itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
                         if (Player* member = itr->getSource())
-                            if (Aura* pAura = member->GetAura(59725, EFFECT_INDEX_0) )
-                                if (pAura->GetCaster() == pImpSRCaster)
-                                    member->RemoveAura(pAura);
+                            if (SpellAuraHolder* pAuraHolder = member->GetSpellAuraHolder(59725, 0) )
+                                if (pAuraHolder->GetCaster() && pAuraHolder->GetCaster()->GetGUID() == pImpSRCaster->GetGUID() )
+                                    member->RemoveSpellAuraHolder(pAuraHolder);
 
         triggeredByHolder->SetInUse(false);
     }
