@@ -22,7 +22,6 @@
 #include "Common.h"
 
 #include "ace/Thread_Mutex.h"
-#include "ace/Method_Request.h"
 #include "LockedQueue.h"
 #include <queue>
 #include "Utilities/Callback.h"
@@ -61,11 +60,12 @@ class SqlTransaction : public SqlOperation
         SqlTransaction() {}
         void DelayExecute(const char *sql)
         {
-            m_Mutex.acquire();
             char* _sql = mangos_strdup(sql);
             if (_sql)
+            {
+                ACE_Guard<ACE_Thread_Mutex> _lock(m_Mutex);
                 m_queue.push(_sql);
-            m_Mutex.release();
+            }
         }
         void Execute(Database *db);
 };
@@ -126,32 +126,4 @@ class SqlQueryHolderEx : public SqlOperation
             : m_holder(holder), m_callback(callback), m_queue(queue) {}
         void Execute(Database *db);
 };
-
-class SqlAsyncTask : public ACE_Method_Request
-{
-public:
-    SqlAsyncTask(Database * db, SqlOperation * op) : m_db(db), m_op(op){}
-    ~SqlAsyncTask()
-    {
-        if (!m_op)
-            return;
-        
-        delete m_op;
-        m_op = NULL;
-    }
-
-    int call()
-    {
-        if(this == NULL || !m_db || !m_op)
-            return -1;
-
-        m_op->Execute(m_db);
-        return 0;
-    }
-
-private:
-    Database * m_db;
-    SqlOperation * m_op;
-};
-
 #endif                                                      //__SQLOPERATIONS_H
