@@ -1095,6 +1095,10 @@ bool Item::IsBindedNotWith( Player const* player ) const
     if (GetOwnerGuid() == player->GetObjectGuid())
         return false;
 
+    if (HasFlag(ITEM_FIELD_FLAGS, ITEM_DYNFLAG_BOP_TRADEABLE))
+        if (allowedGUIDs.find(player->GetGUIDLow()) != allowedGUIDs.end())
+            return false;
+
     // has loot with diff owner
     if (HasGeneratedLoot())
         return true;
@@ -1102,10 +1106,6 @@ bool Item::IsBindedNotWith( Player const* player ) const
     // not binded item
     if (!IsSoulBound())
         return false;
-
-    if (HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_BOP_TRADEABLE))
-        if (allowedGUIDs.find(player->GetGUIDLow()) != allowedGUIDs.end())
-            return false;
 
     // not BOA item case
     if (!IsBoundAccountWide())
