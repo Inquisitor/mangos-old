@@ -460,9 +460,17 @@ void BattleGround::Update(uint32 diff)
             {
                 //TODO : add arena sound PlaySoundToAll(SOUND_ARENA_START);
 
+                // remove auras with duration lower than 30s and arena preparation
                 for(BattleGroundPlayerMap::const_iterator itr = m_Players.begin(); itr != m_Players.end(); ++itr)
                     if (Player *plr = sObjectMgr.GetPlayer(itr->first))
                     {
+                        // BG Status packet
+                        WorldPacket status;
+                        BattleGroundQueueTypeId bgQueueTypeId = BattleGroundMgr::BGQueueTypeId(m_TypeID, GetArenaType());
+                        uint32 queueSlot = plr->GetBattleGroundQueueIndex(bgQueueTypeId);
+                        sBattleGroundMgr.BuildBattleGroundStatusPacket(&status, this, queueSlot, GetStatus(), 0, GetStartTime(), GetArenaType());
+                        plr->GetSession()->SendPacket(&status);
+
                         for(Unit::SpellAuraHolderMap::const_iterator iter = plr->GetSpellAuraHolderMap().begin(); iter != plr->GetSpellAuraHolderMap().end(); ++iter)
                         {
                             if (!iter->second->IsPassive() && iter->second->IsPositive() && iter->second->GetId() != 32612)
