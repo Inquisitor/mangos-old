@@ -1289,8 +1289,6 @@ void Item::SetSoulboundTradeable(AllowedLooterSet* allowedLooters, Player* curre
 
         allowedGUIDs.clear();
         SetState(ITEM_CHANGED, currentOwner);
-        //PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_ITEM_BOP_TRADE);
-        //stmt->setUInt32(0, GetGUIDLow());
 
         CharacterDatabase.PExecute( "DELETE FROM item_soulbound_trade_data WHERE itemGuid = '%u'", GetGUIDLow() );
     }

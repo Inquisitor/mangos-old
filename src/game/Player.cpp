@@ -16236,6 +16236,27 @@ void Player::_LoadInventory(QueryResult *result, uint32 timediff)
                 continue;
             }
 
+            if (item->HasFlag(ITEM_FIELD_FLAGS, ITEM_DYNFLAG_BOP_TRADEABLE))
+            {
+                QueryResult *result = CharacterDatabase.PQuery("SELECT allowedPlayers FROM item_soulbound_trade_data WHERE itemGuid = '%u'", item->GetGUIDLow());
+                if (!result)
+                {
+                    sLog.outDebug("Item::LoadFromDB, Item GUID: %u has flag ITEM_FLAG_BOP_TRADEABLE but has no data in item_soulbound_trade_data, removing flag.", item->GetGUIDLow());
+                    item->RemoveFlag(ITEM_FIELD_FLAGS, ITEM_DYNFLAG_BOP_TRADEABLE);
+                }
+                else
+                {
+                    Field* fields2 = result->Fetch();
+                    std::string strGUID = fields2[0].GetCppString();
+                    Tokens GUIDlist = StrSplit(strGUID, " ");
+                    AllowedLooterSet looters;
+                    for (Tokens::iterator itr = GUIDlist.begin(); itr != GUIDlist.end(); ++itr)
+                        looters.insert(atol(itr->c_str()));
+                    item->SetSoulboundTradeable(&looters, this, true);
+                    m_itemSoulboundTradeable.push_back(item);
+                }
+            }
+
             bool success = true;
 
             // the item/bag is not in a bag
