@@ -1278,12 +1278,12 @@ void Item::SetSoulboundTradeable(AllowedLooterSet* allowedLooters, Player* curre
 {
     if (apply)
     {
-        SetFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_BOP_TRADEABLE);
+        SetFlag(ITEM_FIELD_FLAGS, ITEM_DYNFLAG_BOP_TRADEABLE);
         allowedGUIDs = *allowedLooters;
     }
     else
     {
-        RemoveFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_BOP_TRADEABLE);
+        RemoveFlag(ITEM_FIELD_FLAGS, ITEM_DYNFLAG_BOP_TRADEABLE);
         if (allowedGUIDs.empty())
             return;
 

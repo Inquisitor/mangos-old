@@ -224,7 +224,7 @@ enum ItemDynFlags
     ITEM_DYNFLAG_UNK5                         = 0x00000020,
     ITEM_DYNFLAG_UNK6                         = 0x00000040, // ? old note: usable
     ITEM_DYNFLAG_UNK7                         = 0x00000080,
-    ITEM_DYNFLAG_UNK8                         = 0x00000100,
+    ITEM_DYNFLAG_BOP_TRADEABLE                = 0x00000100, // Allows trading soulbound items
     ITEM_DYNFLAG_READABLE                     = 0x00000200, // can be open for read, it or item proto pagetText make show "Right click to read"
     ITEM_DYNFLAG_UNK10                        = 0x00000400,
     ITEM_DYNFLAG_UNK11                        = 0x00000800,

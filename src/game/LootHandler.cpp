@@ -131,7 +131,8 @@ void WorldSession::HandleAutostoreLootItemOpcode( WorldPacket & recv_data )
     uint8 msg = player->CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, item->itemid, item->count );
     if ( msg == EQUIP_ERR_OK )
     {
-        Item * newitem = player->StoreNewItem( dest, item->itemid, true, item->randomPropertyId);
+        AllowedLooterSet* looters = item->GetAllowedLooters();
+        Item * newitem = player->StoreNewItem( dest, item->itemid, true, item->randomPropertyId, (looters->size() > 1) ? looters : NULL);
 
         if (qitem)
         {

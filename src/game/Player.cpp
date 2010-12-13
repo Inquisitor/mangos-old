@@ -11000,7 +11000,7 @@ Item* Player::StoreNewItem(ItemPosCountVec const& dest, uint32 item, bool update
             for (AllowedLooterSet::iterator itr = allowedLooters->begin(); itr != allowedLooters->end(); ++itr)
                 ss << *itr << " ";
 
-            CharacterDatabase.PExecute("INSERT INTO item_soulbound_trade_data VALUES(%u, %s)", pItem->GetGUIDLow(), ss.str());
+            CharacterDatabase.PExecute("INSERT INTO item_soulbound_trade_data VALUES ('%u', '%s')", pItem->GetGUIDLow(), ss.str());
         }
     }
     return pItem;
@@ -11442,8 +11442,8 @@ void Player::MoveItemToInventory(ItemPosCountVec const& dest, Item* pItem, bool 
         pLastItem->SetState(in_characterInventoryDB ? ITEM_CHANGED : ITEM_NEW, this);
     }
 
-    if (pLastItem->HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAG_BOP_TRADEABLE))
-            m_itemSoulboundTradeable.push_back(pLastItem);
+    if (pLastItem->HasFlag(ITEM_FIELD_FLAGS, ITEM_DYNFLAG_BOP_TRADEABLE))
+        m_itemSoulboundTradeable.push_back(pLastItem);
 }
 
 void Player::DestroyItem( uint8 bag, uint8 slot, bool update )
