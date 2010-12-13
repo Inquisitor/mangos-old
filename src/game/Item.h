@@ -299,7 +299,7 @@ class MANGOS_DLL_SPEC Item : public Object
 
         bool IsBag() const { return GetProto()->InventoryType == INVTYPE_BAG; }
         bool IsBroken() const { return GetUInt32Value(ITEM_FIELD_MAXDURABILITY) > 0 && GetUInt32Value(ITEM_FIELD_DURABILITY) == 0; }
-        bool CanBeTraded(bool mail = false) const;
+        bool CanBeTraded(bool mail = false, bool trade = false) const;
         void SetInTrade(bool b = true) { mb_in_trade = b; }
         bool IsInTrade() const { return mb_in_trade; }
 
@@ -383,10 +383,16 @@ class MANGOS_DLL_SPEC Item : public Object
         void RemoveFromClientUpdateList();
         void BuildUpdateData(UpdateDataMapType& update_players);
 
-        // Item Refunding / Soulbound Trading System
+        // Item Refunding system
         bool IsEligibleForRefund();
         void SetPlayedtimeField(uint32 time) { SetInt32Value(ITEM_FIELD_CREATE_PLAYED_TIME ,time); }
         uint32 GetPlayedtimeField() { return GetInt32Value(ITEM_FIELD_CREATE_PLAYED_TIME); }
+
+        // Soulbound trade system
+        void SetSoulboundTradeable(AllowedLooterSet* allowedLooters, Player* currentOwner, bool apply);
+        bool CheckSoulboundTradeExpire();
+
+        AllowedLooterSet allowedGUIDs;
 
     private:
         std::string m_text;

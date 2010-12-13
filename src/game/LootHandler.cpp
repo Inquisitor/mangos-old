@@ -561,6 +561,9 @@ void WorldSession::HandleLootMasterGiveOpcode( WorldPacket & recv_data )
         return;
     }
 
+    // list of players allowed to receive this item in trade
+    AllowedLooterSet* looters = item.GetAllowedLooters();
+
     // now move item from loot to target inventory
     Item * newitem = target->StoreNewItem( dest, item.itemid, true, item.randomPropertyId );
     target->SendNewItem(newitem, uint32(item.count), false, false, true );
