@@ -16236,7 +16236,7 @@ void Player::_LoadInventory(QueryResult *result, uint32 timediff)
                 continue;
             }
 
-            if (item->HasFlag(ITEM_FIELD_FLAGS, ITEM_DYNFLAG_BOP_TRADEABLE))
+            /*if (item->HasFlag(ITEM_FIELD_FLAGS, ITEM_DYNFLAG_BOP_TRADEABLE))
             {
                 QueryResult *result = CharacterDatabase.PQuery("SELECT allowedPlayers FROM item_soulbound_trade_data WHERE itemGuid = '%u'", item->GetGUIDLow());
                 if (!result)
@@ -16255,7 +16255,7 @@ void Player::_LoadInventory(QueryResult *result, uint32 timediff)
                     item->SetSoulboundTradeable(&looters, this, true);
                     m_itemSoulboundTradeable.push_back(item);
                 }
-            }
+            }*/
 
             bool success = true;
 
