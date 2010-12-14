@@ -11000,7 +11000,7 @@ Item* Player::StoreNewItem(ItemPosCountVec const& dest, uint32 item, bool update
             for (AllowedLooterSet::iterator itr = allowedLooters->begin(); itr != allowedLooters->end(); ++itr)
                 ss << *itr << " ";
 
-            CharacterDatabase.PExecute("INSERT INTO item_soulbound_trade_data VALUES ('%u', '%s')", pItem->GetGUIDLow(), ss.str());
+            CharacterDatabase.PExecute("INSERT INTO item_soulbound_trade_data VALUES ('%u', '%s')", pItem->GetGUIDLow(), ss.str().c_str());
         }
     }
     return pItem;
@@ -16236,7 +16236,7 @@ void Player::_LoadInventory(QueryResult *result, uint32 timediff)
                 continue;
             }
 
-            /*if (item->HasFlag(ITEM_FIELD_FLAGS, ITEM_DYNFLAG_BOP_TRADEABLE))
+            if (item->HasFlag(ITEM_FIELD_FLAGS, ITEM_DYNFLAG_BOP_TRADEABLE))
             {
                 QueryResult *result = CharacterDatabase.PQuery("SELECT allowedPlayers FROM item_soulbound_trade_data WHERE itemGuid = '%u'", item->GetGUIDLow());
                 if (!result)
@@ -16255,7 +16255,7 @@ void Player::_LoadInventory(QueryResult *result, uint32 timediff)
                     item->SetSoulboundTradeable(&looters, this, true);
                     m_itemSoulboundTradeable.push_back(item);
                 }
-            }*/
+            }
 
             bool success = true;
 
