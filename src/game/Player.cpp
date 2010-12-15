@@ -10997,10 +10997,13 @@ Item* Player::StoreNewItem(ItemPosCountVec const& dest, uint32 item, bool update
 
             // save data
             std::ostringstream ss;
+            ss << "REPLACE INTO `item_soulbound_trade_data` VALUES (";
+            ss << pItem->GetGUIDLow();
+            ss << ", '";
             for (AllowedLooterSet::iterator itr = allowedLooters->begin(); itr != allowedLooters->end(); ++itr)
                 ss << *itr << " ";
-
-            CharacterDatabase.PExecute("INSERT INTO item_soulbound_trade_data VALUES ('%u', '%s')", pItem->GetGUIDLow(), ss.str().c_str());
+            ss << "');";
+            CharacterDatabase.PExecute(ss.str().c_str());
         }
     }
     return pItem;
