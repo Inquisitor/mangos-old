@@ -9443,6 +9443,18 @@ void ObjectMgr::LoadGossipMenuItems()
     for(ScriptMapMap::const_iterator itr = sGossipScripts.begin(); itr != sGossipScripts.end(); ++itr)
         gossipScriptSet.insert(itr->first);
 
+    std::multimap<uint32, const CreatureInfo*> CreatureInfoMap;
+    typedef  std::multimap<uint32, const CreatureInfo*>::iterator TMI;
+    for(uint32 i = 1;  i < sCreatureStorage.MaxEntry; ++i)
+        if (CreatureInfo const* cInfo = sCreatureStorage.LookupEntry<CreatureInfo>(i))
+        {
+            if (cInfo->GossipMenuId !=0)
+            {
+                CreatureInfoMap.insert(std::make_pair(cInfo->GossipMenuId,cInfo));
+
+            }
+        }
+
     do
     {
         bar.step();
@@ -9523,12 +9535,13 @@ void ObjectMgr::LoadGossipMenuItems()
         {
             bool found_menu_uses = false;
             bool found_flags_uses = false;
-            for(uint32 i = 1; !found_flags_uses && i < sCreatureStorage.MaxEntry; ++i)
-            {
-                if (CreatureInfo const* cInfo = sCreatureStorage.LookupEntry<CreatureInfo>(i))
-                {
-                    if (cInfo->GossipMenuId == gMenuItem.menu_id)
-                    {
+
+         std::pair<TMI,TMI> tm_range=CreatureInfoMap.equal_range(gMenuItem.menu_id);
+         for (TMI it2=tm_range.first;!found_flags_uses && it2!=tm_range.second;it2++)
+               {
+
+                        CreatureInfo const* cInfo=it2->second;
+                            
                         found_menu_uses = true;
 
                         // some from creatures with gossip menu can use gossip option base at npc_flags
@@ -9538,9 +9551,7 @@ void ObjectMgr::LoadGossipMenuItems()
                         // unused check data preparing part
                         if (!sLog.HasLogFilter(LOG_FILTER_DB_STRICTED_CHECK))
                             menu_ids.erase(cInfo->GossipMenuId);
-                    }
                 }
-            }
 
             if (found_menu_uses && !found_flags_uses)
                 sLog.outErrorDb("Table gossip_menu_option for menu %u, id %u has `npc_option_npcflag` = %u but creatures using this menu does not have corresponding`npcflag`. Option will not accessible in game.", gMenuItem.menu_id, gMenuItem.id, gMenuItem.npc_option_npcflag);
