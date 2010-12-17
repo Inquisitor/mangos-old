@@ -3170,6 +3170,14 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
                     if( GetTypeId() != TYPEID_PLAYER || pVictim->GetEntry() != 19457)
                         return SPELL_AURA_PROC_FAILED;
                 }
+                case 51121: // Time Bomb
+                case 59376:
+                {
+                    target = pVictim;
+                    trigger_spell_id = 51132;
+                    basepoints[0] = pVictim->GetMaxHealth() - pVictim->GetHealth();
+                    break;
+                }
             }
             break;
         case SPELLFAMILY_MAGE:
