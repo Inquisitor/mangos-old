@@ -1631,6 +1631,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         CharmInfo* GetCharmInfo() { return m_charmInfo; }
         CharmInfo* InitCharmInfo(Unit* charm);
 
+        Pet* CreateTamedPetFrom(Creature* creatureTarget,uint32 spell_id = 0);
+
         Player * m_movedPlayer;
 
         uint64 const& GetTotemGUID(TotemSlot slot) const { return m_TotemSlot[slot]; }

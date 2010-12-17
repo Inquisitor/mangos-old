@@ -478,7 +478,7 @@ void WorldSession::HandleBattleFieldPortOpcode( WorldPacket &recv_data )
         case 0:                                         // leave queue
             /*
             // if player leaves rated arena match before match start, it is counted as he played but he lost
-            if (ginfo.IsRated)
+            if (ginfo.IsRated && ginfo.IsInvitedToBGInstanceGUID)
             {
                 ArenaTeam * at = sObjectMgr.GetArenaTeamById(ginfo.ArenaTeamId);
                 if (at)
