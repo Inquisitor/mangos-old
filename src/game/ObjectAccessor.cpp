@@ -120,7 +120,7 @@ void ObjectAccessor::KickPlayer(ObjectGuid guid)
         s->LogoutPlayer(false);                     // logout player without waiting next session list update
     }
 }
-
+/*
 Pet* ObjectAccessor::FindPet(ObjectGuid guid)
 {
     Pet * pet = HashMapHolder<Pet>::Find(guid);
@@ -129,7 +129,7 @@ Pet* ObjectAccessor::FindPet(ObjectGuid guid)
 
     return pet;
 }
-
+*/
 Corpse*
 ObjectAccessor::GetCorpseForPlayerGUID(ObjectGuid guid)
 {

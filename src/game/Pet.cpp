@@ -70,6 +70,9 @@ void Pet::AddToWorld()
     ///- Register the pet for guid lookup
     if (!((Creature*)this)->IsInWorld())
         GetMap()->GetObjectsStore().insert<Pet>(GetGUID(), (Pet*)this);
+    /*if(!IsInWorld())
+        sObjectAccessor.AddObject(this);*/
+        //GetMap()->GetObjectsStore().insert<Pet>(GetGUID(), (Pet*)this);
 
     Unit::AddToWorld();
 }
@@ -79,6 +82,8 @@ void Pet::RemoveFromWorld()
     ///- Remove the pet from the accessor
     if (((Creature*)this)->IsInWorld())
         GetMap()->GetObjectsStore().erase<Pet>(GetGUID(), (Pet*)NULL);
+    /*if(IsInWorld())
+        sObjectAccessor.RemoveObject(this);*/
 
     ///- Don't call the function for Creature, normal mobs + totems go in a different storage
     Unit::RemoveFromWorld();
@@ -910,21 +915,6 @@ bool Pet::InitStatsForLevel(uint32 petlevel, Unit* owner)
             if (!pInfo)         //If no pet levelstats in DB - use 1 for default hunter pet
                 pInfo = sObjectMgr.GetPetLevelInfo(1, petlevel);
 
-            CreatureFamilyEntry const* cFamily = sCreatureFamilyStore.LookupEntry(cinfo->family);
-            if(cFamily && cFamily->minScale > 0.0f && getPetType()==HUNTER_PET)
-            {
-                float scale;
-                if (getLevel() >= cFamily->maxScaleLevel)
-                    scale = cFamily->maxScale;
-                else if (getLevel() <= cFamily->minScaleLevel)
-                    scale = cFamily->minScale;
-                else
-                    scale = cFamily->minScale + float(getLevel() - cFamily->minScaleLevel) / cFamily->maxScaleLevel * (cFamily->maxScale - cFamily->minScale);
-
-                SetObjectScale(scale);
-                UpdateModelData();
-            }
-
             SetUInt32Value(UNIT_FIELD_PETNEXTLEVELEXP, sObjectMgr.GetXPForPetLevel(petlevel));
             setPowerType(POWER_FOCUS);
             break;
@@ -1033,6 +1023,22 @@ bool Pet::InitStatsForLevel(uint32 petlevel, Unit* owner)
     SetAttackTime(OFF_ATTACK, BASE_ATTACK_TIME);
     SetFloatValue(UNIT_MOD_CAST_SPEED, 1.0f);
 
+    //scale
+    CreatureFamilyEntry const* cFamily = sCreatureFamilyStore.LookupEntry(cinfo->family);
+    if (cFamily && cFamily->minScale > 0.0f && getPetType() == HUNTER_PET)
+    {
+        float scale;
+        if (getLevel() >= cFamily->maxScaleLevel)
+            scale = cFamily->maxScale;
+        else if (getLevel() <= cFamily->minScaleLevel)
+            scale = cFamily->minScale;
+        else
+            scale = cFamily->minScale + float(getLevel() - cFamily->minScaleLevel) / cFamily->maxScaleLevel * (cFamily->maxScale - cFamily->minScale);
+
+        scale += GetObjectScale();
+        SetObjectScale(scale);
+        UpdateModelData();
+    }
 
     UpdateAllStats();
 
@@ -1840,10 +1846,13 @@ uint8 Pet::GetMaxTalentPointsForLevel(uint32 level)
 
 void Pet::ToggleAutocast(uint32 spellid, bool apply)
 {
-    if(IsPassiveSpell(spellid) || !isControlled() || !IsInWorld())
+    if(IsPassiveSpell(spellid) || !isControlled())
         return;
 
     PetSpellMap::iterator itr = m_spells.find(spellid);
+
+    if (itr == m_spells.end())
+        return;
 
     uint32 i;
 

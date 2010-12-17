@@ -83,18 +83,21 @@ VendorItem const* VendorItemData::FindItemCostPair(uint32 item_id, uint32 extend
 
 bool AssistDelayEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
 {
-    if (Unit* victim = m_owner.GetMap()->GetUnit(m_victimGuid))
+    if(m_owner.IsInWorld())
     {
-        while (!m_assistantGuids.empty())
+        if (Unit* victim = m_owner.GetMap()->GetUnit(m_victimGuid))
         {
-            Creature* assistant = m_owner.GetMap()->GetAnyTypeCreature(*m_assistantGuids.rbegin());
-            m_assistantGuids.pop_back();
-
-            if (assistant && assistant->CanAssistTo(&m_owner, victim))
+            while (!m_assistantGuids.empty())
             {
-                assistant->SetNoCallAssistance(true);
-                if(assistant->AI())
-                    assistant->AI()->AttackStart(victim);
+                Creature* assistant = m_owner.GetMap()->GetAnyTypeCreature(*m_assistantGuids.rbegin());
+                m_assistantGuids.pop_back();
+
+                if (assistant && assistant->CanAssistTo(&m_owner, victim))
+                {
+                    assistant->SetNoCallAssistance(true);
+                    if(assistant->AI())
+                        assistant->AI()->AttackStart(victim);
+                }
             }
         }
     }

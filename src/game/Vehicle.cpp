@@ -174,7 +174,7 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
 
         passenger->SetCharm(m_pBase);
 
-        if(m_pBase->HasAuraType(SPELL_AURA_FLY) || m_pBase->HasAuraType(SPELL_AURA_MOD_FLIGHT_SPEED))
+        if(m_pBase->HasAuraType(SPELL_AURA_FLY) || m_pBase->HasAuraType(SPELL_AURA_MOD_FLIGHT_SPEED) || ((Creature*)m_pBase)->CanFly())
         {
             WorldPacket data;
             data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12);
@@ -186,6 +186,8 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
         if (passenger->GetTypeId() == TYPEID_PLAYER)
         {
             m_pBase->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
+            if(m_pBase->GetMap() && !m_pBase->GetMap()->IsBattleGround())
+                m_pBase->setFaction(passenger->getFaction());
 
             if (CharmInfo* charmInfo = m_pBase->InitCharmInfo(m_pBase))
             {
@@ -205,7 +207,7 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
     passenger->SendMonsterMoveTransport(m_pBase, SPLINETYPE_FACINGANGLE, SPLINEFLAG_UNKNOWN5, 0, 0.0f);
 
     if (m_pBase->GetTypeId() == TYPEID_UNIT)
-        RelocatePassengers(m_pBase->GetPositionX(), m_pBase->GetPositionY(), m_pBase->GetPositionZ(), m_pBase->GetOrientation());
+        RelocatePassengers(m_pBase->GetPositionX(), m_pBase->GetPositionY(), m_pBase->GetPositionZ()+0.5f, m_pBase->GetOrientation());
 
     UpdateFreeSeatCount();
     return true;
@@ -264,7 +266,7 @@ void VehicleKit::RemovePassenger(Unit *passenger)
 
         WorldPacket data(SMSG_FORCE_MOVE_UNROOT, 8+4);
         data << passenger->GetPackGUID();
-        data << uint32(0);
+        data << uint32(2);
         passenger->SendMessageToSet(&data, true);
 
         ((Player*)passenger)->ResummonPetTemporaryUnSummonedIfAny();

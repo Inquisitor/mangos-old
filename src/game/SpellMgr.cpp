@@ -756,8 +756,20 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
                     }
                     break;
                 case SPELL_AURA_PROC_TRIGGER_SPELL:
+                {
+                    switch(spellproto->Id) // Impact should be poisitive aura
+                    {
+                        case 11103:
+                        case 12357:
+                        case 12358:
+                        case 64343:
+                            return true;
+                        default:
+                            break;
+                    }
                     // many positive auras have negative triggered spells at damage for example and this not make it negative (it can be canceled for example)
                     break;
+                }
                 case SPELL_AURA_MOD_STUN:                   //have positive and negative spells, we can't sort its correctly at this moment.
                     if (effIndex == EFFECT_INDEX_0 && spellproto->Effect[EFFECT_INDEX_1] == 0 && spellproto->Effect[EFFECT_INDEX_2] == 0)
                         return false;                       // but all single stun aura spells is negative
@@ -3205,7 +3217,9 @@ void SpellMgr::LoadSpellScriptTarget()
                 spellProto->EffectImplicitTargetA[i] == TARGET_AREAEFFECT_INSTANT ||
                 spellProto->EffectImplicitTargetB[i] == TARGET_AREAEFFECT_INSTANT ||
                 spellProto->EffectImplicitTargetA[i] == TARGET_AREAEFFECT_CUSTOM ||
-                spellProto->EffectImplicitTargetB[i] == TARGET_AREAEFFECT_CUSTOM)
+                spellProto->EffectImplicitTargetB[i] == TARGET_AREAEFFECT_CUSTOM ||
+                spellProto->EffectImplicitTargetA[i] == TARGET_AREAEFFECT_GO_AROUND_DEST ||
+                spellProto->EffectImplicitTargetB[i] == TARGET_AREAEFFECT_GO_AROUND_DEST)
             {
                 targetfound = true;
                 break;
@@ -4348,6 +4362,11 @@ DiminishingGroup GetDiminishingReturnsGroupForSpell(SpellEntry const* spellproto
             if (spellproto->SpellIconID == 2797)
                 return DIMINISHING_DISORIENT;
             break;
+        }
+        case SPELLFAMILY_UNK1:
+        {
+            // Holiday / Events spells - dont apply any dimnishing to them
+            return DIMINISHING_NONE;
         }
         default:
             break;
