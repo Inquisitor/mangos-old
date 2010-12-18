@@ -6590,13 +6590,8 @@ Unit* Unit::SelectMagnetTarget(Unit *victim, Spell* spell, SpellEffectIndex eff)
     if(!victim)
         return NULL;
 
-    if(!spell)
-        return victim;
-
-    SpellEntry const * spellInfo = spell->m_spellInfo;
-
     // SPELL_AURA_SPELL_MAGNET must NOT take any physical spells except for Hamstring, Wing Clip and Death Grip
-    if(spellInfo && ((spellInfo->SchoolMask != SPELL_SCHOOL_MASK_NORMAL && spellInfo->DmgClass == SPELL_DAMAGE_CLASS_MAGIC) || (spellInfo->Id == 1715 || spellInfo->Id == 2974 || spellInfo->Id == 49576)))
+    if (spell && ((spell->m_spellInfo->SchoolMask != SPELL_SCHOOL_MASK_NORMAL && spell->m_spellInfo->DmgClass == SPELL_DAMAGE_CLASS_MAGIC) || (spell->m_spellInfo->Id == 1715 || spell->m_spellInfo->Id == 2974 || spell->m_spellInfo->Id == 49576)))
     {
         Unit::AuraList const& magnetAuras = victim->GetAurasByType(SPELL_AURA_SPELL_MAGNET);
         for(Unit::AuraList::const_iterator itr = magnetAuras.begin(); itr != magnetAuras.end(); ++itr)
@@ -6606,10 +6601,9 @@ Unit* Unit::SelectMagnetTarget(Unit *victim, Spell* spell, SpellEffectIndex eff)
                 if (magnet->isAlive() && magnet->IsWithinLOSInMap(this) && spell->CheckTarget(magnet, eff))
                 {
                     //Destroy totem...
-                    if( ((Creature*)magnet)->IsTotem())
+                    if (magnet->GetObjectGuid().IsUnit() && ((Creature*)magnet)->IsTotem())
                          magnet->CastSpell(magnet, 5, true);
                     else
-                    {
                         if (SpellAuraHolder *holder = (*itr)->GetHolder())
                             if (holder->DropAuraCharge())
                                 victim->RemoveSpellAuraHolder(holder);
