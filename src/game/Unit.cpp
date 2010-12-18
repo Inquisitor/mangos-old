@@ -6604,6 +6604,7 @@ Unit* Unit::SelectMagnetTarget(Unit *victim, Spell* spell, SpellEffectIndex eff)
                     if (magnet->GetObjectGuid().IsUnit() && ((Creature*)magnet)->IsTotem())
                          magnet->CastSpell(magnet, 5, true);
                     else
+                    {
                         if (SpellAuraHolder *holder = (*itr)->GetHolder())
                             if (holder->DropAuraCharge())
                                 victim->RemoveSpellAuraHolder(holder);
