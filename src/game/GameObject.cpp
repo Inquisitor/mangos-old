@@ -1387,6 +1387,7 @@ void GameObject::Use(Unit* user)
                     return;
             }
 
+            user->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
             spellId = info->spellcaster.spellId;
 
             AddUse();
