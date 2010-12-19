@@ -854,9 +854,12 @@ void Spell::prepareDataForTriggerSystem()
         if (!IsPositiveEffect(m_spellInfo->Id, SpellEffectIndex(i)))
             m_negativeEffectMask |= (1<<i);
 
-    // Hunter traps spells (for Entrapment trigger)
-    // Gives your Immolation Trap, Frost Trap, Explosive Trap, and Snake Trap ....
-    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_HUNTER && (m_spellInfo->SpellFamilyFlags & UI64LIT(0x000020000000001C)))
+    // Hunter trap spells - activation proc for Lock and Load, Entrapment and Misdirection
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_HUNTER &&
+        (m_spellInfo->SpellFamilyFlags & 0x18 ||     // Freezing and Frost Trap, Freezing Arrow
+        m_spellInfo->Id == 57879 ||                     // Snake Trap - done this way to avoid double proc
+        m_spellInfo->SpellFamilyFlags2 & 0x00024000)) // Explosive and Immolation Trap
+
         m_procAttacker |= PROC_FLAG_ON_TRAP_ACTIVATION;
 }
 
