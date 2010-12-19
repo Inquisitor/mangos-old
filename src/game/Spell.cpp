@@ -2999,6 +2999,16 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
         return;
     }
 
+    // Master of Ghouls DBC hack (It should cost nothing to be applied)
+    if (m_spellInfo->Id == 52143)
+    {
+        if(const SpellEntry* spellInfo = sSpellStore.LookupEntry(m_spellInfo->Id))
+        {
+            const_cast<SpellEntry*>(spellInfo)->powerType = 0;
+            const_cast<SpellEntry*>(spellInfo)->manaCost = 0;
+        }
+    }
+
     // Fill cost data
     m_powerCost = CalculatePowerCost(m_spellInfo, m_caster, this, m_CastItem);
 
@@ -3180,7 +3190,6 @@ void Spell::cast(bool skipCheck)
     if (m_spellInfo->Id == 55610)
         if(const SpellEntry* spellInfo = sSpellStore.LookupEntry(m_spellInfo->Id))
             const_cast<SpellEntry*>(spellInfo)->AttributesEx6 |= SPELL_ATTR_EX6_UNK26;
-    
 
     // different triggred (for caster) and precast (casted before apply effect to target) cases
     switch(m_spellInfo->SpellFamilyName)
