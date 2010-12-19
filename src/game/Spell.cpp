@@ -847,6 +847,8 @@ void Spell::prepareDataForTriggerSystem()
             break;
     }
 
+    
+
     // some negative spells have positive effects to another or same targets
     // avoid triggering negative hit for only positive targets
     m_negativeEffectMask = 0x0;
@@ -4416,7 +4418,7 @@ void Spell::TakePower()
     bool hit = true;
     if (m_caster->GetTypeId() == TYPEID_PLAYER)
     {
-        if (m_spellInfo->powerType == POWER_RAGE || m_spellInfo->powerType == POWER_ENERGY)
+        if (m_spellInfo->powerType == POWER_RAGE || m_spellInfo->powerType == POWER_ENERGY || m_spellInfo->powerType == POWER_RUNE)
             if (uint64 targetGUID = m_targets.getUnitTargetGUID())
                 for(tbb::concurrent_vector<TargetInfo>::const_iterator ihit= m_UniqueTargetInfo.begin();ihit != m_UniqueTargetInfo.end();++ihit)
                     if (ihit->targetGUID == targetGUID)
