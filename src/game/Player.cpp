@@ -8079,18 +8079,8 @@ void Player::SendLoot(ObjectGuid guid, LootType loot_type)
             Creature *creature = GetMap()->GetCreature(guid);
 
             // must be in range and creature must be alive for pickpocket and must be dead for another loot
-            if (!creature || creature->isAlive()!=(loot_type == LOOT_PICKPOCKETING))
+            if (!creature || creature->isAlive()!=(loot_type == LOOT_PICKPOCKETING) || (loot_type != LOOT_PICKPOCKETING && !creature->IsWithinDistInMap(this,INTERACTION_DISTANCE))
             { 
-                SendLootRelease(guid);
-                return;
-            }
-
-            float maxDistance = INTERACTION_DISTANCE;
-            if(loot_type == LOOT_PICKPOCKETING && HasAura(58017))
-                maxDistance += 5.0f; // Glyph of Pickpocket increases range by 5 yards
-
-            if(!creature->IsWithinDistInMap(this,maxDistance))
-            {
                 SendLootRelease(guid);
                 return;
             }
