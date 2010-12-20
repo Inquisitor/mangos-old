@@ -3557,7 +3557,7 @@ uint32 Unit::GetDefenseSkillValue(Unit const* target) const
 
 float Unit::GetUnitDodgeChance() const
 {
-    if(hasUnitState(UNIT_STAT_STUNNED))
+    if (IsNonMeleeSpellCasted(false) || hasUnitState(UNIT_STAT_STUNNED))
         return 0.0f;
     if( GetTypeId() == TYPEID_PLAYER )
         return GetFloatValue(PLAYER_DODGE_PERCENTAGE);
@@ -3576,7 +3576,7 @@ float Unit::GetUnitDodgeChance() const
 
 float Unit::GetUnitParryChance() const
 {
-    if ( IsNonMeleeSpellCasted(false) || hasUnitState(UNIT_STAT_STUNNED))
+    if (IsNonMeleeSpellCasted(false) || hasUnitState(UNIT_STAT_STUNNED))
         return 0.0f;
 
     float chance = 0.0f;
@@ -6599,8 +6599,8 @@ Unit* Unit::SelectMagnetTarget(Unit *victim, Spell* spell, SpellEffectIndex eff)
     if(!victim)
         return NULL;
 
-    // Magic case
-    if (spell && (spell->m_spellInfo->DmgClass == SPELL_DAMAGE_CLASS_NONE || spell->m_spellInfo->DmgClass == SPELL_DAMAGE_CLASS_MAGIC))
+    // SPELL_AURA_SPELL_MAGNET must NOT take any physical spells except for Hamstring, Wing Clip and Death Grip
+    if (spell && ((spell->m_spellInfo->SchoolMask != SPELL_SCHOOL_MASK_NORMAL && spell->m_spellInfo->DmgClass == SPELL_DAMAGE_CLASS_MAGIC) || (spell->m_spellInfo->Id == 1715 || spell->m_spellInfo->Id == 2974 || spell->m_spellInfo->Id == 49576)))
     {
         Unit::AuraList const& magnetAuras = victim->GetAurasByType(SPELL_AURA_SPELL_MAGNET);
         for(Unit::AuraList::const_iterator itr = magnetAuras.begin(); itr != magnetAuras.end(); ++itr)
@@ -6609,9 +6609,15 @@ Unit* Unit::SelectMagnetTarget(Unit *victim, Spell* spell, SpellEffectIndex eff)
             {
                 if (magnet->isAlive() && magnet->IsWithinLOSInMap(this) && spell->CheckTarget(magnet, eff))
                 {
-                    if (SpellAuraHolder *holder = (*itr)->GetHolder())
-                        if (holder->DropAuraCharge())
-                            victim->RemoveSpellAuraHolder(holder);
+                    //Destroy totem...
+                    if (magnet->GetObjectGuid().IsUnit() && ((Creature*)magnet)->IsTotem())
+                         magnet->CastSpell(magnet, 5, true);
+                    else
+                    {
+                        if (SpellAuraHolder *holder = (*itr)->GetHolder())
+                            if (holder->DropAuraCharge())
+                                victim->RemoveSpellAuraHolder(holder);
+                    }
                     return magnet;
                 }
             }
@@ -7022,13 +7028,6 @@ uint32 Unit::SpellDamageBonusDone(Unit *pVictim, SpellEntry const *spellProto, u
         }
         case SPELLFAMILY_DEATHKNIGHT:
         {
-            // Glyph of Unholy Blight
-            if (spellProto->Id == 50536) 
-            { 
-                if (Aura *glyphAura = GetDummyAura(63332)) 
-                    DoneTotalMod *= (glyphAura->GetModifier()->m_amount + 100.0f)/ 100.0f; 
-                break; 
-            } 
             // Icy Touch and Howling Blast
             if (spellProto->SpellFamilyFlags & UI64LIT(0x0000000200000002))
             {
@@ -7116,15 +7115,34 @@ uint32 Unit::SpellDamageBonusTaken(Unit *pCaster, SpellEntry const *spellProto, 
     TakenTotalMod *= GetTotalAuraMultiplierByMiscMask(SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN, schoolMask);
 
     // .. taken pct: dummy auras
-    if (GetTypeId() == TYPEID_PLAYER)
+    // .. taken (dummy auras)
+    AuraList const& mDummyAuras = GetAurasByType(SPELL_AURA_DUMMY);
+    for(AuraList::const_iterator i = mDummyAuras.begin(); i != mDummyAuras.end(); ++i)
     {
-        //Cheat Death
-        if (Aura *dummy = GetDummyAura(45182))
+        switch((*i)->GetSpellProto()->SpellIconID)
         {
-            float mod = -((Player*)this)->GetRatingBonusValue(CR_CRIT_TAKEN_SPELL)*20; // Feanor: Formula has changed
-            if (mod < float(dummy->GetModifier()->m_amount))
-                mod = float(dummy->GetModifier()->m_amount);
-            TakenTotalMod *= (mod+100.0f)/100.0f;
+            // Cheat Death
+            case 2109:
+            {
+                if(GetTypeId() != TYPEID_PLAYER)
+                    continue;
+
+                float mod = -((Player*)this)->GetRatingBonusValue(CR_CRIT_TAKEN_SPELL)*20; // Feanor: Formula has changed
+                if (mod < float((*i)->GetModifier()->m_amount))
+                    mod = float((*i)->GetModifier()->m_amount);
+                TakenTotalMod *= (mod+100.0f)/100.0f;
+            }break;
+            // Ebon Plague
+            case 1933:
+            {
+                if ((*i)->GetMiscValue() & (spellProto ? GetSpellSchoolMask(spellProto) : 0))
+                {
+                    if(spellProto && spellProto->Dispel == DISPEL_DISEASE)
+                        TakenTotalMod *= ((*i)->GetSpellProto()->CalculateSimpleValue(EFFECT_INDEX_0) + 100.0f) / 100.0f;
+                    else
+                        TakenTotalMod *= ((*i)->GetModifier()->m_amount + 100.0f) / 100.0f;
+                }
+            }break;
         }
     }
 
@@ -8189,6 +8207,11 @@ uint32 Unit::MeleeDamageBonusTaken(Unit *pCaster, uint32 pdamage,WeaponAttackTyp
 
                     TakenPercent *= (mod + 100.0f) / 100.0f;
                 }
+                break;
+            // Ebon Plague
+            case 1933:
+                if ((*i)->GetMiscValue() & (spellProto ? GetSpellSchoolMask(spellProto) : 0))
+                    TakenPercent *= ((*i)->GetModifier()->m_amount + 100.0f) / 100.0f;
                 break;
         }
     }

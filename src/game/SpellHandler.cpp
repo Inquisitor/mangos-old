@@ -619,6 +619,11 @@ void WorldSession::HandleSpellClick( WorldPacket & recv_data )
             caster->CastSpell(target, itr->second.spellId, true);
         }
     }
+
+    if (unit->GetObjectGuid().IsVehicle())
+    {
+        _player->EnterVehicle(unit->GetVehicleKit());
+    }
 }
 
 void WorldSession::HandleMirrorImageDataRequest( WorldPacket & recv_data )

@@ -847,6 +847,8 @@ void Spell::prepareDataForTriggerSystem()
             break;
     }
 
+    
+
     // some negative spells have positive effects to another or same targets
     // avoid triggering negative hit for only positive targets
     m_negativeEffectMask = 0x0;
@@ -854,9 +856,12 @@ void Spell::prepareDataForTriggerSystem()
         if (!IsPositiveEffect(m_spellInfo->Id, SpellEffectIndex(i)))
             m_negativeEffectMask |= (1<<i);
 
-    // Hunter traps spells (for Entrapment trigger)
-    // Gives your Immolation Trap, Frost Trap, Explosive Trap, and Snake Trap ....
-    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_HUNTER && (m_spellInfo->SpellFamilyFlags & UI64LIT(0x000020000000001C) || m_spellInfo->SpellFamilyFlags2 & 0x64000))
+    // Hunter trap spells - activation proc for Lock and Load, Entrapment and Misdirection
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_HUNTER &&
+        (m_spellInfo->SpellFamilyFlags & 0x18 ||     // Freezing and Frost Trap, Freezing Arrow
+        m_spellInfo->Id == 57879 ||                     // Snake Trap - done this way to avoid double proc
+        m_spellInfo->SpellFamilyFlags2 & 0x00024000)) // Explosive and Immolation Trap
+
         m_procAttacker |= PROC_FLAG_ON_TRAP_ACTIVATION;
 }
 
@@ -2994,6 +2999,16 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
         return;
     }
 
+    // Master of Ghouls DBC hack (It should cost nothing to be applied)
+    if (m_spellInfo->Id == 52143)
+    {
+        if(const SpellEntry* spellInfo = sSpellStore.LookupEntry(m_spellInfo->Id))
+        {
+            const_cast<SpellEntry*>(spellInfo)->powerType = 0;
+            const_cast<SpellEntry*>(spellInfo)->manaCost = 0;
+        }
+    }
+
     // Fill cost data
     m_powerCost = CalculatePowerCost(m_spellInfo, m_caster, this, m_CastItem);
 
@@ -3161,9 +3176,20 @@ void Spell::cast(bool skipCheck)
         }
     }
 
+    // Mass Dispel - immunity bypass hack
     if (m_spellInfo->Id == 32592)
         if(const SpellEntry* spellInfo = sSpellStore.LookupEntry(m_spellInfo->Id))
             const_cast<SpellEntry*>(spellInfo)->Attributes |= SPELL_ATTR_UNAFFECTED_BY_INVULNERABILITY;
+
+    // Hack for Spirit of Redemption because wrong data in dbc
+    if (m_spellInfo->Id == 27827)
+        if(const SpellEntry* spellInfo = sSpellStore.LookupEntry(m_spellInfo->Id))
+            const_cast<SpellEntry*>(spellInfo)->AuraInterruptFlags = 0;
+
+    // Improved Icy Talons
+    if (m_spellInfo->Id == 55610)
+        if(const SpellEntry* spellInfo = sSpellStore.LookupEntry(m_spellInfo->Id))
+            const_cast<SpellEntry*>(spellInfo)->AttributesEx6 |= SPELL_ATTR_EX6_UNK26;
 
     // different triggred (for caster) and precast (casted before apply effect to target) cases
     switch(m_spellInfo->SpellFamilyName)
@@ -4424,7 +4450,7 @@ void Spell::TakePower()
     bool hit = true;
     if (m_caster->GetTypeId() == TYPEID_PLAYER)
     {
-        if (m_spellInfo->powerType == POWER_RAGE || m_spellInfo->powerType == POWER_ENERGY)
+        if (m_spellInfo->powerType == POWER_RAGE || m_spellInfo->powerType == POWER_ENERGY || m_spellInfo->powerType == POWER_RUNE)
             if (uint64 targetGUID = m_targets.getUnitTargetGUID())
                 for(tbb::concurrent_vector<TargetInfo>::const_iterator ihit= m_UniqueTargetInfo.begin();ihit != m_UniqueTargetInfo.end();++ihit)
                     if (ihit->targetGUID == targetGUID)

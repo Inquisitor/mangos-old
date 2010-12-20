@@ -334,7 +334,7 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleNoImmediateEffect,                         //281 SPELL_AURA_MOD_HONOR_GAIN             implemented in Player::RewardHonor
     &Aura::HandleAuraIncreaseBaseHealthPercent,             //282 SPELL_AURA_INCREASE_BASE_HEALTH_PERCENT
     &Aura::HandleNoImmediateEffect,                         //283 SPELL_AURA_MOD_HEALING_RECEIVED       implemented in Unit::SpellHealingBonusTaken
-    &Aura::HandleNULL,                                      //284 51 spells
+    &Aura::HandleAuraLinked,                                //284 SPELL_AURA_LINKED
     &Aura::HandleAuraModAttackPowerOfArmor,                 //285 SPELL_AURA_MOD_ATTACK_POWER_OF_ARMOR  implemented in Player::UpdateAttackPowerAndDamage
     &Aura::HandleNoImmediateEffect,                         //286 SPELL_AURA_ABILITY_PERIODIC_CRIT      implemented in Aura::IsCritFromAbilityAura called from Aura::PeriodicTick
     &Aura::HandleNoImmediateEffect,                         //287 SPELL_AURA_DEFLECT_SPELLS             implemented in Unit::MagicSpellHitResult and Unit::MeleeSpellHitResult
@@ -1403,7 +1403,7 @@ void Aura::TriggerSpell()
                     case 31373:                             // Spellcloth
                     {
                         // Summon Elemental after create item
-                        triggerTarget->SummonCreature(17870, 0, 0, 0, triggerTarget->GetOrientation(), TEMPSUMMON_DEAD_DESPAWN, 0);
+                        triggerTarget->SummonCreature(17870, 0.0f, 0.0f, 0.0f, triggerTarget->GetOrientation(), TEMPSUMMON_DEAD_DESPAWN, 0);
                         return;
                     }
 //                    // Bloodmyst Tesla
@@ -2131,10 +2131,6 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     case 43873:                             // Headless Horseman Laugh
                         target->PlayDistanceSound(11965);
                         return;
-                    case 43874:                             // Scourge Mur'gul Camp: Force Shield Arcane Purple x3
-                        target->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
-                        target->addUnitState(UNIT_STAT_ROOT);
-                        return;
                     case 46699:                             // Requires No Ammo
                         if (target->GetTypeId() == TYPEID_PLAYER)
                             // not use ammo and not allow use
@@ -2496,9 +2492,18 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 target->CastSpell(target, 36731, true, NULL, this);
                 return;
             }
-            case 43874:                                     // Scourge Mur'gul Camp: Force Shield Arcane Purple x3
-                target->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+            case 42517:                                     // Beam to Zelfrax
+            {
+                // expecting target to be a dummy creature
+                Creature* pSummon = target->SummonCreature(23864, 0.0f, 0.0f, 0.0f, target->GetOrientation(), TEMPSUMMON_DEAD_DESPAWN, 0);
+
+                Unit* pCaster = GetCaster();
+
+                if (pSummon && pCaster)
+                    pSummon->GetMotionMaster()->MovePoint(0, pCaster->GetPositionX(), pCaster->GetPositionY(), pCaster->GetPositionZ());
+
                 return;
+            }
             case 44191:                                     // Flame Strike
             {
                 if (target->GetMap()->IsDungeon())
@@ -2729,6 +2734,22 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     }
                     return;
                 }
+                case 42515:                                 // Jarl Beam
+                {
+                    // aura animate dead (fainted) state for the duration, but we need to animate the death itself (correct way below?)
+                    if (Unit* pCaster = GetCaster())
+                        pCaster->ApplyModFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH, apply);
+
+                    // Beam to Zelfrax at remove
+                    if (!apply)
+                        target->CastSpell(target, 42517, true);
+                    return;
+                }
+                case 43874:                                 // Scourge Mur'gul Camp: Force Shield Arcane Purple x3
+                    target->ApplyModFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE, apply);
+                    if (apply)
+                        target->addUnitState(UNIT_STAT_ROOT);
+                    return;
                 case 47178:                                 // Plague Effect Self
                     target->SetFeared(apply, GetCasterGuid(), GetId());
                     return;
@@ -4316,7 +4337,10 @@ void Aura::HandleAuraModDisarm(bool apply, bool Real)
         return;
 
     if (apply)
+    {
+        target->RemoveAurasDueToSpell(46924); // Disarm should stop bladestorm
         target->SetAttackTime(BASE_ATTACK,BASE_ATTACK_TIME);
+    }
     else
         ((Player *)target)->SetRegularAttackTime();
 
@@ -9581,6 +9605,48 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
         }
         case SPELLFAMILY_DEATHKNIGHT:
         {
+            // Frost Fever and Blood Plague
+			if(GetSpellProto()->SpellFamilyFlags2 & 0x2)
+            {
+                // Can't proc on self
+                if (GetCasterGUID() == m_target->GetGUID())
+                    return;
+                Unit * caster = GetCaster();
+                if (!caster)
+                    return;
+ 
+                Aura * aurEff = NULL;
+                // Ebon Plaguebringer / Crypt Fever
+                Unit::AuraList const& TalentAuras = caster->GetAurasByType(SPELL_AURA_OVERRIDE_CLASS_SCRIPTS);
+                for(Unit::AuraList::const_iterator itr = TalentAuras.begin(); itr != TalentAuras.end(); ++itr)
+                {
+                    if ((*itr)->GetMiscValue() == 7282)
+                    {
+                        aurEff = *itr;
+                        // Ebon Plaguebringer - end search if found
+                        if ((*itr)->GetSpellProto()->SpellIconID == 1766)
+                            break;
+                    }
+                }
+                if (aurEff)
+                {
+                    uint32 spellId = 0;
+                    switch (aurEff->GetId())
+                    {
+                        // Ebon Plague
+                        case 51161: spellId1 = 51735; break;
+                        case 51160: spellId1 = 51734; break;
+                        case 51099: spellId1 = 51726; break;
+                        // Crypt Fever
+                        case 49632: spellId1 = 50510; break;
+                        case 49631: spellId1 = 50509; break;
+                        case 49032: spellId1 = 50508; break;
+                        default:
+                            sLog.outError("Unknown rank of Crypt Fever/Ebon Plague %d", aurEff->GetId());
+                    }
+               //     caster->CastSpell(m_target, spellId, true, 0, GetPartAura(0));
+                }
+            }
             // second part of spell apply
             switch (GetId())
             {
@@ -10126,4 +10192,27 @@ void Aura::HandleAuraMirrorImage(bool Apply, bool Real)
         target->SetDisplayId(target->GetNativeDisplayId());
         target->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE);
     }
+}
+
+void Aura::HandleAuraLinked(bool apply, bool Real)
+{
+    if (!Real)
+        return;
+
+    Unit* target = GetTarget();
+
+    if (apply)
+    {
+        Unit * caster = GetCaster();
+        if (!caster)
+            return;
+        // If amount avalible cast with basepoints (Crypt Fever for example)
+        if (GetModifier())
+            caster->CastCustomSpell(target, GetSpellProto()->EffectTriggerSpell[m_effIndex], &GetModifier()->m_amount, NULL, NULL, true, NULL, this);
+        else
+            caster->CastSpell(target, GetSpellProto()->EffectTriggerSpell[m_effIndex],true, NULL, this);
+    }
+    else
+        target->RemoveAurasByCasterSpell(GetSpellProto()->EffectTriggerSpell[m_effIndex], GetCasterGUID());
+        //target->RemoveAura(GetSpellProto()->EffectTriggerSpell[m_effIndex], GetCasterGUID(), 0, AuraRemoveMode(aurApp->GetRemoveMode()));
 }
