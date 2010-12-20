@@ -8079,7 +8079,7 @@ void Player::SendLoot(ObjectGuid guid, LootType loot_type)
             Creature *creature = GetMap()->GetCreature(guid);
 
             // must be in range and creature must be alive for pickpocket and must be dead for another loot
-            if (!creature || creature->isAlive()!=(loot_type == LOOT_PICKPOCKETING) || (loot_type != LOOT_PICKPOCKETING && !creature->IsWithinDistInMap(this,INTERACTION_DISTANCE))
+            if (!creature || creature->isAlive()!=(loot_type == LOOT_PICKPOCKETING) || (loot_type != LOOT_PICKPOCKETING && !creature->IsWithinDistInMap(this,INTERACTION_DISTANCE)))
             { 
                 SendLootRelease(guid);
                 return;
