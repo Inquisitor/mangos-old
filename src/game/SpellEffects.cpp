@@ -3320,8 +3320,30 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 // consume diseases
                 unitTarget->RemoveAurasWithDispelType(DISPEL_DISEASE, m_caster->GetGUID());
             }
-            else if (m_spellInfo->Id == 46584)
+            else if (m_spellInfo->Id == 46584) // Raise Dead
                 return;
+            else if (m_spellInfo->Id == 61999) // Raise Ally
+            {
+                return; // Feanor: To remove when finished...
+
+                if(m_caster->GetTypeId() != TYPEID_PLAYER)
+                    return;
+
+                Player * plr = (Player*)m_caster;
+
+                if(Group * pGroup = plr->GetGroup())
+                {
+                    for(GroupReference *itr = pGroup->GetFirstMember(); itr != NULL; itr = itr->next())
+                    {
+                        Player* Target = itr->getSource();
+                        if(Target && !Target->isAlive() && Target->IsWithinDistInMap(plr, 100))
+                        {
+                            Target->CastSpell(Target, 46619, true);
+                            break;
+                        }
+                    }
+                }
+            }
             break;
         }
     }
