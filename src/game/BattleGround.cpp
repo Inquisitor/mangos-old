@@ -796,7 +796,7 @@ void BattleGround::EndBattleGround(Team winner)
                     loser_ids += _buf;
             }
 
-            CharacterDatabase.PExecute("INSERT INTO `arena_logs` (`team1`,`team1_members`,`team1_rating_change`,`team2`,`team2_members`,`team2_rating_change`,`winner`,`timestamp`) VALUES ('%u','%s','%u','%u','%s','%u','%u','%u')",
+            CharacterDatabase.PExecute("INSERT INTO `arena_logs` (`team1`,`team1_members`,`team1_rating_change`,`team2`,`team2_members`,`team2_rating_change`,`winner`,`timestamp`) VALUES ('%u','%s','%u','%u','%s','%d','%u','%u')",
                                         winner_arena_team->GetId(), winner_ids.c_str(), winner_change,
                                         loser_arena_team->GetId(), loser_ids.c_str(), loser_change,
                                         winner_arena_team->GetId(), time(NULL) );
