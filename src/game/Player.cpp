@@ -22152,6 +22152,8 @@ void Player::UpdateFallInformationIfNeed( MovementInfo const& minfo,uint16 opcod
 
 void Player::UnsummonPetTemporaryIfAny()
 {
+    if(!IsInWorld() || !GetMap())
+        return;
 
     Pet* minipet = GetMiniPet();
 
