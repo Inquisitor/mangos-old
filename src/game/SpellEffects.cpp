@@ -3324,8 +3324,6 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 return;
             else if (m_spellInfo->Id == 61999) // Raise Ally
             {
-                return; // Feanor: To remove when finished...
-
                 if(m_caster->GetTypeId() != TYPEID_PLAYER)
                     return;
 

@@ -2566,10 +2566,10 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             case 46619: // Raise Ally dummy 
             {
                 if(GetCaster()->GetTypeId() == TYPEID_PLAYER)  
-                {
                     if(((Player*)GetCaster())->GetCharm() && ((Player*)GetCaster())->GetCharm()->GetEntry() == 30230)
                         ((Pet*)((Player*)GetCaster())->GetCharm())->Unsummon(PET_SAVE_AS_DELETED);
-                }
+
+                return;
             }
         }
 
