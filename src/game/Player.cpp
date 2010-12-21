@@ -1551,6 +1551,8 @@ void Player::SetDeathState(DeathState s)
         if(getClass()== CLASS_WARRIOR)
             CastSpell(this,SPELL_ID_PASSIVE_BATTLE_STANCE,true);
     }
+    if(s != JUST_DIED)
+        this->RemoveAurasDueToSpell(46619);
 }
 
 bool Player::BuildEnumData( QueryResult * result, WorldPacket * p_data )
@@ -8080,8 +8082,8 @@ void Player::SendLoot(ObjectGuid guid, LootType loot_type)
             Creature *creature = GetMap()->GetCreature(guid);
 
             // must be in range and creature must be alive for pickpocket and must be dead for another loot
-            if (!creature || creature->isAlive()!=(loot_type == LOOT_PICKPOCKETING) || !creature->IsWithinDistInMap(this,INTERACTION_DISTANCE))
-            {
+            if (!creature || creature->isAlive()!=(loot_type == LOOT_PICKPOCKETING) || (loot_type != LOOT_PICKPOCKETING && !creature->IsWithinDistInMap(this,INTERACTION_DISTANCE)))
+            { 
                 SendLootRelease(guid);
                 return;
             }
@@ -20664,7 +20666,7 @@ void Player::UpdateForQuestWorldObjects()
     WorldPacket packet;
     for(ObjectGuidSet::const_iterator itr=m_clientGUIDs.begin(); itr!=m_clientGUIDs.end(); ++itr)
     {
-        if (itr->IsGameobject())
+        if (itr->IsGameObject())
         {
             if (GameObject *obj = GetMap()->GetGameObject(*itr))
                 obj->BuildValuesUpdateBlockForPlayer(&udata,this);
