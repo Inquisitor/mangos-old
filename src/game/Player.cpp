@@ -1550,6 +1550,8 @@ void Player::SetDeathState(DeathState s)
         if(getClass()== CLASS_WARRIOR)
             CastSpell(this,SPELL_ID_PASSIVE_BATTLE_STANCE,true);
     }
+    if(s != JUST_DIED)
+        this->RemoveAurasDueToSpell(46619);
 }
 
 bool Player::BuildEnumData( QueryResult * result, WorldPacket * p_data )
