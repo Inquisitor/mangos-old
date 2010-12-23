@@ -3966,7 +3966,11 @@ bool Unit::IsNonMeleeSpellCasted(bool withDelayed, bool skipChanneled, bool skip
     if ( m_currentSpells[CURRENT_GENERIC_SPELL] &&
         (m_currentSpells[CURRENT_GENERIC_SPELL]->getState() != SPELL_STATE_FINISHED) &&
         (withDelayed || m_currentSpells[CURRENT_GENERIC_SPELL]->getState() != SPELL_STATE_DELAYED) )
-        return(true);
+        {
+            if (!(m_currentSpells[CURRENT_GENERIC_SPELL]->m_spellInfo->AttributesEx2 & SPELL_ATTR_EX2_NOT_RESET_AUTOSHOT))
+                return(true);
+        }
+
 
     // channeled spells may be delayed, but they are still considered casted
     else if ( !skipChanneled && m_currentSpells[CURRENT_CHANNELED_SPELL] &&
@@ -7055,20 +7059,6 @@ uint32 Unit::SpellDamageBonusDone(Unit *pVictim, SpellEntry const *spellProto, u
                     }
                 }
 
-                // Icy Touch
-                if (spellProto->SpellFamilyFlags & UI64LIT(0x0000000000000002))
-                {
-                    // Improved Icy Touch
-                    Unit::AuraList const& dummyAuras = GetAurasByType(SPELL_AURA_DUMMY);
-                    for(Unit::AuraList::const_iterator i = dummyAuras.begin(); i != dummyAuras.end(); ++i)
-                    {
-                        if ((*i)->GetSpellProto()->SpellIconID == 2721)
-                        {
-                            DoneTotalMod *= ((*i)->GetModifier()->m_amount+100.0f) / 100.0f;
-                            break;
-                        }
-                    }
-                }
             }
             // Death Coil (bonus from Item - Death Knight T8 DPS Relic)
             else if (spellProto->SpellFamilyFlags & UI64LIT(0x00002000))
@@ -9268,7 +9258,47 @@ void Unit::AddThreat(Unit* pVictim, float threat /*= 0.0f*/, bool crit /*= false
 {
     // Only mobs can manage threat lists
     if(CanHaveThreatList())
-        m_ThreatManager.addThreat(pVictim, threat, crit, schoolMask, threatSpell);
+{
+    if (threatSpell && pVictim && pVictim->GetTypeId() == TYPEID_PLAYER)
+    {
+        float bonus=1.0f;
+        switch (threatSpell->SpellFamilyName)
+        {
+        case SPELLFAMILY_WARRIOR:
+            {
+                // Heroic Throw
+                if (threatSpell->Id==57755)
+                    bonus=1.5f;
+                //Thunder Clap
+                if (threatSpell->SpellFamilyFlags & UI64LIT(0x80))
+                    bonus=1.85f;
+            };
+            break;
+        case SPELLFAMILY_DEATHKNIGHT:
+            {
+                //Rune Strike
+                if (threatSpell->SpellFamilyFlags & UI64LIT(0x2000000000000000))
+                    bonus=1.75f;
+                // Death and Decay
+                if (threatSpell->Id==52212)
+                    bonus=1.9f;
+                // Icy Touch in Frost Presense
+                if (pVictim->HasAura(48263) && threatSpell->SpellFamilyFlags & UI64LIT(0x2))
+                    bonus=7.0f;
+            };
+            break;
+        case SPELLFAMILY_DRUID:
+            {
+                if (threatSpell->SpellFamilyFlags & UI64LIT(0x0010000000000000))
+                    bonus=1.5f;
+            };
+            break;
+        };
+
+        threat*=bonus;
+    }
+    m_ThreatManager.addThreat(pVictim, threat, crit, schoolMask, threatSpell);
+    }
 }
 
 //======================================================================
