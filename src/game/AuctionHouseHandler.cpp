@@ -295,6 +295,9 @@ void WorldSession::HandleAuctionSellItem( WorldPacket & recv_data )
         itemGuid.GetString().c_str(), auctioneerGuid.GetString().c_str(), bid, buyout, auction_time, AH->GetHouseId());
     auctionHouse->AddAuction(AH);
 
+    //remove from refundable map
+    pl->RemoveRefundableItem(it->GetGUID());
+
     sAuctionMgr.AddAItem(it);
     pl->MoveItemFromInventory( it->GetBagSlot(), it->GetSlot(), true);
 
