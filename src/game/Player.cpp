@@ -2110,8 +2110,11 @@ void Player::RegenerateAll(uint32 diff)
 
     Regenerate(POWER_MANA, diff);
 
+    // Runes act as cooldowns, and they don't need to send any data
     if (getClass() == CLASS_DEATH_KNIGHT)
-        Regenerate(POWER_RUNE, diff);
+        for (uint32 i = 0; i < MAX_RUNES; ++i)
+            if (uint32 cd = GetRuneCooldown(i))
+                SetRuneCooldown(i, (cd > m_regenTimer) ? cd - m_regenTimer : 0);
 
     m_regenTimer = REGEN_TIME_FULL;
 }
@@ -2157,24 +2160,6 @@ void Player::Regenerate(Powers power, uint32 diff)
             addvalue = 30 * RunicPowerDecreaseRate;         // 3 RunicPower by tick
         }   break;
         case POWER_RUNE:
-        {
-            if (getClass() != CLASS_DEATH_KNIGHT)
-                break;
-
-            for(uint32 rune = 0; rune < MAX_RUNES; ++rune)
-            {
-                if(uint16 cd = GetRuneCooldown(rune))       // if we have cooldown, reduce it...
-                {
-                    uint32 cd_diff = diff;
-                    AuraList const& ModPowerRegenPCTAuras = GetAurasByType(SPELL_AURA_MOD_POWER_REGEN_PERCENT);
-                    for(AuraList::const_iterator i = ModPowerRegenPCTAuras.begin(); i != ModPowerRegenPCTAuras.end(); ++i)
-                        if ((*i)->GetModifier()->m_miscvalue == int32(power) && (*i)->GetMiscBValue()==GetCurrentRune(rune))
-                            cd_diff = cd_diff * ((*i)->GetModifier()->m_amount + 100) / 100;
-
-                    SetRuneCooldown(rune, (cd < cd_diff) ? 0 : cd - cd_diff);
-                }
-            }
-        }   break;
         case POWER_FOCUS:
         case POWER_HAPPINESS:
         case POWER_HEALTH:
@@ -21491,6 +21476,20 @@ void Player::SetTitle(CharTitlesEntry const* title, bool lost)
     data << uint32(title->bit_index);
     data << uint32(lost ? 0 : 1);                           // 1 - earned, 0 - lost
     GetSession()->SendPacket(&data);
+}
+
+uint32 Player::GetRuneBaseCooldown(uint8 index)
+{
+    uint8 rune = GetBaseRune(index);
+    uint32 cooldown = RUNE_COOLDOWN;
+
+
+    AuraList const& ModPowerRegenPCTAuras = GetAurasByType(SPELL_AURA_MOD_POWER_REGEN_PERCENT);
+    for(AuraList::const_iterator i = ModPowerRegenPCTAuras.begin(); i != ModPowerRegenPCTAuras.end(); ++i)
+        if ((*i)->GetMiscValue() == POWER_RUNE && (*i)->GetMiscBValue() == rune)
+            cooldown = cooldown*(100-(*i)->GetModifier()->m_amount)/100;
+
+    return cooldown;
 }
 
 void Player::ConvertRune(uint8 index, RuneType newType)
