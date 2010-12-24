@@ -3979,6 +3979,13 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
             if (!(procFlags & PROC_FLAG_ON_TRAP_ACTIVATION) || !procSpell ||
                 !(procSpell->SchoolMask & SPELL_SCHOOL_MASK_FROST) || !roll_chance_i(triggerAmount))
                 return SPELL_AURA_PROC_FAILED;
+        }
+        // Glyph of Death Grip
+        case 58628:
+        {
+            // remove cooldown of Death Grip
+            if (GetTypeId() == TYPEID_PLAYER)
+                ((Player*)this)->RemoveSpellCooldown(49576, true);
             break;
         }
         // Freezing Fog (Rime triggered)
