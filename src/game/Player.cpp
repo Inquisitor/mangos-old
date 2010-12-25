@@ -17520,16 +17520,25 @@ bool Player::CheckItemSaveQueue()
     {
         Item *item = m_itemUpdateQueue[i];
         if(!item || item->GetState() == ITEM_REMOVED) continue;
-        Item *test = GetItemByPos( item->GetBagSlot(), item->GetSlot());
+        uint8 itemBagSlot = item->GetBagSlot();
+        uint8 itemSlot = item->GetSlot();
+        Item *test = GetItemByPos( itemBagSlot, itemSlot);
 
         if (test == NULL)
         {
-            sLog.outError("Player(GUID: %u Name: %s)::_SaveInventory - the bag(%d) and slot(%d) values for the item with guid %d are incorrect, the player doesn't have an item at that position!", GetGUIDLow(), GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow());
+            //sLog.outError("Player(GUID: %u Name: %s)::_SaveInventory - the bag(%d) and slot(%d) values for the item with guid %d are incorrect, the player doesn't have an item at that position!", GetGuidStr().c_str(), GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGuidStr().c_str());
+            sLog.outError("Player::_SaveInventory: Item save queue is corrupt. Player GUID: %u Name: %s", GetGuidStr().c_str(), GetName());
+            sLog.outError("Player::_SaveInventory: The bag and slot values for the item with guid %d are incorrect, the player doesn't have an item at that position.", item->GetGuidStr().c_str());
+            sLog.outError("Player::_SaveInventory: Bag: %d Slot:%d", itemBagSlot, itemSlot);
             queueOk = false;
         }
         else if (test != item)
         {
-            sLog.outError("Player(GUID: %u Name: %s)::_SaveInventory - the bag(%d) and slot(%d) values for the item with guid %d are incorrect, the item with guid %d is there instead!", GetGUIDLow(), GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow(), test->GetGUIDLow());
+            //sLog.outError("Player(GUID: %u Name: %s)::_SaveInventory - the bag(%d) and slot(%d) values for the item with guid %d are incorrect, the item with guid %d is there instead!", GetGuidStr().c_str(), GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGuidStr().c_str(), test->GetGuidStr().c_str());
+            sLog.outError("Player::_SaveInventory: Item save queue is corrupt. Player GUID: %u Name: %s", GetGuidStr().c_str(), GetName());
+            sLog.outError("Player::_SaveInventory: The bag and slot values for the item with guid %d are incorrect.", item->GetGuidStr().c_str());
+            sLog.outError("Player::_SaveInventory: The item with guid %d is there instead.", test->GetGuidStr().c_str());
+            sLog.outError("Player::_SaveInventory: Bag: %d Slot:%d", itemBagSlot, itemSlot);
             queueOk = false;
         }
     }
