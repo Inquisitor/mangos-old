@@ -3320,8 +3320,6 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 // consume diseases
                 unitTarget->RemoveAurasWithDispelType(DISPEL_DISEASE, m_caster->GetGUID());
             }
-            else if (m_spellInfo->Id == 46584) // Raise Dead
-                return;
             else if (m_spellInfo->Id == 61999) // Raise Ally
             {
                 if(m_caster->GetTypeId() != TYPEID_PLAYER)
@@ -7981,22 +7979,18 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                 // Raise dead script effect
                 case 46584:
                 {
-                    if ( !unitTarget || m_caster->GetTypeId() != TYPEID_PLAYER)
+                    if (!unitTarget || m_caster->GetTypeId() != TYPEID_PLAYER)
                         return;
 
                     // If have 52143 spell - summoned pet from dummy effect
                     // Another case summoned guardian from script effect
-                    uint32 triggered_spell_id;
-                    if (!m_caster->HasSpell(52143))
-                        triggered_spell_id = m_spellInfo->EffectBasePoints[eff_idx]+1;
-                    else
-                        triggered_spell_id = m_spellInfo->EffectBasePoints[EFFECT_INDEX_2]+1;
+                    uint32 triggered_spell_id = m_spellInfo->CalculateSimpleValue(SpellEffectIndex(m_caster->HasSpell(52143) ? EFFECT_INDEX_2 : EFFECT_INDEX_1));
 
                     float x,y,z;
 
                     m_caster->GetClosePoint(x, y, z, m_caster->GetObjectBoundingRadius(), PET_FOLLOW_DIST);
 
-                    if ( unitTarget != m_caster )
+                    if (unitTarget != m_caster)
                     {
                         m_caster->CastSpell(unitTarget->GetPositionX(),unitTarget->GetPositionY(),unitTarget->GetPositionZ(),triggered_spell_id, true, NULL, NULL, m_caster->GetObjectGuid(), m_spellInfo);
                         unitTarget->RemoveFromWorld();
@@ -8013,12 +8007,14 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     else
                     {
                         SendCastResult(SPELL_FAILED_REAGENTS);
-                        finish();
+                        finish(true);
                         CancelGlobalCooldown();
                         return;
                     }
                     ((Player*)m_caster)->RemoveSpellCooldown(triggered_spell_id,true);
-                    break;
+                    finish(true);
+                    CancelGlobalCooldown();
+                    return;
                 }
                 default:
                     break;
