@@ -36,6 +36,7 @@
 #include "BattleGroundAV.h"
 #include "Util.h"
 #include "ScriptCalls.h"
+#include "ScriptMgr.h"
 
 bool ForcedDeleteDelayEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
 {
