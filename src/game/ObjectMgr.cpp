@@ -9082,7 +9082,7 @@ void ObjectMgr::LoadSpellDisabledEntrys()
 
     uint32 total_count = 0;
 
-    if(!result)
+    if (!result)
     {
         barGoLink bar( 1 );
         bar.step();
@@ -9115,7 +9115,7 @@ void ObjectMgr::LoadGCNews()
     mGCNewsMap.clear(); // For reloading possibility
 
     QueryResult* result = WorldDatabase.Query("SELECT id, parent, type, text FROM gc_news");
-    if( !result )
+    if (!result)
     {
         barGoLink bar( 1 );
 
