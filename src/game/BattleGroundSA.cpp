@@ -224,6 +224,7 @@ void BattleGroundSA::Update(uint32 diff)
             Phase = 2;
             OpenDoorEvent(SA_EVENT_OP_DOOR, 0);
             ToggleTimer();
+            ResetWorldStates();
             SetStatus(STATUS_IN_PROGRESS);
             PlaySoundToAll(SOUND_BG_START);
             SendMessageToAll(LANG_BG_SA_HAS_BEGUN, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
@@ -236,6 +237,53 @@ void BattleGroundSA::Update(uint32 diff)
         if ((TimeST2Round / 2) == 15000)
             SendMessageToAll(LANG_BG_SA_START_HALF_MINUTE, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
     }
+}
+
+void BattleGroundSA::ResetWorldStates()
+{
+    //Player may enter BEFORE we set up bG - lets update his worldstates anyway...
+    /*UpdateWorldState(BG_SA_RIGHT_GY_HORDE , GraveyardStatus[BG_SA_RIGHT_CAPTURABLE_GY] == HORDE?1:0);
+    UpdateWorldState(BG_SA_LEFT_GY_HORDE , GraveyardStatus[BG_SA_LEFT_CAPTURABLE_GY] == HORDE?1:0);
+    UpdateWorldState(BG_SA_CENTER_GY_HORDE , GraveyardStatus[BG_SA_CENTRAL_CAPTURABLE_GY] == HORDE?1:0);
+
+    UpdateWorldState(BG_SA_RIGHT_GY_ALLIANCE , GraveyardStatus[BG_SA_RIGHT_CAPTURABLE_GY] == ALLIANCE?1:0);
+    UpdateWorldState(BG_SA_LEFT_GY_ALLIANCE , GraveyardStatus[BG_SA_LEFT_CAPTURABLE_GY] == ALLIANCE?1:0);
+    UpdateWorldState(BG_SA_CENTER_GY_ALLIANCE , GraveyardStatus[BG_SA_CENTRAL_CAPTURABLE_GY] == ALLIANCE?1:0);*/
+
+    if (GetController() == ALLIANCE)
+    {
+        UpdateWorldState(BG_SA_ALLY_ATTACKS, 1);
+        UpdateWorldState(BG_SA_HORDE_ATTACKS, 0);
+
+        UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_ALL, 1);
+        UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_ALL, 1);
+        UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_HRD, 0);
+        UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_HRD, 0);
+
+        UpdateWorldState(BG_SA_HORDE_DEFENCE_TOKEN,1);
+        UpdateWorldState(BG_SA_ALLIANCE_DEFENCE_TOKEN,0);
+    }
+    else
+    {
+        UpdateWorldState(BG_SA_HORDE_ATTACKS, 1);
+        UpdateWorldState(BG_SA_ALLY_ATTACKS, 0);
+
+        UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_ALL, 0);
+        UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_ALL, 0);
+        UpdateWorldState(BG_SA_RIGHT_ATT_TOKEN_HRD, 1);
+        UpdateWorldState(BG_SA_LEFT_ATT_TOKEN_HRD, 1);
+
+        UpdateWorldState(BG_SA_HORDE_DEFENCE_TOKEN,0);
+        UpdateWorldState(BG_SA_ALLIANCE_DEFENCE_TOKEN,1);
+    }
+
+    UpdateWorldState(BG_SA_PURPLE_GATEWS, 1);
+    UpdateWorldState(BG_SA_RED_GATEWS, 1);
+    UpdateWorldState(BG_SA_BLUE_GATEWS, 1);
+    UpdateWorldState(BG_SA_GREEN_GATEWS, 1);
+    UpdateWorldState(BG_SA_YELLOW_GATEWS, 1);
+    UpdateWorldState(BG_SA_ANCIENT_GATEWS, 1);
+
 }
 
 void BattleGroundSA::UpdateTimer()
