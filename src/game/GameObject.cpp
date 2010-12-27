@@ -1595,8 +1595,12 @@ void GameObject::DamageTaken(Unit* pDoneBy, uint32 damage)
             SetUInt32Value(GAMEOBJECT_DISPLAYID, m_goInfo->destructibleBuilding.destroyedDisplayId);
 
             if (pWho)
+            {
+                Script->GODestroyed(pWho, this, m_goInfo->destructibleBuilding.destroyedEvent);
+
                 if (BattleGround *bg = pWho->GetBattleGround())
                     bg->EventPlayerDamageGO(pWho, this, m_goInfo->destructibleBuilding.destroyedEvent);
+            }
         }
     }
     else                                            // from intact to damaged
@@ -1616,13 +1620,9 @@ void GameObject::DamageTaken(Unit* pDoneBy, uint32 damage)
             else
                 m_health = 0;
 
-            if (pWho)
-            {
-                Script->GODestroyed(pWho, this);
-                
+            if (pWho)       
                 if (BattleGround *bg = pWho->GetBattleGround())
                     bg->EventPlayerDamageGO(pWho, this, m_goInfo->destructibleBuilding.damagedEvent);
-            }
          }
     }
     SetGoAnimProgress(m_health * 255 / GetMaxHealth());
