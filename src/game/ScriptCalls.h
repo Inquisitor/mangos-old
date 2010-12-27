@@ -46,6 +46,7 @@ typedef char const* (MANGOS_IMPORT * scriptCallScriptsVersion) ();
 
 typedef bool(MANGOS_IMPORT * scriptCallGossipHello) (Player *player, Creature *_Creature );
 typedef bool(MANGOS_IMPORT * scriptCallGOGossipHello) (Player *player, GameObject *_GO);
+typedef bool(MANGOS_IMPORT * scriptCallGODestroyed) (Unit *pWho, GameObject *_GO);
 typedef bool(MANGOS_IMPORT * scriptCallQuestAccept) (Player *player, Creature *_Creature, Quest const *);
 typedef bool(MANGOS_IMPORT * scriptCallGossipSelect)(Player *player, Creature *_Creature, uint32 sender, uint32 action);
 typedef bool(MANGOS_IMPORT * scriptCallGOGossipSelect)(Player *player, GameObject *_GO, uint32 sender, uint32 action);
@@ -80,6 +81,7 @@ typedef struct
     scriptCallGossipHello GossipHello;
     scriptCallGOGossipHello GOGossipHello;
     scriptCallGOChooseReward GOChooseReward;
+    scriptCallGODestroyed GODestroyed;
     scriptCallQuestAccept QuestAccept;
     scriptCallGossipSelect GossipSelect;
     scriptCallGOGossipSelect GOGossipSelect;
