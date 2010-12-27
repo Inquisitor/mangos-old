@@ -2097,26 +2097,33 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
 
             // Some spells untested, for affected GO type 33. May need further adjustments for spells related.
 
-            SpellScriptTargetBounds bounds = sSpellMgr.GetSpellScriptTargetBounds(m_spellInfo->Id);
-
-            std::list<GameObject*> tempTargetGOList;
-
-            for(SpellScriptTarget::const_iterator i_spellST = bounds.first; i_spellST != bounds.second; ++i_spellST)
+            float x, y, z;
+            if (targetMode == TARGET_OBJECT_AREA_SRC)
             {
-                if (i_spellST->second.type == SPELL_TARGET_TYPE_GAMEOBJECT)
+                if (m_targets.m_targetMask & TARGET_FLAG_SOURCE_LOCATION)
                 {
-                    // search all GO's with entry, within range of m_destN
-                    MaNGOS::GameObjectEntryInPosRangeCheck go_check(*m_caster, i_spellST->second.targetEntry, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, radius);
-                    MaNGOS::GameObjectListSearcher<MaNGOS::GameObjectEntryInPosRangeCheck> checker(tempTargetGOList, go_check);
-                    Cell::VisitGridObjects(m_caster, checker, radius);
+                    x = m_targets.m_srcX;
+                    y = m_targets.m_srcY;
+                    z = m_targets.m_srcZ;
                 }
+                else
+                    break;
             }
-
-            if (!tempTargetGOList.empty())
+            else if (m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION)
             {
-                for(std::list<GameObject*>::iterator iter = tempTargetGOList.begin(); iter != tempTargetGOList.end(); ++iter)
-                    AddGOTarget(*iter, effIndex);
+                x = m_targets.m_destX;
+                y = m_targets.m_destY;
+                z = m_targets.m_destZ;
             }
+            else
+                break;
+
+            MaNGOS::GameObjectInRangeCheck check(m_caster, x, y, z, radius + 15.0f);
+            std::list<GameObject*> goList;
+            MaNGOS::GameObjectListSearcher<MaNGOS::GameObjectInRangeCheck> searcher(goList, check);
+            Cell::VisitAllObjects(m_caster, searcher, radius);
+            for (std::list<GameObject*>::const_iterator itr = goList.begin(); itr != goList.end(); ++itr)
+                AddGOTarget(*itr, effIndex);
 
             break;
         }
