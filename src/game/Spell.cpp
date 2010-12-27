@@ -2119,9 +2119,9 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
             else
                 break;
 
-            MaNGOS::GameObjectInRangeCheck check(m_caster, x, y, z, radius + 15.0f);
+            MaNGOS::AnyGameObjectInPointRangeCheck check(m_caster, x, y, z, radius + 15.0f);
             std::list<GameObject*> goList;
-            MaNGOS::GameObjectListSearcher<MaNGOS::GameObjectInRangeCheck> searcher(goList, check);
+            MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck> searcher(goList, check);
             Cell::VisitAllObjects(m_caster, searcher, radius);
             if (!goList.empty())
             {
