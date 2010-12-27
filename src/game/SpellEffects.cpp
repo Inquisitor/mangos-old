@@ -46,6 +46,7 @@
 #include "BattleGround.h"
 #include "BattleGroundEY.h"
 #include "BattleGroundWS.h"
+#include "BattleGroundSA.h"
 #include "Language.h"
 #include "SocialMgr.h"
 #include "VMapFactory.h"
@@ -9128,9 +9129,9 @@ void Spell::EffectTransmitted(SpellEffectIndex eff_idx)
                 float fx, fy, fz;
                 m_caster->GetPosition(fx, fy, fz);
                 uint32 bombId = 0;
-                if (m_spellInfo->Id == 52410) { bombId = BOMB_ID;}
-                if (m_spellInfo->Id == 66268) { bombId = BOMB_ID;}
-                if (m_spellInfo->Id == 66674) { bombId = BOMB_ID;}
+                if (m_spellInfo->Id == 52410) { bombId = 50000;}
+                if (m_spellInfo->Id == 66268) { bombId = 50000;}
+                if (m_spellInfo->Id == 66674) { bombId = 50000;}
                 Creature* cBomb = m_caster->SummonCreature(bombId, fx, fy, fz, 0, TEMPSUMMON_DEAD_DESPAWN, 0);
                 if (!cBomb)
                     return;

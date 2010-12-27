@@ -1564,6 +1564,14 @@ void GameObject::DamageTaken(Unit* pDoneBy, uint32 damage)
     if (GetGoType() != GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING || !m_health)
         return;
 
+    Player* pWho = NULL;
+    if (pDoneBy && pDoneBy->GetTypeId() == TYPEID_PLAYER)
+        pWho = (Player*)pDoneBy;
+
+    if(pDoneBy && ((Creature*)pDoneBy)->GetVehicleKit())
+        pWho = (Player*)pDoneBy->GetCharmerOrOwner();
+
+
     DEBUG_FILTER_LOG(LOG_FILTER_DAMAGE, "GO damage taken: %u to health %u", damage, m_health);
 
     if (m_health > damage)
@@ -1571,9 +1579,9 @@ void GameObject::DamageTaken(Unit* pDoneBy, uint32 damage)
         m_health -= damage;
 
         // For Strand of the Ancients and probably Isle of Conquest
-        if (pDoneBy)
-            if (BattleGround *bg = pDoneBy->GetBattleGround())
-                bg->EventPlayerDamageGO(pDoneBy, this, m_goInfo->destructibleBuilding.damageEvent);
+        if (pWho)
+            if (BattleGround *bg = pWho->GetBattleGround())
+                bg->EventPlayerDamageGO(pWho, this, m_goInfo->destructibleBuilding.damageEvent);
     }
     else
         m_health = 0;
@@ -1586,9 +1594,9 @@ void GameObject::DamageTaken(Unit* pDoneBy, uint32 damage)
             SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_DESTROYED);
             SetUInt32Value(GAMEOBJECT_DISPLAYID, m_goInfo->destructibleBuilding.destroyedDisplayId);
 
-            if (pDoneBy)
-                if (BattleGround *bg = pDoneBy->GetBattleGround())
-                    bg->EventPlayerDamageGO(pDoneBy, this, m_goInfo->destructibleBuilding.destroyedEvent);
+            if (pWho)
+                if (BattleGround *bg = pWho->GetBattleGround())
+                    bg->EventPlayerDamageGO(pWho, this, m_goInfo->destructibleBuilding.destroyedEvent);
         }
     }
     else                                            // from intact to damaged
@@ -1608,9 +1616,9 @@ void GameObject::DamageTaken(Unit* pDoneBy, uint32 damage)
             else
                 m_health = 0;
 
-            if (pDoneBy)
-                if (BattleGround *bg = pDoneBy->GetBattleGround())
-                    bg->EventPlayerDamageGO(pDoneBy, this, m_goInfo->destructibleBuilding.damagedEvent);
+            if (pWho)
+                if (BattleGround *bg = pWho->GetBattleGround())
+                    bg->EventPlayerDamageGO(pWho, this, m_goInfo->destructibleBuilding.damagedEvent);
          }
     }
     SetGoAnimProgress(m_health * 255 / GetMaxHealth());
