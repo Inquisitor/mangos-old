@@ -23,6 +23,7 @@
 #include "Unit.h"
 #include "Util.h"
 #include "WorldPacket.h"
+#include "CreatureAI.h"
 
 VehicleKit::VehicleKit(Unit* base, VehicleEntry const* vehicleInfo) : m_vehicleInfo(vehicleInfo), m_pBase(base), m_uiNumFreeSeats(0)
 {
@@ -207,7 +208,12 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
     passenger->SendMonsterMoveTransport(m_pBase, SPLINETYPE_FACINGANGLE, SPLINEFLAG_UNKNOWN5, 0, 0.0f);
 
     if (m_pBase->GetTypeId() == TYPEID_UNIT)
+    {
+        if (((Creature*)m_pBase)->AI())
+                ((Creature*)m_pBase)->AI()->PassengerBoarded(passenger, seat->first, true);
+
         RelocatePassengers(m_pBase->GetPositionX(), m_pBase->GetPositionY(), m_pBase->GetPositionZ()+0.5f, m_pBase->GetOrientation());
+    }
 
     UpdateFreeSeatCount();
     return true;
@@ -274,6 +280,10 @@ void VehicleKit::RemovePassenger(Unit *passenger)
     passenger->UpdateAllowedPositionZ(px, py, pz);
     passenger->SetPosition(px, py, pz + 0.5f, po);
     UpdateFreeSeatCount();
+
+    if (m_pBase->GetTypeId() == TYPEID_UNIT)
+        if (((Creature*)m_pBase)->AI())
+            ((Creature*)m_pBase)->AI()->PassengerBoarded(passenger, seat->first, true);
 }
 
 void VehicleKit::Reset()
