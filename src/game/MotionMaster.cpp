@@ -212,7 +212,7 @@ void MotionMaster::MoveIdle()
         push(&si_idleMovement);
 }
 
-void MotionMaster::MoveRandom()
+void MotionMaster::MoveRandom(float spawndist)
 {
     if (m_owner->GetTypeId() == TYPEID_PLAYER)
     {
