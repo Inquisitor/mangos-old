@@ -30,10 +30,9 @@
 #include "ObjectMgr.h"
 
 /*
-* Strand of the Ancients by Rage Hunter, with modifications and bug fixes by me.
+* BattleGround Strand of the Ancients:
 * TODO:
 *   - Put Seaforium charges also in last zone, just before last door. But when?
-*   - Boats system, attackers must appear in a boat.
 *   - Move all the harcoded variables such coords to header BattleGroundSA.h
 *   - Cosmetics & avoid hacks.
 */
@@ -45,6 +44,7 @@ BattleGroundSA::BattleGroundSA()
     m_StartMessageIds[BG_STARTING_EVENT_THIRD]  = LANG_BG_SA_START_HALF_MINUTE;
     m_StartMessageIds[BG_STARTING_EVENT_FOURTH] = LANG_BG_SA_HAS_BEGUN;
 
+    m_BgObjects.resize(BG_SA_MAXOBJ);
     for (int32 i = 0; i <= BG_SA_GATE_MAX; ++i)
         GateStatus[i] = 1;
     TimerEnabled = false;
@@ -56,8 +56,6 @@ BattleGroundSA::BattleGroundSA()
     Round_timer = 0;
     team = 0;
     Phase = 1;
-    timeToFly = 110000; // 10 seconds after the battle starts, players will leave the start location flying to docks
-    players_sent = false;
 }
 
 BattleGroundSA::~BattleGroundSA()
@@ -87,6 +85,31 @@ void BattleGroundSA::FillInitialWorldStates(WorldPacket& data, uint32& count)
     FillInitialWorldState(data, count, BG_SA_TIMER_MINUTES, uint32(0));
     FillInitialWorldState(data, count, BG_SA_TIMER_10SEC, uint32(0));
     FillInitialWorldState(data, count, BG_SA_TIMER_SEC, uint32(0));
+}
+
+void BattleGroundSA::StartShips()
+{
+    if (shipsStarted)
+        return;
+
+    DoorOpen(m_BgObjects[BG_SA_BOAT_ONE]);
+    DoorOpen(m_BgObjects[BG_SA_BOAT_TWO]);
+
+    for (int i = BG_SA_BOAT_ONE; i <= BG_SA_BOAT_TWO; i++)
+    {
+        for (BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end();itr++)
+        {
+            if (Player* p = sObjectMgr.GetPlayer(itr->first))
+            {
+                UpdateData data;
+                WorldPacket pkt;
+                GetBGObject(i)->BuildValuesUpdateBlockForPlayer(&data, p);
+                data.BuildPacket(&pkt);
+                p->GetSession()->SendPacket(&pkt);
+            }
+        }
+    }
+    shipsStarted = true;
 }
 
 void BattleGroundSA::ToggleTimer()
@@ -133,16 +156,13 @@ void BattleGroundSA::Update(uint32 diff)
 {
     BattleGround::Update(diff);
 
-    if (GetStatus() == STATUS_WAIT_JOIN && !players_sent)
-    {
-        if (timeToFly <= diff)
-        {
-            LetsFly();
-            players_sent = true;
-        }
-        else
-            timeToFly -= diff;
-    }
+    if (GetStatus() == STATUS_WAIT_JOIN && !shipsStarted)
+        if (Phase == 1)
+            if (shipsTimer <= diff)
+                StartShips();
+            else
+                shipsTimer -= diff;
+
     if (GetStatus() == STATUS_IN_PROGRESS)
     {
         if (Round_timer >= BG_SA_ROUNDLENGTH)
@@ -159,7 +179,7 @@ void BattleGroundSA::Update(uint32 diff)
                 EndBattleGround(0);
             }
         } 
-        else
+        else 
             Round_timer += diff;
 
         for (int gyd = 0; gyd < BG_SA_GRY_MAX; ++gyd)
@@ -219,23 +239,26 @@ void BattleGroundSA::Update(uint32 diff)
     }
     if (GetStatus() == STATUS_WAIT_JOIN && Phase == 2)
     {
+        if (!shipsStarted)
+            if (shipsTimer <= diff)
+            {
+                SendMessageToAll(LANG_BG_SA_START_ONE_MINUTE, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                StartShips();
+            }
+            else
+                shipsTimer -= diff;
         if (TimeST2Round < diff)
         {
             Phase = 2;
             OpenDoorEvent(SA_EVENT_OP_DOOR, 0);
             ToggleTimer();
-            ResetWorldStates();
             SetStatus(STATUS_IN_PROGRESS);
             PlaySoundToAll(SOUND_BG_START);
             SendMessageToAll(LANG_BG_SA_HAS_BEGUN, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
             SendWarningToAll(LANG_BG_SA_HAS_BEGUN);
-            LetsFly();
         }
         else
             TimeST2Round -= diff;
-
-        if ((TimeST2Round / 2) == 15000)
-            SendMessageToAll(LANG_BG_SA_START_HALF_MINUTE, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
     }
 }
 
@@ -300,10 +323,8 @@ void BattleGroundSA::StartingEventCloseDoors()
 
 void BattleGroundSA::StartingEventOpenDoors()
 {
-    OpenDoorEvent(SA_EVENT_OP_DOOR, 0);
     SpawnEvent(SA_EVENT_ADD_NPC, 0, true);
     ToggleTimer();
-    LetsFly();
 }
 
 void BattleGroundSA::RemovePlayer(Player* /*plr*/, ObjectGuid /*guid*/)
@@ -392,9 +413,9 @@ void BattleGroundSA::ResetBattle(uint32 vinner)
         ++horde_sc;
 
     Phase = 2;
-    timeToFly = 50000;
-    players_sent = false;
-
+    shipsTimer = 60000;
+    shipsStarted = false;
+    
     for (int32 i = 0; i <= BG_SA_GATE_MAX; ++i)
         GateStatus[i] = 1;
 
@@ -403,13 +424,15 @@ void BattleGroundSA::ResetBattle(uint32 vinner)
     controller = ALLIANCE;
     ToggleTimer();
 
+    SetupShips();
+
     for (BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
     {
         if (Player *plr = sObjectMgr.GetPlayer(itr->first))
             TeleportPlayerToCorrectLoc(plr, true);
     }
 
-	UpdatePhase();
+    UpdatePhase();
 }
 
 void BattleGroundSA::Reset()
@@ -491,6 +514,43 @@ void BattleGroundSA::UpdatePhase()
 
 bool BattleGroundSA::SetupBattleGround()
 {
+    return SetupShips();
+}
+
+bool BattleGroundSA::SetupShips()
+{
+    for (int i = BG_SA_BOAT_ONE; i <= BG_SA_BOAT_TWO; i++)
+        for (BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
+            if (Player *plr = sObjectMgr.GetPlayer(itr->first))
+                SendTransportsRemove(plr);
+    for (uint8 i = BG_SA_BOAT_ONE; i <= BG_SA_BOAT_TWO; i++)
+    {
+        uint32 boatid=0;
+        switch (i)
+        {
+            case BG_SA_BOAT_ONE:
+                boatid = GetController() == ALLIANCE ? BG_SA_BOAT_ONE_H : BG_SA_BOAT_ONE_A;
+                break;
+            case BG_SA_BOAT_TWO:
+                boatid = GetController() == ALLIANCE ? BG_SA_BOAT_TWO_H : BG_SA_BOAT_TWO_A;
+                break;
+        }
+        if (!(AddObject(i, boatid, BG_SA_START_LOCATIONS[i + 5][0], BG_SA_START_LOCATIONS[i + 5][1], BG_SA_START_LOCATIONS[i + 5][2]+ (GetController() == ALLIANCE ? -3.750f: 0) , BG_SA_START_LOCATIONS[i + 5][3], 0, 0, 0, 0, RESPAWN_ONE_DAY)))
+        {
+            sLog.outError("SA_ERROR: Can't spawn ships!");
+            return false;
+        }
+    }
+
+    GetBGObject(BG_SA_BOAT_ONE)->UpdateRotationFields(1.0f, 0.0002f);
+    GetBGObject(BG_SA_BOAT_TWO)->UpdateRotationFields(1.0f, 0.00001f);
+    SpawnBGObject(m_BgObjects[BG_SA_BOAT_ONE], RESPAWN_IMMEDIATELY);
+    SpawnBGObject(m_BgObjects[BG_SA_BOAT_TWO], RESPAWN_IMMEDIATELY);
+
+    for (int i = BG_SA_BOAT_ONE; i <= BG_SA_BOAT_TWO; i++)
+        for (BattleGroundPlayerMap::const_iterator itr = GetPlayers().begin(); itr != GetPlayers().end(); ++itr)
+            if (Player *plr = sObjectMgr.GetPlayer(itr->first))
+                SendTransportInit(plr);
     return true;
 }
 
@@ -1064,6 +1124,29 @@ void BattleGroundSA::TeleportPlayerToCorrectLoc(Player *plr, bool resetBattle)
     if (!plr)
         return;
 
+    if (!shipsStarted)
+    {
+        if (plr->GetTeam() != GetController())
+        {
+            plr->CastSpell(plr,12438,true);//Without this player falls before boat loads...
+
+            if (urand(0,1))
+                plr->TeleportTo(607, 2682.936f, -830.368f, 50.0f, 2.895f, 0);
+            else
+                plr->TeleportTo(607, 2577.003f, 980.261f, 50.0f, 0.807f, 0);
+
+        }
+        else
+            plr->TeleportTo(607, 1209.7f, -65.16f, 70.1f, 0.0f, 0);
+    }
+    else
+    {
+        if (plr->GetTeam() != GetController())
+            plr->TeleportTo(607, 1600.381f, -106.263f, 8.8745f, 3.78f, 0);
+        else
+            plr->TeleportTo(607, 1209.7f, -65.16f, 70.1f, 0.0f, 0);
+    }
+    SendTransportInit(plr);
     if (resetBattle)
     {
         if (!plr->isAlive())
@@ -1076,51 +1159,61 @@ void BattleGroundSA::TeleportPlayerToCorrectLoc(Player *plr, bool resetBattle)
         plr->SetPower(POWER_MANA, plr->GetMaxPower(POWER_MANA));
         plr->CombatStopWithPets(true);
     }
-    
-    if (GetStatus() != STATUS_IN_PROGRESS || resetBattle)
+}
+
+void BattleGroundSA::SendTransportInit(Player *player)
+{
+    if (GetBGObject(BG_SA_BOAT_ONE) || GetBGObject(BG_SA_BOAT_TWO))
     {
-        if (plr->GetTeam() != GetController())
-        {
-            if (urand(0,1))
-                plr->TeleportTo(607, BG_SA_START_LOCATIONS[0][0], BG_SA_START_LOCATIONS[0][1], BG_SA_START_LOCATIONS[0][2], BG_SA_START_LOCATIONS[0][3]);
-            else
-                plr->TeleportTo(607, BG_SA_START_LOCATIONS[1][0], BG_SA_START_LOCATIONS[1][1], BG_SA_START_LOCATIONS[1][2], BG_SA_START_LOCATIONS[1][3]);
-        }
-        else
-            plr->TeleportTo(607, BG_SA_START_LOCATIONS[4][0], BG_SA_START_LOCATIONS[4][1], BG_SA_START_LOCATIONS[4][2], BG_SA_START_LOCATIONS[4][3]);
-    }
-    else
-    {
-        if (plr->GetTeam() != GetController())
-        {
-            if (urand(0,1))
-                plr->TeleportTo(607, BG_SA_START_LOCATIONS[2][0], BG_SA_START_LOCATIONS[2][1], BG_SA_START_LOCATIONS[2][2], BG_SA_START_LOCATIONS[2][3]);
-            else
-                plr->TeleportTo(607, BG_SA_START_LOCATIONS[3][0], BG_SA_START_LOCATIONS[3][1], BG_SA_START_LOCATIONS[3][2], BG_SA_START_LOCATIONS[3][3]);
-        }
-        else
-            plr->TeleportTo(607, BG_SA_START_LOCATIONS[4][0], BG_SA_START_LOCATIONS[4][1], BG_SA_START_LOCATIONS[4][2], BG_SA_START_LOCATIONS[4][3]);
+        UpdateData transData;
+        if (GetBGObject(BG_SA_BOAT_ONE))
+            GetBGObject(BG_SA_BOAT_ONE)->BuildCreateUpdateBlockForPlayer(&transData, player);
+        if (GetBGObject(BG_SA_BOAT_TWO))
+            GetBGObject(BG_SA_BOAT_TWO)->BuildCreateUpdateBlockForPlayer(&transData, player);
+        WorldPacket packet;
+        transData.BuildPacket(&packet);
+        player->GetSession()->SendPacket(&packet);
     }
 }
 
-void BattleGroundSA::LetsFly()
+void BattleGroundSA::SendTransportsRemove(Player * player)
 {
-    for (BattleGroundPlayerMap::const_iterator iter = m_Players.begin(); iter != m_Players.end(); ++iter)
+    if (GetBGObject(BG_SA_BOAT_ONE) || GetBGObject(BG_SA_BOAT_TWO))
     {
-        if (Player *player = sObjectMgr.GetPlayer(iter->first))
-        {
-            if (player->HasAura(44521))                 // Remove Preparation
-                player->RemoveAurasDueToSpell(44521);
+        UpdateData transData;
+        if (GetBGObject(BG_SA_BOAT_ONE))
+            GetBGObject(BG_SA_BOAT_ONE)->BuildOutOfRangeUpdateBlock(&transData);
+        if (GetBGObject(BG_SA_BOAT_TWO))
+            GetBGObject(BG_SA_BOAT_TWO)->BuildOutOfRangeUpdateBlock(&transData);
+        WorldPacket packet;
+        transData.BuildPacket(&packet);
+        player->GetSession()->SendPacket(&packet);
+    }
+}
 
-            if (GetController() != player->GetTeam())
+uint32 BattleGroundSA::GetCorrectFactionSA(uint8 vehicleType) const
+{
+    if (GetStatus() != STATUS_WAIT_JOIN)
+    {
+        switch(vehicleType)
+        {
+            case VEHICLE_SA_DEMOLISHER:
             {
-                // This is custom, I haven't implemented boats yet, so, fly!
-                player->CastSpell(player, 54168, true); // Parachute :)
-                if (player->GetPositionY() < 0)
-                    player->SendMonsterMove(1597.637f, -106.348f, 8.888f, SPLINETYPE_NORMAL, SPLINEFLAG_TRAJECTORY, 10000);
+                if (GetController() == ALLIANCE)
+                    return VEHICLE_FACTION_HORDE;
                 else
-                    player->SendMonsterMove(1606.608f, 50.1236f, 7.58f, SPLINETYPE_NORMAL, SPLINEFLAG_TRAJECTORY, 10000);
+                    return VEHICLE_FACTION_ALLIANCE;
             }
+            case VEHICLE_SA_CANNON:
+            {
+                if (GetController() == ALLIANCE)
+                    return VEHICLE_FACTION_ALLIANCE;
+                else
+                    return VEHICLE_FACTION_HORDE;
+            }
+            default:
+                return VEHICLE_FACTION_NEUTRAL;
         }
     }
+    return VEHICLE_FACTION_NEUTRAL;
 }
