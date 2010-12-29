@@ -2141,6 +2141,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                                                 }
                                             }
                             }
+                            m_caster->RemoveAurasDueToSpell(62340);
                             float dist_to_compare = GetSpellRadius(sSpellRadiusStore.LookupEntry(m_spellInfo->EffectRadiusIndex[eff_idx]));
                             if (target && target->GetBase()->IsWithinDist2d(m_targets.m_destX, m_targets.m_destY, dist_to_compare * 2)) // now we use *2 because the location of the seat is not correct
                                 passenger->EnterVehicle(target, 0);
@@ -7462,7 +7463,10 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     if (VehicleKit *seat = m_caster->GetVehicleKit())
                         if (Unit *passenger = seat->GetPassenger(0))
                             if (Unit *demolisher = m_caster->GetVehicle()->GetBase())
+                            {
+                                passenger->EnterVehicle(demolisher->GetVehicleKit(), 3);
                                 demolisher->CastSpell(demolisher, 62340, true);
+                            }
 
                     return;
                 }
