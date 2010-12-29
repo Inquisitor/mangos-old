@@ -1650,6 +1650,8 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 67296:
                 case 67297:
                 case 67298:
+                case 63024:                                 // Gravity Bomb (10 man)
+                case 64234:                                 // Gravity Bomb (25 man)
                     unMaxTargets = 1;
                     break;
                 case 28542:                                 // Life Drain
