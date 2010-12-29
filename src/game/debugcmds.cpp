@@ -1115,6 +1115,6 @@ bool ChatHandler::HandleDebugEnterVehicleCommand(char* args)
     if (!target->GetVehicleKit()->HasEmptySeat(seat))
         return false;
     
-    m_session->EnterVehicle(target->GetVehicleKit(), seat);
+    m_session->GetPlayer()->EnterVehicle(target->GetVehicleKit(), seat);
     return true;
 }
