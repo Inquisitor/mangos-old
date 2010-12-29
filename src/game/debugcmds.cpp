@@ -1093,3 +1093,28 @@ bool ChatHandler::HandleDebugSpellModsCommand(char* args)
 
     return true;
 }
+
+bool ChatHandler::HandleDebugEnterVehicleCommand(char* args)
+{
+    Unit* target = getSelectedUnit();
+    if (!target)
+    {
+        SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (!target->GetVehicleKit())
+        return false;
+
+    if (!*args)
+        return false;
+
+    uint32 seat = atoi(args);
+
+    if (!target->GetVehicleKit()->HasEmptySeat(seat))
+        return false;
+    
+    m_session->EnterVehicle(target->GetVehicleKit(), seat);
+    return true;
+}
