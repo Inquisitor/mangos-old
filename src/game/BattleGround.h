@@ -351,11 +351,11 @@ class BattleGround
         uint32 GetBonusHonorFromKill(uint32 kills) const;
         bool IsRandom() { return m_IsRandom; }
 
-        //START//////////SA and IC /////////START//
+        // Strand of the Ancients and Isle of Conquest related
         virtual uint32 GetController()				  const	{ return false; }
         virtual uint8  GetGydController(uint8 /*gyd*/) const { return false; }
         virtual uint8  GetNodeControll(uint8 /*node*/) const { return false; }
-        //END////////////SA and IC ///////////END//
+        virtual uint32 GetVehicleFaction(uint8 vehicleType) const { return 35; }
 
         // Set methods:
         void SetName(char const* Name)      { m_Name = Name; }
