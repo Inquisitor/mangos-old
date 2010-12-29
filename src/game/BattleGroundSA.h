@@ -306,7 +306,7 @@ class BattleGroundSA : public BattleGround
         void SendWarningToAllSA(uint8 gyd, int status, Team team, bool isDoor = false, int door = NULL, bool destroyed = false);
         /* For vehicle's faction*/
         uint32 GetCorrectFactionSA(uint8 vehicleType) const;
-        /* Custom */
+        /* This teleports player to correct loc in function of BG status and it resurects player if necesary */
         void TeleportPlayerToCorrectLoc(Player *player, bool resetBattle = false);
     private:
         uint8               m_Gyd[BG_SA_GRY_MAX];

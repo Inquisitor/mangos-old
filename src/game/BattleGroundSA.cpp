@@ -45,6 +45,8 @@ BattleGroundSA::BattleGroundSA()
     m_StartMessageIds[BG_STARTING_EVENT_FOURTH] = LANG_BG_SA_HAS_BEGUN;
 
     m_BgObjects.resize(BG_SA_MAXOBJ);
+    shipsStarted = false;
+    shipsTimer = BG_SA_BOAT_START;
     for (int32 i = 0; i <= BG_SA_GATE_MAX; ++i)
         GateStatus[i] = 1;
     TimerEnabled = false;
