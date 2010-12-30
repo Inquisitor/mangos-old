@@ -50,13 +50,10 @@ BattleGroundSA::BattleGroundSA()
     for (int32 i = 0; i <= BG_SA_GATE_MAX; ++i)
         GateStatus[i] = 1;
     TimerEnabled = false;
-    countalliance = 0;
     alliance_sc = 0;
     horde_sc = 0;
-    controller = HORDE;
     TimeST2Round = 60000;
     Round_timer = 0;
-    team = 0;
     Phase = 1;
 }
 
@@ -173,7 +170,7 @@ void BattleGroundSA::Update(uint32 diff)
             {
                 PlaySoundToAll(BG_SA_SOUND_GYD_VICTORY);
                 SendMessageToAll(LANG_BG_SA_NETRALL_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
-                ResetBattle(0);
+                ResetBattle(0, controller);
             }
             else
             {
@@ -407,11 +404,11 @@ void BattleGroundSA::VirtualUpdatePlayerScore(Player* Source, uint32 type, uint3
     }
 }
 
-void BattleGroundSA::ResetBattle(uint32 vinner)
+void BattleGroundSA::ResetBattle(uint32 winner, Team defender)
 {
-    if (vinner == ALLIANCE)
+    if (winner == ALLIANCE)
         ++alliance_sc;
-    else if (vinner == HORDE)
+    else if (winner == HORDE)
         ++horde_sc;
 
     Phase = 2;
@@ -422,8 +419,7 @@ void BattleGroundSA::ResetBattle(uint32 vinner)
         GateStatus[i] = 1;
 
     SetStartTime(0);
-    countalliance = 0;
-    controller = ALLIANCE;
+    controller = (defender  == ALLIANCE) ?  HORDE : ALLIANCE;
     ToggleTimer();
 
     SetupShips();
@@ -441,6 +437,10 @@ void BattleGroundSA::Reset()
 {
     //call parent's class reset
     BattleGround::Reset();
+
+    uint32 Attackers = ((urand(0,1)) ? ALLIANCE : HORDE);
+    controller = (Attackers == ALLIANCE) ? HORDE : ALLIANCE;
+
     m_ActiveEvents[SA_EVENT_ADD_GO] = BG_EVENT_NONE;
     m_ActiveEvents[SA_EVENT_ADD_NPC] = BG_EVENT_NONE;
     m_ActiveEvents[SA_EVENT_ADD_SPIR] = BG_EVENT_NONE;
@@ -877,7 +877,7 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     SendMessageToAll(LANG_BG_SA_ALLIANCE_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
                     RewardHonorToTeam(150, (teamIndex == 0) ? ALLIANCE:HORDE);
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 100, (teamIndex == 0) ? ALLIANCE:HORDE);
-                    ResetBattle(player->GetTeam());
+                    ResetBattle(player->GetTeam(), controller);
                 }
                 else
                 {
