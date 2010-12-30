@@ -947,44 +947,15 @@ void BattleGroundSA::_GydOccupied(uint8 node,Team team)
 {
     if (node >= 0 && node < 3)
     {
-        switch (team)
-        {
-            case ALLIANCE:
-            {
-                UpdateWorldState(GrraveYardWS[node][1], 0);
-                UpdateWorldState(GrraveYardWS[node][0], 1);
-                break;
-            }
-            case HORDE: 
-            {
-                UpdateWorldState(GrraveYardWS[node][0], 0);
-                UpdateWorldState(GrraveYardWS[node][1], 1);
-                break;
-            }
-        }
+        UpdateWorldState(GrraveYardWS[node][0], team == HORDE ? 0 : 1);
+        UpdateWorldState(GrraveYardWS[node][1], team == HORDE ? 1 : 0);
     }
     else if (node == 3)
     {
-        switch (team)
+        for (int8 i = 0; i <= BG_SA_MAX_WS; ++i)
         {
-            case HORDE: 
-            {
-                for (int8 i = 0; i <= BG_SA_MAX_WS; ++i)
-                {
-                    UpdateWorldState(BG_SA_WorldStatusH[i], 1);
-                    UpdateWorldState(BG_SA_WorldStatusA[i], 0);
-                }
-                break;
-            }
-            case ALLIANCE: 
-            {
-                for (int8 i = 0; i <= BG_SA_MAX_WS; ++i)
-                {
-                    UpdateWorldState(BG_SA_WorldStatusH[i], 0);
-                    UpdateWorldState(BG_SA_WorldStatusA[i], 1);
-                }
-                break;
-            }
+            UpdateWorldState(BG_SA_WorldStatusH[i], team == HORDE ? 1 : 0);
+            UpdateWorldState(BG_SA_WorldStatusA[i], team == HORDE ? 0 : 1);
         }
     }
 }
