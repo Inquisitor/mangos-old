@@ -398,8 +398,7 @@ void BattleGroundSA::Reset()
     //call parent's class reset
     BattleGround::Reset();
 
-    uint32 Attackers = ((urand(0,1)) ? ALLIANCE : HORDE);
-    controller = (Attackers == ALLIANCE) ? HORDE : ALLIANCE;
+    controller = ((urand(0,1)) ? ALLIANCE : HORDE);
 
     m_ActiveEvents[SA_EVENT_ADD_GO] = BG_EVENT_NONE;
     m_ActiveEvents[SA_EVENT_ADD_NPC] = BG_EVENT_NONE;
