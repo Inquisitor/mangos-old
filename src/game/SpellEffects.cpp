@@ -1045,6 +1045,67 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     m_caster->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                     return;
                 }
+                case 25465:                                 // Snowball - hack for event - add coin
+                {
+                    sLog.outString("NEW_YEAR: %s (type: %u) casts %d at %s (type: %u)",
+                        (m_caster?m_caster->GetName():"(?)"),
+                        (m_caster?m_caster->GetTypeId():0),
+                        m_spellInfo->Id,
+                        (unitTarget?unitTarget->GetName():"(?)"),
+                        (unitTarget?unitTarget->GetTypeId():0)
+                    );
+                    if (m_caster && m_caster->GetTypeId() == TYPEID_PLAYER && unitTarget && unitTarget->GetTypeId() == TYPEID_PLAYER)
+                    {
+                        int32 count = 1;
+                        uint32 itemId = 99999;
+                        uint32 noSpaceForCount = 0;
+                        Player * plTarget = (Player *) unitTarget;
+                        // check space and find places
+                        ItemPosCountVec dest;
+                        uint8 msg = plTarget->CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, itemId, count, &noSpaceForCount );
+                        if( msg != EQUIP_ERR_OK )                               // convert to possible store amount
+                            count -= noSpaceForCount;
+
+                        if( count == 0 || dest.empty())                         // can't add any
+                        {
+                            sLog.outError("Oops... can't add coin...");
+                            return;
+                        }
+
+                        Item* item = plTarget->StoreNewItem( dest, itemId, true, Item::GenerateItemRandomPropertyId(itemId));
+
+                        if(count > 0 && item)
+                        {
+                            Player* pl = (Player*)m_caster;
+                            pl->SendNewItem(item,count,false,true);
+                            if(pl!=plTarget)
+                                plTarget->SendNewItem(item,count,true,false);
+                        }
+                        else
+                        {
+                            sLog.outError("Oops... Item was not created...");
+                        }
+                    }
+                    return;
+                }
+                case 31402:                                 // Kick - hack for event - destroy coins
+                {
+                    sLog.outString("NEW_YEAR: %s (type: %u) casts %d at %s (type: %u)",
+                        (m_caster?m_caster->GetName():"(?)"),
+                        (m_caster?m_caster->GetTypeId():0),
+                        m_spellInfo->Id,
+                        (unitTarget?unitTarget->GetName():"(?)"),
+                        (unitTarget?unitTarget->GetTypeId():0)
+                    );
+                    if (m_caster && m_caster->GetTypeId() == TYPEID_PLAYER && unitTarget && unitTarget->GetTypeId() == TYPEID_PLAYER)
+                    {
+                        int32 count = 5;
+                        uint32 itemId = 99999;
+                        Player * plTarget = (Player *) unitTarget;
+                        plTarget->DestroyItemCount(itemId, count, true, false);
+                    }
+                    return;
+                }
                 case 13120:                                 // net-o-matic
                 {
                     if (!unitTarget)
@@ -1295,10 +1356,10 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 {
                     if (unitTarget && unitTarget->GetTypeId() == TYPEID_PLAYER)
                     {
-		    	uint32 toCast = (roll_chance_i(50) ? 28059 : 28084);
-			unitTarget->RemoveAurasDueToSpell( (toCast == 28059)? 28084 : 28059 );
-			unitTarget->CastSpell(unitTarget, toCast, true);
-			unitTarget->RemoveAurasDueToSpell( (toCast == 28059)? 29660 : 29659 );
+                        uint32 toCast = (roll_chance_i(50) ? 28059 : 28084);
+                        unitTarget->RemoveAurasDueToSpell( (toCast == 28059)? 28084 : 28059 );
+                        unitTarget->CastSpell(unitTarget, toCast, true);
+                        unitTarget->RemoveAurasDueToSpell( (toCast == 28059)? 29660 : 29659 );
                     }
                     break;
                 }
@@ -8586,7 +8647,7 @@ void Spell::EffectResurrect(SpellEffectIndex /*eff_idx*/)
                 return;
             }
             break;
-		// Defibrillate (Gnomish Army Knife) has 67% chance of success
+        // Defibrillate (Gnomish Army Knife) has 67% chance of success
         case 54732:
             if (roll_chance_i(33))
                 return;
