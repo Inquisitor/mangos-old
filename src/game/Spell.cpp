@@ -1654,6 +1654,7 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 64234:                                 // Gravity Bomb (25 man)
                 case 61916:                                 // Lightning Whirl (10 man)
                 case 63482:                                 // Lightning Whirl (25 man)
+                case 63018:                                 // Searing Light
                     unMaxTargets = 1;
                     break;
                 case 28542:                                 // Life Drain
