@@ -276,14 +276,12 @@ class BattleGroundSA : public BattleGround
         uint32 GetVehicleFaction(uint8 vehicleType) const { return GetCorrectFactionSA(vehicleType); }
         void RemovePlayer(Player *plr, ObjectGuid guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
-        void EndBattleGround(uint32 winner);
+        void EndBattleGround(Team winner);
         void ResetBattle(uint32 winner, Team controller);
         bool SetupBattleGround();
         void SendMessageSA(Player *player, uint32 type, uint32 name);
         void UpdateTimer();
         void UpdatePhase();
-        uint32 alliance_sc;
-        uint32 horde_sc;
         uint32 Phase;
         Team controller;
         uint32 Round_timer;
@@ -291,7 +289,6 @@ class BattleGroundSA : public BattleGround
         bool shipsStarted;
         uint32 shipsTimer;
         /* Scorekeeping */
-        void RewardMedalsToTeam(uint32 teamid, bool winner);
         void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
         /* For boats */
         bool SetupShips();
