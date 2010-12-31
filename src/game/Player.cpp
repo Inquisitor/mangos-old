@@ -5441,7 +5441,7 @@ bool Player::UpdateSkill(uint32 skill_id, uint32 step)
     if ((!max) || (!value) || (value >= max))
         return false;
 
-    if (value*512 < max*urand(0,512))
+    if (value*64 < max*urand(0,64))
     {
         uint32 new_value = value+step;
         if(new_value > max)
