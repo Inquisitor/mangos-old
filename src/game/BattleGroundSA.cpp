@@ -380,6 +380,7 @@ void BattleGroundSA::ResetBattle(uint32 winner, Team defender)
 
     SetStartTime(0);
     controller = (defender  == ALLIANCE) ?  HORDE : ALLIANCE;
+    relicGateDestroyed = false;
     ToggleTimer();
 
     SetupShips();
@@ -399,6 +400,7 @@ void BattleGroundSA::Reset()
     BattleGround::Reset();
 
     controller = ((urand(0,1)) ? ALLIANCE : HORDE);
+    relicGateDestroyed = false;
 
     m_ActiveEvents[SA_EVENT_ADD_GO] = BG_EVENT_NONE;
     m_ActiveEvents[SA_EVENT_ADD_NPC] = BG_EVENT_NONE;
@@ -703,6 +705,7 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     UpdatePlayerScore(player, SCORE_GATES_DESTROYED, 1);
                     RewardHonorToTeam(100, (teamIndex == 0) ? ALLIANCE:HORDE);
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 75, (teamIndex == 0) ? ALLIANCE:HORDE);
+                    relicGateDestroyed = true;
                     break;
             }
             break;
@@ -830,6 +833,13 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
         case BG_SA_GO_TITAN_RELIC:
         {
             if (eventId == 22097 && player->GetTeam() != GetController())
+            {
+                if(!relicGateDestroyed)
+                {
+                    player->GetSession()->KickPlayer();
+                    sLog.outError("Player %s has clicked SOTA Relic without Relic gate being destroyed", player->GetName());
+                    return;
+                }
                 if(Phase == 1)
                 {
                     PlaySoundToAll(BG_SA_SOUND_GYD_VICTORY);
@@ -845,6 +855,7 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 100, (teamIndex == 0) ? ALLIANCE:HORDE);
                     EndBattleGround(player->GetTeam());
                 }
+            }
             break;
         }
     }

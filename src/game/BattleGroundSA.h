@@ -287,6 +287,7 @@ class BattleGroundSA : public BattleGround
         uint32 Round_timer;
         uint32 TimeST2Round;
         bool shipsStarted;
+        bool relicGateDestroyed;
         uint32 shipsTimer;
         /* Scorekeeping */
         void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
