@@ -137,25 +137,25 @@ void BattleGroundSA::Update(uint32 diff)
     BattleGround::Update(diff);
 
     if (GetStatus() == STATUS_WAIT_JOIN && !shipsStarted)
-        if (Phase == 1)
+        if (Phase == SA_ROUND_ONE) // Round one not started yet
             if (shipsTimer <= diff)
                 StartShips();
             else
                 shipsTimer -= diff;
 
-    if (GetStatus() == STATUS_IN_PROGRESS)
+    if (GetStatus() == STATUS_IN_PROGRESS) // Battleground already in progress
     {
         if (Round_timer >= BG_SA_ROUNDLENGTH)
         {
-            if(Phase == 1)
+            if(Phase == SA_ROUND_ONE) // Timeout of second round
             {
                 PlaySoundToAll(BG_SA_SOUND_GYD_VICTORY);
-                SendMessageToAll(LANG_BG_SA_NETRALL_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                SendMessageToAll(LANG_BG_SA_NEUTRAL_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
                 ResetBattle(0, controller);
             }
-            else
+            else // Timeout of second round
             {
-                SendMessageToAll(LANG_BG_SA_NETRALL_END_2ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                SendMessageToAll(LANG_BG_SA_NEUTRAL_END_2ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
                 EndBattleGround(TEAM_NONE);
             }
         } 
@@ -217,7 +217,7 @@ void BattleGroundSA::Update(uint32 diff)
         }
         UpdateTimer();
     }
-    if (GetStatus() == STATUS_WAIT_JOIN && Phase == 2)
+    if (GetStatus() == STATUS_WAIT_JOIN && Phase == 2) // Round two, not yet started
     {
         if (!shipsStarted)
             if (shipsTimer <= diff)
@@ -232,7 +232,7 @@ void BattleGroundSA::Update(uint32 diff)
             Phase = 2;
             OpenDoorEvent(SA_EVENT_OP_DOOR, 0);
             ToggleTimer();
-            SetStatus(STATUS_IN_PROGRESS);
+            SetStatus(STATUS_IN_PROGRESS); // Start round two
             PlaySoundToAll(SOUND_BG_START);
             SendMessageToAll(LANG_BG_SA_HAS_BEGUN, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
             SendWarningToAll(LANG_BG_SA_HAS_BEGUN);
@@ -371,7 +371,7 @@ void BattleGroundSA::VirtualUpdatePlayerScore(Player* Source, uint32 type, uint3
 
 void BattleGroundSA::ResetBattle(uint32 winner, Team defender)
 {
-    Phase = 2;
+    Phase = SA_ROUND_TWO;
     shipsTimer = 60000;
     shipsStarted = false;
     
@@ -414,7 +414,7 @@ void BattleGroundSA::Reset()
 
 void BattleGroundSA::UpdatePhase()
 {
-    if (Phase == 2)
+    if (Phase == SA_ROUND_TWO)
     {
         SpawnEvent(SA_EVENT_ADD_VECH_E, 0, false);
         SpawnEvent(SA_EVENT_ADD_VECH_W, 0, false);
@@ -464,7 +464,7 @@ void BattleGroundSA::UpdatePhase()
     for (uint32 z = 0; z <= BG_SA_GATE_MAX; ++z)
         UpdateWorldState(BG_SA_GateStatus[z], GateStatus[z]);
 
-    if (Phase == 2)
+    if (Phase == SA_ROUND_TWO)
     {
         Round_timer = 0;
         SetStatus(STATUS_WAIT_JOIN);
@@ -840,17 +840,17 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     sLog.outError("Player %s has clicked SOTA Relic without Relic gate being destroyed", player->GetName());
                     return;
                 }
-                if(Phase == 1)
+                if(Phase == SA_ROUND_ONE) // Victory at first round
                 {
                     PlaySoundToAll(BG_SA_SOUND_GYD_VICTORY);
-                    SendMessageToAll(LANG_BG_SA_ALLIANCE_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                    SendMessageToAll(controller == ALLIANCE ? LANG_BG_SA_ALLIANCE_END_1ROUND : LANG_BG_SA_ALLIANCE_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
                     RewardHonorToTeam(150, (teamIndex == 0) ? ALLIANCE:HORDE);
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 100, (teamIndex == 0) ? ALLIANCE:HORDE);
-                    ResetBattle(player->GetTeam(), controller);
+                    ResetBattle(player->GetTeam(), GetController());
                 }
-                else
+                else // Victory at second round
                 {
-                    SendMessageToAll(LANG_BG_SA_HORDE_END_2ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                    SendMessageToAll(controller == ALLIANCE ? LANG_BG_SA_ALLIANCE_END_2ROUND : LANG_BG_SA_HORDE_END_2ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
                     RewardHonorToTeam(150, (teamIndex == 0) ? ALLIANCE:HORDE);
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 100, (teamIndex == 0) ? ALLIANCE:HORDE);
                     EndBattleGround(player->GetTeam());
@@ -954,7 +954,7 @@ WorldSafeLocsEntry const* BattleGroundSA::GetClosestGraveYard(Player* player)
     return good_entry;
 }
 
-void BattleGroundSA::_GydOccupied(uint8 node,Team team)
+void BattleGroundSA::_GydOccupied(uint8 node, Team team)
 {
     if (node >= 0 && node < 3)
     {
