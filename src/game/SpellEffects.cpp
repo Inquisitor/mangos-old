@@ -9189,7 +9189,7 @@ void Spell::EffectTransmitted(SpellEffectIndex eff_idx)
         {
             uint32 type = bg->GetTypeID(true);
             if (type == BATTLEGROUND_SA)
-                if (bg->GetController() == ((Player*)m_caster)->GetTeam())
+                if (bg->GetDefender() == ((Player*)m_caster)->GetTeam())
                     return;
             if (type == BATTLEGROUND_SA || type == BATTLEGROUND_IC)
             {
