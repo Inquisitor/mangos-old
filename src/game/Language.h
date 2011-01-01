@@ -930,8 +930,8 @@ enum MangosStrings
 
     LANG_BG_SA_ALLIANCE_END_1ROUND          = 20019,
     LANG_BG_SA_HORDE_END_2ROUND             = 20020,
-    LANG_BG_SA_NETRALL_END_1ROUND           = 20021,
-    LANG_BG_SA_NETRALL_END_2ROUND           = 20022,
+    LANG_BG_SA_NEUTRAL_END_1ROUND           = 20021,
+    LANG_BG_SA_NEUTRAL_END_2ROUND           = 20022,
     /*##############################################
     #          Strings for SendWarningToAll        #
     ##############################################*/
@@ -947,6 +947,8 @@ enum MangosStrings
     LANG_BG_SA_ALLIANCE_EAST_CONQUESTED     = 20033,
     LANG_BG_SA_ALLIANCE_WEST_CONQUESTED     = 20034,
     LANG_BG_SA_ALLIANCE_SOUTH_CONQUESTED    = 20035,
+    LANG_BG_SA_HORDE_END_1ROUND             = 20036,
+    LANG_BG_SA_ALLIANCE_END_2ROUND          = 20037,
     
     LANG_BG_SA_GATE_ROOM_ANCIENT_SHRINE_DESTROYED = 20036,
     LANG_BG_SA_GATE_GREEN_EMERALD_DESTROYED       = 20037,

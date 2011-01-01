@@ -240,6 +240,12 @@ static float BG_SA_START_LOCATIONS[7][4] = {
     { 2574.003662f, 981.261475f, 2.603424f, 0.807696f}
 };
 
+enum BG_SA_Phase
+{
+    SA_ROUND_ONE = 1,
+    SA_ROUND_TWO = 2,
+};
+
 class BattleGroundSAScore : public BattleGroundScore
 {
     public:
@@ -271,7 +277,7 @@ class BattleGroundSA : public BattleGround
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(Player* player);
         virtual void Reset();
 
-        uint32 GetController() const	{ return controller; }
+        Team GetController() const	{ return controller; }
         uint8 GetGydController(uint8 gyd) const { return m_Gyd[gyd]; }
         uint32 GetVehicleFaction(uint8 vehicleType) const { return GetCorrectFactionSA(vehicleType); }
         void RemovePlayer(Player *plr, ObjectGuid guid);
