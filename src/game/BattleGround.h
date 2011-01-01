@@ -352,9 +352,9 @@ class BattleGround
         bool IsRandom() { return m_IsRandom; }
 
         // Strand of the Ancients and Isle of Conquest related
-        virtual Team GetController()				  const	{ return TEAM_NONE; }
-        virtual uint8  GetGydController(uint8 /*gyd*/) const { return false; }
-        virtual uint8  GetNodeControll(uint8 /*node*/) const { return false; }
+        virtual Team   GetDefender()                    const   { return TEAM_NONE; }
+        virtual uint8  GetGydController(uint8 /*gyd*/)  const   { return false; }
+        virtual uint8  GetNodeControll(uint8 /*node*/)  const   { return false; }
         virtual uint32 GetVehicleFaction(uint8 vehicleType) const { return 35; }
 
         // Set methods:

@@ -929,9 +929,9 @@ enum MangosStrings
     LANG_BG_SA_INSTALL_BOMB                 = 20018,
 
     LANG_BG_SA_ALLIANCE_END_1ROUND          = 20019,
-    LANG_BG_SA_HORDE_END_2ROUND             = 20020,
-    LANG_BG_SA_NEUTRAL_END_1ROUND           = 20021,
-    LANG_BG_SA_NEUTRAL_END_2ROUND           = 20022,
+    LANG_BG_SA_HORDE_END_1ROUND             = 20020,
+    LANG_BG_SA_ALLIANCE_END_2ROUND          = 20021,
+    LANG_BG_SA_HORDE_END_2ROUND             = 20022,
     /*##############################################
     #          Strings for SendWarningToAll        #
     ##############################################*/
@@ -947,8 +947,6 @@ enum MangosStrings
     LANG_BG_SA_ALLIANCE_EAST_CONQUESTED     = 20033,
     LANG_BG_SA_ALLIANCE_WEST_CONQUESTED     = 20034,
     LANG_BG_SA_ALLIANCE_SOUTH_CONQUESTED    = 20035,
-    LANG_BG_SA_HORDE_END_1ROUND             = 20036,
-    LANG_BG_SA_ALLIANCE_END_2ROUND          = 20037,
     
     LANG_BG_SA_GATE_ROOM_ANCIENT_SHRINE_DESTROYED = 20036,
     LANG_BG_SA_GATE_GREEN_EMERALD_DESTROYED       = 20037,
@@ -962,6 +960,12 @@ enum MangosStrings
     LANG_BG_SA_GATE_MAUVE_AMETHYST_DAMAGED        = 20045,
     LANG_BG_SA_GATE_RED_SUN_DAMAGED               = 20046,
     LANG_BG_SA_GATE_YELLOW_MOON_DAMAGED           = 20047,
+    // Additions after edits
+    LANG_BG_SA_HORDE_TIMEOUT_END_1ROUND             = 20048,
+    LANG_BG_SA_ALLIANCE_TIMEOUT_END_1ROUND          = 20049,
+
+    LANG_BG_SA_HORDE_TIMEOUT_END_2ROUND             = 20050,
+    LANG_BG_SA_ALLIANCE_TIMEOUT_END_2ROUND          = 20051,
 
     // NOT RESERVED IDS                   12000-1999999999
     // `db_script_string` table index     2000000000-2000009999 (MIN_DB_SCRIPT_STRING_ID-MAX_DB_SCRIPT_STRING_ID)

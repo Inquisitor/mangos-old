@@ -68,7 +68,7 @@ void BattleGroundSA::FillInitialWorldStates(WorldPacket& data, uint32& count)
         else if (m_Gyd[i] == BG_SA_GARVE_STATUS_ALLY_OCCUPIED)
             _GydOccupied(i,ALLIANCE);
     }
-    if (GetController() == HORDE)
+    if (GetDefender() == HORDE)
         _GydOccupied(3,HORDE);
     else
         _GydOccupied(3,ALLIANCE);
@@ -150,12 +150,12 @@ void BattleGroundSA::Update(uint32 diff)
             if(Phase == SA_ROUND_ONE) // Timeout of second round
             {
                 PlaySoundToAll(BG_SA_SOUND_GYD_VICTORY);
-                SendMessageToAll(LANG_BG_SA_NEUTRAL_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
-                ResetBattle(0, controller);
+                SendMessageToAll(defender == ALLIANCE ? LANG_BG_SA_ALLIANCE_TIMEOUT_END_1ROUND : LANG_BG_SA_HORDE_TIMEOUT_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                ResetBattle(0, defender);
             }
             else // Timeout of second round
             {
-                SendMessageToAll(LANG_BG_SA_NEUTRAL_END_2ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                SendMessageToAll(defender == ALLIANCE ? LANG_BG_SA_ALLIANCE_TIMEOUT_END_2ROUND : LANG_BG_SA_HORDE_TIMEOUT_END_2ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
                 EndBattleGround(TEAM_NONE);
             }
         } 
@@ -253,7 +253,7 @@ void BattleGroundSA::ResetWorldStates()
     UpdateWorldState(BG_SA_LEFT_GY_ALLIANCE , GraveyardStatus[BG_SA_LEFT_CAPTURABLE_GY] == ALLIANCE?1:0);
     UpdateWorldState(BG_SA_CENTER_GY_ALLIANCE , GraveyardStatus[BG_SA_CENTRAL_CAPTURABLE_GY] == ALLIANCE?1:0);*/
 
-    if (GetController() == ALLIANCE)
+    if (GetDefender() == ALLIANCE)
     {
         UpdateWorldState(BG_SA_ALLY_ATTACKS, 1);
         UpdateWorldState(BG_SA_HORDE_ATTACKS, 0);
@@ -379,7 +379,7 @@ void BattleGroundSA::ResetBattle(uint32 winner, Team defender)
         GateStatus[i] = 1;
 
     SetStartTime(0);
-    controller = (defender  == ALLIANCE) ?  HORDE : ALLIANCE;
+    defender = (defender  == ALLIANCE) ?  HORDE : ALLIANCE;
     relicGateDestroyed = false;
     ToggleTimer();
 
@@ -399,7 +399,7 @@ void BattleGroundSA::Reset()
     //call parent's class reset
     BattleGround::Reset();
 
-    controller = ((urand(0,1)) ? ALLIANCE : HORDE);
+    defender = ((urand(0,1)) ? ALLIANCE : HORDE);
     relicGateDestroyed = false;
 
     m_ActiveEvents[SA_EVENT_ADD_GO] = BG_EVENT_NONE;
@@ -423,7 +423,7 @@ void BattleGroundSA::UpdatePhase()
         SpawnEvent(SA_EVENT_ADD_NPC, 0, false);
         OpenDoorEvent(SA_EVENT_OP_DOOR, 0);
     }
-    if (GetController() == HORDE)
+    if (GetDefender() == HORDE)
     {
         _GydOccupied(3,HORDE);
         m_ActiveEvents[5] = BG_SA_GARVE_STATUS_HORDE_OCCUPIED;
@@ -438,7 +438,7 @@ void BattleGroundSA::UpdatePhase()
             _GydOccupied(i,HORDE);
         }
     }
-    if (GetController() == ALLIANCE)
+    if (GetDefender() == ALLIANCE)
     {
         _GydOccupied(3,ALLIANCE);
         SpawnEvent(SA_EVENT_ADD_SPIR, BG_SA_GARVE_STATUS_HORDE_OCCUPIED, false);
@@ -492,13 +492,13 @@ bool BattleGroundSA::SetupShips()
         switch (i)
         {
             case BG_SA_BOAT_ONE:
-                boatid = GetController() == ALLIANCE ? BG_SA_BOAT_ONE_H : BG_SA_BOAT_ONE_A;
+                boatid = GetDefender() == ALLIANCE ? BG_SA_BOAT_ONE_H : BG_SA_BOAT_ONE_A;
                 break;
             case BG_SA_BOAT_TWO:
-                boatid = GetController() == ALLIANCE ? BG_SA_BOAT_TWO_H : BG_SA_BOAT_TWO_A;
+                boatid = GetDefender() == ALLIANCE ? BG_SA_BOAT_TWO_H : BG_SA_BOAT_TWO_A;
                 break;
         }
-        if (!(AddObject(i, boatid, BG_SA_START_LOCATIONS[i + 5][0], BG_SA_START_LOCATIONS[i + 5][1], BG_SA_START_LOCATIONS[i + 5][2]+ (GetController() == ALLIANCE ? -3.750f: 0) , BG_SA_START_LOCATIONS[i + 5][3], 0, 0, 0, 0, RESPAWN_ONE_DAY)))
+        if (!(AddObject(i, boatid, BG_SA_START_LOCATIONS[i + 5][0], BG_SA_START_LOCATIONS[i + 5][1], BG_SA_START_LOCATIONS[i + 5][2]+ (GetDefender() == ALLIANCE ? -3.750f: 0) , BG_SA_START_LOCATIONS[i + 5][3], 0, 0, 0, 0, RESPAWN_ONE_DAY)))
         {
             sLog.outError("SA_ERROR: Can't spawn ships!");
             return false;
@@ -604,7 +604,7 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
         sound = (teamIndex == BG_TEAM_ALLIANCE) ? BG_SA_SOUND_GYD_ASSAULTED_ALLIANCE : BG_SA_SOUND_GYD_ASSAULTED_HORDE;
     }
     // If node is occupied, change to enemy-contested
-    else if (controller == HORDE)
+    else if (defender == HORDE)
     {
         if (m_Gyd[gyd] == BG_SA_GARVE_STATUS_HORDE_OCCUPIED)
         {
@@ -629,7 +629,7 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
             sound = (teamIndex == BG_TEAM_ALLIANCE) ? BG_SA_SOUND_GYD_ASSAULTED_ALLIANCE : BG_SA_SOUND_GYD_ASSAULTED_HORDE;
         }
     }
-    else if (controller == ALLIANCE)
+    else if (defender == ALLIANCE)
     {
         if (m_Gyd[gyd] == BG_SA_GARVE_STATUS_ALLY_OCCUPIED)
         {
@@ -659,7 +659,7 @@ void BattleGroundSA::EventPlayerClickedOnFlag(Player *source, GameObject* target
 
 void BattleGroundSA::EventSpawnGOSA(Player *owner, Creature* obj, float x, float y, float z)
 {
-	SendMessageToAll(LANG_BG_SA_INSTALL_BOMB, (controller == ALLIANCE) ? CHAT_MSG_BG_SYSTEM_HORDE : CHAT_MSG_BG_SYSTEM_ALLIANCE , owner);
+	SendMessageToAll(LANG_BG_SA_INSTALL_BOMB, (defender == ALLIANCE) ? CHAT_MSG_BG_SYSTEM_HORDE : CHAT_MSG_BG_SYSTEM_ALLIANCE , owner);
 }
 
 void BattleGroundSA::SendMessageSA(Player *player, uint32 type, uint32 name)
@@ -832,7 +832,7 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
         }
         case BG_SA_GO_TITAN_RELIC:
         {
-            if (eventId == 22097 && player->GetTeam() != GetController())
+            if (eventId == 22097 && player->GetTeam() != GetDefender())
             {
                 if(!relicGateDestroyed)
                 {
@@ -843,14 +843,14 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                 if(Phase == SA_ROUND_ONE) // Victory at first round
                 {
                     PlaySoundToAll(BG_SA_SOUND_GYD_VICTORY);
-                    SendMessageToAll(controller == ALLIANCE ? LANG_BG_SA_ALLIANCE_END_1ROUND : LANG_BG_SA_ALLIANCE_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                    SendMessageToAll(defender == HORDE ? LANG_BG_SA_ALLIANCE_END_1ROUND : LANG_BG_SA_ALLIANCE_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
                     RewardHonorToTeam(150, (teamIndex == 0) ? ALLIANCE:HORDE);
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 100, (teamIndex == 0) ? ALLIANCE:HORDE);
-                    ResetBattle(player->GetTeam(), GetController());
+                    ResetBattle(player->GetTeam(), GetDefender());
                 }
                 else // Victory at second round
                 {
-                    SendMessageToAll(controller == ALLIANCE ? LANG_BG_SA_ALLIANCE_END_2ROUND : LANG_BG_SA_HORDE_END_2ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                    SendMessageToAll(defender == HORDE ? LANG_BG_SA_ALLIANCE_END_2ROUND : LANG_BG_SA_HORDE_END_2ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
                     RewardHonorToTeam(150, (teamIndex == 0) ? ALLIANCE:HORDE);
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 100, (teamIndex == 0) ? ALLIANCE:HORDE);
                     EndBattleGround(player->GetTeam());
@@ -936,14 +936,14 @@ WorldSafeLocsEntry const* BattleGroundSA::GetClosestGraveYard(Player* player)
     // If not, place ghost on starting location
     if (!good_entry)
     {
-        if (GetController() == HORDE)
+        if (GetDefender() == HORDE)
         {
             if (teamIndex == 0)
                 good_entry = sWorldSafeLocsStore.LookupEntry(BG_SA_GraveyardIds[1]);
             else
                 good_entry = sWorldSafeLocsStore.LookupEntry(BG_SA_GraveyardIds[0]);
         }
-        if (GetController() == ALLIANCE)
+        if (GetDefender() == ALLIANCE)
         {
             if (teamIndex == 0)
                 good_entry = sWorldSafeLocsStore.LookupEntry(BG_SA_GraveyardIds[0]);
@@ -1069,7 +1069,7 @@ void BattleGroundSA::TeleportPlayerToCorrectLoc(Player *plr, bool resetBattle)
 
     if (!shipsStarted)
     {
-        if (plr->GetTeam() != GetController())
+        if (plr->GetTeam() != GetDefender())
         {
             plr->CastSpell(plr,12438,true);//Without this player falls before boat loads...
 
@@ -1084,7 +1084,7 @@ void BattleGroundSA::TeleportPlayerToCorrectLoc(Player *plr, bool resetBattle)
     }
     else
     {
-        if (plr->GetTeam() != GetController())
+        if (plr->GetTeam() != GetDefender())
             plr->TeleportTo(607, 1600.381f, -106.263f, 8.8745f, 3.78f, 0);
         else
             plr->TeleportTo(607, 1209.7f, -65.16f, 70.1f, 0.0f, 0);
@@ -1142,14 +1142,14 @@ uint32 BattleGroundSA::GetCorrectFactionSA(uint8 vehicleType) const
         {
             case VEHICLE_SA_DEMOLISHER:
             {
-                if (GetController() == ALLIANCE)
+                if (GetDefender() == ALLIANCE)
                     return VEHICLE_FACTION_HORDE;
                 else
                     return VEHICLE_FACTION_ALLIANCE;
             }
             case VEHICLE_SA_CANNON:
             {
-                if (GetController() == ALLIANCE)
+                if (GetDefender() == ALLIANCE)
                     return VEHICLE_FACTION_ALLIANCE;
                 else
                     return VEHICLE_FACTION_HORDE;
