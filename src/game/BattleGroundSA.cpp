@@ -230,7 +230,7 @@ void BattleGroundSA::Update(uint32 diff)
         }
         UpdateTimer();
     }
-    if (GetStatus() == STATUS_WAIT_JOIN && Phase == 2) // Round two, not yet started
+    if (GetStatus() == STATUS_WAIT_JOIN && Phase == SA_ROUND_TWO) // Round two, not yet started
     {
         if (!shipsStarted)
             if (shipsTimer <= diff)
@@ -435,30 +435,18 @@ void BattleGroundSA::UpdatePhase()
         SpawnEvent(SA_EVENT_ADD_BOMB, 1, false);
         SpawnEvent(SA_EVENT_ADD_NPC, 0, false);
         OpenDoorEvent(SA_EVENT_OP_DOOR, 0);
-    }
-    if (GetDefender() == HORDE)
-    {
-        _GydOccupied(3,HORDE);
-        m_ActiveEvents[5] = BG_SA_GARVE_STATUS_HORDE_OCCUPIED;
         SpawnEvent(SA_EVENT_ADD_BOMB, 0, true);
-        for (uint8 i = 0; i < BG_SA_GRY_MAX; ++i)
-        {
-            m_prevGyd[i] = 0;
-            m_GydTimers[i] = 0;
-            m_BannerTimers[i].timer = 0;
-            m_Gyd[i] = BG_SA_GARVE_STATUS_HORDE_OCCUPIED;
-            m_ActiveEvents[i] = BG_SA_GARVE_STATUS_HORDE_OCCUPIED;
-            _GydOccupied(i,HORDE);
-        }
     }
-    if (GetDefender() == ALLIANCE)
+
+    _GydOccupied(3,GetDefender());
+
+    if(Phase == SA_ROUND_ONE)
     {
-        _GydOccupied(3,ALLIANCE);
         SpawnEvent(SA_EVENT_ADD_SPIR, BG_SA_GARVE_STATUS_HORDE_OCCUPIED, false);
         SpawnEvent(SA_EVENT_ADD_SPIR, BG_SA_GARVE_STATUS_ALLY_OCCUPIED, true);
-        m_ActiveEvents[5] = BG_SA_GARVE_STATUS_ALLY_OCCUPIED;
-        SpawnEvent(SA_EVENT_ADD_BOMB, 1, true);
-        SpawnEvent(SA_EVENT_ADD_NPC, 0, true);
+
+        m_ActiveEvents[5] = GetDefender() == ALLIANCE ? BG_SA_GARVE_STATUS_ALLY_OCCUPIED : BG_SA_GARVE_STATUS_HORDE_OCCUPIED;
+
         for (uint8 i = 0; i < BG_SA_GRY_MAX; ++i)
         {
             for (uint8 z = 1; z < 5; ++z)
@@ -468,11 +456,15 @@ void BattleGroundSA::UpdatePhase()
             m_GydTimers[i] = 0;
             m_BannerTimers[i].timer = 0;
             SpawnEvent(i, 3, true); 
-            m_Gyd[i] = BG_SA_GARVE_STATUS_ALLY_OCCUPIED;
-            m_ActiveEvents[i] = BG_SA_GARVE_STATUS_ALLY_OCCUPIED;
-            _GydOccupied(i,ALLIANCE);
+            m_Gyd[i] = GetDefender() == ALLIANCE ? BG_SA_GARVE_STATUS_ALLY_OCCUPIED : BG_SA_GARVE_STATUS_HORDE_OCCUPIED;
+            m_ActiveEvents[i] = GetDefender() == ALLIANCE ? BG_SA_GARVE_STATUS_ALLY_OCCUPIED : BG_SA_GARVE_STATUS_HORDE_OCCUPIED;
+            _GydOccupied(i,GetDefender());
         }
+
+        SpawnEvent(SA_EVENT_ADD_BOMB, 1, true);
+        SpawnEvent(SA_EVENT_ADD_NPC, 0, true);
     }
+
 
     for (uint32 z = 0; z <= BG_SA_GATE_MAX; ++z)
         UpdateWorldState(BG_SA_GateStatus[z], GateStatus[z]);
