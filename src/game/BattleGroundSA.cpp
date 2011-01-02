@@ -1135,10 +1135,18 @@ void BattleGroundSA::SendTransportsRemove(Player * player)
     if (GetBGObject(BG_SA_BOAT_ONE) || GetBGObject(BG_SA_BOAT_TWO))
     {
         UpdateData transData;
-        if (GetBGObject(BG_SA_BOAT_ONE))
-            GetBGObject(BG_SA_BOAT_ONE)->BuildOutOfRangeUpdateBlock(&transData);
-        if (GetBGObject(BG_SA_BOAT_TWO))
-            GetBGObject(BG_SA_BOAT_TWO)->BuildOutOfRangeUpdateBlock(&transData);
+        if (GameObject * boat1 = GetBGObject(BG_SA_BOAT_ONE))
+        {
+            boat1->BuildOutOfRangeUpdateBlock(&transData);
+            boat1->SetRespawnTime(0);
+            boat1->Delete();
+        }
+        if (GameObject * boat2 = GetBGObject(BG_SA_BOAT_TWO))
+        {
+            boat2->BuildOutOfRangeUpdateBlock(&transData);
+            boat2->SetRespawnTime(0);
+            boat2->Delete();
+        }
         WorldPacket packet;
         transData.BuildPacket(&packet);
         player->GetSession()->SendPacket(&packet);
