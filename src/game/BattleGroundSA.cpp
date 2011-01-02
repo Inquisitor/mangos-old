@@ -50,7 +50,7 @@ BattleGroundSA::BattleGroundSA()
     for (int32 i = 0; i <= BG_SA_GATE_MAX; ++i)
         GateStatus[i] = 1;
     TimerEnabled = false;
-    TimeST2Round = 60000;
+    TimeST2Round = 120000;
     Round_timer = 0;
     Phase = 1;
 }
@@ -244,6 +244,7 @@ void BattleGroundSA::Update(uint32 diff)
         {
             Phase = 2;
             OpenDoorEvent(SA_EVENT_OP_DOOR, 0);
+            SpawnEvent(SA_EVENT_ADD_NPC, 0, true);
             ToggleTimer();
             SetStatus(STATUS_IN_PROGRESS); // Start round two
             PlaySoundToAll(SOUND_BG_START);
@@ -266,7 +267,7 @@ void BattleGroundSA::ResetWorldStates()
     UpdateWorldState(BG_SA_LEFT_GY_ALLIANCE , GraveyardStatus[BG_SA_LEFT_CAPTURABLE_GY] == ALLIANCE?1:0);
     UpdateWorldState(BG_SA_CENTER_GY_ALLIANCE , GraveyardStatus[BG_SA_CENTRAL_CAPTURABLE_GY] == ALLIANCE?1:0);*/
 
-    if (GetDefender() == ALLIANCE)
+    if (GetDefender() == HORDE)
     {
         UpdateWorldState(BG_SA_ALLY_ATTACKS, 1);
         UpdateWorldState(BG_SA_HORDE_ATTACKS, 0);
@@ -427,6 +428,8 @@ void BattleGroundSA::Reset()
 
 void BattleGroundSA::UpdatePhase()
 {
+    ResetWorldStates();
+
     if (Phase == SA_ROUND_TWO)
     {
         SpawnEvent(SA_EVENT_ADD_VECH_E, 0, false);
@@ -462,18 +465,18 @@ void BattleGroundSA::UpdatePhase()
         }
 
         SpawnEvent(SA_EVENT_ADD_BOMB, 1, true);
-        SpawnEvent(SA_EVENT_ADD_NPC, 0, true);
+        //SpawnEvent(SA_EVENT_ADD_NPC, 0, true);
     }
 
-
-    for (uint32 z = 0; z <= BG_SA_GATE_MAX; ++z)
-        UpdateWorldState(BG_SA_GateStatus[z], GateStatus[z]);
+    // We already do it at ResetWorldStates
+    /*for (uint32 z = 0; z <= BG_SA_GATE_MAX; ++z)
+        UpdateWorldState(BG_SA_GateStatus[z], GateStatus[z]);*/
 
     if (Phase == SA_ROUND_TWO)
     {
         Round_timer = 0;
         SetStatus(STATUS_WAIT_JOIN);
-        SendMessageToAll(LANG_BG_SA_START_ONE_MINUTE, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+        SendMessageToAll(LANG_BG_SA_START_TWO_MINUTE, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
     }
 
     SpawnEvent(SA_EVENT_ADD_GO, 0, false);
@@ -850,7 +853,7 @@ void BattleGroundSA::EventPlayerDamageGO(Player *player, GameObject* target_obj,
                     RoundScores[0].winner = GetDefender() == ALLIANCE ? HORDE : ALLIANCE;
                     RoundScores[0].time = Round_timer;
                     PlaySoundToAll(BG_SA_SOUND_GYD_VICTORY);
-                    SendMessageToAll(defender == HORDE ? LANG_BG_SA_ALLIANCE_END_1ROUND : LANG_BG_SA_ALLIANCE_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
+                    SendMessageToAll(defender == HORDE ? LANG_BG_SA_ALLIANCE_END_1ROUND : LANG_BG_SA_HORDE_END_1ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
                     RewardHonorToTeam(150, (teamIndex == 0) ? ALLIANCE:HORDE);
                     RewardReputationToTeam((teamIndex == 0) ? 1050:1085, 100, (teamIndex == 0) ? ALLIANCE:HORDE);
                     ResetBattle(player->GetTeam(), GetDefender());
