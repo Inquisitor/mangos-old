@@ -123,7 +123,6 @@ void BattleGroundSA::EndBattleGround(Team winner)
     else
         winner = RoundScores[1].winner == ALLIANCE ? ALLIANCE : HORDE;
 
-
     //win reward
     if(winner)
     {
@@ -383,7 +382,7 @@ void BattleGroundSA::VirtualUpdatePlayerScore(Player* Source, uint32 type, uint3
     }
 }
 
-void BattleGroundSA::ResetBattle(uint32 winner, Team defender)
+void BattleGroundSA::ResetBattle(uint32 winner, Team teamDefending)
 {
     Phase = SA_ROUND_TWO;
     shipsTimer = 60000;
@@ -393,7 +392,7 @@ void BattleGroundSA::ResetBattle(uint32 winner, Team defender)
         GateStatus[i] = 1;
 
     SetStartTime(0);
-    defender = (defender  == ALLIANCE) ?  HORDE : ALLIANCE;
+    defender = (teamDefending  == ALLIANCE) ?  HORDE : ALLIANCE;
     relicGateDestroyed = false;
     ToggleTimer();
 

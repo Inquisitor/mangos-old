@@ -67,21 +67,6 @@ enum BG_SA_WorldStates
     BG_SA_BONUS_TIMER           = 0xdf3,
     BG_SA_ENABLE_TIMER          = 3564,
 };
-/*
-enum BG_SA_WorldStates
-{
-    BG_SA_BONUS_TIMER                       = 3571, //bonus timer (1 - on, 0 - off)
-    BG_SA_ENABLE_TIMER                      = 3564,
-    BG_SA_TIMER_SEC                         = 3561, //C
-    BG_SA_TIMER_10SEC                       = 3560, //B
-    BG_SA_TIMER_MINUTES                     = 3559, //A
-    BG_SA_S_GRRAVE_YARD_A_CONTROL           = 3637, //South g - Horde control
-    BG_SA_W_GRRAVE_YARD_A_CONTROL           = 3635, //West g - Horde control
-    BG_SA_E_GRRAVE_YARD_A_CONTROL           = 3636, //East g - Horde control
-    BG_SA_S_GRRAVE_YARD_H_CONTROL           = 3634, //South g - Alliance control
-    BG_SA_W_GRRAVE_YARD_H_CONTROL           = 3633, //West g - Alliance control
-    BG_SA_E_GRRAVE_YARD_H_CONTROL           = 3632, //East g - Alliance control
-};*/
 
 static int32 GrraveYardWS[3][2]=
 {
@@ -289,7 +274,7 @@ class BattleGroundSA : public BattleGround
         void RemovePlayer(Player *plr, ObjectGuid guid);
         void HandleAreaTrigger(Player *Source, uint32 Trigger);
         void EndBattleGround(Team winner);
-        void ResetBattle(uint32 winner, Team defender);
+        void ResetBattle(uint32 winner, Team teamDefending);
         bool SetupBattleGround();
         void SendMessageSA(Player *player, uint32 type, uint32 name);
         void UpdateTimer();
