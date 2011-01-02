@@ -32,6 +32,21 @@
 #include <openssl/crypto.h>
 #include <ace/Version.h>
 #include <ace/Get_Opt.h>
+#include <execinfo.h> // for crash handler -- Inqui
+#include <signal.h>   // for crash handler -- Inqui
+
+void handler(int sig) { // for crash handler -- Inqui
+  void *array[50];
+  size_t size;
+    
+  // get void*'s for all entries on the stack
+  size = backtrace(array, 50);
+ 	
+  // print out all the frames to stderr
+  fprintf(stdout, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, 1);
+  exit(1);
+}
 
 #ifdef WIN32
 #include "ServiceWin32.h"
@@ -71,6 +86,8 @@ void usage(const char *prog)
 /// Launch the mangos server
 extern int main(int argc, char **argv)
 {
+    signal(SIGSEGV, handler);   // install crash handler -- Inqui
+    
     // - Construct Memory Manager Instance
     MaNGOS::Singleton<MemoryManager>::Instance();
 
