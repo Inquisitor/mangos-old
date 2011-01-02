@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -143,7 +143,7 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
     passenger->m_movementInfo.AddMovementFlag(MOVEFLAG_ONTRANSPORT);
     passenger->m_movementInfo.SetTransportData(m_pBase->GetGUID(),
         seatInfo->m_attachmentOffsetX, seatInfo->m_attachmentOffsetY, seatInfo->m_attachmentOffsetZ,
-        seatInfo->m_passengerYaw, getMSTime(), seat->first, seatInfo);
+        seatInfo->m_passengerYaw, WorldTimer::getMSTime(), seat->first, seatInfo);
 
     if (passenger->GetTypeId() == TYPEID_PLAYER)
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -158,7 +158,7 @@ void PlayerTaxi::InitTaxiNodesForLevel(uint32 race, uint32 chrClass, uint32 leve
         case RACE_DWARF:    SetTaximaskNode(6);  break;     // Dwarf
         case RACE_NIGHTELF: SetTaximaskNode(26);
                             SetTaximaskNode(27); break;     // Night Elf
-        case RACE_UNDEAD_PLAYER: SetTaximaskNode(11); break;// Undead
+        case RACE_UNDEAD:   SetTaximaskNode(11); break;     // Undead
         case RACE_TAUREN:   SetTaximaskNode(22); break;     // Tauren
         case RACE_GNOME:    SetTaximaskNode(6);  break;     // Gnome
         case RACE_TROLL:    SetTaximaskNode(23); break;     // Troll
@@ -1191,7 +1191,7 @@ void Player::SetDrunkValue(uint16 newDrunkenValue, uint32 itemId)
     SendMessageToSet(&data, true);
 }
 
-void Player::Update( uint32 p_time )
+void Player::Update( uint32 update_diff, uint32 p_time )
 {
     if(!IsInWorld())
         return;
@@ -1211,25 +1211,25 @@ void Player::Update( uint32 p_time )
 
     //used to implement delayed far teleports
     SetCanDelayTeleport(true);
-    Unit::Update( p_time );
+    Unit::Update( update_diff, p_time );
     SetCanDelayTeleport(false);
 
     // update player only attacks
     if(uint32 ranged_att = getAttackTimer(RANGED_ATTACK))
     {
-        setAttackTimer(RANGED_ATTACK, (p_time >= ranged_att ? 0 : ranged_att - p_time) );
+        setAttackTimer(RANGED_ATTACK, (update_diff >= ranged_att ? 0 : ranged_att - update_diff) );
     }
 
     if(uint32 off_att = getAttackTimer(OFF_ATTACK))
     {
-        setAttackTimer(OFF_ATTACK, (p_time >= off_att ? 0 : off_att - p_time) );
+        setAttackTimer(OFF_ATTACK, (update_diff >= off_att ? 0 : off_att - update_diff) );
     }
 
     time_t now = time (NULL);
 
     UpdatePvPFlag(now);
 
-    UpdateContestedPvP(p_time);
+    UpdateContestedPvP(update_diff);
 
     UpdateDuelFlag(now);
 
@@ -1250,7 +1250,7 @@ void Player::Update( uint32 p_time )
         while (iter != m_timedquests.end())
         {
             QuestStatusData& q_status = mQuestStatus[*iter];
-            if( q_status.m_timer <= p_time )
+            if( q_status.m_timer <= update_diff )
             {
                 uint32 quest_id  = *iter;
                 ++iter;                                     // current iter will be removed in FailQuest
@@ -1258,7 +1258,7 @@ void Player::Update( uint32 p_time )
             }
             else
             {
-                q_status.m_timer -= p_time;
+                q_status.m_timer -= update_diff;
                 if (q_status.uState != QUEST_NEW) q_status.uState = QUEST_CHANGED;
                 ++iter;
             }
@@ -1363,23 +1363,23 @@ void Player::Update( uint32 p_time )
 
     if (m_regenTimer)
     {
-        if(p_time >= m_regenTimer)
+        if(update_diff >= m_regenTimer)
             m_regenTimer = 0;
         else
-            m_regenTimer -= p_time;
+            m_regenTimer -= update_diff;
     }
 
     if (m_weaponChangeTimer > 0)
     {
-        if(p_time >= m_weaponChangeTimer)
+        if(update_diff >= m_weaponChangeTimer)
             m_weaponChangeTimer = 0;
         else
-            m_weaponChangeTimer -= p_time;
+            m_weaponChangeTimer -= update_diff;
     }
 
     if (m_zoneUpdateTimer > 0)
     {
-        if(p_time >= m_zoneUpdateTimer)
+        if(update_diff >= m_zoneUpdateTimer)
         {
             uint32 newzone, newarea;
             GetZoneAndAreaId(newzone,newarea);
@@ -1397,15 +1397,15 @@ void Player::Update( uint32 p_time )
             }
         }
         else
-            m_zoneUpdateTimer -= p_time;
+            m_zoneUpdateTimer -= update_diff;
     }
 
     if (m_timeSyncTimer > 0)
     {
-        if(p_time >= m_timeSyncTimer)
+        if(update_diff >= m_timeSyncTimer)
             SendTimeSync();
         else
-            m_timeSyncTimer -= p_time;
+            m_timeSyncTimer -= update_diff;
     }
 
     if (isAlive())
@@ -1427,29 +1427,29 @@ void Player::Update( uint32 p_time )
 
     if(m_nextSave > 0)
     {
-        if(p_time >= m_nextSave)
+        if(update_diff >= m_nextSave)
         {
             // m_nextSave reseted in SaveToDB call
             SaveToDB();
             DETAIL_LOG("Player '%s' (GUID: %u) saved", GetName(), GetGUIDLow());
         }
         else
-            m_nextSave -= p_time;
+            m_nextSave -= update_diff;
     }
 
     //Handle Water/drowning
-    HandleDrowning(p_time);
+    HandleDrowning(update_diff);
 
     //Handle detect stealth players
     if (m_DetectInvTimer > 0)
     {
-        if (p_time >= m_DetectInvTimer)
+        if (update_diff >= m_DetectInvTimer)
         {
             HandleStealthedUnitsDetection();
             m_DetectInvTimer = 3000;
         }
         else
-            m_DetectInvTimer -= p_time;
+            m_DetectInvTimer -= update_diff;
     }
 
     // Played time
@@ -1463,7 +1463,7 @@ void Player::Update( uint32 p_time )
 
     if (m_drunk)
     {
-        m_drunkTimer += p_time;
+        m_drunkTimer += update_diff;
 
         if (m_drunkTimer > 10*IN_MILLISECONDS)
             HandleSobering();
@@ -1482,8 +1482,8 @@ void Player::Update( uint32 p_time )
             m_deathTimer -= p_time;
     }
 
-    UpdateEnchantTime(p_time);
-    UpdateHomebindTime(p_time);
+    UpdateEnchantTime(update_diff);
+    UpdateHomebindTime(update_diff);
 
     // group update
     SendUpdateToOutOfRangeGroupMembers();
@@ -5994,6 +5994,16 @@ void Player::SendActionButtons(uint32 state) const
 
     GetSession()->SendPacket( &data );
     DETAIL_LOG( "Action Buttons for '%u' spec '%u' Initialized", GetGUIDLow(), m_activeSpec );
+}
+
+void Player::SendLockActionButtons() const
+{
+    DETAIL_LOG( "Locking Action Buttons for '%u' spec '%u'", GetGUIDLow(), m_activeSpec);
+    WorldPacket data(SMSG_ACTION_BUTTONS, 1);
+    // sending 2 locks actions bars, neither user can remove buttons, nor client removes buttons at spell unlearn
+    // they remain locked until server sends new action buttons
+    data << uint8(2);
+    GetSession()->SendPacket( &data );
 }
 
 bool Player::IsActionButtonDataValid(uint8 button, uint32 action, uint8 type, Player* player, bool msg)
@@ -12997,7 +13007,7 @@ void Player::PrepareGossipMenu(WorldObject *pSource, uint32 menuId)
                 }
                 case GOSSIP_OPTION_TRAINER:
                     // pet trainers not have spells in fact now
-                    /* FIXME: gossip menu with single unlearn pet talents option not show by some reason 
+                    /* FIXME: gossip menu with single unlearn pet talents option not show by some reason
                     if (pCreature->GetCreatureInfo()->trainer_type == TRAINER_TYPE_PETS)
                         hasMenuItem = false;
                     else */
@@ -13013,7 +13023,7 @@ void Player::PrepareGossipMenu(WorldObject *pSource, uint32 menuId)
                         hasMenuItem = false;
                     break;
                 case GOSSIP_OPTION_UNLEARNPETSKILLS:
-                    if (pCreature->GetCreatureInfo()->trainer_type != TRAINER_TYPE_PETS || pCreature->GetCreatureInfo()->trainer_class != CLASS_HUNTER) 
+                    if (pCreature->GetCreatureInfo()->trainer_type != TRAINER_TYPE_PETS || pCreature->GetCreatureInfo()->trainer_class != CLASS_HUNTER)
                         hasMenuItem = false;
                     else if (Pet * pet = GetPet())
                     {
@@ -14004,6 +14014,21 @@ void Player::RewardQuest(Quest const *pQuest, uint32 reward, Object* questGiver,
 
     if (announce)
         SendQuestReward(pQuest, XP, questGiver);
+
+    bool handled = false;
+
+    switch(questGiver->GetTypeId())
+    {
+        case TYPEID_UNIT:
+            handled = sScriptMgr.OnQuestRewarded(this, (Creature*)questGiver, pQuest);
+            break;
+        case TYPEID_GAMEOBJECT:
+            handled = sScriptMgr.OnQuestRewarded(this, (GameObject*)questGiver, pQuest);
+            break;
+    }
+
+    if (!handled && pQuest->GetQuestCompleteScript() != 0)
+        GetMap()->ScriptsStart(sQuestEndScripts, pQuest->GetQuestCompleteScript(), questGiver, this);
 
     // cast spells after mark quest complete (some spells have quest completed state reqyurements in spell_area data)
     if (pQuest->GetRewSpellCast() > 0)
@@ -15075,9 +15100,6 @@ void Player::SendQuestReward( Quest const *pQuest, uint32 XP, Object * questGive
     data << uint32(pQuest->GetBonusTalents());              // bonus talents
     data << uint32(0);                                      // arena points
     GetSession()->SendPacket( &data );
-
-    if (pQuest->GetQuestCompleteScript() != 0)
-        GetMap()->ScriptsStart(sQuestEndScripts, pQuest->GetQuestCompleteScript(), questGiver, this);
 }
 
 void Player::SendQuestFailed( uint32 quest_id, InventoryChangeFailure reason)
@@ -21490,6 +21512,99 @@ void Player::ApplyGlyphs(bool apply)
         ApplyGlyph(i,apply);
 }
 
+/*
+void Player::EnterVehicle(Vehicle *vehicle)
+{
+    VehicleEntry const *ve = sVehicleStore.LookupEntry(vehicle->GetVehicleId());
+    if(!ve)
+        return;
+
+    VehicleSeatEntry const *veSeat = sVehicleSeatStore.LookupEntry(ve->m_seatID[0]);
+    if(!veSeat)
+        return;
+
+    vehicle->SetCharmerGuid(GetObjectGuid());  
+    vehicle->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+    vehicle->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
+    vehicle->setFaction(getFaction());
+
+    SetCharm(vehicle);                                      // charm
+    m_camera.SetView(vehicle);                              // set view
+
+    SetClientControl(vehicle, 1);                           // redirect controls to vehicle
+    SetMover(vehicle);
+
+    WorldPacket data(SMSG_ON_CANCEL_EXPECTED_RIDE_VEHICLE_AURA, 0);
+    GetSession()->SendPacket(&data);
+
+    data.Initialize(MSG_MOVE_TELEPORT_ACK, 30);
+    data << GetPackGUID();
+    data << uint32(0);                                      // counter?
+    data << uint32(MOVEFLAG_ONTRANSPORT);                   // transport
+    data << uint16(0);                                      // special flags
+    data << uint32(WorldTimer::getMSTime());                            // time
+    data << vehicle->GetPositionX();                        // x
+    data << vehicle->GetPositionY();                        // y
+    data << vehicle->GetPositionZ();                        // z
+    data << vehicle->GetOrientation();                      // o
+    // transport part, TODO: load/calculate seat offsets
+    data << vehicle->GetObjectGuid();                       // transport guid
+    data << float(veSeat->m_attachmentOffsetX);             // transport offsetX
+    data << float(veSeat->m_attachmentOffsetY);             // transport offsetY
+    data << float(veSeat->m_attachmentOffsetZ);             // transport offsetZ
+    data << float(0);                                       // transport orientation
+    data << uint32(WorldTimer::getMSTime());                            // transport time
+    data << uint8(0);                                       // seat
+    // end of transport part
+    data << uint32(0);                                      // fall time
+    GetSession()->SendPacket(&data);
+
+    data.Initialize(SMSG_PET_SPELLS, 8+2+4+4+4*MAX_UNIT_ACTION_BAR_INDEX+1+1);
+    data << vehicle->GetObjectGuid();
+    data << uint16(0);
+    data << uint32(0);
+    data << uint32(0x00000101);
+
+    for(uint32 i = 0; i < 10; ++i)
+        data << uint16(0) << uint8(0) << uint8(i+8);
+
+    data << uint8(0);
+    data << uint8(0);
+    GetSession()->SendPacket(&data);
+}
+
+void Player::ExitVehicle(Vehicle *vehicle)
+{
+    vehicle->SetCharmerGuid(ObjectGuid());
+    vehicle->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+    vehicle->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PLAYER_CONTROLLED);
+    vehicle->setFaction((GetTeam() == ALLIANCE) ? vehicle->GetCreatureInfo()->faction_A : vehicle->GetCreatureInfo()->faction_H);
+
+    SetCharm(NULL);
+    m_camera.ResetView();
+
+    SetClientControl(vehicle, 0);
+    SetMover(NULL);
+
+    WorldPacket data(MSG_MOVE_TELEPORT_ACK, 30);
+    data << GetPackGUID();
+    data << uint32(0);                                      // counter?
+    data << uint32(MOVEFLAG_ROOT);                          // fly unk
+    data << uint16(MOVEFLAG2_UNK4);                         // special flags
+    data << uint32(WorldTimer::getMSTime());                            // time
+    data << vehicle->GetPositionX();                        // x
+    data << vehicle->GetPositionY();                        // y
+    data << vehicle->GetPositionZ();                        // z
+    data << vehicle->GetOrientation();                      // o
+    data << uint32(0);                                      // fall time
+    GetSession()->SendPacket(&data);
+
+    RemovePetActionBar();
+
+    // maybe called at dummy aura remove?
+    // CastSpell(this, 45472, true);                        // Parachute
+}
+*/
 
 bool Player::isTotalImmune()
 {
@@ -22596,7 +22711,10 @@ void Player::ActivateSpec(uint8 specNum)
     if (GetBattleGround() && GetBattleGround()->GetStatus() == STATUS_IN_PROGRESS)
         return;
 
-    SendActionButtons(2);
+    // prevent deletion of action buttons by client at spell unlearn or by player while spec change in progress
+    SendLockActionButtons();
+    // gc version:
+    //SendActionButtons(2);
     UnsummonAllTotems();
     ClearComboPointHolders(); 	
     ClearAllReactives();
@@ -22780,7 +22898,7 @@ void Player::BuildTeleportAckMsg( WorldPacket *data, float x, float y, float z, 
     *data << uint32(0);                                     // this value increments every time
     *data << uint32(m_movementInfo.GetMovementFlags());     // movement flags
     *data << uint16(0);                                     // 2.3.0
-    *data << uint32(getMSTime());                           // time
+    *data << uint32(WorldTimer::getMSTime());                           // time
     *data << x;
     *data << y;
     *data << z;
@@ -22798,7 +22916,7 @@ void Player::ResetTimeSync()
     m_timeSyncCounter = 0;
     m_timeSyncTimer = 0;
     m_timeSyncClient = 0;
-    m_timeSyncServer = getMSTime();
+    m_timeSyncServer = WorldTimer::getMSTime();
 }
 
 void Player::SendTimeSync()
@@ -22809,7 +22927,7 @@ void Player::SendTimeSync()
 
     // Schedule next sync in 10 sec
     m_timeSyncTimer = 10000;
-    m_timeSyncServer = getMSTime();
+    m_timeSyncServer = WorldTimer::getMSTime();
 }
 
 void Player::SendDuelCountdown(uint32 counter)

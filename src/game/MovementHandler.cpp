@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -278,8 +278,8 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
         GetPlayer()->GetMotionMaster()->GetCurrentMovementGeneratorType()!=FLIGHT_MOTION_TYPE &&
         Anti_TeleTimeDiff>Anti_TeleTimeIgnoreDiff)
     {
-        const uint32 CurTime=getMSTime();
-        if (getMSTimeDiff(GetPlayer()->m_anti_lastalarmtime,CurTime) > 5000)
+        const uint32 CurTime=WorldTimer::getMSTime();
+        if (WorldTimer::getMSTimeDiff(GetPlayer()->m_anti_lastalarmtime,CurTime) > 5000)
         {
             GetPlayer()->m_anti_alarmcount = 0;
         }
@@ -289,7 +289,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
         float delta_z = GetPlayer()->GetPositionZ() - movementInfo.GetPos()->z;
         float delta = sqrt(delta_x * delta_x + delta_y * delta_y); // Len of movement-vector via Pythagoras (a^2+b^2=Len^2)
         float tg_z = 0.0f; //tangens
-        float delta_t = getMSTimeDiff(GetPlayer()->m_anti_lastmovetime,CurTime);
+        float delta_t = WorldTimer::getMSTimeDiff(GetPlayer()->m_anti_lastmovetime,CurTime);
 
         GetPlayer()->m_anti_lastmovetime = CurTime;
         GetPlayer()->m_anti_MovedLen += delta;
@@ -308,7 +308,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
         {
             // Check every 500ms is a lot more advisable then 1000ms, because normal movment packet arrives every 500ms
             uint32 OldNextLenCheck=GetPlayer()->m_anti_NextLenCheck;
-            float delta_xyt=GetPlayer()->m_anti_MovedLen/(float)(getMSTimeDiff(OldNextLenCheck-500,CurTime));
+            float delta_xyt=GetPlayer()->m_anti_MovedLen/(float)(WorldTimer::getMSTimeDiff(OldNextLenCheck-500,CurTime));
             GetPlayer()->m_anti_NextLenCheck = CurTime+500;
             GetPlayer()->m_anti_MovedLen = 0.0f;
             static const float MaxDeltaXYT = 0.035f;
@@ -559,7 +559,7 @@ bool WorldSession::VerifyMovementInfo(MovementInfo const& movementInfo, ObjectGu
 
 void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo)
 {
-    movementInfo.UpdateTime(getMSTime());
+    movementInfo.UpdateTime(WorldTimer::getMSTime());
 
     Unit *mover = _player->GetMover();
 
