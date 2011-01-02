@@ -167,8 +167,8 @@ void BattleGroundSA::Update(uint32 diff)
                 SendMessageToAll(defender == ALLIANCE ? LANG_BG_SA_ALLIANCE_TIMEOUT_END_2ROUND : LANG_BG_SA_HORDE_TIMEOUT_END_2ROUND, CHAT_MSG_BG_SYSTEM_NEUTRAL, NULL);
                 RoundScores[1].winner = GetDefender();
                 RoundScores[1].time = Round_timer;
+                EndBattleGround(TEAM_NONE);
                 return;
-                //EndBattleGround(TEAM_NONE);
             }
         } 
         else 
