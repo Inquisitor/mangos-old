@@ -46,6 +46,8 @@ BattleGroundSA::BattleGroundSA()
 
     m_BgObjects.resize(BG_SA_MAXOBJ);
     shipsStarted = false;
+    isDemolisherDestroyed[0] = false; // ALLIANCE
+    isDemolisherDestroyed[1] = false; // HORDE
     shipsTimer = BG_SA_BOAT_START;
     for (int32 i = 0; i <= BG_SA_GATE_MAX; ++i)
         GateStatus[i] = 1;
@@ -345,26 +347,6 @@ void BattleGroundSA::HandleAreaTrigger(Player * /*Source*/, uint32 /*Trigger*/)
 void BattleGroundSA::UpdatePlayerScore(Player* Source, uint32 type, uint32 value)
 {
     BattleGroundScoreMap::iterator itr = m_PlayerScores.find(Source->GetGUID());
-    if(itr == m_PlayerScores.end())                         // player not found...
-        return;
-
-    switch(type)
-    {
-        case SCORE_DEMOLISHERS_DESTROYED:
-            ((BattleGroundSAScore*)itr->second)->DemolishersDestroyed += value; 
-            break;
-        case SCORE_GATES_DESTROYED:
-            ((BattleGroundSAScore*)itr->second)->GatesDestroyed += value; 
-            break;
-        default:
-            BattleGround::UpdatePlayerScore(Source,type,value);
-            break;
-    }
-}
-
-void BattleGroundSA::VirtualUpdatePlayerScore(Player* Source, uint32 type, uint32 value)
-{
-    BattleGroundScoreMap::iterator itr = m_PlayerScores.find(Source->GetObjectGuid());
     if(itr == m_PlayerScores.end())                         // player not found...
         return;
 
@@ -878,7 +860,10 @@ void BattleGroundSA::HandleKillUnit(Creature* unit, Player* killer)
         return;
 
     if(unit->GetEntry() == 28781)  //Demolisher
+    {
         UpdatePlayerScore(killer, SCORE_DEMOLISHERS_DESTROYED, 1);
+        isDemolisherDestroyed[killer->GetTeam() == HORDE ? 0 : 1] = true;
+    }
 }
 
 int32 BattleGroundSA::_GatesName(GameObject* obj)

@@ -262,7 +262,6 @@ class BattleGroundSA : public BattleGround
         virtual void EventPlayerDamageGO(Player *player, GameObject* target_obj, uint32 eventId);
         virtual void EventSpawnGOSA(Player *owner, Creature* obj, float x, float y, float z);
         virtual void FillInitialWorldStates(WorldPacket& data, uint32& count);
-        virtual void VirtualUpdatePlayerScore(Player* Source, uint32 type, uint32 value);
         virtual void EventPlayerClickedOnFlag(Player *source, GameObject* target_obj);
         virtual void HandleKillUnit(Creature* unit, Player* killer);
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(Player* player);
@@ -286,6 +285,7 @@ class BattleGroundSA : public BattleGround
         bool shipsStarted;
         bool relicGateDestroyed;
         uint32 shipsTimer;
+        bool isDemolisherDestroyed[2];
         /* Scorekeeping */
         void UpdatePlayerScore(Player *Source, uint32 type, uint32 value);
         /* For boats */
