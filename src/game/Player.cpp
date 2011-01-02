@@ -17516,7 +17516,7 @@ void Player::_SaveGlyphs()
 bool Player::CheckItemSaveQueue()
 {
     bool queueOk = true;
-    sLog.outBasic("Player::CheckItemSaveQueue() - checking queue for player %s (guid: %s)...", GetName(), GetGuidStr().c_str());
+    sLog.outBasic("%s::CheckItemSaveQueue() checking item save queue...", GetGuidStr().c_str());
     for(size_t i = 0; i < m_itemUpdateQueue.size(); ++i)
     {
         Item *item = m_itemUpdateQueue[i];
@@ -17543,7 +17543,7 @@ bool Player::CheckItemSaveQueue()
             queueOk = false;
         }
     }
-    sLog.outBasic("Player::CheckItemSaveQueue() for player %s (guid: %s) SUCCESS", GetName(), GetGuidStr().c_str());
+    sLog.outBasic("%s::CheckItemSaveQueue() checking item save queue - SUCCESS", GetGuidStr().c_str());
     return queueOk;
 }
 
