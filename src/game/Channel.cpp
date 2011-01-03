@@ -997,8 +997,8 @@ void Channel::JoinNotify(uint64 guid)
         name = "UNKNOWN";
 
     char msg[256];
-    //snprintf( ( char* )msg, 256, "JOIN %s %s\n",GetName().c_str(), name.data());
-    RASocket::raprint(msg);
+    snprintf( ( char* )msg, 256, "JOIN %s %s\n",GetName().c_str(), name.data());
+    //RASocket::raprint(msg);
 }
 
 void Channel::LeaveNotify(uint64 guid)
@@ -1015,6 +1015,6 @@ void Channel::LeaveNotify(uint64 guid)
         name = "UNKNOWN";
 
     char msg[256];
-    //snprintf( (char*)msg, 256, "PART %s %s\n",GetName().c_str(), name.data());
-    RASocket::raprint(msg);
+    snprintf( (char*)msg, 256, "PART %s %s\n",GetName().c_str(), name.data());
+    //RASocket::raprint(msg);
 }
