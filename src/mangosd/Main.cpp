@@ -32,6 +32,9 @@
 #include <openssl/crypto.h>
 #include <ace/Version.h>
 #include <ace/Get_Opt.h>
+#if PLATFORM == PLATFORM_WINDOWS
+// Not needed for Windows
+#else
 #include <execinfo.h> // for crash handler -- Inqui
 #include <signal.h>   // for crash handler -- Inqui
 
@@ -47,6 +50,7 @@ void handler(int sig) { // for crash handler -- Inqui
   backtrace_symbols_fd(array, size, 1);
   exit(1);
 }
+#endif
 
 #ifdef WIN32
 #include "ServiceWin32.h"
@@ -86,7 +90,11 @@ void usage(const char *prog)
 /// Launch the mangos server
 extern int main(int argc, char **argv)
 {
+#if PLATFORM == PLATFORM_WINDOWS
+// Not needed for Windows
+#else
     signal(SIGSEGV, handler);   // install crash handler -- Inqui
+#endif
     
     // - Construct Memory Manager Instance
     MaNGOS::Singleton<MemoryManager>::Instance();
