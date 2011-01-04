@@ -1595,7 +1595,7 @@ void GameObject::DamageTaken(Unit* pDoneBy, uint32 damage)
 
             if (pWho)
             {
-                Script->GODestroyed(pWho, this, m_goInfo->destructibleBuilding.destroyedEvent);
+                sScriptMgr.OnGameObjectDestroyed(pWho, this, m_goInfo->destructibleBuilding.destroyedEvent);
 
                 if (BattleGround *bg = pWho->GetBattleGround())
                     bg->EventPlayerDamageGO(pWho, this, m_goInfo->destructibleBuilding.destroyedEvent);

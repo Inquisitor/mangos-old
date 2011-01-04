@@ -452,7 +452,7 @@ void Unit::SendMonsterMoveJump(float NewPosX, float NewPosY, float NewPosZ, floa
     data << GetPackGUID();
     data << uint8(0);                                       // new in 3.1
     data << GetPositionX() << GetPositionY() << GetPositionZ();
-    data << uint32(getMSTime());
+    data << uint32(WorldTimer::getMSTime());
 
     data << uint8(0);                                    // unknown
 
@@ -543,7 +543,7 @@ void Unit::SendMonsterMoveTransport(WorldObject *transport, SplineType type, Spl
     data << float(transport->GetPositionX());
     data << float(transport->GetPositionY());
     data << float(transport->GetPositionZ());
-    data << uint32(getMSTime());
+    data << uint32(WorldTimer::getMSTime());
 
     data << uint8(type);                                    // spline type
 
@@ -9651,7 +9651,7 @@ DiminishingLevels Unit::GetDiminishing(DiminishingGroup group)
             return DIMINISHING_LEVEL_1;
 
         // If last spell was casted more than 15 seconds ago - reset the count.
-        if (i->stack==0 && getMSTimeDiff(i->hitTime,getMSTime()) > 15*IN_MILLISECONDS)
+        if (i->stack==0 && WorldTimer::getMSTimeDiff(i->hitTime,WorldTimer::getMSTime()) > 15*IN_MILLISECONDS)
         {
             i->hitCount = DIMINISHING_LEVEL_1;
             return DIMINISHING_LEVEL_1;

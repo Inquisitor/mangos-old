@@ -491,7 +491,7 @@ void Pet::SetDeathState(DeathState s)                       // overwrite virtual
     }
 }
 
-void Pet::Update(uint32 diff)
+void Pet::Update(uint32 update_diff, uint32 diff)
 {
     if (!IsInWorld())                               // pet already removed, just wait in remove queue, no updates
         return;
@@ -500,7 +500,7 @@ void Pet::Update(uint32 diff)
     {
         case CORPSE:
         {
-            if (m_corpseDecayTimer <= diff)
+            if (m_corpseDecayTimer <= update_diff)
             {
                 MANGOS_ASSERT(getPetType()!=SUMMON_PET && "Must be already removed.");
                 Unsummon(PET_SAVE_NOT_IN_SLOT);             //hunters' pets never get removed because of death, NEVER!

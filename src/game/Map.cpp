@@ -2941,7 +2941,7 @@ void Map::ScriptsProcess()
                 }
 
                 Creature *pCreature = (Creature*)target;
-                pCreature->UpdateEntry(step.script->set_entry.entry, ALLIANCE, 0, step.script->set_entry.keep_stat ? true : false);
+                pCreature->UpdateEntry(step.script->set_entry.entry, ALLIANCE, 0, 0, step.script->set_entry.keep_stat ? true : false);
             }
             case SCRIPT_COMMAND_SET_RUN:
             {
