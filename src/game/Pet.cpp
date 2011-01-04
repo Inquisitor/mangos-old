@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2010 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -519,7 +519,7 @@ void Pet::Update(uint32 diff)
                 return;
             }
 
-            if (isControlled() && !IsWithinDistInMap(owner, GetMap()->GetVisibilityDistance()) && GetEntry() != 4277) // Eye of kilrogg should _never_ disappear when out of range
+            if (isControlled() && !IsWithinDistInMap(owner, GetMap()->GetVisibilityDistance()))
             {
                 DEBUG_LOG("Pet %d lost control, removed. Owner = %d, distance = %d, pet GUID = ", GetGUID(),owner->GetGUID(), GetDistance2d(owner), owner->GetPetGuid().GetCounter());
                 Unsummon(PET_SAVE_REAGENTS);
@@ -546,18 +546,18 @@ void Pet::Update(uint32 diff)
 
             if (m_duration > 0)
             {
-                if(m_duration > (int32)diff)
-                    m_duration -= (int32)diff;
+                if(m_duration > (int32)update_diff)
+                    m_duration -= (int32)update_diff;
                 else
                 {
                     DEBUG_LOG("Pet %d removed with duration expired.", GetGUID());
-                    Unsummon(getPetType() != SUMMON_PET ? PET_SAVE_AS_DELETED : PET_SAVE_NOT_IN_SLOT, owner);
+                    Unsummon(PET_SAVE_AS_DELETED, owner);
                     return;
                 }
             }
 
             //regenerate focus for hunter pets or energy for deathknight's ghoul
-            if(m_regenTimer <= diff)
+            if(m_regenTimer <= update_diff)
             {
                 Regenerate(getPowerType(), REGEN_TIME_FULL);
                 m_regenTimer = REGEN_TIME_FULL;
@@ -569,7 +569,7 @@ void Pet::Update(uint32 diff)
                     RegenerateHealth(REGEN_TIME_FULL);
             }
             else
-                m_regenTimer -= diff;
+                m_regenTimer -= update_diff;
 
             break;
         }
@@ -584,7 +584,7 @@ void Pet::Update(uint32 diff)
     };
 
     if (IsInWorld())
-        Creature::Update(diff);
+        Creature::Update(update_diff, diff);
 }
 
 HappinessState Pet::GetHappinessState()
@@ -665,11 +665,14 @@ void Pet::Unsummon(PetSaveMode mode, Unit* owner /*= NULL*/)
 
             // Special way for remove cooldown if SPELL_ATTR_DISABLED_WHILE_ACTIVE
             if (spellInfo && spellInfo->Attributes & SPELL_ATTR_DISABLED_WHILE_ACTIVE)
+            {
                 p_owner->SendCooldownEvent(spellInfo);
+            }
 
             if (mode == PET_SAVE_REAGENTS)
             {
                 //returning of reagents only for players, so best done here
+
                 if (spellInfo)
                 {
                     for(uint32 i = 0; i < MAX_SPELL_REAGENTS; ++i)
@@ -2129,19 +2132,6 @@ void Pet::ApplyStatScalingBonus(Stats stat, bool apply)
 
     int32 basePoints = int32(m_baseBonusData->statScale[stat] * (CalculateScalingData()->statScale[stat] / 100.0f));
 
-    if(stat == STAT_STAMINA)
-    {
-        PetSpellMap::const_iterator itr = m_spells.find(62758);    //Wild Hunt rank 1
-        if (itr == m_spells.end())
-            itr = m_spells.find(62762);                            //Wild Hunt rank 2
-
-        if (itr != m_spells.end())                                 // If pet has Wild Hunt
-        {
-            SpellEntry const* sProto = sSpellStore.LookupEntry(itr->first); // Then get the SpellProto and add the dummy effect value
-            basePoints += basePoints * sProto->CalculateSimpleValue(EFFECT_INDEX_0) / 100;
-        }
-    }
-
     bool needRecalculateStat = false;
 
     if (basePoints == 0)
@@ -2305,20 +2295,8 @@ void Pet::ApplyAttackPowerScalingBonus(bool apply)
             break;
         }
         case HUNTER_PET:
-        {
             newAPBonus = owner->GetTotalAttackPowerValue(RANGED_ATTACK);
-
-            PetSpellMap::const_iterator itr = m_spells.find(62758);    //Wild Hunt rank 1
-            if (itr == m_spells.end())
-                itr = m_spells.find(62762);                            //Wild Hunt rank 2
-
-            if (itr != m_spells.end())                                 // If pet has Wild Hunt
-            {
-                SpellEntry const* sProto = sSpellStore.LookupEntry(itr->first); // Then get the SpellProto and add the dummy effect value
-                newAPBonus += newAPBonus * sProto->CalculateSimpleValue(EFFECT_INDEX_1) / 100;
-            }
             break;
-        }
         default:
             newAPBonus = 0;
             break;
