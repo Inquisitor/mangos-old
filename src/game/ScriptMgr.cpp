@@ -1117,6 +1117,7 @@ ScriptLoadResult ScriptMgr::LoadScriptLibrary(const char* libName)
     GET_SCRIPT_HOOK_PTR(m_pOnGOGossipSelect,           "GOGossipSelect");
     GET_SCRIPT_HOOK_PTR(m_pOnGossipSelectWithCode,     "GossipSelectWithCode");
     GET_SCRIPT_HOOK_PTR(m_pOnGOGossipSelectWithCode,   "GOGossipSelectWithCode");
+    GET_SCRIPT_HOOK_PTR(m_pOnGODestroyed,              "GODestroyed");
     GET_SCRIPT_HOOK_PTR(m_pOnQuestAccept,              "QuestAccept");
     GET_SCRIPT_HOOK_PTR(m_pOnGOQuestAccept,            "GOQuestAccept");
     GET_SCRIPT_HOOK_PTR(m_pOnItemQuestAccept,          "ItemQuestAccept");
