@@ -809,7 +809,7 @@ void WorldSession::HandleRequestPartyMemberStatsOpcode( WorldPacket &recv_data )
     ObjectGuid guid;
     recv_data >> guid;
 
-    Player *player = HashMapHolder<Player>::Find(guid); 
+    Player *player = sObjectMgr.GetPlayer(guid);
     if(!player)
     {
         WorldPacket data(SMSG_PARTY_MEMBER_STATS_FULL, 3+4+2);
