@@ -637,6 +637,7 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
     {
         case 37675:                                         // Chaos Blast
         case 56266:                                         // Vortex
+        case 74505:                                         // Enervating Brand
             return false;
         case 36032:                                         // Arcane Blast
         case 47540:                                         // Penance start dummy aura - Rank 1
