@@ -3491,7 +3491,7 @@ void Aura::HandleAuraModShapeshift(bool apply, bool Real)
                         if ((int32)target->GetPower(POWER_ENERGY) > furorChance)
                         {
                             target->SetPower(POWER_ENERGY, 0);
-                            target->CastCustomSpell(target, 17099, &furorChance, NULL, NULL, this);
+                            target->CastCustomSpell(target, 17099, &furorChance, NULL, NULL, true, NULL, this);
                         }
                     }
                     else if(furorChance)                    // only if talent known
@@ -4405,39 +4405,38 @@ void Aura::HandleAuraModDisarm(bool apply, bool Real)
     if(!apply && target->HasAuraType(GetModifier()->m_auraname))
         return;
 
-    uint32 flags = 0;
-    uint32 field = 0;
-    WeaponAttackType attack_type = OFF_ATTACK;
+    uint32 flags;
+    uint32 field;
+    WeaponAttackType attack_type;
 
     switch (GetModifier()->m_auraname)
     {
-      case SPELL_AURA_MOD_DISARM:
+        default:
+        case SPELL_AURA_MOD_DISARM:
         {
             field = UNIT_FIELD_FLAGS;
             flags = UNIT_FLAG_DISARMED;
             attack_type = BASE_ATTACK;
+            break;
         }
-        break;
-      case SPELL_AURA_MOD_DISARM_SHIELD:
+        case SPELL_AURA_MOD_DISARM_OFFHAND:
         {
             field = UNIT_FIELD_FLAGS_2;
             flags = UNIT_FLAG2_DISARM_OFFHAND;
+            attack_type = OFF_ATTACK;
+            break;
         }
-        break;
-      case SPELL_AURA_MOD_DISARM_RANGED:
+        case SPELL_AURA_MOD_DISARM_RANGED:
         {
             field = UNIT_FIELD_FLAGS_2;
             flags = UNIT_FLAG2_DISARM_RANGED;
+            attack_type = RANGED_ATTACK;
+            break;
         }
-        break;
     }
 
-    if(apply)
-        target->SetFlag(field, flags);
-    else
-        target->RemoveFlag(field, flags);
+    target->ApplyModFlag(field, flags, apply);
 
-    // only at real add/remove aura
     if (target->GetTypeId() != TYPEID_PLAYER)
         return;
 
@@ -4448,7 +4447,7 @@ void Aura::HandleAuraModDisarm(bool apply, bool Real)
     if (apply)
     {
         target->RemoveAurasDueToSpell(46924); // Disarm should stop bladestorm
-        target->SetAttackTime(BASE_ATTACK,BASE_ATTACK_TIME);
+        target->SetAttackTime(attack_type, BASE_ATTACK_TIME);
     }
     else
         ((Player *)target)->SetRegularAttackTime();
