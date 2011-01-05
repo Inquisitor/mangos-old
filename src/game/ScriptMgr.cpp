@@ -52,7 +52,6 @@ ScriptMgr::ScriptMgr() :
     m_pOnGOGossipSelect(NULL),
     m_pOnGossipSelectWithCode(NULL),
     m_pOnGOGossipSelectWithCode(NULL),
-    m_pOnGODestroyed(NULL),
     m_pOnQuestAccept(NULL),
     m_pOnGOQuestAccept(NULL),
     m_pOnItemQuestAccept(NULL),
@@ -1038,11 +1037,6 @@ bool ScriptMgr::OnGameObjectUse(Player* pPlayer, GameObject* pGameObject)
     return m_pOnGOUse != NULL && m_pOnGOUse(pPlayer, pGameObject);
 }
 
-bool ScriptMgr::OnGameObjectDestroyed(Player * pPlayer, GameObject * pGameObject, uint32 eventId)
-{
-    return m_pOnGODestroyed != NULL && m_pOnGODestroyed(pPlayer, pGameObject, eventId);
-}
-
 bool ScriptMgr::OnItemUse(Player* pPlayer, Item* pItem, SpellCastTargets const& targets)
 {
     return m_pOnItemUse != NULL && m_pOnItemUse(pPlayer, pItem, targets);
@@ -1117,7 +1111,6 @@ ScriptLoadResult ScriptMgr::LoadScriptLibrary(const char* libName)
     GET_SCRIPT_HOOK_PTR(m_pOnGOGossipSelect,           "GOGossipSelect");
     GET_SCRIPT_HOOK_PTR(m_pOnGossipSelectWithCode,     "GossipSelectWithCode");
     GET_SCRIPT_HOOK_PTR(m_pOnGOGossipSelectWithCode,   "GOGossipSelectWithCode");
-    GET_SCRIPT_HOOK_PTR(m_pOnGODestroyed,              "GODestroyed");
     GET_SCRIPT_HOOK_PTR(m_pOnQuestAccept,              "QuestAccept");
     GET_SCRIPT_HOOK_PTR(m_pOnGOQuestAccept,            "GOQuestAccept");
     GET_SCRIPT_HOOK_PTR(m_pOnItemQuestAccept,          "ItemQuestAccept");
@@ -1172,7 +1165,6 @@ void ScriptMgr::UnloadScriptLibrary()
     m_pOnGOGossipSelect         = NULL;
     m_pOnGossipSelectWithCode   = NULL;
     m_pOnGOGossipSelectWithCode = NULL;
-    m_pOnGODestroyed            = NULL;
     m_pOnQuestAccept            = NULL;
     m_pOnGOQuestAccept          = NULL;
     m_pOnItemQuestAccept        = NULL;
