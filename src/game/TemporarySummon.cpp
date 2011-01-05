@@ -104,18 +104,13 @@ void TemporarySummon::Update( uint32 update_diff,  uint32 diff )
                 return;
             }
 
-            if (m_timer <= diff)
+            if (m_timer <= update_diff)
             {
-                if (m_timer <= update_diff)
-                {
-                    UnSummon();
-                    return;
-                }
-                else
-                    m_timer -= update_diff;
+                UnSummon();
+                return;
             }
             else
-                m_timer -= diff;
+                m_timer -= update_diff;
             break;
         }
         case TEMPSUMMON_TIMED_OR_DEAD_DESPAWN:
@@ -127,18 +122,13 @@ void TemporarySummon::Update( uint32 update_diff,  uint32 diff )
                 return;
             }
 
-            if (m_timer <= diff)
+            if (m_timer <= update_diff)
             {
-                if (m_timer <= update_diff)
-                {
-                    UnSummon();
-                    return;
-                }
-                else
-                    m_timer -= update_diff;
+                UnSummon();
+                return;
             }
             else
-                m_timer -= diff;
+                m_timer -= update_diff;
             break;
         }
         default:
