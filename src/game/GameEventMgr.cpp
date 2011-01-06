@@ -670,7 +670,7 @@ void GameEventMgr::ApplyNewEvent(uint16 event_id, bool resume)
     }
 
     m_ActiveEvents.insert(event_id); 
-    CharacterDatabase.PQuery("INSERT INTO game_event_status (event) VALUES (%u)", event_id);
+    CharacterDatabase.PQuery("REPLACE INTO game_event_status (event) VALUES (%u)", event_id);
 
     if (sWorld.getConfig(CONFIG_BOOL_EVENT_ANNOUNCE))
         sWorld.SendWorldText(LANG_EVENTMESSAGE, mGameEvent[event_id].description.c_str());
