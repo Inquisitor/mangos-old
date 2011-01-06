@@ -1037,7 +1037,7 @@ bool Pet::InitStatsForLevel(uint32 petlevel, Unit* owner)
         else
             scale = cFamily->minScale + float(getLevel() - cFamily->minScaleLevel) / cFamily->maxScaleLevel * (cFamily->maxScale - cFamily->minScale);
 
-        scale += GetObjectScale();
+      //  scale += GetObjectScale();
         SetObjectScale(scale);
         UpdateModelData();
     }
