@@ -197,7 +197,7 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
         if (msg.empty())
             return;
 
-        if (ChatHandler(this).ParseCommands(msg.c_str()) > 0)
+        if (ChatHandler(this).ParseCommands(msg.c_str()))
             return;
 
         if (!processChatmessageFurtherAfterSecurityChecks(msg, lang))
