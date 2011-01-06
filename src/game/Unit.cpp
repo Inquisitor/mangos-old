@@ -12134,6 +12134,9 @@ void Unit::_AddAura(uint32 spellID, uint32 duration, Unit * caster)
                     DEBUG_FILTER_LOG(LOG_FILTER_SPELL_CAST, "Manually adding aura of spell %u, index %u, duration %u ms", spellID, i, duration);
                 }
             }
+            if (GetTypeId() == TYPEID_UNIT)
+                if (((Creature*)this)->AI())
+                    ((Creature*)this)->AI()->SpellHit(caster, spellInfo);
             AddSpellAuraHolder(holder);
         }
     }

@@ -4274,7 +4274,8 @@ void Aura::HandleModCharm(bool apply, bool Real)
 
         if(target->GetTypeId() == TYPEID_UNIT)
         {
-            ((Creature*)target)->AIM_Initialize();
+            if(!(((Creature*)target)->GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_KEEP_AI))
+                ((Creature*)target)->AIM_Initialize();
             CharmInfo *charmInfo = target->InitCharmInfo(target);
             charmInfo->InitCharmCreateSpells();
             charmInfo->SetReactState( REACT_DEFENSIVE );
