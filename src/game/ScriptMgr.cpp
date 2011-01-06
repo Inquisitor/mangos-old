@@ -75,30 +75,31 @@ ScriptMgr::~ScriptMgr()
     UnloadScriptLibrary();
 }
 
-void ScriptMgr::LoadScripts(ScriptMapMap& scripts, const char* tablename)
+
+void ScriptMgr::LoadScripts(ScriptMapMap& scripts, char const* tablename)
 {
-    if (sWorld.IsScriptScheduled())                         // function don't must be called in time scripts use.
+    if(sWorld.IsScriptScheduled())                          // function don't must be called in time scripts use.
         return;
 
-    sLog.outString("%s :", tablename);
+    sLog.outString( "%s :", tablename);
 
     scripts.clear();                                        // need for reload support
 
-    QueryResult *result = WorldDatabase.PQuery("SELECT id, delay, requirement_type, requirement_value, command, datalong, datalong2, datalong3, datalong4, data_flags, dataint, dataint2, dataint3, dataint4, x, y, z, o FROM %s", tablename);
+    QueryResult *result = WorldDatabase.PQuery( "SELECT id, delay, requirement_type, requirement_value, command, datalong, datalong2, datalong3, datalong4, data_flags, dataint, dataint2, dataint3, dataint4, x, y, z, o FROM %s", tablename );
 
     uint32 count = 0;
 
-    if (!result)
+    if( !result )
     {
-        barGoLink bar(1);
+        barGoLink bar( 1 );
         bar.step();
 
         sLog.outString();
-        sLog.outString(">> Loaded %u script definitions", count);
+        sLog.outString( ">> Loaded %u script definitions", count );
         return;
     }
 
-    barGoLink bar((int)result->GetRowCount());
+    barGoLink bar( (int)result->GetRowCount() );
 
     do
     {
@@ -165,7 +166,7 @@ void ScriptMgr::LoadScripts(ScriptMapMap& scripts, const char* tablename)
                     }
                 }
 
-                // if (!GetMangosStringLocale(tmp.dataint)) will be checked after db_script_string loading
+                // if(!GetMangosStringLocale(tmp.dataint)) will checked after db_script_string loading
                 break;
             }
             case SCRIPT_COMMAND_EMOTE:
@@ -259,11 +260,11 @@ void ScriptMgr::LoadScripts(ScriptMapMap& scripts, const char* tablename)
                     continue;
                 }
 
-                if (info->type == GAMEOBJECT_TYPE_FISHINGNODE ||
-                    info->type == GAMEOBJECT_TYPE_FISHINGHOLE ||
-                    info->type == GAMEOBJECT_TYPE_DOOR        ||
-                    info->type == GAMEOBJECT_TYPE_BUTTON      ||
-                    info->type == GAMEOBJECT_TYPE_TRAP)
+                if (info->type==GAMEOBJECT_TYPE_FISHINGNODE ||
+                    info->type==GAMEOBJECT_TYPE_FISHINGHOLE ||
+                    info->type==GAMEOBJECT_TYPE_DOOR        ||
+                    info->type==GAMEOBJECT_TYPE_BUTTON      ||
+                    info->type==GAMEOBJECT_TYPE_TRAP)
                 {
                     sLog.outErrorDb("Table `%s` have gameobject type (%u) unsupported by command SCRIPT_COMMAND_RESPAWN_GAMEOBJECT for script id %u", tablename, info->id, tmp.id);
                     continue;
@@ -302,7 +303,7 @@ void ScriptMgr::LoadScripts(ScriptMapMap& scripts, const char* tablename)
                     continue;
                 }
 
-                if (info->type != GAMEOBJECT_TYPE_DOOR)
+                if (info->type!=GAMEOBJECT_TYPE_DOOR)
                 {
                     sLog.outErrorDb("Table `%s` has gameobject type (%u) non supported by command %s for script id %u", tablename, info->id, (tmp.command == SCRIPT_COMMAND_OPEN_DOOR ? "SCRIPT_COMMAND_OPEN_DOOR" : "SCRIPT_COMMAND_CLOSE_DOOR"), tmp.id);
                     continue;
@@ -497,17 +498,17 @@ void ScriptMgr::LoadScripts(ScriptMapMap& scripts, const char* tablename)
             case SCRIPT_COMMAND_ADD_QUEST_COUNT:
             {
                 Quest const* quest = sObjectMgr.GetQuestTemplate(tmp.add_quest_count.quest_id);
-                if( tmp.add_quest_count.quest_field > 4 )
+                if (tmp.add_quest_count.quest_field > 4)
                 {
                     sLog.outErrorDb("Table `%s` has x for requirement [] (x: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `datalong2` for script id %u",tablename,tmp.add_quest_count.quest_field,tmp.id);
                     continue;
                 }
-                if( tmp.add_quest_count.inc_value < 1 )
+                if (tmp.add_quest_count.inc_value < 1)
                 {
                     sLog.outErrorDb("Table `%s` has increment value (Value: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `dataint` for script id %u",tablename,tmp.add_quest_count.inc_value,tmp.id);
                     continue;
                 }
-                if(!quest)
+                if (!quest)
                 {
                     sLog.outErrorDb("Table `%s` has invalid quest (ID: %u) in SCRIPT_COMMAND_ADD_QUEST_COUNT in `datalong` for script id %u",tablename,tmp.add_quest_count.quest_id,tmp.id);
                     continue;
@@ -516,13 +517,13 @@ void ScriptMgr::LoadScripts(ScriptMapMap& scripts, const char* tablename)
             } 
             case SCRIPT_COMMAND_TEMP_SUMMON_OBJECT:
             {
-                if(!MaNGOS::IsValidMapCoord(tmp.x,tmp.y,tmp.z,tmp.o))
+                if (!MaNGOS::IsValidMapCoord(tmp.x,tmp.y,tmp.z,tmp.o))
                 {
                     sLog.outErrorDb("Table `%s` has invalid coordinates (X: %f Y: %f) in SCRIPT_COMMAND_TEMP_SUMMON_OBJECT for script id %u",tablename,tmp.x,tmp.y,tmp.id);
                     continue;
                 }
 
-                if(!ObjectMgr::GetGameObjectInfo(tmp.go_summon.go_entry))
+                if (!ObjectMgr::GetGameObjectInfo(tmp.go_summon.go_entry))
                 {
                     sLog.outErrorDb("Table `%s` has invalid gameobject (Entry: %u) in SCRIPT_COMMAND_TEMP_SUMMON_OBJECT for script id %u",tablename,tmp.go_summon.go_entry,tmp.id);
                     continue;
@@ -551,50 +552,50 @@ void ScriptMgr::LoadScripts(ScriptMapMap& scripts, const char* tablename)
             ScriptMap emptyMap;
             scripts[tmp.id] = emptyMap;
         }
-        scripts[tmp.id].insert(ScriptMap::value_type(tmp.delay, tmp));
+        scripts[tmp.id].insert(std::pair<uint32, ScriptInfo>(tmp.delay, tmp));
 
         ++count;
-    } while(result->NextRow());
+    } while( result->NextRow() );
 
     delete result;
 
     sLog.outString();
-    sLog.outString(">> Loaded %u script definitions", count);
+    sLog.outString( ">> Loaded %u script definitions", count );
 }
 
 void ScriptMgr::LoadGameObjectScripts()
 {
-    LoadScripts(sGameObjectScripts, "gameobject_scripts");
+    LoadScripts(sGameObjectScripts,    "gameobject_scripts");
 
     // check ids
     for(ScriptMapMap::const_iterator itr = sGameObjectScripts.begin(); itr != sGameObjectScripts.end(); ++itr)
     {
-        if (!sObjectMgr.GetGOData(itr->first))
-            sLog.outErrorDb("Table `gameobject_scripts` has not existing gameobject (GUID: %u) as script id", itr->first);
+        if(!sObjectMgr.GetGOData(itr->first))
+            sLog.outErrorDb("Table `gameobject_scripts` has not existing gameobject (GUID: %u) as script id",itr->first);
     }
 }
 
 void ScriptMgr::LoadQuestEndScripts()
 {
-    LoadScripts(sQuestEndScripts, "quest_end_scripts");
+    LoadScripts(sQuestEndScripts,  "quest_end_scripts");
 
     // check ids
     for(ScriptMapMap::const_iterator itr = sQuestEndScripts.begin(); itr != sQuestEndScripts.end(); ++itr)
     {
-        if (!sObjectMgr.GetQuestTemplate(itr->first))
-            sLog.outErrorDb("Table `quest_end_scripts` has not existing quest (Id: %u) as script id", itr->first);
+        if(!sObjectMgr.GetQuestTemplate(itr->first))
+            sLog.outErrorDb("Table `quest_end_scripts` has not existing quest (Id: %u) as script id",itr->first);
     }
 }
 
 void ScriptMgr::LoadQuestStartScripts()
 {
-    LoadScripts(sQuestStartScripts, "quest_start_scripts");
+    LoadScripts(sQuestStartScripts,"quest_start_scripts");
 
     // check ids
     for(ScriptMapMap::const_iterator itr = sQuestStartScripts.begin(); itr != sQuestStartScripts.end(); ++itr)
     {
-        if (!sObjectMgr.GetQuestTemplate(itr->first))
-            sLog.outErrorDb("Table `quest_start_scripts` has not existing quest (Id: %u) as script id", itr->first);
+        if(!sObjectMgr.GetQuestTemplate(itr->first))
+            sLog.outErrorDb("Table `quest_start_scripts` has not existing quest (Id: %u) as script id",itr->first);
     }
 }
 
@@ -607,9 +608,9 @@ void ScriptMgr::LoadSpellScripts()
     {
         SpellEntry const* spellInfo = sSpellStore.LookupEntry(itr->first);
 
-        if (!spellInfo)
+        if(!spellInfo)
         {
-            sLog.outErrorDb("Table `spell_scripts` has not existing spell (Id: %u) as script id", itr->first);
+            sLog.outErrorDb("Table `spell_scripts` has not existing spell (Id: %u) as script id",itr->first);
             continue;
         }
 
@@ -621,7 +622,7 @@ void ScriptMgr::LoadSpellScripts()
             if (!spellInfo->Effect[i])
                 continue;
 
-            if (spellInfo->Effect[i] == SPELL_EFFECT_SCRIPT_EFFECT)
+            if (spellInfo->Effect[i] == SPELL_EFFECT_SCRIPT_EFFECT || spellInfo->Effect[i] == SPELL_EFFECT_SEND_EVENT || spellInfo->Effect[i] == SPELL_EFFECT_DUMMY)
             {
                 found =  true;
                 break;
@@ -629,7 +630,7 @@ void ScriptMgr::LoadSpellScripts()
         }
 
         if (!found)
-            sLog.outErrorDb("Table `spell_scripts` has unsupported spell (Id: %u) without SPELL_EFFECT_SCRIPT_EFFECT (%u) spell effect", itr->first, SPELL_EFFECT_SCRIPT_EFFECT);
+            sLog.outErrorDb("Table `spell_scripts` has unsupported spell (Id: %u) without SPELL_EFFECT_SCRIPT_EFFECT (%u) spell effect",itr->first,SPELL_EFFECT_SCRIPT_EFFECT);
     }
 }
 
@@ -641,19 +642,19 @@ void ScriptMgr::LoadEventScripts()
 
     // Load all possible script entries from gameobjects
     for(uint32 i = 1; i < sGOStorage.MaxEntry; ++i)
-        if (GameObjectInfo const* goInfo = sGOStorage.LookupEntry<GameObjectInfo>(i))
+        if (GameObjectInfo const * goInfo = sGOStorage.LookupEntry<GameObjectInfo>(i))
             if (uint32 eventId = goInfo->GetEventScriptId())
                 evt_scripts.insert(eventId);
 
     // Load all possible script entries from spells
     for(uint32 i = 1; i < sSpellStore.GetNumRows(); ++i)
     {
-        SpellEntry const* spell = sSpellStore.LookupEntry(i);
+        SpellEntry const * spell = sSpellStore.LookupEntry(i);
         if (spell)
         {
             for(int j = 0; j < MAX_EFFECT_INDEX; ++j)
             {
-                if (spell->Effect[j] == SPELL_EFFECT_SEND_EVENT)
+                if( spell->Effect[j] == SPELL_EFFECT_SEND_EVENT )
                 {
                     if (spell->EffectMiscValue[j])
                         evt_scripts.insert(spell->EffectMiscValue[j]);

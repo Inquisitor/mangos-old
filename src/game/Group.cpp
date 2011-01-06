@@ -1693,7 +1693,7 @@ void Group::ResetInstances(InstanceResetMethod method, bool isRaid, Player* Send
             continue;
         }
 
-        if(method == INSTANCE_RESET_ALL)
+        if(method == INSTANCE_RESET_ALL || method == INSTANCE_RESET_CHANGE_DIFFICULTY)
         {
             // the "reset all instances" method can only reset normal maps
             if (entry->map_type == MAP_RAID || diff == DUNGEON_DIFFICULTY_HEROIC)

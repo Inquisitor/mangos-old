@@ -598,7 +598,7 @@ enum UnitFlags2
     UNIT_FLAG2_DISARM_OFFHAND       = 0x00000080,           // also shield case
     UNIT_FLAG2_UNK8                 = 0x00000100,
     UNIT_FLAG2_UNK9                 = 0x00000200,
-    UNIT_FLAG2_DISARM_RANGED        = 0x00000400,           // disarm or something
+    UNIT_FLAG2_DISARM_RANGED        = 0x00000400,
     UNIT_FLAG2_REGENERATE_POWER     = 0x00000800,
 };
 
@@ -781,6 +781,7 @@ class MovementInfo
         MovementFlags GetMovementFlags() const { return MovementFlags(moveFlags); }
         void SetMovementFlags(MovementFlags f) { moveFlags = f; }
         MovementFlags2 GetMovementFlags2() const { return MovementFlags2(moveFlags2); }
+        void AddMovementFlag2(MovementFlags2 f) { moveFlags2 |= f; }
 
         // Position manipulations
         Position const *GetPos() const { return &pos; }
@@ -1228,20 +1229,19 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         bool haveOffhandWeapon() const;
         bool CanUseEquippedWeapon(WeaponAttackType attackType) const
         {
-            bool disarmed = false;
+            if (IsInFeralForm())
+                return false;
+
             switch(attackType)
             {
+                default:
                 case BASE_ATTACK:
-                    disarmed = HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISARMED);
-                break;
+                    return !HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISARMED);
                 case OFF_ATTACK:
-                    disarmed = HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_DISARM_OFFHAND);
-                break;
+                    return !HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_DISARM_OFFHAND);
                 case RANGED_ATTACK:
-                    disarmed = HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_DISARM_RANGED);
-                break;
+                    return !HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_DISARM_RANGED);
             }
-            return !IsInFeralForm() && !disarmed;
         }
         bool canReachWithAttack(Unit *pVictim) const;
         uint32 m_extraAttacks;
@@ -1654,7 +1654,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         bool AddSpellAuraHolder(SpellAuraHolder *holder);
         void AddAuraToModList(Aura *aura);
 
-        void _AddAura(uint32 spellID, uint32 duration = 60000);
+        void _AddAura(uint32 spellID, uint32 duration = 60000, Unit * caster = NULL);
 
         float CheckAuraStackingAndApply(Aura *Aur, UnitMods unitMod, UnitModifierType modifierType, float amount, bool apply, int32 miscMask = 0, int32 miscValue = 0);
 

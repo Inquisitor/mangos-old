@@ -95,7 +95,7 @@ class MANGOS_DLL_SPEC MotionMaster : private std::stack<MovementGenerator *>
         }
 
         void MoveIdle();
-        void MoveRandom();
+        void MoveRandom(float spawndist = 0.0f);
         void MoveTargetedHome();
         void MoveFollow(Unit* target, float dist, float angle);
         void MoveChase(Unit* target, float dist = 0.0f, float angle = 0.0f);

@@ -1527,25 +1527,17 @@ void WorldSession::HandleItemRefundRequest( WorldPacket& recv_data )
             RefundEntry = _player->LookupRefundableItem(GUID);
 
             // If the item is refundable we look up the extendedcost
-            if( RefundEntry != 0 && pItem->GetPlayedtimeField() != 0 )
-            {
-                uint32 played = _player->GetTotalPlayedTime();
-
-                if( played < ( pItem->GetPlayedtimeField() + 60*60*2 ) )
+            if (RefundEntry != 0 && pItem->GetPlayedtimeField() != 0)
+                if (_player->GetTotalPlayedTime() < (pItem->GetPlayedtimeField() + 60*60*2))
                     ex = sItemExtendedCostStore.LookupEntry(RefundEntry);
-            }
 
             if(ex != NULL)
             {
-                proto = pItem->GetProto();
-
-                if( proto != NULL )
+                if(proto = pItem->GetProto())
                 {
                     //We remove the refunded item and refund the cost
-                    for( int i = 0; i < 5; ++i )
-                    {
+                    for (int i = 0; i < 5; ++i)
                         _player->StoreNewItemInInventorySlot( ex->reqitem[i], ex->reqitemcount[i]);
-                    }
 
                     _player->ModifyHonorPoints(ex->reqhonorpoints);
                     _player->ModifyArenaPoints(ex->reqarenapoints);
@@ -1554,9 +1546,7 @@ void WorldSession::HandleItemRefundRequest( WorldPacket& recv_data )
                     uint32 count = 1;
                     // Remove Item from player
                     _player->DestroyItem( pItem->GetBagSlot(),pItem->GetSlot(), true);
-                    //_player->DestroyItemCount(pItem, &count, true);
-                    //_player->GetItemInterface()->RemoveItemAmtByGuid( GUID, 1 );
-
+                    // Remove Item from refundable map
                     _player->RemoveRefundableItem(GUID);
 
                     // we were successful!
@@ -1570,13 +1560,13 @@ void WorldSession::HandleItemRefundRequest( WorldPacket& recv_data )
     packet << uint64(GUID);
     packet << uint32(error);
 
-    if(error == 0)
+    if (error == 0)
     {
         packet << uint32(proto->BuyPrice);
         packet << uint32(ex->reqhonorpoints);
         packet << uint32(ex->reqarenapoints);
             
-        for(int i = 0; i < 5; ++i)
+        for (int i = 0; i < 5; ++i)
         {
             packet << uint32(ex->reqitem[i]);
             packet << uint32(ex->reqitemcount[i]);
@@ -1594,14 +1584,14 @@ void WorldSession::SendRefundInfo(uint64 itemGUID)
         return;
 
     Item* pItem = _player->GetItemByGuid(itemGUID);
-    if(pItem == NULL)
+    if (pItem == NULL)
         return;
 
-    if(pItem->IsEligibleForRefund())
+    if (pItem->IsEligibleForRefund())
     {
         uint32 RefundEntry = _player->LookupRefundableItem(itemGUID);
 
-        if( !RefundEntry || pItem->GetPlayedtimeField() == 0)
+        if (!RefundEntry || pItem->GetPlayedtimeField() == 0)
             return;
 
         ItemExtendedCostEntry const*ex = sItemExtendedCostStore.LookupEntry(RefundEntry);
@@ -1616,17 +1606,15 @@ void WorldSession::SendRefundInfo(uint64 itemGUID)
         packet << uint32( ex->reqhonorpoints );
         packet << uint32( ex->reqarenapoints );
 
-        for(int i = 0; i < 5; ++i)
+        for (int i = 0; i < 5; ++i)
         {
             packet << uint32( ex->reqitem[i] );
             packet << uint32( ex->reqitemcount[i] );
         }
 
         packet << uint32( 0 );  // always seems to be 0
-
-        uint32 played = _player->GetTotalPlayedTime();
         
-        if(played > (pItem->GetPlayedtimeField() + 60*60*2))
+        if (_player->GetTotalPlayedTime() > (pItem->GetPlayedtimeField() + 60*60*2))
             packet << uint32( 0 );
         else
             packet << uint32( pItem->GetPlayedtimeField() );

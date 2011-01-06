@@ -1300,6 +1300,13 @@ bool InstanceMap::CanEnter(Player *player)
         return false;
     }
 
+    if(!player->isGameMaster() && i_data && i_data->IsEncounterInProgress())
+    {
+        sLog.outDebug("MAP: Player '%s' can't enter instance '%s' while an encounter is in progress.", player->GetName(), GetMapName());
+        player->SendTransferAborted(GetId(), TRANSFER_ABORT_ZONE_IN_COMBAT);
+        return false;
+    }
+
     return Map::CanEnter(player);
 }
 
@@ -1409,13 +1416,15 @@ bool InstanceMap::Add(Player *player)
                 if(!playerBind)
                     player->BindToInstance(GetInstanceSave(), false);
                 else
+                {
                     // cannot jump to a different instance without resetting it
                     //MANGOS_ASSERT(playerBind->save == GetInstanceSave());
-                    if (playerBind->save != GetInstanceSave())
+                    if (playerBind->save != GetInstanceSave() && !player->isGameMaster()) // Allow GMs jump from instance to another
                     {
                         player->RepopAtGraveyard();
                         return false;
                     }
+                }
             }
         }
     }

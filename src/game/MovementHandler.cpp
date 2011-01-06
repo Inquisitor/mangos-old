@@ -278,7 +278,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
         GetPlayer()->GetMotionMaster()->GetCurrentMovementGeneratorType()!=FLIGHT_MOTION_TYPE &&
         Anti_TeleTimeDiff>Anti_TeleTimeIgnoreDiff)
     {
-        const uint32 CurTime=WorldTimer::getMSTime();
+        const uint32 CurTime = WorldTimer::getMSTime();
         if (WorldTimer::getMSTimeDiff(GetPlayer()->m_anti_lastalarmtime,CurTime) > 5000)
         {
             GetPlayer()->m_anti_alarmcount = 0;

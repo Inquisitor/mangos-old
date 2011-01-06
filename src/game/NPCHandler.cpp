@@ -394,6 +394,7 @@ void WorldSession::HandleGossipSelectOptionOpcode( WorldPacket & recv_data )
             _player->PlayerTalkClass->SendGossipMenu(textId, guid.GetRawValue());
         }
     }
+
     uint32 sender = _player->PlayerTalkClass->GossipOptionSender(gossipListId);
     uint32 action = _player->PlayerTalkClass->GossipOptionAction(gossipListId);
 

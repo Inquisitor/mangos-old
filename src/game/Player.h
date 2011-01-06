@@ -1366,7 +1366,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         void UpdateItemDuration(uint32 time, bool realtimeonly = false);
         void AddEnchantmentDurations(Item *item);
         void RemoveEnchantmentDurations(Item *item);
-        void RemoveAllEnchantments(EnchantmentSlot slot);
+        void RemoveAllEnchantments(EnchantmentSlot slot, bool isArenaRemove = false);
         void AddEnchantmentDuration(Item *item,EnchantmentSlot slot,uint32 duration);
         void ApplyEnchantment(Item *item,EnchantmentSlot slot,bool apply, bool apply_dur = true, bool ignore_condition = false);
         void ApplyEnchantment(Item *item,bool apply);
@@ -1759,8 +1759,7 @@ class MANGOS_DLL_SPEC Player : public Unit
         static bool IsActionButtonDataValid(uint8 button, uint32 action, uint8 type, Player* player, bool msg = true);
         ActionButton* addActionButton(uint8 spec, uint8 button, uint32 action, uint8 type);
         void removeActionButton(uint8 spec, uint8 button);
-        void SendActionButtons(uint32 state) const;
-        void SendInitialActionButtons() const { SendActionButtons(1); }
+        void SendInitialActionButtons() const;
         void SendLockActionButtons() const;
         ActionButton const* GetActionButton(uint8 button);
 

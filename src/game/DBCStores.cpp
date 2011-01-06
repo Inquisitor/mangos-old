@@ -22,6 +22,7 @@
 #include "ProgressBar.h"
 #include "SharedDefines.h"
 #include "ObjectGuid.h"
+#include "SpellMgr.h"
 
 #include "DBCfmt.h"
 
@@ -431,6 +432,19 @@ void LoadDBCStores(const std::string& dataPath)
 
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sFactionTemplateStore,     dbcPath,"FactionTemplate.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sGameObjectDisplayInfoStore,dbcPath,"GameObjectDisplayInfo.dbc");
+    for (uint32 i = 0; i < sGameObjectDisplayInfoStore.GetNumRows(); ++i)
+    {
+        if (GameObjectDisplayInfoEntry *info = const_cast<GameObjectDisplayInfoEntry*>(sGameObjectDisplayInfoStore.LookupEntry(i)))
+        {
+            if (info->maxX < info->minX)
+                std::swap(info->maxX, info->minX);
+            if (info->maxY < info->minY)
+                std::swap(info->maxY, info->minY);
+            if (info->maxZ < info->minZ)
+                std::swap(info->maxZ, info->minZ);
+        }
+    }
+
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sGemPropertiesStore,       dbcPath,"GemProperties.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sGlyphPropertiesStore,     dbcPath,"GlyphProperties.dbc");
     LoadDBC(availableDbcLocales,bar,bad_dbc_files,sGlyphSlotStore,           dbcPath,"GlyphSlot.dbc");
@@ -500,6 +514,43 @@ void LoadDBCStores(const std::string& dataPath)
         std::swap(*((uint32*)(&spell->SpellFamilyFlags)),*(((uint32*)(&spell->SpellFamilyFlags))+1));
         #endif
     }
+
+    // DBC Hacks
+
+    //Throw Passanger
+    SpellEntry *sfix3 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(62324));
+    sfix3->Targets |= TARGET_FLAG_UNIT_UNK;
+
+    //Twilight Torment - relly dunno what blizzard intended to do
+    SpellEntry *sfix4 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(57935));
+    sfix4->AttributesEx = 0;
+    sfix4->AttributesEx4 = SPELL_ATTR_EX4_NOT_STEALABLE;
+    sfix4->CastingTimeIndex = 1;
+    sfix4->RecoveryTime = 0;
+    sfix4->procFlags = (PROC_FLAG_TAKEN_MELEE_HIT | PROC_FLAG_TAKEN_MELEE_SPELL_HIT | PROC_FLAG_TAKEN_RANGED_HIT | PROC_FLAG_TAKEN_RANGED_SPELL_HIT | PROC_FLAG_TAKEN_NEGATIVE_SPELL_HIT);
+    sfix4->procChance = 100;
+    sfix4->procCharges = 0;
+    sfix4->rangeIndex = 1;
+    sfix4->StackAmount = 0;
+    sfix4->Effect[EFFECT_INDEX_1] = 0;
+    sfix4->EffectDieSides[EFFECT_INDEX_1] = 0;
+    sfix4->EffectBasePoints[EFFECT_INDEX_0] = -1;
+    sfix4->EffectImplicitTargetA[EFFECT_INDEX_0] = 6;
+    sfix4->EffectImplicitTargetA[EFFECT_INDEX_1] = 0;
+    sfix4->EffectImplicitTargetB[EFFECT_INDEX_0] = 0;
+    sfix4->EffectImplicitTargetB[EFFECT_INDEX_1] = 0;
+    sfix4->EffectRadiusIndex[EFFECT_INDEX_0] = 0;
+    sfix4->EffectRadiusIndex[EFFECT_INDEX_1] = 0;
+    sfix4->EffectApplyAuraName[EFFECT_INDEX_0] = SPELL_AURA_PROC_TRIGGER_SPELL;
+    sfix4->EffectApplyAuraName[EFFECT_INDEX_1] = 0;
+    sfix4->EffectAmplitude[EFFECT_INDEX_0] = 0;
+    sfix4->EffectAmplitude[EFFECT_INDEX_1] = 0;
+    sfix4->EffectMiscValue[EFFECT_INDEX_0] = 0;
+    sfix4->EffectMiscValue[EFFECT_INDEX_1] = 0;
+    sfix4->EffectMiscValueB[EFFECT_INDEX_0] = 0;
+    sfix4->EffectMiscValueB[EFFECT_INDEX_1] = 0;
+    sfix4->EffectTriggerSpell[EFFECT_INDEX_0] = 57988;
+    sfix4->EffectTriggerSpell[EFFECT_INDEX_1] = 0;
 
     for (uint32 j = 0; j < sSkillLineAbilityStore.GetNumRows(); ++j)
     {
