@@ -521,6 +521,7 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                         else damage = 0;
                         break;
                     }
+                    // Blade of Twilight
                     case 74769:
                     case 77844:
                     case 77845:
