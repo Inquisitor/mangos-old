@@ -4287,7 +4287,8 @@ void Aura::HandleModCharm(bool apply, bool Real)
 
         if(target->GetTypeId() == TYPEID_UNIT)
         {
-            ((Creature*)target)->AIM_Initialize();
+            if(!(((Creature*)target)->GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_KEEP_AI))
+                ((Creature*)target)->AIM_Initialize();
             CharmInfo *charmInfo = target->InitCharmInfo(target);
             charmInfo->InitCharmCreateSpells();
             charmInfo->SetReactState( REACT_DEFENSIVE );
@@ -5357,6 +5358,7 @@ void Aura::HandlePeriodicTriggerSpell(bool apply, bool /*Real*/)
                 return;
             }
             case 51912:                                     // Ultra-Advanced Proto-Typical Shortening Blaster
+			case 53102:                                    	// Scepter of Domination
                 if (m_removeMode == AURA_REMOVE_BY_EXPIRE)
                 {
                     if (Unit* pCaster = GetCaster())
@@ -8168,6 +8170,34 @@ void Aura::PeriodicDummyTick()
                         case 2: target->CastSpell(target, 55739, true); break;
                     }
                     return;
+                case 54798: // FLAMING Arrow Triggered Effect
+                {
+                    Unit * caster = GetCaster();
+                    if (!caster)
+                        return;
+
+                    if (target->GetTypeId() == TYPEID_UNIT || !caster->GetObjectGuid().IsVehicle())
+                        return;
+
+                    Unit *rider = caster->GetVehicleKit()->GetPassenger(0);
+                    if (!rider)
+                        return;
+
+                    // set ablaze
+                    if (target->HasAura(54683, EFFECT_INDEX_0))
+                        return;
+                    else
+                        target->CastSpell(target, 54683, true);
+
+                    // Credit Frostworgs
+                    if (target->GetEntry() == 29358)
+                        rider->CastSpell(rider, 54896, true);
+                    // Credit Frost Giants
+                    else if (target->GetEntry() == 29351)
+                        rider->CastSpell(rider, 54893, true);
+
+                    break;
+                }
 // Exist more after, need add later
                 default:
                     break;
