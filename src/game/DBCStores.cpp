@@ -517,6 +517,10 @@ void LoadDBCStores(const std::string& dataPath)
 
     // DBC Hacks
 
+    //Lifebloom final heal
+    SpellEntry *sfix2 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(33778));
+    sfix2->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
+
     //Throw Passanger
     SpellEntry *sfix3 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(62324));
     sfix3->Targets |= TARGET_FLAG_UNIT_UNK;

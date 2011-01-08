@@ -7275,7 +7275,7 @@ bool Unit::IsSpellCrit(Unit *pVictim, SpellEntry const *spellProto, SpellSchoolM
     switch(spellProto->DmgClass)
     {
         case SPELL_DAMAGE_CLASS_NONE:
-            if (spellProto->Id != 379 && spellProto->Id != 33778) // Earth Shield and Lifebloom heal should be able to crit
+            if (spellProto->Id != 379) // Earth Shield should be able to crit
                 return false;
         case SPELL_DAMAGE_CLASS_MAGIC:
         {
