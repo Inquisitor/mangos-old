@@ -2279,6 +2279,9 @@ void Map::ScriptsProcess()
                     break;
                 }
 
+                if((step.script->summonCreature.flags & 0x02))
+                    pCreature->SetCreatorGuid(summoner->GetObjectGuid());
+
                 break;
             }
             case SCRIPT_COMMAND_OPEN_DOOR:
