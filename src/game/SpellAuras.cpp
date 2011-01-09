@@ -3022,9 +3022,14 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         // prevent double apply bonuses
                         if (target->GetTypeId() != TYPEID_PLAYER || !((Player*)target)->GetSession()->PlayerLoading())
                         {
-                            m_modifier.m_amount = caster->SpellHealingBonusDone(target, GetSpellProto(), m_modifier.m_amount, SPELL_DIRECT_DAMAGE);
-                            m_modifier.m_amount = target->SpellHealingBonusTaken(caster, GetSpellProto(), m_modifier.m_amount, SPELL_DIRECT_DAMAGE);
-                        }
+                            if(GetStackAmount() <= 1)
+                            {
+                                const SpellEntry* finalBloomEntry = sSpellStore.LookupEntry(33778);
+                                m_modifier.m_amount = caster->SpellHealingBonusDone(target, finalBloomEntry, m_modifier.m_amount, HEAL);
+                                m_modifier.m_amount = target->SpellHealingBonusTaken(caster, finalBloomEntry, m_modifier.m_amount, HEAL);
+                            }else
+                                m_modifier.m_amount += (GetStackAmount() == 2) ? m_modifier.m_amount : (m_modifier.m_amount / 2);
+                        } 
                     }
                 }
                 else
@@ -3036,9 +3041,10 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     // final heal
                     if (target->IsInWorld() && GetStackAmount() > 0)
                     {
-                        int32 amount = m_modifier.m_amount;
-                        target->CastCustomSpell(target, 33778, &amount, NULL, NULL, true, NULL, this, GetCasterGuid());
+                        //Heal
+                        target->CastCustomSpell(target, 33778, &m_modifier.m_amount, NULL, NULL, true, NULL, this, GetCasterGUID());
 
+                        //Return mana
                         if (Unit* caster = GetCaster())
                         {
                             int32 returnmana = (GetSpellProto()->ManaCostPercentage * caster->GetCreateMana() / 100) * GetStackAmount() / 2;
@@ -5521,7 +5527,11 @@ void Aura::HandlePeriodicHeal(bool apply, bool /*Real*/)
             m_modifier.m_amount += ap > holy ? ap : holy;
         }
 
-        m_modifier.m_amount = caster->SpellHealingBonusDone(target, GetSpellProto(), m_modifier.m_amount, DOT, GetStackAmount());
+        //Lifebloom special stacking
+        if(GetSpellProto()->SpellFamilyName == SPELLFAMILY_DRUID && (GetSpellProto()->SpellFamilyFlags & UI64LIT(0x1000000000)) && GetStackAmount() > 1)
+            m_modifier.m_amount += (GetStackAmount() == 2) ? m_modifier.m_amount : (m_modifier.m_amount / 2);
+        else
+            m_modifier.m_amount = caster->SpellHealingBonusDone(target, GetSpellProto(), m_modifier.m_amount, DOT, GetStackAmount());
     }
 }
 
@@ -7966,6 +7976,14 @@ void Aura::PeriodicDummyTick()
                     // 7053 Forsaken Skill: Shadow
                     return;
                 }
+                // Steal Flesh
+                case 52708:
+                {
+                    if (Unit *caster = GetCaster())
+                        caster->CastSpell(caster, 52712, true );
+                    target->CastSpell(target, 52711, true);
+                    return;
+                }
                 case 7057:                                  // Haunting Spirits
                     if (roll_chance_i(33))
                         target->CastSpell(target,m_modifier.m_amount,true,NULL,this);
@@ -9141,7 +9159,9 @@ void SpellAuraHolder::SetStackAmount(uint32 stackAmount)
                 if (amount != aur->GetModifier()->m_amount)
                 {
                     aur->ApplyModifier(false, true);
-                    aur->GetModifier()->m_amount = amount;
+                    // Lifebloom has special amount calculation in final bloom
+                    if(m_spellProto->SpellFamilyName != SPELLFAMILY_DRUID && !(m_spellProto->SpellFamilyFlags & UI64LIT(0x1000000000)))
+                        aur->GetModifier()->m_amount = amount;
                     aur->ApplyModifier(true, true);
                 }
             }
