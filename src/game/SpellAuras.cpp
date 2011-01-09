@@ -9275,20 +9275,21 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
                         return;
                     break;
                 }
+                case 29865:                                 // Deathbloom of Loatheb
+                case 55053:
+                {
+                    if (!apply)
+                    {
+                        cast_at_remove = true;
+                        // normal | heroic
+                        spellId1 = ((GetId() == 29865) ? 55594 : 55601 );
+                    }
+                    else return;
+                    break;
+                }
                 default:
                     return;
             }
-
-            // Deathbloom of Loatheb
-            if( (GetId() == 29865 || GetId() == 55053) && !apply )
-            {
-                cast_at_remove = true;
-                // normal | heroic
-                spellId1 = ((GetId() == 29865) ? 55594 : 55601 );
-            }
-            else
-                return;
-
             break;
         }
         case SPELLFAMILY_MAGE:
@@ -9685,7 +9686,7 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
         case SPELLFAMILY_DEATHKNIGHT:
         {
             // Frost Fever and Blood Plague
-			if(GetSpellProto()->SpellFamilyFlags2 & 0x2)
+            if(GetSpellProto()->SpellFamilyFlags2 & 0x2)
             {
                 // Can't proc on self
                 if (GetCasterGUID() == m_target->GetGUID())
