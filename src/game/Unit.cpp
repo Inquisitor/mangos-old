@@ -5000,6 +5000,12 @@ void Unit::RemoveAurasWithDispelType( DispelType type, uint64 casterGUID )
 
 void Unit::RemoveAuraHolderFromStack(uint32 spellId, int32 stackAmount, uint64 casterGUID, AuraRemoveMode mode)
 {
+    if (!spellId)
+    {
+        sLog.outError("RemoveAuraHolderFromStack: Returned becouse of spellId being = 0!");
+        return;
+    }
+
     SpellAuraHolderBounds spair = GetSpellAuraHolderBounds(spellId);
     for(SpellAuraHolderMap::iterator iter = spair.first; iter != spair.second; ++iter)
     {
