@@ -3082,7 +3082,7 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
     prepareDataForTriggerSystem();
 
     // calculate cast time (calculated after first CheckCast check to prevent charge counting for first CheckCast fail)
-    m_casttime = GetSpellCastTime(m_spellInfo, this,false);
+    m_casttime = GetSpellCastTime(m_spellInfo, this);
 
     // set timer base at cast time
     ReSetTimer();
