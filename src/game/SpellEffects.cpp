@@ -1982,7 +1982,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         }
                         case EFFECT_INDEX_1:                // additional data for dummy[0]
                         case EFFECT_INDEX_2:
-                            return;                         
+                            return;
                     }
                     return;
                 }
@@ -8685,7 +8685,7 @@ void Spell::EffectResurrect(SpellEffectIndex /*eff_idx*/)
                 return;
             }
             break;
-		// Defibrillate (Gnomish Army Knife) has 67% chance of success
+        // Defibrillate (Gnomish Army Knife) has 67% chance of success
         case 54732:
             if (roll_chance_i(33))
                 return;
