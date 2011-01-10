@@ -9334,6 +9334,18 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
                         return;
                     break;
                 }
+                case 69674:
+                {
+                    if (!apply)
+                    {
+                        if (m_removeMode == AURA_REMOVE_BY_DISPEL)
+                        {
+                            cast_at_remove = true;
+                            spellId1 = 69706;
+                        }
+                    }
+                    break;
+                }
                 default:
                     return;
             }
