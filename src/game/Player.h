@@ -2768,7 +2768,7 @@ template <class T> T Player::ApplySpellMod(uint32 spellId, SpellModOp op, T &bas
             totalpct += mod->value;
         }
 
-        if (mod->charges > 0 && drop_charges)
+        if (mod->charges > 0)
         {
             --mod->charges;
             if (mod->charges == 0)
