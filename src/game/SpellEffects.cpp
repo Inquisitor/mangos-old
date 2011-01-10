@@ -2647,6 +2647,13 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, 71341, true);
                     break;
                 }
+                case 72202:                                 // Blood Link
+                {
+                    if (!unitTarget)
+                        return;
+                    unitTarget->CastSpell(unitTarget, 72195, true);
+                    break;
+                }
             }
             break;
         }
@@ -7840,6 +7847,18 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     if (!unitTarget)
                         return;
                     m_caster->CastSpell(unitTarget, 71480, true);
+                    return;
+                }
+                 case 72195:                                 // Blood link
+                {
+                    if (!unitTarget)
+                        return;
+                    if (unitTarget->HasAura(72371))
+                    {
+                        unitTarget->RemoveAurasDueToSpell(72371);
+                        int32 power = unitTarget->GetPower(unitTarget->getPowerType());
+                        unitTarget->CastCustomSpell(unitTarget, 72371, &power, &power, NULL, true);
+                    }
                     return;
                 }
                 // Burst at the Seams (Quest: That's Abominable!)

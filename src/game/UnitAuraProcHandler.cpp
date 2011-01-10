@@ -3362,7 +3362,12 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
                        }
                         break;
                 }
-                
+                case 72178:                                 // Blood link Saurfang aura
+                {
+                    target = this;
+                    trigger_spell_id = 72195;
+                    break;
+                }
                 case 51121: // Time Bomb
                 case 59376:
                 {
