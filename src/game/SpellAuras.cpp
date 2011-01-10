@@ -2251,19 +2251,6 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     case 75973:                             // X-53 Touring Rocket
                         Spell::SelectMountByAreaAndSkill(target, 0, 0, 75957, 75972, 76154);
                         return;
-                    case 71563:                             //Deadly Precision Item 50259 - Nevermelting Ice Crystal  
-                        {
-                            if (Unit* caster = GetCaster())
-                            {
-                                caster->CastSpell(caster, 71564, true); //Deadly Precision
-                                if (Aura* A=caster->GetAura(71564,EFFECT_INDEX_0))
-                                {
-                                    SpellAuraHolder* H=A->GetHolder();
-                                    H->SetStackAmount(H->GetSpellProto()->StackAmount);
-                                }
-                            }
-                            return;
-                        }
                 }
                 break;
             }
