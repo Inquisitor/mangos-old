@@ -983,6 +983,13 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     // Cauterizing Heal or Searing Flame
                     triggered_spell_id = (procFlag & PROC_FLAG_SUCCESSFUL_POSITIVE_SPELL) ? 69733 : 69729;
                     break;
+                case 70871:
+                    // Soul of Blood Qween
+                    triggered_spell_id = 70872;
+                    basepoints[0] = int32(triggerAmount* damage /100);
+                    if (basepoints[0] < 0)
+                        return SPELL_AURA_PROC_FAILED;
+                    break;
                 // Item - Shadowmourne Legendary
                 case 71903:
                 {
