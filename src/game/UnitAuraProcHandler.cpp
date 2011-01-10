@@ -4015,6 +4015,22 @@ SpellAuraProcResult Unit::HandleProcTriggerSpellAuraProc(Unit *pVictim, uint32 d
             basepoints[0] = int32(GetTotalAttackPowerValue(BASE_ATTACK) * triggerAmount / 100);
             break;
         }
+        // Hack for Blood mark (ICC Saurfang)
+        case 72255:
+        case 72444:
+        case 72445:
+        case 72446:
+        {
+            float radius = GetSpellRadius(sSpellRadiusStore.LookupEntry(auraSpellInfo->EffectRadiusIndex[EFFECT_INDEX_0]));
+            Map::PlayerList const& pList = GetMap()->GetPlayers();
+            for (Map::PlayerList::const_iterator itr = pList.begin(); itr != pList.end(); ++itr)
+                if (itr->getSource() && itr->getSource()->IsWithinDistInMap(this,radius) && itr->getSource()->HasAura(triggerEntry->targetAuraSpell))
+                {
+                    target = itr->getSource();
+                    break;
+                }
+            break;
+        }
     }
 
     if (cooldown && GetTypeId()==TYPEID_PLAYER && ((Player*)this)->HasSpellCooldown(trigger_spell_id))

@@ -9363,7 +9363,11 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
                     break;
                 }
                 case 70867:                                 // Soul of Blood Qween
+                case 70879:
                 case 71473:
+                case 71525:
+                case 71530:
+                case 71531:
                 case 71532:
                 case 71533:
                 {
