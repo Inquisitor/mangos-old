@@ -9334,7 +9334,7 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
                         return;
                     break;
                 }
-                case 69674:
+                case 69674:                                 //Mutated Infection
                 {
                     if (!apply)
                     {
@@ -9342,6 +9342,24 @@ void SpellAuraHolder::HandleSpellSpecificBoosts(bool apply)
                         {
                             cast_at_remove = true;
                             spellId1 = 69706;
+                        }
+                    }
+                    break;
+                }
+                case 69290:// Blighted Spores
+                {
+                    if (!apply)
+                    {
+                        if (m_removeMode == AURA_REMOVE_BY_EXPIRE)
+                        {
+                             cast_at_remove = true;
+                             spellId1 = 69291; //Inoculated
+                             // Cast unknown spell - spore explode (override)
+                             float radius = GetSpellRadius(sSpellRadiusStore.LookupEntry(GetSpellProto()->EffectRadiusIndex[EFFECT_INDEX_0]));
+                             Map::PlayerList const& pList = m_target->GetMap()->GetPlayers();
+                             for (Map::PlayerList::const_iterator itr = pList.begin(); itr != pList.end(); ++itr)
+                                 if (itr->getSource() && itr->getSource()->IsWithinDistInMap(m_target,radius))
+                                     itr->getSource()->CastSpell(itr->getSource(), spellId1, true);
                         }
                     }
                     break;
