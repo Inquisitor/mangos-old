@@ -2639,6 +2639,14 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         ((Player*)m_caster)->RemoveSpellCooldown(53385, true); //Divine Storm
                     return;
                 }
+                case 71390:                                 // Pact of darkfallen
+                {
+                    if (!unitTarget)
+                        return;
+
+                    unitTarget->CastSpell(unitTarget, 71341, true);
+                    break;
+                }
             }
             break;
         }
