@@ -776,8 +776,8 @@ void Spell::prepareDataForTriggerSystem()
                 break;
             case SPELLFAMILY_HUNTER:
                 // Hunter Rapid Killing/Explosive Trap Effect/Immolation Trap Effect/Frost Trap Aura/Snake Trap Effect/Explosive Shot
-                if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x0100200000000214)) ||
-                    m_spellInfo->SpellFamilyFlags2 & 0x200)
+                if ((m_spellInfo->SpellFamilyFlags & UI64LIT(0x010020000000021C)) ||
+                    m_spellInfo->SpellFamilyFlags2 & 0x64200)
                     m_canTrigger = true;
                 break;
             case SPELLFAMILY_PALADIN:
@@ -3082,7 +3082,7 @@ void Spell::prepare(SpellCastTargets const* targets, Aura* triggeredByAura)
     prepareDataForTriggerSystem();
 
     // calculate cast time (calculated after first CheckCast check to prevent charge counting for first CheckCast fail)
-    m_casttime = GetSpellCastTime(m_spellInfo, this);
+    m_casttime = GetSpellCastTime(m_spellInfo, this,false);
 
     // set timer base at cast time
     ReSetTimer();

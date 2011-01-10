@@ -6110,7 +6110,7 @@ ActionButton const* Player::GetActionButton(uint8 button)
 
 bool Player::SetPosition(float x, float y, float z, float orientation, bool teleport)
 {
-    if(!Unit::SetPosition(x, y, z, orientation, teleport))
+    if (!Unit::SetPosition(x, y, z, orientation, teleport))
         return false;
 
     // group update
