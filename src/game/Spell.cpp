@@ -1137,6 +1137,20 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
             DoSpellHitOnUnit(m_caster, mask);
     }
 
+    if(missInfo == SPELL_MISS_MISS || missInfo == SPELL_MISS_RESIST)
+    {
+        Unit* realCaster = GetAffectiveCaster();
+        if(realCaster && realCaster != unit)
+        {
+            if (!unit->isInCombat() && unit->GetTypeId() != TYPEID_PLAYER && ((Creature*)unit)->AI())
+                ((Creature*)unit)->AI()->AttackedBy(realCaster);
+
+            unit->AddThreat(realCaster);
+            unit->SetInCombatWith(realCaster);
+            realCaster->SetInCombatWith(unit);
+        }
+    }
+
     // All calculated do it!
     // Do healing and triggers
     if (m_healing)
@@ -3785,7 +3799,7 @@ void Spell::finish(bool ok)
             if (ihit->deleted == true)
                 continue;
 
-            if( ihit->missCondition == SPELL_MISS_NONE )
+            if (ihit->missCondition == SPELL_MISS_NONE)
             {
                 // check m_caster->GetGUID() let load auras at login and speedup most often case
                 Unit *unit = m_caster->GetObjectGuid() == ihit->targetGUID ? m_caster : ObjectAccessor::GetUnit(*m_caster, ihit->targetGUID);
