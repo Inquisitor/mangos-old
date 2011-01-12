@@ -5727,6 +5727,15 @@ SpellCastResult Spell::CheckCast(bool strict)
                 }
                 break;
             }
+            case SPELL_EFFECT_TALENT_SPEC_SELECT:
+            {
+                // can't change during already started arena/battleground
+                if (m_caster->GetTypeId() == TYPEID_PLAYER)
+                {
+                    if (((Player*)m_caster)->GetBattleGround() && ((Player*)m_caster)->GetBattleGround()->GetStatus() == STATUS_IN_PROGRESS)
+                        return SPELL_FAILED_NOT_IN_BATTLEGROUND;
+                }
+            }
             default:break;
         }
     }
