@@ -1356,10 +1356,10 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 {
                     if (unitTarget && unitTarget->GetTypeId() == TYPEID_PLAYER)
                     {
-		    	uint32 toCast = (roll_chance_i(50) ? 28059 : 28084);
-			unitTarget->RemoveAurasDueToSpell( (toCast == 28059)? 28084 : 28059 );
-			unitTarget->CastSpell(unitTarget, toCast, true);
-			unitTarget->RemoveAurasDueToSpell( (toCast == 28059)? 29660 : 29659 );
+                        uint32 toCast = (roll_chance_i(50) ? 28059 : 28084);
+                        unitTarget->RemoveAurasDueToSpell( (toCast == 28059)? 28084 : 28059 );
+                        unitTarget->CastSpell(unitTarget, toCast, true);
+                        unitTarget->RemoveAurasDueToSpell( (toCast == 28059)? 29660 : 29659 );
                     }
                     break;
                 }

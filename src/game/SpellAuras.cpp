@@ -5349,7 +5349,7 @@ void Aura::HandlePeriodicTriggerSpell(bool apply, bool /*Real*/)
                 return;
             }
             case 51912:                                     // Ultra-Advanced Proto-Typical Shortening Blaster
-			case 53102:                                    	// Scepter of Domination
+            case 53102:                                        // Scepter of Domination
                 if (m_removeMode == AURA_REMOVE_BY_EXPIRE)
                 {
                     if (Unit* pCaster = GetCaster())
@@ -5623,7 +5623,7 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
                 break;
             }
             case SPELLFAMILY_GENERIC:
-            { 	
+            {     
                 if(spellProto->Id == 50344)
                     m_modifier.m_amount = caster->GetMaxHealth() * 0.05;
                 break;
@@ -8712,16 +8712,16 @@ void Aura::HandleAuraModAllCritChance(bool apply, bool Real)
 
 void Aura::SetAuraMaxDuration( int32 duration )
 {
-	m_maxduration = duration;
+    m_maxduration = duration;
 
-	// possible overwrite persistent state
-	if (duration > 0)
-	{
-		if (!(GetHolder()->IsPassive() && GetSpellProto()->DurationIndex == 0))
-			GetHolder()->SetPermanent(false);
+    // possible overwrite persistent state
+    if (duration > 0)
+    {
+        if (!(GetHolder()->IsPassive() && GetSpellProto()->DurationIndex == 0))
+            GetHolder()->SetPermanent(false);
 
-		GetHolder()->SetAuraFlags(GetHolder()->GetAuraFlags() | AFLAG_DURATION);
-	}
+        GetHolder()->SetAuraFlags(GetHolder()->GetAuraFlags() | AFLAG_DURATION);
+    }
 }
 
 bool Aura::IsLastAuraOnHolder()

@@ -1656,7 +1656,7 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 61916:                                 // Lightning Whirl (10 man)
                 case 63482:                                 // Lightning Whirl (25 man)
                 case 63018:                                 // Searing Light (10 man)
-		case 65121:                                 // Searing Light (25 man)
+                case 65121:                                 // Searing Light (25 man)
                 case 71340:                                 // Pact of darkfallen (hack for script work)
                     unMaxTargets = 1;
                     break;

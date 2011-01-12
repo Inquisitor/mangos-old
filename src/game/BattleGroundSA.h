@@ -23,7 +23,7 @@ class BattleGround;
 
 #define BG_SA_GRY_MAX   3
 #define BG_SA_GATE_MAX  6
-#define BG_SA_MAX_WS	3
+#define BG_SA_MAX_WS    3
 
 const uint32 BG_SA_GateStatus[6] = {3849, 3623, 3620, 3614, 3617, 3638};
 const uint32 BG_SA_WorldStatusA[3] = {3630, 3629, 3628};
@@ -267,7 +267,7 @@ class BattleGroundSA : public BattleGround
         virtual WorldSafeLocsEntry const* GetClosestGraveYard(Player* player);
         virtual void Reset();
 
-        Team GetDefender() const	{ return defender; }
+        Team GetDefender() const    { return defender; }
         uint8 GetGydController(uint8 gyd) const { return m_Gyd[gyd]; }
         uint32 GetVehicleFaction(uint8 vehicleType) const { return GetCorrectFactionSA(vehicleType); }
         void RemovePlayer(Player *plr, ObjectGuid guid);

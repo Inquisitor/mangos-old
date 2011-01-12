@@ -1748,7 +1748,7 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 break;
             case ACHIEVEMENT_CRITERIA_TYPE_HONORABLE_KILL:
             case ACHIEVEMENT_CRITERIA_TYPE_GET_KILLING_BLOWS:
-            {	
+            {
                 if (!miscvalue1)
                     continue;
 
@@ -1780,7 +1780,7 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 // some hardcoded requirements
                 switch(achievementCriteria->referredAchievement)
                 {
-                    case 231:					// Wrecking Ball
+                    case 231:                   // Wrecking Ball
                     {
                         if(!bg || bg->GetPlayerScore(GetPlayer(),SCORE_DEATHS) != 0)
                             continue;
@@ -1811,24 +1811,24 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
                 // some hardcoded requirements
                 switch(achievementCriteria->referredAchievement)
                 {
-                    case 204:					// WS, capture 3 flags without dying
+                    case 204:                   // WS, capture 3 flags without dying
                     {
                         if(bg->GetPlayerScore(GetPlayer(),SCORE_DEATHS) != 0)
                             continue;
                         break;
                     }
-	                case 211:					// EY, capture flag while controling all 4 bases
-	                {
-	                    if(!bg->IsAllNodesConrolledByTeam(GetPlayer()->GetTeam()))
-	                        continue;
-	                    break;
-	                }
-	                case 216:					// EY, capture 3 flags without dying
-	                {
-	                    if(bg->GetPlayerScore(GetPlayer(),SCORE_DEATHS) != 0)
-	                        continue;
-	                    break;
-	                }
+                    case 211:                   // EY, capture flag while controling all 4 bases
+                    {
+                        if(!bg->IsAllNodesConrolledByTeam(GetPlayer()->GetTeam()))
+                            continue;
+                        break;
+                    }
+                    case 216:                    // EY, capture 3 flags without dying
+                    {
+                        if(bg->GetPlayerScore(GetPlayer(),SCORE_DEATHS) != 0)
+                            continue;
+                        break;
+                    }
                 }
 
                 SetCriteriaProgress(achievementCriteria, achievement, miscvalue1, PROGRESS_ACCUMULATE);
@@ -1836,8 +1836,8 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
             }
             case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_TEAM_RATING:
             {
-            	if(!miscvalue1 || achievementCriteria->highest_team_rating.teamtype != miscvalue1)
-            	    continue;
+                if(!miscvalue1 || achievementCriteria->highest_team_rating.teamtype != miscvalue1)
+                    continue;
 
                 change = miscvalue2;
                 progressType = PROGRESS_HIGHEST;
@@ -1845,11 +1845,11 @@ void AchievementMgr::UpdateAchievementCriteria(AchievementCriteriaTypes type, ui
             }
             case ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_PERSONAL_RATING:
             {
-            	if(!miscvalue1 || achievementCriteria->highest_personal_rating.teamtype != miscvalue1)
-            	    continue;
+                if(!miscvalue1 || achievementCriteria->highest_personal_rating.teamtype != miscvalue1)
+                    continue;
 
-            	if(achievementCriteria->highest_personal_rating.teamrating != 0 && achievementCriteria->highest_personal_rating.teamrating > miscvalue2)
-            	    continue;
+                if(achievementCriteria->highest_personal_rating.teamrating != 0 && achievementCriteria->highest_personal_rating.teamrating > miscvalue2)
+                    continue;
 
                 change = miscvalue2;
                 progressType = PROGRESS_HIGHEST;
