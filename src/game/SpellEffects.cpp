@@ -9538,8 +9538,6 @@ void Spell::EffectStealBeneficialBuff(SpellEffectIndex eff_idx)
         {
             // Random select buff for dispel
             SpellAuraHolder *holder = steal_list[urand(0, list_size-1)];
-            // Not use chance for steal
-            // TODO possible need do it
 
             int32 miss_chance = 0;
             // Apply dispel mod from aura caster
