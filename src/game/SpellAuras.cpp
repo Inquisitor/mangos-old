@@ -2152,9 +2152,6 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         // Pet will be following owner, this makes him stop
                         target->addUnitState(UNIT_STAT_STUNNED);
                         return;
-                    case 58914:                             // Kill Command
-                        target->CastSpell(target, 34027, true, NULL, this);
-                        return;
                     case 62061:                             // Festive Holiday Mount
                         if (target->HasAuraType(SPELL_AURA_MOUNTED))
                             // Reindeer Transformation
@@ -2337,6 +2334,18 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 // Fingers of Frost stacks set to max at apply
                 if (GetId() == 74396)
                     GetHolder()->SetAuraCharges(GetSpellProto()->StackAmount);
+                break;
+            }
+            case SPELLFAMILY_HUNTER:
+            {
+                /* disabled until full implementation
+                switch(GetId())
+                {
+                    case 34026:                             // Kill Command
+                        target->CastSpell(target, 34027, true, NULL, this);
+                        return;
+                }
+                */
                 break;
             }
             case SPELLFAMILY_SHAMAN:
@@ -5340,7 +5349,7 @@ void Aura::HandlePeriodicTriggerSpell(bool apply, bool /*Real*/)
                 return;
             }
             case 51912:                                     // Ultra-Advanced Proto-Typical Shortening Blaster
-			case 53102:                                    	// Scepter of Domination
+            case 53102:                                        // Scepter of Domination
                 if (m_removeMode == AURA_REMOVE_BY_EXPIRE)
                 {
                     if (Unit* pCaster = GetCaster())
@@ -5613,7 +5622,7 @@ void Aura::HandlePeriodicDamage(bool apply, bool Real)
                 break;
             }
             case SPELLFAMILY_GENERIC:
-            { 	
+            {     
                 if(spellProto->Id == 50344)
                     m_modifier.m_amount = caster->GetMaxHealth() * 0.05;
                 break;
@@ -8788,16 +8797,16 @@ void Aura::HandleAuraModAllCritChance(bool apply, bool Real)
 
 void Aura::SetAuraMaxDuration( int32 duration )
 {
-	m_maxduration = duration;
+    m_maxduration = duration;
 
-	// possible overwrite persistent state
-	if (duration > 0)
-	{
-		if (!(GetHolder()->IsPassive() && GetSpellProto()->DurationIndex == 0))
-			GetHolder()->SetPermanent(false);
+    // possible overwrite persistent state
+    if (duration > 0)
+    {
+        if (!(GetHolder()->IsPassive() && GetSpellProto()->DurationIndex == 0))
+            GetHolder()->SetPermanent(false);
 
-		GetHolder()->SetAuraFlags(GetHolder()->GetAuraFlags() | AFLAG_DURATION);
-	}
+        GetHolder()->SetAuraFlags(GetHolder()->GetAuraFlags() | AFLAG_DURATION);
+    }
 }
 
 bool Aura::IsLastAuraOnHolder()

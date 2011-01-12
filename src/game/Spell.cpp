@@ -1137,6 +1137,20 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
             DoSpellHitOnUnit(m_caster, mask);
     }
 
+    if(missInfo == SPELL_MISS_MISS || missInfo == SPELL_MISS_RESIST)
+    {
+        Unit* realCaster = GetAffectiveCaster();
+        if(realCaster && realCaster != unit)
+        {
+            if (!unit->isInCombat() && unit->GetTypeId() != TYPEID_PLAYER && ((Creature*)unit)->AI())
+                ((Creature*)unit)->AI()->AttackedBy(realCaster);
+
+            unit->AddThreat(realCaster);
+            unit->SetInCombatWith(realCaster);
+            realCaster->SetInCombatWith(unit);
+        }
+    }
+
     // All calculated do it!
     // Do healing and triggers
     if (m_healing)
@@ -1319,7 +1333,7 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
             }
 
             // not break stealth by cast targeting
-            if ((!(m_spellInfo->AttributesEx & SPELL_ATTR_EX_NOT_BREAK_STEALTH) && m_spellInfo->Id != 51690 && m_spellInfo->Id != 53198 && m_spellInfo->Id != 3600 ) || (m_spellInfo->SpellFamilyName == SPELLFAMILY_ROGUE && m_spellInfo->SpellFamilyFlags == SPELLFAMILYFLAG_ROGUE_SAP))
+            if ((!(m_spellInfo->AttributesEx & SPELL_ATTR_EX_NOT_BREAK_STEALTH) && m_spellInfo->Id != 51690 && m_spellInfo->Id != 53198 && m_spellInfo->Id != 3600 && m_spellInfo->Id != 58838) || (m_spellInfo->SpellFamilyName == SPELLFAMILY_ROGUE && m_spellInfo->SpellFamilyFlags == SPELLFAMILYFLAG_ROGUE_SAP))
                 unit->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
 
             // can cause back attack (if detected), stealth removed at Spell::cast if spell break it
@@ -1656,7 +1670,7 @@ void Spell::SetTargetMap(SpellEffectIndex effIndex, uint32 targetMode, UnitList&
                 case 61916:                                 // Lightning Whirl (10 man)
                 case 63482:                                 // Lightning Whirl (25 man)
                 case 63018:                                 // Searing Light (10 man)
-		case 65121:                                 // Searing Light (25 man)
+                case 65121:                                 // Searing Light (25 man)
                 case 71340:                                 // Pact of darkfallen (hack for script work)
                     unMaxTargets = 1;
                     break;
@@ -3816,7 +3830,7 @@ void Spell::finish(bool ok)
             if (ihit->deleted == true)
                 continue;
 
-            if( ihit->missCondition == SPELL_MISS_NONE )
+            if (ihit->missCondition == SPELL_MISS_NONE)
             {
                 // check m_caster->GetGUID() let load auras at login and speedup most often case
                 Unit *unit = m_caster->GetObjectGuid() == ihit->targetGUID ? m_caster : ObjectAccessor::GetUnit(*m_caster, ihit->targetGUID);
@@ -5764,6 +5778,15 @@ SpellCastResult Spell::CheckCast(bool strict)
                 }
                 break;
             }
+            case SPELL_EFFECT_TALENT_SPEC_SELECT:
+            {
+                // can't change during already started arena/battleground
+                if (m_caster->GetTypeId() == TYPEID_PLAYER)
+                {
+                    if (((Player*)m_caster)->GetBattleGround() && ((Player*)m_caster)->GetBattleGround()->GetStatus() == STATUS_IN_PROGRESS)
+                        return SPELL_FAILED_NOT_IN_BATTLEGROUND;
+                }
+            }
             default:break;
         }
     }
@@ -7092,7 +7115,7 @@ bool Spell::CheckTarget( Unit* target, SpellEffectIndex eff )
             // Get GO cast coordinates if original caster -> GO
             if (target != m_caster)
                 if (WorldObject *caster = GetCastingObject())
-                    if (!target->IsWithinLOSInMap(caster))
+                    if (!target->IsWithinLOSInMap(caster) && m_targets.m_targetMask != 66/*unit + dest*/ && m_spellInfo->EffectImplicitTargetB[eff] != TARGET_ALL_ENEMY_IN_AREA_INSTANT)
                         return false;
             break;
     }

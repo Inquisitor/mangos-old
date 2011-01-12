@@ -3936,6 +3936,18 @@ void Spell::EffectTeleportUnits(SpellEffectIndex eff_idx)
                 ((Player*)unitTarget)->TeleportTo(st->target_mapId,st->target_X,st->target_Y,st->target_Z,st->target_Orientation,unitTarget==m_caster ? TELE_TO_SPELL : 0);
             break;
         }
+        case TARGET_EFFECT_SELECT:
+        {
+            // m_destN filled, but sometimes for wrong dest and does not have TARGET_FLAG_DEST_LOCATION
+
+            float x = unitTarget->GetPositionX();
+            float y = unitTarget->GetPositionY();
+            float z = unitTarget->GetPositionZ();
+            float orientation = m_caster->GetOrientation();
+
+            m_caster->NearTeleportTo(x, y, z, orientation, unitTarget == m_caster);
+            return;
+        }
         case TARGET_BEHIND_VICTIM:
         {
             Unit *pTarget = NULL;
@@ -9757,8 +9769,6 @@ void Spell::EffectStealBeneficialBuff(SpellEffectIndex eff_idx)
         {
             // Random select buff for dispel
             SpellAuraHolder *holder = steal_list[urand(0, list_size-1)];
-            // Not use chance for steal
-            // TODO possible need do it
 
             int32 miss_chance = 0;
             // Apply dispel mod from aura caster

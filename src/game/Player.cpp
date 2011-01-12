@@ -22678,8 +22678,6 @@ void Player::ActivateSpec(uint8 specNum)
         UnsummonPetTemporaryIfAny();
     else if (Pet* pet = GetPet())
         pet->Unsummon(PET_SAVE_NOT_IN_SLOT, this);
-    if (GetBattleGround() && GetBattleGround()->GetStatus() == STATUS_IN_PROGRESS)
-        return;
 
     // prevent deletion of action buttons by client at spell unlearn or by player while spec change in progress
     SendLockActionButtons();
