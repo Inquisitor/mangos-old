@@ -5857,8 +5857,9 @@ SpellCastResult Spell::CheckCast(bool strict)
                 if (m_caster->GetTypeId() == TYPEID_PLAYER && !sMapStore.LookupEntry(m_caster->GetMapId())->IsMountAllowed() && !m_IsTriggeredSpell && !m_spellInfo->AreaGroupId)
                     return SPELL_FAILED_NO_MOUNTS_ALLOWED;
 
+                /* // Feanor - Is it really needed here, mounts should be allowed in shapeshift as long as they remove them (all shapeshift ?)
                 if (m_caster->IsInDisallowedMountForm())
-                    return SPELL_FAILED_NOT_SHAPESHIFT;
+                    return SPELL_FAILED_NOT_SHAPESHIFT; */
 
                 break;
             }
