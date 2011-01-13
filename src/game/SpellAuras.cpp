@@ -4506,7 +4506,7 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
             {
                 if (Unit* caster = GetCaster())
                 {
-                    if(!apply)
+                    if(apply)
                     {
                         if (caster->GetOwner() && caster->GetOwner()->HasAura(56250)) // Glyph of Seduction
                         {
