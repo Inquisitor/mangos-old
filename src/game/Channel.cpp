@@ -587,7 +587,7 @@ void Channel::Say(uint64 p, const char *what, uint32 lang)
         data << what;
         data << uint8(plr ? plr->chatTag() : 0);
 
-        SendToAll(&data, !players[p].IsModerator() ? p : false);
+        SendToAll(&data, !players[p].IsModerator() ? p : 0);
 
         char msg[512];
         snprintf( ( char* )msg, 512, "MSG %s %s %s\n",GetName().c_str(), plr->GetName(), what );
