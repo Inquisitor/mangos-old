@@ -1103,6 +1103,12 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     }
 
 
+                    //Glyph of Scourge Strike
+                case 58642:
+                    {
+                        triggered_spell_id = 69961;
+                        break;
+                    }
         }
 
         break;
