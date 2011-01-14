@@ -275,7 +275,6 @@ class Channel
         void Invite(uint64 p, const char *newp);
         void Voice(uint64 guid1, uint64 guid2);
         void DeVoice(uint64 guid1, uint64 guid2);
-        void SendToAll(WorldPacket *data, uint64 p = 0);
         void JoinNotify(uint64 guid);                                           // invisible notify
         void LeaveNotify(uint64 guid);                                          // invisible notify
 };
