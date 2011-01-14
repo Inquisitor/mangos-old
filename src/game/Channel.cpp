@@ -676,33 +676,14 @@ void Channel::SetOwner(uint64 guid, bool exclaim)
 void Channel::SendToAll(WorldPacket *data, uint64 p)
 {
     for(PlayerList::const_iterator i = players.begin(); i != players.end(); ++i)
-    {
-        Player *plr = sObjectMgr.GetPlayer(i->first);
-        if(plr)
-        {
+        if (Player *plr = sObjectMgr.GetPlayer(i->first))
             if(!p || !plr->GetSocial()->HasIgnore(p))
                 plr->GetSession()->SendPacket(data);
-        }
-    }
-}
-
-void Channel::SendToAllButOne(WorldPacket *data, uint64 who)
-{
-    for(PlayerList::const_iterator i = players.begin(); i != players.end(); ++i)
-    {
-        if(i->first != who)
-        {
-            Player *plr = sObjectMgr.GetPlayer(i->first);
-            if(plr)
-                plr->GetSession()->SendPacket(data);
-        }
-    }
 }
 
 void Channel::SendToOne(WorldPacket *data, uint64 who)
 {
-    Player *plr = sObjectMgr.GetPlayer(who);
-    if(plr)
+    if (Player *plr = sObjectMgr.GetPlayer(who))
         plr->GetSession()->SendPacket(data);
 }
 
