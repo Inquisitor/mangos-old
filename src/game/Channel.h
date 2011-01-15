@@ -198,7 +198,6 @@ class Channel
         void MakeVoiceOn(WorldPacket *data, uint64 guid);                       //+ 0x22
         void MakeVoiceOff(WorldPacket *data, uint64 guid);                      //+ 0x23
 
-        void SendToAllButOne(WorldPacket *data, uint64 who);
         void SendToOne(WorldPacket *data, uint64 who);
 
         bool IsOn(uint64 who) const { return players.find(who) != players.end(); }

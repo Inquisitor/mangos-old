@@ -2087,6 +2087,31 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         if (Unit* caster = GetCaster())
                             caster->CastSpell(caster, 13138, true, NULL, this);
                         return;
+                    case 34026:   // kill command
+                    {
+                        Unit * pet = target->GetPet();
+                        if (!pet)
+                            break;
+
+                        target->CastSpell(target,34027,true,NULL,this);
+
+                        // set 3 stacks and 3 charges (to make all auras not disappear at once)
+                        Aura * owner_aura = target->GetAura(34027,EFFECT_INDEX_0);
+                        Aura * pet_aura  = pet->GetAura(58914, EFFECT_INDEX_0);
+                        if (owner_aura)
+                        {
+                            owner_aura->GetHolder()->SetStackAmount(owner_aura->GetSpellProto()->StackAmount);
+                        }
+                        if (pet_aura)
+                        {
+                            if (pet_aura->GetHolder())
+                            {
+                                pet_aura->GetHolder()->SetAuraCharges(0);
+                                pet_aura->GetHolder()->SetStackAmount(owner_aura->GetSpellProto()->StackAmount);
+                            }
+                        }
+                        break;
+                    }
                     case 31606:                             // Stormcrow Amulet
                     {
                         CreatureInfo const * cInfo = ObjectMgr::GetCreatureTemplate(17970);
@@ -2165,8 +2190,11 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                         if (Unit* caster = GetCaster())
                         {
                             if (urand(0,10) > 2)
-                                for(uint8 x = 0; x < (urand(0,1) ? 2:3); ++x)
+                            {
+                                int32 count  = urand(0,1) ? 2 : 4;
+                                for(int i = 0; i < count; ++i)
                                     caster->SummonCreature(urand(0,1) ? 22482 : 22483, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
+                            }
                             else 
                                 caster->SummonCreature(22038, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000 );
                         }
@@ -4503,7 +4531,7 @@ void Aura::HandleAuraModStun(bool apply, bool Real)
             {
                 if (Unit* caster = GetCaster())
                 {
-                    if(!apply)
+                    if(apply)
                     {
                         if (caster->GetOwner() && caster->GetOwner()->HasAura(56250)) // Glyph of Seduction
                         {
@@ -6680,7 +6708,7 @@ void Aura::HandleShapeshiftBoosts(bool apply)
     uint32 HotWSpellId = 0;
     uint32 MasterShaperSpellId = 0;
 
-    uint32 form = GetModifier()->m_miscvalue;
+    ShapeshiftForm form = ShapeshiftForm(GetModifier()->m_miscvalue);
 
     Unit *target = GetTarget();
 
@@ -6775,11 +6803,9 @@ void Aura::HandleShapeshiftBoosts(bool apply)
                 if (itr->second.state == PLAYERSPELL_REMOVED) continue;
                 if (itr->first==spellId1 || itr->first==spellId2) continue;
                 SpellEntry const *spellInfo = sSpellStore.LookupEntry(itr->first);
-                if (!spellInfo || !(spellInfo->Attributes & (SPELL_ATTR_PASSIVE | SPELL_ATTR_UNK7)))
+                if (!spellInfo || !IsNeedCastSpellAtFormApply(spellInfo, form))
                     continue;
-                // passive spells with SPELL_ATTR_EX2_NOT_NEED_SHAPESHIFT are already active without shapeshift, do no recast!
-                if (spellInfo->Stances & (1<<(form-1)) && !(spellInfo->AttributesEx2 & SPELL_ATTR_EX2_NOT_NEED_SHAPESHIFT))
-                    target->CastSpell(target, itr->first, true, NULL, this);
+                target->CastSpell(target, itr->first, true, NULL, this);
             }
             // remove auras that do not require shapeshift, but are not active in this specific form (like Improved Barkskin)
             Unit::SpellAuraHolderMap& tAuras = target->GetSpellAuraHolderMap();

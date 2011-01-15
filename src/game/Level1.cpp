@@ -2293,11 +2293,11 @@ bool ChatHandler::HandleSendChannelMsgCommand(char *args)
     char* arg_GM = strtok(NULL, " ");
     char* text = strtok(NULL, "");
 
-    if( !channel_name || !irc_name || !text || !arg_GM )
+    if (!channel_name || !irc_name || !text || !arg_GM)
         return false;
 
     Channel * channel = cMgr->GetChannel(channel_name, NULL, false );
-    if( !channel )
+    if (!channel)
         return false;
 
     char msg[256];
