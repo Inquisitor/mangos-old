@@ -5505,7 +5505,7 @@ void Aura::HandlePeriodicHeal(bool apply, bool /*Real*/)
         // Lifeblood
         if (GetSpellProto()->SpellIconID == 3088 && GetSpellProto()->SpellVisual[0] == 8145)
         {
-            int32 healthBonus = int32 (0.0032f * caster->GetMaxHealth();
+            int32 healthBonus = int32 (0.0032f * caster->GetMaxHealth());
             m_modifier.m_amount += healthBonus;
         }
 
