@@ -2476,7 +2476,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                             if ((*itr)->GetEntry() == 26472)
                                 ++m_counted; // Increment if found
 
-                        for(int x = 0; x < m_counted; ++x)
+                        for(int i = 0; i < m_counted; ++i)
                             ((Player*)m_caster)->KilledMonsterCredit(27221);
                     }
                     return;
@@ -2613,7 +2613,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 case 45607:                                 // Q: Kaganishu
                 {
                     if (m_caster->GetTypeId() == TYPEID_PLAYER)
-                        ((Player*)m_caster)->KilledMonsterCredit(25425, ObjectGuid());
+                        ((Player*)m_caster)->KilledMonsterCredit(25425);
                     return;
                 }
             }

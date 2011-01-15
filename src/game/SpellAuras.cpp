@@ -2772,7 +2772,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     {
                         if (Unit* caster = GetCaster())
                             if (caster->GetTypeId() == TYPEID_PLAYER)
-                                ((Player*)caster)->KilledMonsterCredit(24235, ObjectGuid());
+                                ((Player*)caster)->KilledMonsterCredit(24235);
                     }
                     else 
                     {
@@ -2785,7 +2785,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     {
                         if (Unit* caster = GetCaster())
                             if (caster->GetTypeId() == TYPEID_PLAYER)
-                                ((Player*)caster)->KilledMonsterCredit(30546, ObjectGuid());
+                                ((Player*)caster)->KilledMonsterCredit(30546);
                     }
                     else 
                     {
