@@ -2212,42 +2212,6 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             }
                         }
                     }
-                    case 59579: // Burst at the Seams (Feanor: Is this needed anymore ? Handled in SpellEffects (59576)
-                    {                    
-                        CellPair pair(MaNGOS::ComputeCellPair(target->GetPositionX(), target->GetPositionY()));
-                        Cell cell(pair);
-                        cell.SetNoCreate();
-
-                        std::list<Creature*> creatureList;
-                        {
-                            MaNGOS::AnyUnitInObjectRangeCheck go_check(target, 15); // 15 yards check
-                            MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(creatureList, go_check);
-                            TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-                            target->GetMap()->Visit(cell, go_visit);
-                        }
-
-                        if (!creatureList.empty())
-                        {
-                            for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
-                            {
-                                if ((*itr)->isAlive() && (*itr)->GetTypeId() != TYPEID_PLAYER && ((*itr)->GetEntry() == 31142 || (*itr)->GetEntry() == 31147 || (*itr)->GetEntry() == 31205))
-                                {
-                                    target->CastSpell((*itr), 59580, true);
-                                    if (target->GetOwner())
-                                    {
-                                        Unit * pOwner = target->GetOwner();
-                                        switch((*itr)->GetEntry())
-                                        {
-                                            case 31142: pOwner->CastSpell(pOwner, 59591, true); break;
-                                            case 31147: pOwner->CastSpell(pOwner, 60042, true); break;
-                                            case 31205: pOwner->CastSpell(pOwner, 60040, true); break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        return;
-                    }
                     case 63624:                             // Learn a Second Talent Specialization
                         // Teach Learn Talent Specialization Switches, required for client triggered casts, allow after 30 sec delay
                         if (target->GetTypeId() == TYPEID_PLAYER)
@@ -2808,7 +2772,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     {
                         if (Unit* caster = GetCaster())
                             if (caster->GetTypeId() == TYPEID_PLAYER)
-                                ((Player*)caster)->KilledMonsterCredit(24235, ObjectGuid());
+                                ((Player*)caster)->KilledMonsterCredit(24235);
                     }
                     else 
                     {
@@ -2821,7 +2785,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     {
                         if (Unit* caster = GetCaster())
                             if (caster->GetTypeId() == TYPEID_PLAYER)
-                                ((Player*)caster)->KilledMonsterCredit(30546, ObjectGuid());
+                                ((Player*)caster)->KilledMonsterCredit(30546);
                     }
                     else 
                     {
@@ -4713,7 +4677,7 @@ void Aura::HandleModStealth(bool apply, bool Real)
                 if ((*i)->GetSpellProto()->SpellIconID == 2114)
                     target->CastSpell(target, 31666, true);
                 // Overkill
-                else if ((*i)->GetId() == 58426 && GetSpellProto()->SpellFamilyFlags & UI64LIT(0x0000000000400000))
+                else if ((*i)->GetId() == 58426)//Overkill we should remove anyway
                 {
                     if (Aura* aura = target->GetAura(58427, EFFECT_INDEX_0))
                     {
@@ -5538,6 +5502,13 @@ void Aura::HandlePeriodicHeal(bool apply, bool /*Real*/)
                 holy = 0;
             holy = int32(holy * 377 / 1000);
             m_modifier.m_amount += ap > holy ? ap : holy;
+        }
+
+        // Lifeblood
+        if (GetSpellProto()->SpellIconID == 3088 && GetSpellProto()->SpellVisual[0] == 8145)
+        {
+            int32 healthBonus = int32 (0.016f * caster->GetMaxHealth());
+            m_modifier.m_amount += healthBonus;
         }
 
         //Lifebloom special stacking

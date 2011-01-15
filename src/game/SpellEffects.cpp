@@ -2291,7 +2291,8 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 }
                 case 38173:                                 // Q: On Spirit's Wings
                 {
-                    if (!unitTarget || GetCaster()->GetTypeId() != TYPEID_PLAYER || ((Player*)GetCaster())->GetQuestStatus(10714) == QUEST_STATUS_COMPLETE)
+                    uint32 questId = 10714;
+                    if (!unitTarget || GetCaster()->GetTypeId() != TYPEID_PLAYER || ((Player*)GetCaster())->GetQuestStatus(questId) == QUEST_STATUS_COMPLETE)
                         return;
 
                     Player * pPlr = static_cast<Player*>(GetCaster());
@@ -2320,20 +2321,13 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         {
                             pPlr->SummonCreature(22492, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ+5, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000);
                             pPlr->KilledMonsterCredit(22383);
-                            pPlr->CompleteQuest(10714); // Complete quest
+                            pPlr->CompleteQuest(questId); // Complete quest
 
-                            uint16 log_slot;
-                            log_slot = pPlr->FindQuestSlot(10714);
-                            if (log_slot >= MAX_QUEST_LOG_SIZE)
-                                return;
-
-                            uint32 QuestID = pPlr->GetQuestSlotQuestId(log_slot);
-
-                            Quest const* pQuest = GetQuestTemplateStore(QuestID);
+                            Quest const* pQuest = GetQuestTemplateStore(questId);
                             if (!pQuest)
                                 return;
 
-                            QuestStatusData& q_status = pPlr->getQuestStatusMap()[QuestID];
+                            QuestStatusData& q_status = pPlr->getQuestStatusMap()[questId];
                             uint32 oldCount = q_status.m_creatureOrGOcount[0];
                             if(oldCount+ m_counted > pQuest->ReqCreatureOrGOCount[0] && oldCount == pQuest->ReqCreatureOrGOCount[0]) // We shouldnt go above required count
                                 return;
@@ -2346,8 +2340,8 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                             if (q_status.uState != QUEST_NEW) q_status.uState = QUEST_CHANGED;
 
                             pPlr->SendQuestUpdateAddCreatureOrGo(pQuest, ObjectGuid(), 0, oldCount + m_counted);
-                            if (pPlr->CanCompleteQuest(QuestID))
-                                pPlr->CompleteQuest(QuestID);
+                            if (pPlr->CanCompleteQuest(questId))
+                                pPlr->CompleteQuest(questId);
                         }
                     }
                     return;
@@ -2545,7 +2539,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                             if ((*itr)->GetEntry() == 26472)
                                 ++m_counted; // Increment if found
 
-                        for(int x = 0; x < m_counted; ++x)
+                        for(int i = 0; i < m_counted; ++i)
                             ((Player*)m_caster)->KilledMonsterCredit(27221);
                     }
                     return;
@@ -2682,7 +2676,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 case 45607:                                 // Q: Kaganishu
                 {
                     if (m_caster->GetTypeId() == TYPEID_PLAYER)
-                        ((Player*)m_caster)->KilledMonsterCredit(25425, ObjectGuid());
+                        ((Player*)m_caster)->KilledMonsterCredit(25425);
                     return;
                 }
                 case 70769: //Item - Paladin T10 Retribution 2P Bonus
@@ -7944,7 +7938,6 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     Cell cell(pair);
                     cell.SetNoCreate();
 
-
                     std::list<Creature*> creatureList;
                     {
                         MaNGOS::AnyUnitInPointRangeCheck go_check(pCaster, pCaster->GetPositionX(), pCaster->GetPositionY(), pCaster->GetPositionZ(), 20);
@@ -7971,6 +7964,52 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
 
                             unitTarget->DealDamage((*itr), (*itr)->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                         }
+                        unitTarget->DealDamage(unitTarget, unitTarget->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                    }
+                    return;
+                }
+                // Burst at the Seams (Quest: Fuel for the Fire)
+                case 52510:
+                {
+                    Unit * pCaster = GetCaster();
+                    // Iterate for all creatures around cast place
+                    CellPair pair(MaNGOS::ComputeCellPair(pCaster->GetPositionX(), pCaster->GetPositionY()));
+                    Cell cell(pair);
+                    cell.SetNoCreate();
+
+                    std::list<Creature*> creatureList;
+                    {
+                        MaNGOS::AnyUnitInPointRangeCheck go_check(pCaster, pCaster->GetPositionX(), pCaster->GetPositionY(), pCaster->GetPositionZ(), 20);
+                        MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck> go_search(creatureList, go_check);
+                        TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
+                        unitTarget->GetMap()->Visit(cell, go_visit);
+                    }
+
+                    if (!creatureList.empty())
+                    {
+                        for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
+                        {
+                            if((*itr)->GetEntry() == 28844)
+                            {
+                                if (Unit * pOwner = GetCaster()->GetOwner())
+                                    if (pOwner->GetTypeId() == TYPEID_PLAYER)
+                                    {
+                                        ((Player*)pOwner)->KilledMonsterCredit(29099);
+                                        QuestStatusData& q_status = ((Player*)pOwner)->getQuestStatusMap()[12690]; // Fuel for the Fire
+                                        if (q_status.m_status == QUEST_STATUS_INCOMPLETE && (q_status.m_creatureOrGOcount[0] % 20) < 3)
+                                        {
+                                            float x,y,z;
+                                            (*itr)->GetPosition(x,y,z);
+                                            (*itr)->SummonCreature(28873, x,y,z, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000);
+                                            ((Player*)pOwner)->KilledMonsterCredit(28873);
+                                        }
+                                    }
+
+                                (*itr)->CastSpell((*itr), 52508, true);
+                                //unitTarget->DealDamage((*itr), (*itr)->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                            }
+                        }
+
                         unitTarget->DealDamage(unitTarget, unitTarget->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                     }
                     return;
