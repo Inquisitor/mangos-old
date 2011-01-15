@@ -2228,7 +2228,8 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 }
                 case 38173:                                 // Q: On Spirit's Wings
                 {
-                    if (!unitTarget || GetCaster()->GetTypeId() != TYPEID_PLAYER || ((Player*)GetCaster())->GetQuestStatus(10714) == QUEST_STATUS_COMPLETE)
+                    uint32 questId = 10714;
+                    if (!unitTarget || GetCaster()->GetTypeId() != TYPEID_PLAYER || ((Player*)GetCaster())->GetQuestStatus(questId) == QUEST_STATUS_COMPLETE)
                         return;
 
                     Player * pPlr = static_cast<Player*>(GetCaster());
@@ -2257,20 +2258,13 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                         {
                             pPlr->SummonCreature(22492, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ+5, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000);
                             pPlr->KilledMonsterCredit(22383);
-                            pPlr->CompleteQuest(10714); // Complete quest
+                            pPlr->CompleteQuest(questId); // Complete quest
 
-                            uint16 log_slot;
-                            log_slot = pPlr->FindQuestSlot(10714);
-                            if (log_slot >= MAX_QUEST_LOG_SIZE)
-                                return;
-
-                            uint32 QuestID = pPlr->GetQuestSlotQuestId(log_slot);
-
-                            Quest const* pQuest = GetQuestTemplateStore(QuestID);
+                            Quest const* pQuest = GetQuestTemplateStore(questId);
                             if (!pQuest)
                                 return;
 
-                            QuestStatusData& q_status = pPlr->getQuestStatusMap()[QuestID];
+                            QuestStatusData& q_status = pPlr->getQuestStatusMap()[questId];
                             uint32 oldCount = q_status.m_creatureOrGOcount[0];
                             if(oldCount+ m_counted > pQuest->ReqCreatureOrGOCount[0] && oldCount == pQuest->ReqCreatureOrGOCount[0]) // We shouldnt go above required count
                                 return;
@@ -2283,8 +2277,8 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                             if (q_status.uState != QUEST_NEW) q_status.uState = QUEST_CHANGED;
 
                             pPlr->SendQuestUpdateAddCreatureOrGo(pQuest, ObjectGuid(), 0, oldCount + m_counted);
-                            if (pPlr->CanCompleteQuest(QuestID))
-                                pPlr->CompleteQuest(QuestID);
+                            if (pPlr->CanCompleteQuest(questId))
+                                pPlr->CompleteQuest(questId);
                         }
                     }
                     return;
