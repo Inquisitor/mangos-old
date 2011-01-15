@@ -2212,42 +2212,6 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                             }
                         }
                     }
-                    case 59579: // Burst at the Seams (Feanor: Is this needed anymore ? Handled in SpellEffects (59576)
-                    {                    
-                        CellPair pair(MaNGOS::ComputeCellPair(target->GetPositionX(), target->GetPositionY()));
-                        Cell cell(pair);
-                        cell.SetNoCreate();
-
-                        std::list<Creature*> creatureList;
-                        {
-                            MaNGOS::AnyUnitInObjectRangeCheck go_check(target, 15); // 15 yards check
-                            MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck> go_search(creatureList, go_check);
-                            TypeContainerVisitor<MaNGOS::CreatureListSearcher<MaNGOS::AnyUnitInObjectRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-                            target->GetMap()->Visit(cell, go_visit);
-                        }
-
-                        if (!creatureList.empty())
-                        {
-                            for(std::list<Creature*>::iterator itr = creatureList.begin(); itr != creatureList.end(); ++itr)
-                            {
-                                if ((*itr)->isAlive() && (*itr)->GetTypeId() != TYPEID_PLAYER && ((*itr)->GetEntry() == 31142 || (*itr)->GetEntry() == 31147 || (*itr)->GetEntry() == 31205))
-                                {
-                                    target->CastSpell((*itr), 59580, true);
-                                    if (target->GetOwner())
-                                    {
-                                        Unit * pOwner = target->GetOwner();
-                                        switch((*itr)->GetEntry())
-                                        {
-                                            case 31142: pOwner->CastSpell(pOwner, 59591, true); break;
-                                            case 31147: pOwner->CastSpell(pOwner, 60042, true); break;
-                                            case 31205: pOwner->CastSpell(pOwner, 60040, true); break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        return;
-                    }
                     case 63624:                             // Learn a Second Talent Specialization
                         // Teach Learn Talent Specialization Switches, required for client triggered casts, allow after 30 sec delay
                         if (target->GetTypeId() == TYPEID_PLAYER)
