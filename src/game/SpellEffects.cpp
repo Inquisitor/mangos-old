@@ -454,6 +454,7 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
                         damage = unitTarget->GetMaxHealth() / 2;
                         break;
                     }
+                    // Touch the Nightmare
                     case 50341:
                     {
                         if(effect_idx == EFFECT_INDEX_2)
