@@ -1038,6 +1038,8 @@ bool Pet::InitStatsForLevel(uint32 petlevel, Unit* owner)
 
       //  scale += GetObjectScale();
         SetObjectScale(scale);
+        // gc version
+        //SetObjectScale(DEFAULT_OBJECT_SCALE + scale);
         UpdateModelData();
     }
 

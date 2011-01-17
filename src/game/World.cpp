@@ -656,7 +656,7 @@ void World::LoadConfigSettings(bool reload)
         setConfig(CONFIG_UINT32_MAX_OVERSPEED_PINGS, 2);
     }
 
-    setConfig(CONFIG_BOOL_SAVE_RESPAWN_TIME_IMMEDIATLY, "SaveRespawnTimeImmediately", true);
+    setConfig(CONFIG_BOOL_SAVE_RESPAWN_TIME_IMMEDIATELY, "SaveRespawnTimeImmediately", true);
     setConfig(CONFIG_BOOL_WEATHER, "ActivateWeather", true);
 
     setConfig(CONFIG_BOOL_ALWAYS_MAX_SKILL_FOR_LEVEL, "AlwaysMaxSkillForLevel", false);
@@ -983,8 +983,12 @@ void World::SetInitialWorldSettings()
     sLog.outString( "Loading Spell Bonus Data..." );
     sSpellMgr.LoadSpellBonuses();                           // must be after LoadSpellChains
 
-    sLog.outString( "Loading spell disabled table...");
+    sLog.outString( "Loading Spell Disabled Data...");
     sObjectMgr.LoadSpellDisabledEntrys();
+
+    sLog.outString( "Loading Spell Stacking Data...");
+    sSpellMgr.LoadSpellStackingRules();
+
     sLog.outString( "Loading Spell Proc Item Enchant..." );
     sSpellMgr.LoadSpellProcItemEnchant();                   // must be after LoadSpellChains
 

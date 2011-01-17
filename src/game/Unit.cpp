@@ -8298,6 +8298,7 @@ void Unit::ApplySpellDispelImmunity(const SpellEntry * spellProto, DispelType ty
 {
     ApplySpellImmune(spellProto->Id,IMMUNITY_DISPEL, type, apply);
 
+    // Feanor: Check it against some non-destealthing spells
     // such dispell type should not remove auras but only return visibility
     if(type == DISPEL_STEALTH || type == DISPEL_INVISIBILITY)
         return;

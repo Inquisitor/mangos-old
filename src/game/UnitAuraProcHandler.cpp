@@ -949,18 +949,6 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     target = owner;
                     break;
                 }
-                // Kill command
-                case 58914:
-                {
-                    // Remove aura stack from pet
-                    RemoveAuraHolderFromStack(58914);
-                    Unit* owner = GetOwner();
-                    if (!owner)
-                        return SPELL_AURA_PROC_FAILED;
-                    // reduce the owner's aura stack
-                    owner->RemoveAuraHolderFromStack(34027);
-                    return SPELL_AURA_PROC_OK;
-                }
                 // Vampiric Touch (generic, used by some boss)
                 case 52723:
                 case 60501:
@@ -980,6 +968,17 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     // Glyph of Shadowfiend (need cast as self cast for owner, no hidden cooldown)
                     owner->CastSpell(owner,58227,true,castItem,triggeredByAura);
                     return SPELL_AURA_PROC_OK;
+                }
+                // Kill Command, pet aura
+                case 58914:
+                {
+                    // also decrease owner buff stack
+                    if (Unit* owner = GetOwner())
+                        owner->RemoveAuraHolderFromStack(34027);
+
+                    // Remove only single aura from stack
+                    if (triggeredByAura->GetStackAmount() > 1 && !triggeredByAura->GetHolder()->ModStackAmount(-1))
+                        return SPELL_AURA_PROC_CANT_TRIGGER;
                 }
                 // Glyph of Life Tap
                 case 63320:
@@ -4338,16 +4337,6 @@ SpellAuraProcResult Unit::HandleAddPctModifierAuraProc(Unit* /*pVictim*/, uint32
 
     switch(spellInfo->SpellFamilyName)
     {
-        case SPELLFAMILY_GENERIC:
-        {
-            if (spellInfo->Id == 34027)                     // Kill Command
-            {
-                // Remove only single aura from stack
-                if (triggeredByAura->GetStackAmount() > 1 && !triggeredByAura->GetHolder()->ModStackAmount(-1))
-                    return SPELL_AURA_PROC_CANT_TRIGGER;
-            }
-            break;
-        }
         case SPELLFAMILY_MAGE:
         {
             // Combustion
