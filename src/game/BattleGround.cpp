@@ -473,7 +473,7 @@ void BattleGround::Update(uint32 diff)
                         sBattleGroundMgr.BuildBattleGroundStatusPacket(&status, this, queueSlot, GetStatus(), 0, GetStartTime(), GetArenaType());
                         plr->GetSession()->SendPacket(&status);
 
-                        for(Unit::SpellAuraHolderMap::iterator iter = plr->GetSpellAuraHolderMap().begin(); iter != plr->GetSpellAuraHolderMap().end();)
+                        /*for(Unit::SpellAuraHolderMap::iterator iter = plr->GetSpellAuraHolderMap().begin(); iter != plr->GetSpellAuraHolderMap().end();)
                         {
                             if (!iter->second->IsPassive() && iter->second->IsPositive() && iter->second->GetId() != 32612)
                             {
@@ -489,7 +489,7 @@ void BattleGround::Update(uint32 diff)
                             }
                             else
                                 ++iter;
-                        }
+                        }*/
 
                         plr->RemoveAurasDueToSpell(SPELL_ARENA_PREPARATION);
                     }
