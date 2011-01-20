@@ -3261,7 +3261,6 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell)
         tmp+=deflect_chance;
         if (roll < tmp)
             return SPELL_MISS_PARRY;
-        return SPELL_MISS_NONE;
     }
 
     // Check for attack from behind
