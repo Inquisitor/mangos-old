@@ -6613,6 +6613,12 @@ int32 Unit::DealHeal(Unit *pVictim, uint32 addhealth, SpellEntry const *spellPro
 
         ((Player*)unit)->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_HEAL_CASTED, addhealth);
     }
+    else
+    if (((Creature*)unit)->IsPet())
+    {
+        // overheal = addhealth - gain
+        unit->SendHealSpellLog(pVictim, spellProto->Id, addhealth, addhealth - gain, critical, absorb);
+    }
 
     if (pVictim->GetTypeId()==TYPEID_PLAYER)
     {
