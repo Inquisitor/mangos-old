@@ -75,6 +75,8 @@ bool Database::Initialize(const char * infoString, int nConns /*= 1*/)
         return false;
 
     m_pResultQueue = new SqlResultQueue;
+
+    InitDelayThread();
     return true;
 }
 
@@ -277,14 +279,11 @@ bool Database::Execute(const char *sql)
     else
     {
         //if async execution is not available
-        if(!m_threadBody)
+        if(!m_bAllowAsyncTransactions)
             return DirectExecute(sql);
 
         // Simple sql statement
-        pTrans = new SqlTransaction;
-        pTrans->DelayExecute(sql);
-
-        m_threadBody->Delay(pTrans);
+        m_threadBody->Delay(new SqlStatement(sql));
     }
 
     return true;
@@ -308,18 +307,6 @@ bool Database::PExecute(const char * format,...)
     }
 
     return Execute(szQuery);
-}
-
-bool Database::DirectExecute(const char* sql)
-{
-    if(!m_pAsyncConn)
-        return false;
-
-    SqlTransaction trans;
-    trans.DelayExecute(sql);
-
-    trans.Execute(m_pAsyncConn);
-    return true;
 }
 
 bool Database::DirectPExecute(const char * format,...)
@@ -363,7 +350,7 @@ bool Database::CommitTransaction()
         return false;
 
     //if async execution is not available
-    if(!m_delayThread)
+    if(!m_bAllowAsyncTransactions)
         return CommitTransactionDirect();
 
     //add SqlTransaction to the async queue
