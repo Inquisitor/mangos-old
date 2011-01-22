@@ -224,15 +224,16 @@ bool VehicleKit::AddPassenger(Unit *passenger, int8 seatId)
 
     passenger->SendMonsterMoveTransport(m_pBase, SPLINETYPE_FACINGANGLE, SPLINEFLAG_UNKNOWN5, 0, 0.0f);
 
+    RelocatePassengers(m_pBase->GetPositionX(), m_pBase->GetPositionY(), m_pBase->GetPositionZ()+0.5f, m_pBase->GetOrientation());
+
+    UpdateFreeSeatCount();
+
     if (m_pBase->GetTypeId() == TYPEID_UNIT)
     {
         if (((Creature*)m_pBase)->AI())
-                ((Creature*)m_pBase)->AI()->PassengerBoarded(passenger, seat->first, true);
-
-        RelocatePassengers(m_pBase->GetPositionX(), m_pBase->GetPositionY(), m_pBase->GetPositionZ()+0.5f, m_pBase->GetOrientation());
+            ((Creature*)m_pBase)->AI()->PassengerBoarded(passenger, seat->first, true);
     }
 
-    UpdateFreeSeatCount();
     return true;
 }
 
@@ -300,7 +301,7 @@ void VehicleKit::RemovePassenger(Unit *passenger)
 
     if (m_pBase->GetTypeId() == TYPEID_UNIT)
         if (((Creature*)m_pBase)->AI())
-            ((Creature*)m_pBase)->AI()->PassengerBoarded(passenger, seat->first, true);
+            ((Creature*)m_pBase)->AI()->PassengerBoarded(passenger, seat->first, false);
 }
 
 void VehicleKit::Reset()
