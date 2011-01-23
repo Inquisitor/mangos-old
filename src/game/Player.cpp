@@ -17412,7 +17412,7 @@ void Player::SaveToDB()
     ss << "',";
     ss << uint32(GetByteValue(PLAYER_FIELD_BYTES, 2));
     ss << ")";
-	
+
     CharacterDatabase.BeginTransaction();
 
     CharacterDatabase.Execute( ss.str().c_str() );
