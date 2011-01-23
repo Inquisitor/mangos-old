@@ -1907,7 +1907,8 @@ bool BattleGroundMgr::IsArenaType(BattleGroundTypeId bgTypeId)
     return ( bgTypeId == BATTLEGROUND_AA ||
         bgTypeId == BATTLEGROUND_BE ||
         bgTypeId == BATTLEGROUND_NA ||
-        bgTypeId == BATTLEGROUND_RL );
+        bgTypeId == BATTLEGROUND_RL ||
+        bgTypeId == BATTLEGROUND_DS);
 }
 
 BattleGroundQueueTypeId BattleGroundMgr::BGQueueTypeId(BattleGroundTypeId bgTypeId, uint8 arenaType)
