@@ -185,6 +185,9 @@ void BattleGroundDS::HandleAreaTrigger(Player *Source, uint32 Trigger)
 
     switch(Trigger)
     {
+        case 5326:
+            Source->TeleportTo(GetMapId(),1299.046f, 784.825f, 9.338f, Source->GetOrientation());
+            break;
         case 5347:
         case 5348:
             break;
