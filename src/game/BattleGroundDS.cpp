@@ -135,13 +135,13 @@ void BattleGroundDS::AddPlayer(Player *plr)
     //create score and add it to map, default values are set in constructor
     BattleGroundDSScore* sc = new BattleGroundDSScore;
 
-    m_PlayerScores[plr->GetGUID()] = sc;
+    m_PlayerScores[plr->GetObjectGuid()] = sc;
 
     UpdateWorldState(0xe11, GetAlivePlayersCountByTeam(ALLIANCE));
     UpdateWorldState(0xe10, GetAlivePlayersCountByTeam(HORDE));
 }
 
-void BattleGroundDS::RemovePlayer(Player* /*plr*/, uint64 /*guid*/)
+void BattleGroundDS::RemovePlayer(Player* /*plr*/, ObjectGuid /*guid*/)
 {
     if (GetStatus() == STATUS_WAIT_LEAVE)
         return;
@@ -159,7 +159,7 @@ void BattleGroundDS::HandleKillPlayer(Player *player, Player *killer)
 
     if (!killer)
     {
-        sLog.outError("Killer player not found");
+        sLog.outError("BattleGroundDS: Killer player not found");
         return;
     }
 
@@ -197,12 +197,12 @@ void BattleGroundDS::HandleAreaTrigger(Player *Source, uint32 Trigger)
             break;
     }
 }
- 
-void BattleGroundDS::FillInitialWorldStates(WorldPacket &data)
+
+void BattleGroundDS::FillInitialWorldStates(WorldPacket &data, uint32& count)
 {
-    data << uint32(0xe11) << uint32(GetAlivePlayersCountByTeam(ALLIANCE));           // 7
-    data << uint32(0xe10) << uint32(GetAlivePlayersCountByTeam(HORDE));           // 8
-    data << uint32(0xe1a) << uint32(1);           // 9
+    FillInitialWorldState(data, count, 0xe11, GetAlivePlayersCountByTeam(ALLIANCE));
+    FillInitialWorldState(data, count, 0xe10, GetAlivePlayersCountByTeam(HORDE));
+    FillInitialWorldState(data, count, 0xe1a, 1);
 }
 
 void BattleGroundDS::Reset()
