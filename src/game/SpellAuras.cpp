@@ -1161,7 +1161,21 @@ void Aura::TriggerSpell()
     ObjectGuid casterGUID = GetCasterGuid();
     Unit* triggerTarget = GetTriggerTarget();
 
-    if (casterGUID.IsEmpty() || !triggerTarget)
+    // Penance target hack. DO NOT FORGET TO RECHECK triggerTarget IF DROPPING!!
+    if (!triggerTarget)
+    {
+        uint32 auraId = GetSpellProto()->Id;
+        if (auraId == 47757 || auraId == 52986 || auraId == 52987 || auraId == 52988)
+        {
+            triggerTarget = GetCaster();
+        }
+        else
+        {
+            return;
+        }
+    }
+
+    if (casterGUID.IsEmpty())
         return;
 
     // generic casting code with custom spells and target/caster customs
@@ -2003,6 +2017,18 @@ void Aura::TriggerSpell()
                         irangeIndex = 18; // 15 yards
 
                     const_cast<SpellEntry*>(triggeredSpellInfo)->EffectRadiusIndex[0] = irangeIndex;
+                }
+                break;
+            }
+            // Penance target hack
+            case 47757:
+            case 52986:
+            case 52987:
+            case 52988:
+            {
+                if (!(triggerTarget->HasAura(47757) || triggerTarget->HasAura(52986) || triggerTarget->HasAura(52987) || triggerTarget->HasAura(52988)))
+                {
+                    triggerTarget = target;
                 }
                 break;
             }
@@ -2906,19 +2932,19 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
         }
         case SPELLFAMILY_PRIEST:
         {
-            // Penance - set target if noone is selected
-            if (GetSpellProto()->SpellIconID == 225 || GetSpellProto()->SpellIconID == 2818)
-            {
-                if (Unit* caster = GetCaster())
-                {
-                    if (caster->GetTypeId() == TYPEID_PLAYER)
-                    {
-                        if (apply && target)     
-                            ((Player*)caster)->SetSelectionGuid(target->GetObjectGuid()); 
-                        return;
-                    }
-                }
-            }
+            //// Penance - set target if noone is selected
+            //if (GetSpellProto()->SpellIconID == 225 || GetSpellProto()->SpellIconID == 2818)
+            //{
+            //    if (Unit* caster = GetCaster())
+            //    {
+            //        if (caster->GetTypeId() == TYPEID_PLAYER)
+            //        {
+            //            if (apply && target)     
+            //                ((Player*)caster)->SetSelectionGuid(target->GetObjectGuid()); 
+            //            return;
+            //        }
+            //    }
+            //}
             // Pain and Suffering
             if (GetSpellProto()->SpellIconID == 2874 && target->GetTypeId()==TYPEID_PLAYER)
             {
