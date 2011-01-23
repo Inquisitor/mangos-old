@@ -3261,7 +3261,6 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell)
         tmp+=deflect_chance;
         if (roll < tmp)
             return SPELL_MISS_PARRY;
-        return SPELL_MISS_NONE;
     }
 
     // Check for attack from behind
@@ -6613,6 +6612,12 @@ int32 Unit::DealHeal(Unit *pVictim, uint32 addhealth, SpellEntry const *spellPro
             ((Player*)unit)->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HEALING_DONE, gain, 0, pVictim);
 
         ((Player*)unit)->GetAchievementMgr().UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HIGHEST_HEAL_CASTED, addhealth);
+    }
+    else
+    if (((Creature*)unit)->IsPet())
+    {
+        // overheal = addhealth - gain
+        unit->SendHealSpellLog(pVictim, spellProto->Id, addhealth, addhealth - gain, critical, absorb);
     }
 
     if (pVictim->GetTypeId()==TYPEID_PLAYER)
