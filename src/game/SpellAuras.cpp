@@ -4583,7 +4583,7 @@ void Aura::HandleModStealth(bool apply, bool Real)
             }
 
             // apply full stealth period bonuses only at first stealth aura in stack
-            if(target->GetAurasByType(SPELL_AURA_MOD_STEALTH).size()<=1)
+            if(target->GetAurasByType(SPELL_AURA_MOD_STEALTH).size()<=2) // // Vanish also triggering Stealth, (no double auras possible here)
             {
                 Unit::AuraList const& mDummyAuras = target->GetAurasByType(SPELL_AURA_DUMMY);
                 for(Unit::AuraList::const_iterator i = mDummyAuras.begin();i != mDummyAuras.end(); ++i)
