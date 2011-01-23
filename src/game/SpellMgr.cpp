@@ -837,6 +837,16 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
                 case SPELL_AURA_ADD_FLAT_MODIFIER:          // mods
                 case SPELL_AURA_ADD_PCT_MODIFIER:
                 {
+                    switch(spellproto->Id)
+                    {
+                        case 48489: // Improved Mangle
+                        case 48491:
+                        case 48532:
+                            return true;
+                            break;
+                        default:
+                            break;
+                    }
                     // non-positive mods
                     switch(spellproto->EffectMiscValue[effIndex])
                     {
