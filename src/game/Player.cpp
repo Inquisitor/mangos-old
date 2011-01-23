@@ -17286,8 +17286,11 @@ void Player::SaveToDB()
     DEBUG_FILTER_LOG(LOG_FILTER_PLAYER_STATS, "The value of player %s at save: ", m_name.c_str());
     outDebugStatsValues();
 
+    std::string sql_name = m_name;
+    CharacterDatabase.escape_string(sql_name);
+
     std::ostringstream ss;
-    ss << "REPLACE INTO characters (guid,level,xp,money,playerBytes,playerBytes2,playerFlags,"
+    ss << "REPLACE INTO characters (guid,account,name,race,class,gender,level,xp,money,playerBytes,playerBytes2,playerFlags,"
         "map, dungeon_difficulty, position_x, position_y, position_z, orientation, "
         "taximask, online, cinematic, "
         "totaltime, leveltime, rest_bonus, logout_time, is_logout_resting, resettalents_cost, resettalents_time, "
@@ -17296,6 +17299,11 @@ void Player::SaveToDB()
         "todayKills, yesterdayKills, chosenTitle, knownCurrencies, watchedFaction, drunk, health, power1, power2, power3, "
         "power4, power5, power6, power7, specCount, activeSpec, exploredZones, equipmentCache, ammoId, knownTitles, actionBars) VALUES ("
         << GetGUIDLow() << ", "
+        << GetSession()->GetAccountId() << ", '"
+        << sql_name << "', "
+        << (uint32)getRace() << ", "
+        << (uint32)getClass() << ", "
+        << (uint32)getGender() << ", "
         << getLevel() << ", "
         << GetUInt32Value(PLAYER_XP) << ", "
         << GetMoney() << ", "
