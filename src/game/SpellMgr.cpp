@@ -1884,12 +1884,12 @@ void SpellMgr::LoadSpellStackingRules()
         uint32 spellId1 = fields[0].GetUInt32();
         std::string IdsChain = fields[1].GetCppString();
 
-        Tokens tokens = StrSplit(IdsChain, " ");
+        Tokens tokens(IdsChain, ' ');
         std::set<uint32> spellSet;
 
         Tokens::iterator iter;
         for(iter = tokens.begin(); iter != tokens.end(); ++iter)
-            spellSet.insert(atoi((*iter).c_str()));
+            spellSet.insert(atoi(*iter));
         
         mSpellStacksMap[spellId1] = spellSet;
 
