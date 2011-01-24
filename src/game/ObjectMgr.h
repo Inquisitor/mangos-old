@@ -524,7 +524,7 @@ class ObjectMgr
 
         typedef UNORDERED_MAP<uint32, Group*> GroupMap;
 
-        typedef UNORDERED_MAP<uint32, Guild*> GuildMap;
+        typedef std::vector <Guild *> GuildMap;
 
         typedef UNORDERED_MAP<uint32, ArenaTeam*> ArenaTeamMap;
 
