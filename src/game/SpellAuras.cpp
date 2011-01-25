@@ -2253,24 +2253,6 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     if (!target->IsNonMeleeSpellCasted(false))
                         return;
 
-                    if(Spell * pSpell = target->GetCurrentSpell(CURRENT_MELEE_SPELL))
-                    {
-                        if (!pSpell->m_spellInfo->speed)
-                        {
-                            sLog.outError("Unrelenting Assault accessing on instant CURRENT_MELEE_SPELL spell-cast of %i", pSpell->m_spellInfo->Id);
-                            return;
-                        }
-                    }
-
-                    if(Spell * pSpell = target->GetCurrentSpell(CURRENT_GENERIC_SPELL))
-                    {
-                        if (!pSpell->m_spellInfo->speed)
-                        {
-                            sLog.outError("Unrelenting Assault accessing on instant CURRENT_GENERIC_SPELL spell-cast of %i", pSpell->m_spellInfo->Id);
-                            return;
-                        }
-                    }
-
                     Unit* caster = GetCaster();
                     if (!caster)
                         return;
