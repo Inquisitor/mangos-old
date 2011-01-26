@@ -2487,7 +2487,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 case 45877:                                 // Q:Bring 'Em Back Alive
                 {
                    if(m_caster->GetObjectGuid().IsVehicle())
-                        ((Creature*)m_caster)->ForcedDespawn();
+                        ((Creature*)m_caster)->ForcedDespawn(500);
                     return;
                 }
 
@@ -4378,10 +4378,23 @@ void Spell::EffectHealthLeech(SpellEffectIndex eff_idx)
 
 void Spell::DoCreateItem(SpellEffectIndex eff_idx, uint32 itemtype)
 {
-    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
+    if (!unitTarget)
         return;
 
-    Player* player = (Player*)unitTarget;
+    Player* player = NULL;
+
+    if(unitTarget->GetTypeId() != TYPEID_PLAYER)
+    {
+        if(unitTarget->GetObjectGuid().IsVehicle())
+            if (Unit *unit = m_caster->GetVehicleKit()->GetPassenger(0))
+                if (unit->GetTypeId() == TYPEID_PLAYER)
+                    player = (Player*)unit;
+    }
+    else
+        player = (Player*)unitTarget;
+
+    if (!player)
+        return;
 
     uint32 newitemid = itemtype;
     ItemPrototype const *pProto = ObjectMgr::GetItemPrototype( newitemid );
@@ -9739,10 +9752,22 @@ void Spell::EffectStealBeneficialBuff(SpellEffectIndex eff_idx)
 
 void Spell::EffectKillCreditPersonal(SpellEffectIndex eff_idx)
 {
-    if(!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
+    if (!unitTarget)
         return;
 
-    ((Player*)unitTarget)->KilledMonsterCredit(m_spellInfo->EffectMiscValue[eff_idx]);
+    Player * player = NULL;
+
+    if (unitTarget->GetTypeId() != TYPEID_PLAYER)
+    {
+        if (unitTarget->GetObjectGuid().IsVehicle())
+            if (Unit *unit = unitTarget->GetVehicleKit()->GetPassenger(0))
+                if (unit->GetTypeId() == TYPEID_PLAYER)
+                    player = (Player*)unit;
+    }
+    else
+        player = (Player*)unitTarget;
+
+    player->KilledMonsterCredit(m_spellInfo->EffectMiscValue[eff_idx]);
 }
 
 void Spell::EffectKillCreditGroup(SpellEffectIndex eff_idx)

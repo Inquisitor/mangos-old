@@ -517,6 +517,14 @@ void LoadDBCStores(const std::string& dataPath)
 
     // DBC Hacks
 
+    // Gather Lumber
+    SpellEntry *sfix1 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(47939));
+    sfix1->EffectImplicitTargetA[EFFECT_INDEX_1] = TARGET_SELF;
+    sfix1->Effect[EFFECT_INDEX_1] = SPELL_EFFECT_KILL_CREDIT_PERSONAL;
+
+    SpellEntry *sfix5 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(48610));
+    sfix5->EffectImplicitTargetA[EFFECT_INDEX_1] = TARGET_SELF;
+
     //Lifebloom final heal
     SpellEntry *sfix2 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(33778));
     sfix2->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
