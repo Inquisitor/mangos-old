@@ -457,7 +457,7 @@ void AchievementMgr::ResetAchievementCriteria(AchievementCriteriaTypes type, uin
                     case 229:
                     case 231:
 					case 582:
-                    case 583:
+					case 583:
                     case 584:
                     case 587:
                     case 872:
