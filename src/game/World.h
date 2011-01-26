@@ -601,6 +601,9 @@ class World
         char const* GetDBVersion() { return m_DBVersion.c_str(); }
         char const* GetCreatureEventAIVersion() { return m_CreatureEventAIVersion.c_str(); }
 
+        typedef UNORDERED_MAP<uint32, WorldSession*> SessionMap;
+        SessionMap GetSessions() { return m_sessions; }
+
         ACE_Thread_Mutex m_spellUpdateLock;
 
     protected:
@@ -650,7 +653,7 @@ class World
 
         typedef UNORDERED_MAP<uint32, Weather*> WeatherMap;
         WeatherMap m_weathers;
-        typedef UNORDERED_MAP<uint32, WorldSession*> SessionMap;
+        
         SessionMap m_sessions;
         uint32 m_maxActiveSessionCount;
         uint32 m_maxQueuedSessionCount;
