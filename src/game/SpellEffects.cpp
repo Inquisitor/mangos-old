@@ -9758,14 +9758,16 @@ void Spell::EffectKillCreditPersonal(SpellEffectIndex eff_idx)
     Player * player = NULL;
 
     if (unitTarget->GetTypeId() != TYPEID_PLAYER)
-    {
         if (unitTarget->GetObjectGuid().IsVehicle())
             if (Unit *unit = unitTarget->GetVehicleKit()->GetPassenger(0))
                 if (unit->GetTypeId() == TYPEID_PLAYER)
                     player = (Player*)unit;
-    }
-    else
-        player = (Player*)unitTarget;
+
+    if (!player)
+        if(unitTarget->GetTypeId() == TYPEID_PLAYER)
+            player = (Player*)unitTarget;
+        else
+            return;
 
     player->KilledMonsterCredit(m_spellInfo->EffectMiscValue[eff_idx]);
 }
