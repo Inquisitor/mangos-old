@@ -826,9 +826,9 @@ inline ByteBuffer& operator>> (ByteBuffer& buf, MovementInfo& mi)
 
 enum RelocationOperations
 {
-    AI_Notify_Sheduled          = 0x01,
-    AI_Notify_Execution         = 0x02,
-    Visibility_Update_Sheduled  = 0x04,
+    AI_Notify_Sheduled          = 0x01,         // AI relocation notification sheduled
+    AI_Notify_Execution         = 0x02,         // AI relocation notification will be executed in next update tick
+    Visibility_Update_Execution = 0x04,         // Visibility will be updated in next update tick
 };
 
 enum DiminishingLevels
@@ -2044,6 +2044,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void SheduleVisibilityUpdate();
 
         uint8 m_notify_sheduled;
+        bool isNotifySheduled(uint8 f) const { return m_notify_sheduled & f;}
         struct 
         {
             float x, y, z;
