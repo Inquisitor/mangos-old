@@ -702,9 +702,9 @@ void WorldSession::HandleMirrorImageDataRequest( WorldPacket & recv_data )
 
 void WorldSession::HandleUpdateProjectilePosition(WorldPacket& recvPacket)
 {
-    uint64 casterGuid;  // actually target ?
+    uint64 casterGuid;  // Spell Caster
     uint32 spellId;     // Spell Id
-    uint8  cast_Id;     // Some counter ? the fuck
+    uint8  cast_Id;     // Some counter increased every cast ? the fuck
     float m_targetX, m_targetY, m_targetZ; // Position of missile hit
 
     recvPacket >> casterGuid;
@@ -713,7 +713,6 @@ void WorldSession::HandleUpdateProjectilePosition(WorldPacket& recvPacket)
 
     recvPacket >> m_targetX >> m_targetY >> m_targetZ;
 
-    // Do we need unit as we use 3d position anyway ?
     Unit * pCaster = ObjectAccessor::GetUnit(*_player, casterGuid);
     if (!pCaster)
         return;
