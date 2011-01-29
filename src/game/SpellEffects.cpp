@@ -7447,8 +7447,47 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, damage, false);
                     break;
                 }
-                // Q: The Denouncement
-                case 48724:
+                case 49109:
+                {
+                    m_caster->CastSpell(m_caster, 49122, true); // Kill Credit for caster
+
+                    if(Creature * pWagon = m_caster->GetClosestCreatureWithEntry(m_caster, 27607, 10))
+                    {
+                        if(pWagon->isAlive())
+                        {
+                            float x,y,z;
+                            pWagon->GetClosePoint(x,y,z, pWagon->GetObjectBoundingRadius(), 5);
+                            if(Creature * pEngineer = unitTarget->SummonCreature(27163, x,y,z, 0, TEMPSUMMON_TIMED_DESPAWN, 10000))
+                            {
+                                char * text = "";
+                                switch(urand(0, 4))
+                                {
+                                    case 0: text = "Hey, do any of you know McGoyver over at Valgarde? He's my uncle. You know what his title is? Pro. Yea, just Pro. I want to be a pro too."; break;
+                                    case 1: text = "When I'm done with this plague wagon it'll look like a goblin built it!"; break;
+                                    case 2: text = "I hear you single handedly airlifted our villagers out of this hell-hole. Is that true?"; break;
+                                    case 3: text = "Something straight up stinks in here! it's definitely not me. Gnomes smell like butter and sunshine. Not like those dwarves that smell like they were born from a trogg's armpit! None of you are dwarves, are you?"; break;
+                                    case 4: text = "It doesn't make any sense. Why don't they just fly Naxxramas over Wintergarde Keep and blow it up? I mean, that's what I would do if I were Kel'Thuzad."; break;
+                                }
+                                pEngineer->MonsterSay(text, LANG_UNIVERSAL);
+
+                                pEngineer->GetMotionMaster()->MovePoint(0, pWagon->GetPositionX(), pWagon->GetPositionY(), pWagon->GetPositionZ());
+                                pEngineer->DealDamage(pWagon, pWagon->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                            }
+                        }
+                    }
+                }
+                case 49081:                                 //Drop Off Soldier
+                {
+                    if (!unitTarget)
+                        return;
+
+                   
+                    for(int i = 0; i < 5; ++i)
+                        unitTarget->SummonCreature(27588, 3704.239f+irand(-5, 5),-1188.2666f,121.054f, 4.259f, TEMPSUMMON_TIMED_DESPAWN, 10000);
+
+                    return;
+                }
+                case 48724:                                 // Q: The Denouncement
                 case 48726:
                 case 48728:
                 case 48730:
@@ -7459,8 +7498,8 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, damage, true);
                     return;
                 }
-                // Q: In Service of Blood/Unholy/Frost
-                case 50252:
+                
+                case 50252:                                 // Q: In Service of Blood/Unholy/Frost
                 case 47724:
                 case 47703:
                 {
@@ -7480,7 +7519,7 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     caster->CastSpell(caster, damage, true);
                     return;
                 }
-                case 32580:
+                case 32580:                                 // Wicked Strong Fetish
                 {
                     uint32 toSummon = 0;
                     if (unitTarget->GetClosestCreatureWithEntry(unitTarget, 21351, 10))
@@ -9822,9 +9861,11 @@ void Spell::EffectKillCreditPersonal(SpellEffectIndex eff_idx)
 
 void Spell::EffectKillCreditGroup(SpellEffectIndex eff_idx)
 {
+    unitTarget->MonsterSay("im target", 0);
     if(!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
         return;
 
+    printf("\n handling EffectKillCreditGroup %i ! \n ", m_spellInfo->EffectMiscValue[eff_idx]);
     ((Player*)unitTarget)->RewardPlayerAndGroupAtEvent(m_spellInfo->EffectMiscValue[eff_idx], unitTarget);
 }
 
