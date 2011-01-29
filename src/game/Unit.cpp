@@ -10788,7 +10788,10 @@ void Unit::DoPetCastSpell( Player *owner, uint8 cast_count, SpellCastTargets* ta
     else
     {
         if(GetObjectGuid().IsVehicle())
+        {
             Spell::SendCastResult(owner,spellInfo,0,result);
+            spell->SendInterrupted(0);
+        }
         else
             pet->SendPetCastFail(spellInfo->Id, result);
 
