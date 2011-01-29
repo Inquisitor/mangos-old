@@ -348,6 +348,9 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
             {
                 switch(m_spellInfo->Id)                     // better way to check unknown
                 {
+                    case 56578:
+                        damage = unitTarget->GetMaxHealth() * m_spellInfo->CalculateSimpleValue(EFFECT_INDEX_0) / 100; // Deal 26% HP
+                    break;
                     // Positive/Negative Charge
                     case 28062:
                     case 28085:
