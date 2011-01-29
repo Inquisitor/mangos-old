@@ -598,14 +598,14 @@ void ObjectMgr::LoadCreatureTemplates()
             if (difficultyInfo->AIName && *difficultyInfo->AIName)
             {
                 sLog.outErrorDb("Difficulty %u mode creature (Entry: %u) has `AIName`, but in any case will used difficulty 0 mode creature (Entry: %u) AIName.",
-                    diff, cInfo->DifficultyEntry[diff], i);
+                    diff + 1, cInfo->DifficultyEntry[diff], i);
                 continue;
             }
 
             if (difficultyInfo->ScriptID)
             {
                 sLog.outErrorDb("Difficulty %u mode creature (Entry: %u) has `ScriptName`, but in any case will used difficulty 0 mode creature (Entry: %u) ScriptName.",
-                    diff, cInfo->DifficultyEntry[diff], i);
+                    diff + 1, cInfo->DifficultyEntry[diff], i);
                 continue;
             }
 
@@ -7779,7 +7779,7 @@ bool PlayerCondition::Meets(Player const * player) const
         }
         case CONDITION_NO_AURA:
             return !player->HasAura(value1, SpellEffectIndex(value2));
-        case CONDITION_ACTIVE_EVENT:
+        case CONDITION_ACTIVE_GAME_EVENT:
             return sGameEventMgr.IsActiveEvent(value1);
         case CONDITION_AREA_FLAG:
         {
@@ -7860,6 +7860,12 @@ bool PlayerCondition::Meets(Player const * player) const
             return player->HasItemCount(value1, value2, true);
         case CONDITION_NOITEM_WITH_BANK:
             return !player->HasItemCount(value1, value2, true);
+        case CONDITION_NOT_ACTIVE_GAME_EVENT:
+            return !sGameEventMgr.IsActiveEvent(value1);
+        case CONDITION_ACTIVE_HOLIDAY:
+            return sGameEventMgr.IsActiveHoliday(HolidayIds(value1));
+        case CONDITION_NOT_ACTIVE_HOLIDAY:
+            return !sGameEventMgr.IsActiveHoliday(HolidayIds(value1));
         default:
             return false;
     }
@@ -8008,10 +8014,10 @@ bool PlayerCondition::IsValid(ConditionType condition, uint32 value1, uint32 val
             }
             break;
         }
-        case CONDITION_ACTIVE_EVENT:
+        case CONDITION_ACTIVE_GAME_EVENT:
+        case CONDITION_NOT_ACTIVE_GAME_EVENT:
         {
-            GameEventMgr::GameEventDataMap const& events = sGameEventMgr.GetEventMap();
-            if (value1 >=events.size() || !events[value1].isValid())
+            if (!sGameEventMgr.IsValidEvent(value1))
             {
                 sLog.outErrorDb("Active event (%u) condition requires existing event id (%u), skipped", condition, value1);
                 return false;
@@ -8106,6 +8112,16 @@ bool PlayerCondition::IsValid(ConditionType condition, uint32 value1, uint32 val
                 return false;
             }
 
+            break;
+        }
+        case CONDITION_ACTIVE_HOLIDAY:
+        case CONDITION_NOT_ACTIVE_HOLIDAY:
+        {
+            if (!sHolidaysStore.LookupEntry(value1))
+            {
+                sLog.outErrorDb("Active holiday (%u) condition requires existing holiday id (%u), skipped", condition, value1);
+                return false;
+            }
             break;
         }
         case CONDITION_NONE:
@@ -9226,7 +9242,7 @@ bool FindCreatureData::operator()( CreatureDataPair const& dataPair )
         i_mapDist = new_dist;
     }
 
-    // skip not spawned (in any state), 
+    // skip not spawned (in any state),
     uint16 pool_id = sPoolMgr.IsPartOfAPool<Creature>(dataPair.first);
     if (pool_id && !sPoolMgr.IsSpawnedObject<Creature>(dataPair.first))
         return false;
