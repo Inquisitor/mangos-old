@@ -29,10 +29,6 @@
 #include "Totem.h"
 #include "SpellAuras.h"
 
-#include <G3D/Vector3.h>
-
-using G3D::Vector3;
-
 void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
 {
     uint8 bagIndex, slot;
