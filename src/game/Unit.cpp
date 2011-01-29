@@ -10787,7 +10787,11 @@ void Unit::DoPetCastSpell( Player *owner, uint8 cast_count, SpellCastTargets* ta
     }
     else
     {
-        pet->SendPetCastFail(spellInfo->Id, result);
+        if(GetObjectGuid().IsVehicle())
+            Spell::SendCastResult(owner,spellInfo,0,result);
+        else
+            pet->SendPetCastFail(spellInfo->Id, result);
+
         if (!pet->HasSpellCooldown(spellInfo->Id))
             owner->SendClearCooldown(spellInfo->Id, pet);
 
