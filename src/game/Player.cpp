@@ -21066,8 +21066,8 @@ void Player::RewardPlayerAndGroupAtEvent(uint32 creature_id, WorldObject* pRewar
                 pGroupGuy->KilledMonsterCredit(creature_id, creature_guid);
         }
     }
-    else                                                    // if (!pGroup)
-        KilledMonsterCredit(creature_id, creature_guid);
+
+    KilledMonsterCredit(creature_id, creature_guid);
 }
 
 void Player::RewardPlayerAndGroupAtCast(WorldObject* pRewardSource, uint32 spellid)
