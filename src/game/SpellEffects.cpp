@@ -9861,11 +9861,9 @@ void Spell::EffectKillCreditPersonal(SpellEffectIndex eff_idx)
 
 void Spell::EffectKillCreditGroup(SpellEffectIndex eff_idx)
 {
-    unitTarget->MonsterSay("im target", 0);
     if(!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
         return;
 
-    printf("\n handling EffectKillCreditGroup %i ! \n ", m_spellInfo->EffectMiscValue[eff_idx]);
     ((Player*)unitTarget)->RewardPlayerAndGroupAtEvent(m_spellInfo->EffectMiscValue[eff_idx], unitTarget);
 }
 
