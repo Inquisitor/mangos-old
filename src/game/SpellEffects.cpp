@@ -7454,7 +7454,26 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->CastSpell(unitTarget, damage, false);
                     break;
                 }
-                case 49109:
+                case 47962:                                 // Rescue Injured Soldier
+                {
+                    for(int i = 0; i < 3; ++i)
+                        if (Creature * pInjured = m_caster->GetClosestCreatureWithEntry(m_caster, 27106+i, 10))
+                        {
+                            if (m_caster->GetCharmerOrOwner())
+                                if (m_caster->GetCharmerOrOwner()->GetTypeId() == TYPEID_PLAYER)
+                                    ((Player*)m_caster->GetCharmerOrOwner())->KilledMonsterCredit(27109);
+                            pInjured->CastSpell(m_caster, 49242, true); // Enter Vehicle
+                        }
+
+                    if (Creature * pInjured = m_caster->GetClosestCreatureWithEntry(m_caster, 27110, 10))
+                    {
+                        if (m_caster->GetCharmerOrOwner())
+                            if (m_caster->GetCharmerOrOwner()->GetTypeId() == TYPEID_PLAYER)
+                            ((Player*)m_caster->GetCharmerOrOwner())->KilledMonsterCredit(27109);
+                        pInjured->CastSpell(m_caster, 49242, true); // Enter Vehicle
+                    }
+                }
+                case 49109:                                 // Drop Off Gnome
                 {
                     m_caster->CastSpell(m_caster, 49122, true); // Kill Credit for caster
 

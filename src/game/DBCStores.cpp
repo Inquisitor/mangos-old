@@ -531,14 +531,6 @@ void LoadDBCStores(const std::string& dataPath)
     sfix6->EffectImplicitTargetA[EFFECT_INDEX_0] = TARGET_SELF;
     sfix6->EffectImplicitTargetA[EFFECT_INDEX_1] = TARGET_SCRIPT;
 
-    // Soldier Rescued
-    SpellEntry *sfix7 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(47967));
-    sfix7->Attributes = 536871296;
-    sfix7->AttributesEx = 1024;
-    sfix7->AttributesEx2 = 0;
-    sfix7->AttributesEx4 = 0;
-    sfix7->AttributesEx5 = 0;
-
     //Lifebloom final heal
     SpellEntry *sfix2 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(33778));
     sfix2->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
