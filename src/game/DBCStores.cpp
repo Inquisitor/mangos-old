@@ -531,6 +531,12 @@ void LoadDBCStores(const std::string& dataPath)
     sfix6->EffectImplicitTargetA[EFFECT_INDEX_0] = TARGET_SELF;
     sfix6->EffectImplicitTargetA[EFFECT_INDEX_1] = TARGET_SCRIPT;
 
+    // Deliver Kodo
+    SpellEntry *sfix7 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(45877));
+    sfix7->Effect[EFFECT_INDEX_2] = SPELL_EFFECT_KILL_CREDIT_PERSONAL;
+    for(int i = 0; i < 3; ++i)
+         sfix7->EffectImplicitTargetA[i] = TARGET_SELF;
+
     //Lifebloom final heal
     SpellEntry *sfix2 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(33778));
     sfix2->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
