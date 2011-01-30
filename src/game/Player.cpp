@@ -20701,13 +20701,14 @@ bool Player::HasQuest(uint32 questId) const
 {
     for (uint32 i = 0; i < MAX_QUEST_LOG_SIZE; ++i)
     {
-        uint32 questid = GetQuestSlotQuestId(i);
-        if (questid == 0)
+        uint32 qLogQuestId = GetQuestSlotQuestId(i);
+
+        if (qLogQuestId == 0)
             continue;
-        if (questid == questId)
+        if (questId == qLogQuestId)
             return true;
 
-        return false;
+        continue;
     }
     return false;
 }
