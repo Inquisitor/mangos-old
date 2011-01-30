@@ -223,7 +223,8 @@ Unit::Unit()
 
     m_Visibility = VISIBILITY_ON;
 
-    m_notify_sheduled = 0;
+    m_sheduled_visibility_updates = VisibilityUpdateFlag_None;
+
     m_last_notified_position.x = 0;
     m_last_notified_position.y = 0;
     m_last_notified_position.z = 0;
@@ -12124,90 +12125,118 @@ SpellAuraHolder* Unit::GetSpellAuraHolder (uint32 spellid, uint64 casterGUID)
 
 class RelocationNotifyEvent : public BasicEvent
 {
-    public:
-        RelocationNotifyEvent(Unit& owner) : BasicEvent(), m_owner(owner)
+public:
+    RelocationNotifyEvent(Unit& owner) : BasicEvent(), m_owner(owner)
+    {
+        m_owner._AddVisibilityUpdateFlag(VisibilityUpdateFlag_AI_Sheduled);
+    }
+
+#ifdef KEEP_THINGS_SIMPLE
+    bool Execute(uint64 e_time, uint32 /*p_time*/)
+    {
+        float radius = MAX_CREATURE_ATTACK_RADIUS * sWorld.getConfig(CONFIG_FLOAT_RATE_CREATURE_AGGRO);
+        if (m_owner.GetTypeId() == TYPEID_PLAYER)
         {
-            m_owner.m_notify_sheduled |= AI_Notify_Sheduled;
+            MaNGOS::PlayerRelocationNotifier notify((Player&)m_owner);
+            Cell::VisitAllObjects(&m_owner,notify,radius);
+        } 
+        else //if(m_owner.GetTypeId() == TYPEID_UNIT)
+        {
+            MaNGOS::CreatureRelocationNotifier notify((Creature&)m_owner);
+            Cell::VisitAllObjects(&m_owner,notify,radius);
         }
-
-        bool Execute(uint64 e_time, uint32 /*p_time*/)
+        m_owner._RemoveVisibilityUpdateFlag(VisibilityUpdateFlag_AI_Sheduled | VisibilityUpdateFlag_AI_Now);
+        return true;
+    }
+#else
+    bool Execute(uint64 e_time, uint32 /*p_time*/)
+    {
+        float radius = MAX_CREATURE_ATTACK_RADIUS * sWorld.getConfig(CONFIG_FLOAT_RATE_CREATURE_AGGRO);
+        if (m_owner.isVisibilityUpdatePending(VisibilityUpdateFlag_AI_Now))
         {
-            float radius = MAX_CREATURE_ATTACK_RADIUS * sWorld.getConfig(CONFIG_FLOAT_RATE_CREATURE_AGGRO);
-
-            if (m_owner.m_notify_sheduled & AI_Notify_Execution)
+            if (m_owner.GetTypeId() == TYPEID_PLAYER)
             {
-                if (m_owner.GetTypeId() == TYPEID_PLAYER)
-                {
-                    MaNGOS::PlayerRelocationNotifier notify((Player&)m_owner);
-                    Cell::VisitAllObjects(&m_owner,notify,radius);
-                } 
-                else //if(m_owner.GetTypeId() == TYPEID_UNIT)
-                {
-                    MaNGOS::CreatureRelocationNotifier notify((Creature&)m_owner);
-                    Cell::VisitAllObjects(&m_owner,notify,radius);
-                }
-
-                m_owner.m_notify_sheduled &= ~(AI_Notify_Sheduled | AI_Notify_Execution);
-                return true;
-            }
-            else
+                MaNGOS::PlayerRelocationNotifier notify((Player&)m_owner);
+                Cell::VisitAllObjects(&m_owner,notify,radius);
+            } 
+            else //if(m_owner.GetTypeId() == TYPEID_UNIT)
             {
-                m_owner.m_notify_sheduled |= AI_Notify_Execution;
-                m_owner.m_Events.AddEvent(this, e_time + 1, false);
-                return false;
+                MaNGOS::CreatureRelocationNotifier notify((Creature&)m_owner);
+                Cell::VisitAllObjects(&m_owner,notify,radius);
             }
+            m_owner._RemoveVisibilityUpdateFlag(VisibilityUpdateFlag_AI_Sheduled | VisibilityUpdateFlag_AI_Now);
+            return true;
         }
-
-        void Abort(uint64)
+        else
         {
-            m_owner.m_notify_sheduled &= ~(AI_Notify_Sheduled | AI_Notify_Execution);
+            m_owner._AddVisibilityUpdateFlag(VisibilityUpdateFlag_AI_Now);
+            m_owner.m_Events.AddEvent(this, e_time + 1, false);
+            return false;
         }
+    }
+#endif
 
-    private:
-        Unit& m_owner;
+    void Abort(uint64)
+    {
+        m_owner._RemoveVisibilityUpdateFlag(VisibilityUpdateFlag_AI_Sheduled | VisibilityUpdateFlag_AI_Now);
+    }
+
+private:
+    Unit& m_owner;
 };
 
 class UpdateVisibilityEvent : public BasicEvent
 {
-    public:
-        UpdateVisibilityEvent(Unit& owner) : BasicEvent(), m_owner(owner)
-        {
-            m_owner.m_notify_sheduled |= Visibility_Update_Execution;
-        }
+public:
+    UpdateVisibilityEvent(Unit& owner) : BasicEvent(), m_owner(owner)
+    {
+        m_owner._AddVisibilityUpdateFlag(VisibilityUpdateFlag_Client);
+    }
 
-        bool Execute(uint64, uint32)
-        {
-            m_owner.GetViewPoint().Call_UpdateVisibilityForOwner();
-            m_owner.UpdateObjectVisibility();
-            m_owner.m_notify_sheduled &= ~Visibility_Update_Execution;
-            return true;
-        }
+    bool Execute(uint64, uint32)
+    {
+        m_owner.GetViewPoint().Call_UpdateVisibilityForOwner();
+        m_owner.UpdateObjectVisibility();
+        m_owner._RemoveVisibilityUpdateFlag(VisibilityUpdateFlag_Client);
+        return true;
+    }
 
-        void Abort(uint64)
-        {
-            m_owner.m_notify_sheduled &= ~Visibility_Update_Execution;
-        }
+    void Abort(uint64)
+    {
+        m_owner._RemoveVisibilityUpdateFlag(VisibilityUpdateFlag_Client);
+    }
 
-    private:
-        Unit& m_owner;
+private:
+    Unit& m_owner;
 };
 
 void Unit::SheduleAINotify(uint32 delay)
 {
-    if (m_notify_sheduled & AI_Notify_Sheduled)
-        return;
-
-    RelocationNotifyEvent *notify = new RelocationNotifyEvent(*this);
-    m_Events.AddEvent(notify, m_Events.CalculateTime(delay));
+    if (!isVisibilityUpdatePending(VisibilityUpdateFlag_AI_Sheduled))
+        m_Events.AddEvent(new RelocationNotifyEvent(*this), m_Events.CalculateTime(delay));
 }
 
 void Unit::SheduleVisibilityUpdate()
 {
-    if (m_notify_sheduled & Visibility_Update_Execution)
-        return;
+    if (!isVisibilityUpdatePending(VisibilityUpdateFlag_Client))
+        m_Events.AddEvent(new UpdateVisibilityEvent(*this), m_Events.CalculateTime(0));
+}
 
-    UpdateVisibilityEvent *notify = new UpdateVisibilityEvent(*this);
-    m_Events.AddEvent(notify, m_Events.CalculateTime(0));
+void Unit::OnRelocated()
+{
+    // switch to use G3D::Vector3 is good idea, maybe
+    float dx = m_last_notified_position.x - GetPositionX();
+    float dy = m_last_notified_position.y - GetPositionY();
+    float dz = m_last_notified_position.z - GetPositionZ();
+    float distsq = dx*dx+dy*dy+dz*dz;
+    if (distsq > World::GetRelocationLowerLimitSq())
+    {
+        m_last_notified_position.x = GetPositionX();
+        m_last_notified_position.y = GetPositionY();
+        m_last_notified_position.z = GetPositionZ();
+        SheduleVisibilityUpdate();
+    }
+    SheduleAINotify(World::GetRelocationAINotifyDelay());
 }
 
 void Unit::_AddAura(uint32 spellID, uint32 duration, Unit * caster)
