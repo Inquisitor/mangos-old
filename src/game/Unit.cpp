@@ -222,12 +222,7 @@ Unit::Unit()
     m_AuraFlags = 0;
 
     m_Visibility = VISIBILITY_ON;
-
     m_sheduled_visibility_updates = VisibilityUpdateFlag_None;
-
-    m_last_notified_position.x = 0;
-    m_last_notified_position.y = 0;
-    m_last_notified_position.z = 0;
 
     m_detectInvisibilityMask = 0;
     m_invisibilityMask = 0;

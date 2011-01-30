@@ -824,11 +824,12 @@ inline ByteBuffer& operator>> (ByteBuffer& buf, MovementInfo& mi)
     return buf;
 }
 
-enum RelocationOperations
+enum VisibilityUpdateFlags
 {
-    AI_Notify_Sheduled          = 0x01,         // AI relocation notification sheduled
-    AI_Notify_Execution         = 0x02,         // AI relocation notification will be executed in next update tick
-    Visibility_Update_Execution = 0x04,         // Visibility will be updated in next update tick
+    VisibilityUpdateFlag_None        = 0x00,
+    VisibilityUpdateFlag_AI_Sheduled = 0x01,         // AI relocation notification sheduled
+    VisibilityUpdateFlag_AI_Now      = 0x02,         // AI relocation notification will be executed in next update tick
+    VisibilityUpdateFlag_Client      = 0x04,         // Visibility will be updated in next update tick
 };
 
 enum DiminishingLevels
@@ -850,14 +851,6 @@ struct DiminishingReturn
     uint32                  hitTime;
     uint32                  hitCount;
 };
-
-enum VisibilityUpdateFlags
-{
-    VisibilityUpdateFlag_None        = 0x00,
-    VisibilityUpdateFlag_AI_Sheduled = 0x01,         // AI relocation notification sheduled
-    VisibilityUpdateFlag_AI_Now      = 0x02,         // AI relocation notification will be executed in next update tick
-    VisibilityUpdateFlag_Client      = 0x04,         // Visibility will be updated in next update tick
-;
 
 // At least some values expected fixed and used in auras field, other custom
 enum MeleeHitOutcome
