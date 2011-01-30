@@ -537,6 +537,12 @@ void LoadDBCStores(const std::string& dataPath)
     for(int i = 0; i < 3; ++i)
          sfix7->EffectImplicitTargetA[i] = TARGET_SELF;
 
+    // Hand Over Reins
+    SpellEntry *sfix8 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(49285));
+    sfix8->Effect[EFFECT_INDEX_0] = SPELL_EFFECT_KILL_CREDIT_PERSONAL;
+    for(int i = 0; i < 2; ++i)
+         sfix7->EffectImplicitTargetA[i] = TARGET_SELF;
+
     //Lifebloom final heal
     SpellEntry *sfix2 = const_cast<SpellEntry*>(sSpellStore.LookupEntry(33778));
     sfix2->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;

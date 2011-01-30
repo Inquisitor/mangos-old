@@ -996,6 +996,15 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
         {
             switch(m_spellInfo->Id)
             {
+                case 49266:
+                {
+                    if (!unitTarget)
+                        return;
+
+                    if(unitTarget->GetEntry() == 26472)
+                        unitTarget->setFaction(35);
+                    return;
+                }
                 case 7769:                                  // Strafe Jotunheim Building
                 {
                     if(Unit * pCaster = GetCaster())
@@ -2522,6 +2531,7 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
                 case 48610:                                 // Q:Shredder Repair
                 case 52264:                                 // Q:Grand Theft Palomino
                 case 45877:                                 // Q:Bring 'Em Back Alive
+                case 49285:                                 // Q:Mounting Up
                 {
                    if(m_caster->GetObjectGuid().IsVehicle())
                         ((Creature*)m_caster)->ForcedDespawn(500);
