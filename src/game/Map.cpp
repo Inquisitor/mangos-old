@@ -659,25 +659,6 @@ Map::Remove(T *obj, bool remove)
     }
 }
 
-inline void _F_optimized(Unit & u)
-{
-    float dx = u.m_last_notified_position.x - u.GetPositionX();
-    float dy = u.m_last_notified_position.y - u.GetPositionY();
-    float dz = u.m_last_notified_position.z - u.GetPositionZ();
-    float distsq = dx*dx+dy*dy+dz*dz;
-
-    if (distsq > Map::relocation_lower_limit_sq)
-    {
-        u.m_last_notified_position.x = u.GetPositionX();
-        u.m_last_notified_position.y = u.GetPositionY();
-        u.m_last_notified_position.z = u.GetPositionZ();
-
-        u.SheduleVisibilityUpdate();
-    }
-
-    u.SheduleAINotify(Map::relocation_ai_notify_delay);
-}
-
 void
 Map::PlayerRelocation(Player *player, float x, float y, float z, float orientation)
 {

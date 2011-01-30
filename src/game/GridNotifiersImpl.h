@@ -94,7 +94,7 @@ inline void MaNGOS::CreatureRelocationNotifier::Visit(PlayerMapType &m)
     for(PlayerMapType::iterator iter=m.begin(); iter != m.end(); ++iter)
     {
         Player* player = iter->getSource();
-        iif (player->isAlive() && !player->IsTaxiFlying() && !player->isVisibilityUpdatePending(VisibilityUpdateFlag_AI_Now))
+        if (player->isAlive() && !player->IsTaxiFlying() && !player->isVisibilityUpdatePending(VisibilityUpdateFlag_AI_Now))
             PlayerCreatureRelocationWorker(player, &i_creature);
     }
 }
