@@ -996,13 +996,26 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
         {
             switch(m_spellInfo->Id)
             {
-                case 49266:
+                case 49266:                                 // Dangle Wild Carrot
                 {
                     if (!unitTarget)
                         return;
 
                     if(unitTarget->GetEntry() == 26472)
                         unitTarget->setFaction(35);
+                    return;
+                }
+                case 49134:                                 // Tranquilizer Dart
+                {
+                    if (!unitTarget)
+                        return;
+
+                    if(unitTarget->GetEntry() == 27627)
+                        if(unitTarget->GetVehicle())
+                        {
+                            ((Creature*)unitTarget)->UpdateEntry(27632);
+                            unitTarget->GetVehicle()->GetBase()->setFaction(35);
+                        }
                     return;
                 }
                 case 7769:                                  // Strafe Jotunheim Building
