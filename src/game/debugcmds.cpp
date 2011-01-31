@@ -1107,10 +1107,9 @@ bool ChatHandler::HandleDebugEnterVehicleCommand(char* args)
     if (!target->GetVehicleKit())
         return false;
 
-    if (!*args)
+    uint32 seat;
+    if (!ExtractUInt32(&args, seat))
         return false;
-
-    uint32 seat = atoi(args);
 
     if (!target->GetVehicleKit()->HasEmptySeat(seat))
         return false;
@@ -1130,10 +1129,9 @@ bool ChatHandler::HandleSetVehicleIdCommand(char* args)
         return false;
     }
 
-    if (!*args)
+    uint32 vehicleId;
+    if (!ExtractUInt32(&args, vehicleId))
         return false;
-
-    uint32 vehicleId = atoi(args);
 
     VehicleEntry const* vehicleInfo = sVehicleStore.LookupEntry(vehicleId);
     if(!vehicleInfo)
