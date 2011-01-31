@@ -10562,9 +10562,6 @@ void Unit::DoPetAction( Player* owner, uint8 flag, uint32 spellid, ObjectGuid pe
     {
         case ACT_COMMAND:                                   //0x07
        // Maybe exists some flag that disable it at client side
-            if (petGuid.IsVehicle())
-                return;
-
             switch(spellid)
             {
                 case COMMAND_STAY:                          //flat=1792  //STAY
@@ -10574,12 +10571,20 @@ void Unit::DoPetAction( Player* owner, uint8 flag, uint32 spellid, ObjectGuid pe
                     GetCharmInfo()->SetCommandState( COMMAND_STAY );
                     break;
                 case COMMAND_FOLLOW:                        //spellid=1792  //FOLLOW
+                    if (petGuid.IsVehicle())
+                        return;
                     AttackStop();
                     GetMotionMaster()->MoveFollow(owner,PET_FOLLOW_DIST,((Pet*)this)->GetPetFollowAngle());
                     GetCharmInfo()->SetCommandState( COMMAND_FOLLOW );
                     break;
                 case COMMAND_ATTACK:                        //spellid=1792  //ATTACK
                 {
+                    if (petGuid.IsVehicle())
+                    {
+                         VehicleSeatEntry const* seatInfo = GetVehicleKit()->GetSeatInfo(owner);
+                         if (!seatInfo || !(seatInfo->m_flags & SEAT_FLAG_ATTACK_TEST))
+                             return;
+                    }
                     Unit *TargetUnit = owner->GetMap()->GetUnit(targetGuid);
                     if(!TargetUnit)
                         return;
@@ -10623,6 +10628,9 @@ void Unit::DoPetAction( Player* owner, uint8 flag, uint32 spellid, ObjectGuid pe
                     break;
                 }
                 case COMMAND_ABANDON:                       // abandon (hunter pet) or dismiss (summoned pet)
+                    if (petGuid.IsVehicle())
+                        return;
+
                     if(((Creature*)this)->IsPet())
                     {
                         Pet* p = (Pet*)this;

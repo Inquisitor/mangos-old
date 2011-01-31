@@ -5166,7 +5166,7 @@ SpellCastResult Spell::CheckCast(bool strict)
     bool castOnVehicleAllowed = false;
 
     if (m_caster->GetVehicle())
-        if ( VehicleSeatEntry const* seatInfo = m_caster->GetVehicle()->GetSeatInfo(m_caster))
+        if (VehicleSeatEntry const* seatInfo = m_caster->GetVehicle()->GetSeatInfo(m_caster))
             if (seatInfo->m_flags & SEAT_FLAG_CAN_CAST || seatInfo->m_flags & SEAT_FLAG_CAN_ATTACK)
                 castOnVehicleAllowed = true;
 
@@ -5997,7 +5997,7 @@ SpellCastResult Spell::CheckPetCast(Unit* target)
         if(this->m_spellInfo->Id == 33395) // Water Elemental's Freeze should overcast Waterbolt
             m_caster->InterruptNonMeleeSpells(false);
         else
-            return SPELL_FAILED_SPELL_IN_PROGRESS;     
+            return SPELL_FAILED_SPELL_IN_PROGRESS;
     }
 
     if(m_caster->isInCombat() && IsNonCombatSpell(m_spellInfo))
