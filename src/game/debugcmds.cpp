@@ -1109,7 +1109,9 @@ bool ChatHandler::HandleDebugEnterVehicleCommand(char* args)
 
     uint32 seat;
     if (!ExtractUInt32(&args, seat))
-        return false;
+    {
+        seat = 0;
+    }
 
     if (!target->GetVehicleKit()->HasEmptySeat(seat))
         return false;
@@ -1119,7 +1121,7 @@ bool ChatHandler::HandleDebugEnterVehicleCommand(char* args)
 }
 
 
-bool ChatHandler::HandleSetVehicleIdCommand(char* args)
+bool ChatHandler::HandleDebugSetVehicleIdCommand(char* args)
 {
     Unit* target = getSelectedUnit();
     if (!target)
