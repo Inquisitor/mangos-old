@@ -6808,6 +6808,21 @@ void Spell::EffectSummonObjectWild(SpellEffectIndex eff_idx)
     }
 
     pGameObj->SummonLinkedTrapIfAny();
+
+    if(m_spellInfo->Id == 55896) // Q: Valkyrion Must Burn
+    {
+        Creature* pHay = NULL;
+
+        // search for a reef cow nearby
+        MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck u_check(*pGameObj, 30096, true, 10.0f);
+        MaNGOS::CreatureLastSearcher<MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck> searcher(pHay, u_check);
+
+        Cell::VisitAllObjects(pGameObj, searcher, 10.0f);
+
+        if (pHay)
+            if(m_caster->GetCharmerOrOwnerOrSelf()->GetTypeId() == TYPEID_PLAYER)
+                ((Player*)m_caster->GetCharmerOrOwnerOrSelf())->KilledMonsterCredit(30096);
+    }
 }
 
 void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
