@@ -1564,7 +1564,6 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         Pet* GetPet() const;
         Unit* GetCharmer() const;
         Unit* GetCharm() const;
-        Unit* GetCreator() const;
         void Uncharm();
         Unit* GetCharmerOrOwner() const { return !GetCharmerGuid().IsEmpty() ? GetCharmer() : GetOwner(); }
         Unit* GetCharmOrPet() const { return !GetCharmGuid().IsEmpty() ? GetCharm() : (Unit*)GetPet(); }
