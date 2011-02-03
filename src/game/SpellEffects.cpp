@@ -7626,7 +7626,7 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                             pWagon->GetClosePoint(x,y,z, pWagon->GetObjectBoundingRadius(), 5);
                             if(Creature * pEngineer = unitTarget->SummonCreature(27163, x,y,z, 0, TEMPSUMMON_TIMED_DESPAWN, 10000))
                             {
-                                char * text = "";
+                                const char * text = "";
                                 switch(urand(0, 4))
                                 {
                                     case 0: text = "Hey, do any of you know McGoyver over at Valgarde? He's my uncle. You know what his title is? Pro. Yea, just Pro. I want to be a pro too."; break;
