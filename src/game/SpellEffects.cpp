@@ -987,7 +987,41 @@ void Spell::EffectSchoolDMG(SpellEffectIndex effect_idx)
 void Spell::EffectDummy(SpellEffectIndex eff_idx)
 {
     if (!unitTarget && !gameObjTarget && !itemTarget)
+    {
+        switch(m_spellInfo->Id)
+        {
+            case 48345:                                 // Q:Bombard the Ballistae
+                {
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    // Iterate for all creatures around cast place
+
+                    std::list<GameObject*> gobList;
+                    {
+                        MaNGOS::AnyGameObjectInPointRangeCheck go_check(m_caster, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10.0f); // 10 yards check
+                        MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck> go_search(gobList, go_check);
+                        Cell::VisitAllObjects(m_caster, go_search, 10.0f);
+                    }
+
+                    if (!gobList.empty())
+                    {
+                        for(std::list<GameObject*>::iterator itr = gobList.begin(); itr != gobList.end(); ++itr)
+                        {
+                            if( (*itr)->GetEntry() == 188673 )
+                            {
+                                (*itr)->SetLootState(GO_JUST_DEACTIVATED);
+                                ((Player*)m_caster)->KilledMonsterCredit(27331);
+                            }
+                        }
+                    }
+                    return;
+                }
+            default:
+                    break;
+        }
         return;
+    }
 
     // selection by spell family
     switch(m_spellInfo->SpellFamilyName)
@@ -2578,37 +2612,6 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                         for(int i = 0; i < m_counted; ++i)
                             ((Player*)m_caster)->KilledMonsterCredit(27221);
-                    }
-                    return;
-                }
-                case 48345:                                 // Q:Bombard the Ballistae
-                {
-                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
-                        return;
-
-                    // Iterate for all creatures around cast place
-                    CellPair pair(MaNGOS::ComputeCellPair(m_targets.m_destX, m_targets.m_destY));
-                    Cell cell(pair);
-                    cell.SetNoCreate();
-
-                    std::list<GameObject*> gobList;
-                    {
-                        MaNGOS::AnyGameObjectInPointRangeCheck go_check(m_caster, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, 10.0f); // 10 yards check
-                        MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck> go_search(gobList, go_check);
-                        TypeContainerVisitor<MaNGOS::GameObjectListSearcher<MaNGOS::AnyGameObjectInPointRangeCheck>, GridTypeMapContainer> go_visit(go_search);
-                        GetCaster()->GetMap()->Visit(cell, go_visit);
-                    }
-
-                    if (!gobList.empty())
-                    {
-                        for(std::list<GameObject*>::iterator itr = gobList.begin(); itr != gobList.end(); ++itr)
-                        {
-                            if( (*itr)->GetEntry() == 188673 )
-                            {
-                                (*itr)->SetLootState(GO_JUST_DEACTIVATED);
-                                ((Player*)m_caster)->KilledMonsterCredit(27331);
-                            }
-                        }
                     }
                     return;
                 }

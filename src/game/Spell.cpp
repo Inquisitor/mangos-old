@@ -3596,7 +3596,7 @@ void Spell::_handle_immediate_phase()
             continue;
 
         // apply Send Event effect to ground in case empty target lists
-        if( m_spellInfo->Effect[j] == SPELL_EFFECT_SEND_EVENT && !HaveTargetsForEffect(SpellEffectIndex(j)) )
+        if((m_spellInfo->Effect[j] == SPELL_EFFECT_SEND_EVENT || m_spellInfo->Effect[j] == SPELL_EFFECT_DUMMY) && !HaveTargetsForEffect(SpellEffectIndex(j)) )
         {
             HandleEffects(NULL, NULL, NULL, SpellEffectIndex(j));
             continue;
