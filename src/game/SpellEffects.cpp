@@ -6878,41 +6878,6 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_DECREASE_SPEED);
                     return;
                 }
-                case 24194:                                 // Uther's Tribute
-                case 24195:                                 // Grom's Tribute
-                {
-                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
-                        return;
-
-                    uint8 race = unitTarget->getRace();
-                    uint32 spellId = 0;
-                    switch(m_spellInfo->Id)
-                    {
-                        case 24194:
-                            switch(race)
-                            {
-                                case RACE_HUMAN:            spellId = 24105; break;
-                                case RACE_DWARF:            spellId = 24107; break;
-                                case RACE_NIGHTELF:         spellId = 24108; break;
-                                case RACE_GNOME:            spellId = 24106; break;
-                                case RACE_DRAENEI:          spellId = 69533; break;
-                            }
-                            break;
-                        case 24195:
-                            switch(race)
-                            {
-                                case RACE_ORC:              spellId = 24104; break;
-                                case RACE_UNDEAD:           spellId = 24103; break;
-                                case RACE_TAUREN:           spellId = 24102; break;
-                                case RACE_TROLL:            spellId = 24101; break;
-                                case RACE_BLOODELF:         spellId = 69530; break;
-                            }
-                            break;
-                    }
-                    if (spellId)
-                        unitTarget->CastSpell(unitTarget, spellId, true);
-                    return;
-                }
                 case 22539:                                 // Shadow Flame (All script effects, not just end ones to
                 case 22972:                                 // prevent player from dodging the last triggered spell)
                 case 22975:
@@ -6938,9 +6903,118 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     m_caster->CastSpell(unitTarget, 22682, true);
                     return;
                 }
+                case 24194:                                 // Uther's Tribute
+                case 24195:                                 // Grom's Tribute
+                {
+                    if (m_caster->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    uint8 race = m_caster->getRace();
+                    uint32 spellId = 0;
+
+                    switch(m_spellInfo->Id)
+                    {
+                        case 24194:
+                            switch(race)
+                            {
+                                case RACE_HUMAN:            spellId = 24105; break;
+                                case RACE_DWARF:            spellId = 24107; break;
+                                case RACE_NIGHTELF:         spellId = 24108; break;
+                                case RACE_GNOME:            spellId = 24106; break;
+                                case RACE_DRAENEI:          spellId = 69533; break;
+                            }
+                            break;
+                        case 24195:
+                            switch(race)
+                            {
+                                case RACE_ORC:              spellId = 24104; break;
+                                case RACE_UNDEAD:           spellId = 24103; break;
+                                case RACE_TAUREN:           spellId = 24102; break;
+                                case RACE_TROLL:            spellId = 24101; break;
+                                case RACE_BLOODELF:         spellId = 69530; break;
+                            }
+                            break;
+                    }
+
+                    if (spellId)
+                        m_caster->CastSpell(m_caster, spellId, true);
+
+                    return;
+                }
                 case 24590:                                 // Brittle Armor - need remove one 24575 Brittle Armor aura
                     unitTarget->RemoveAuraHolderFromStack(24575);
                     return;
+                case 24717:                                 // Pirate Costume
+                {
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    // Pirate Costume (male or female)
+                    m_caster->CastSpell(unitTarget, unitTarget->getGender() == GENDER_MALE ? 24708 : 24709, true);
+                    return;
+                }
+                case 24718:                                 // Ninja Costume
+                {
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    // Ninja Costume (male or female)
+                    m_caster->CastSpell(unitTarget, unitTarget->getGender() == GENDER_MALE ? 24711 : 24710, true);
+                    return;
+                }
+                case 24719:                                 // Leper Gnome Costume
+                {
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    // Leper Gnome Costume (male or female)
+                    m_caster->CastSpell(unitTarget, unitTarget->getGender() == GENDER_MALE ? 24712 : 24713, true);
+                    return;
+                }
+                case 24720:                                 // Random Costume
+                {
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    uint32 spellId = 0;
+
+                    switch(urand(0, 6))
+                    {
+                        case 0:
+                            spellId = unitTarget->getGender() == GENDER_MALE ? 24708 : 24709;
+                            break;
+                        case 1:
+                            spellId = unitTarget->getGender() == GENDER_MALE ? 24711 : 24710;
+                            break;
+                        case 2:
+                            spellId = unitTarget->getGender() == GENDER_MALE ? 24712 : 24713;
+                            break;
+                        case 3:
+                            spellId = 24723;
+                            break;
+                        case 4:
+                            spellId = 24732;
+                            break;
+                        case 5:
+                            spellId = unitTarget->getGender() == GENDER_MALE ? 24735 : 24736;
+                            break;
+                        case 6:
+                            spellId = 24740;
+                            break;
+                    }
+
+                    m_caster->CastSpell(unitTarget, spellId, true);
+                    return;
+                }
+                case 24737:                                 // Ghost Costume
+                {
+                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
+                        return;
+
+                    // Ghost Costume (male or female)
+                    m_caster->CastSpell(unitTarget, unitTarget->getGender() == GENDER_MALE ? 24735 : 24736, true);
+                    return;
+                }
                 case 26275:                                 // PX-238 Winter Wondervolt TRAP
                 {
                     uint32 spells[4] = { 26272, 26157, 26273, 26274 };
@@ -7665,24 +7739,6 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
 
                     // Summon Main Mammoth Meat
                     m_caster->CastSpell(m_caster, 57444, true);
-                    return;
-                }
-                case 54729:                                 // Winged Steed of the Ebon Blade
-                {
-                    if (!unitTarget || unitTarget->GetTypeId() != TYPEID_PLAYER)
-                        return;
-
-                    // Prevent stacking of mounts
-                    unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
-
-                    // Triggered spell id dependent of riding skill
-                    if (uint16 skillval = ((Player*)unitTarget)->GetSkillValue(SKILL_RIDING))
-                    {
-                        if (skillval >= 300)
-                            unitTarget->CastSpell(unitTarget, 54727, true);
-                        else
-                            unitTarget->CastSpell(unitTarget, 54726, true);
-                    }
                     return;
                 }
                 case 54436:                                 // Demonic Empowerment (succubus Vanish effect)
