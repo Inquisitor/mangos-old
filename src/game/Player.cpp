@@ -2543,7 +2543,7 @@ void Player::SendLogXPGain(uint32 GivenXP, Unit* victim, uint32 RestXP)
 
 void Player::GiveXP(uint32 xp, Unit* victim)
 {
-    if ( xp < 1 )
+    if (!xp)
         return;
 
     if(!isAlive() && !GetBattleGroundId())
@@ -2607,7 +2607,7 @@ void Player::GiveXP(uint32 xp, Unit* victim)
 // Current player experience not update (must be update by caller)
 void Player::GiveLevel(uint32 level)
 {
-    if ( level == getLevel() )
+    if (level == getLevel())
         return;
 
     PlayerLevelInfo info;
@@ -2662,7 +2662,7 @@ void Player::GiveLevel(uint32 level)
     SetHealth(GetMaxHealth());
     SetPower(POWER_MANA, GetMaxPower(POWER_MANA));
     SetPower(POWER_ENERGY, GetMaxPower(POWER_ENERGY));
-    if(GetPower(POWER_RAGE) > GetMaxPower(POWER_RAGE))
+    if (GetPower(POWER_RAGE) > GetMaxPower(POWER_RAGE))
         SetPower(POWER_RAGE, GetMaxPower(POWER_RAGE));
     SetPower(POWER_FOCUS, 0);
     SetPower(POWER_HAPPINESS, 0);
@@ -2681,9 +2681,8 @@ void Player::GiveLevel(uint32 level)
 
 void Player::UpdateFreeTalentPoints(bool resetIfNeed)
 {
-    uint32 level = getLevel();
     // talents base at level diff ( talents = level - 9 but some can be used already)
-    if (level < 10)
+    if (uint32 level = getLevel() < 10)
     {
         // Remove all talent points
         if (m_usedTalentCount > 0)                           // Free any used talents
