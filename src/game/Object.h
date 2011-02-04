@@ -88,7 +88,7 @@ struct WorldLocation
 
 
 //use this class to measure time between world update ticks
-//essential for units updating their spells after cells become active 
+//essential for units updating their spells after cells become active
 class WorldUpdateCounter
 {
     public:
@@ -413,7 +413,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
                 ~UpdateHelper() { }
 
                 void Update( uint32 time_diff )
-                { 
+                {
                     m_obj->Update( m_obj->m_updateTracker.timeElapsed(), time_diff);
                     m_obj->m_updateTracker.Reset();
                 }
@@ -574,7 +574,7 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         void BuildUpdateData(UpdateDataMapType &);
 
         GameObject* SummonGameObject(uint32 id, float x, float y, float z, float ang, uint32 despwtime);
-        Creature* SummonCreature(uint32 id, float x, float y, float z, float ang,TempSummonType spwtype,uint32 despwtime, bool asActiveObject = false);
+        Creature* SummonCreature(uint32 id, float x, float y, float z, float ang,TempSummonType spwtype,uint32 despwtime, bool asActiveObject = false, bool setOwnerGuid = false);
 
         // helper functions to select units
         Creature* GetClosestCreatureWithEntry(WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange);

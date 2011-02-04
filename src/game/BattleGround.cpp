@@ -473,14 +473,23 @@ void BattleGround::Update(uint32 diff)
                         sBattleGroundMgr.BuildBattleGroundStatusPacket(&status, this, queueSlot, GetStatus(), 0, GetStartTime(), GetArenaType());
                         plr->GetSession()->SendPacket(&status);
 
-                        for(Unit::SpellAuraHolderMap::const_iterator iter = plr->GetSpellAuraHolderMap().begin(); iter != plr->GetSpellAuraHolderMap().end(); ++iter)
+                        /*for(Unit::SpellAuraHolderMap::iterator iter = plr->GetSpellAuraHolderMap().begin(); iter != plr->GetSpellAuraHolderMap().end();)
                         {
                             if (!iter->second->IsPassive() && iter->second->IsPositive() && iter->second->GetId() != 32612)
+                            {
                                 for (int32 i = 0; i < MAX_EFFECT_INDEX; ++i)
                                     if (Aura *aura = iter->second->GetAuraByEffectIndex(SpellEffectIndex(i)))
                                         if (uint32(aura->GetAuraMaxDuration()) < 30000)
+                                        {
                                              plr->RemoveAurasDueToSpell(iter->second->GetId());
-                        }
+                                             iter = plr->GetSpellAuraHolderMap().begin();
+                                        }
+                                        else
+                                            ++iter;
+                            }
+                            else
+                                ++iter;
+                        }*/
 
                         plr->RemoveAurasDueToSpell(SPELL_ARENA_PREPARATION);
                     }
@@ -1960,6 +1969,7 @@ void BattleGround::HandleKillPlayer( Player *player, Player *killer )
             if (plr->GetTeam() == killer->GetTeam() && plr->IsAtGroupRewardDistance(player))
             {
                 UpdatePlayerScore(plr, SCORE_HONORABLE_KILLS, 1);
+                plr->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_SPECIAL_PVP_KILL,1);
                 plr->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HONORABLE_KILL,1);
                 plr->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HONORABLE_KILL_AT_AREA,1);
             }

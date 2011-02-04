@@ -78,8 +78,11 @@ inline void MaNGOS::PlayerRelocationNotifier::Visit(CreatureMapType &m)
         return;
 
     for(CreatureMapType::iterator iter = m.begin(); iter != m.end(); ++iter)
-        if (iter->getSource()->isAlive())
-            PlayerCreatureRelocationWorker(&i_player, iter->getSource());
+    {
+        Creature* c = iter->getSource();
+        if (c->isAlive() && !c->isVisibilityUpdatePending(VisibilityUpdateFlag_AI_Now))
+            PlayerCreatureRelocationWorker(&i_player, c);
+    }
 }
 
 template<>
@@ -91,7 +94,7 @@ inline void MaNGOS::CreatureRelocationNotifier::Visit(PlayerMapType &m)
     for(PlayerMapType::iterator iter=m.begin(); iter != m.end(); ++iter)
     {
         Player* player = iter->getSource();
-        if (player->isAlive() && !player->IsTaxiFlying())
+        if (player->isAlive() && !player->IsTaxiFlying() && !player->isVisibilityUpdatePending(VisibilityUpdateFlag_AI_Now))
             PlayerCreatureRelocationWorker(player, &i_creature);
     }
 }
@@ -105,7 +108,7 @@ inline void MaNGOS::CreatureRelocationNotifier::Visit(CreatureMapType &m)
     for(CreatureMapType::iterator iter = m.begin(); iter != m.end(); ++iter)
     {
         Creature* c = iter->getSource();
-        if (c != &i_creature && c->isAlive())
+        if (c != &i_creature && c->isAlive() && !c->isVisibilityUpdatePending(VisibilityUpdateFlag_AI_Now))
             CreatureCreatureRelocationWorker(c, &i_creature);
     }
 }

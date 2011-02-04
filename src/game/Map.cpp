@@ -268,7 +268,7 @@ bool Map::EnsureGridLoaded(const Cell &cell)
         //otherwise there is a possibility of infinity chain (grid loading will be called many times for the same grid)
         //possible scenario:
         //active object A(loaded with loader.LoadN call and added to the  map)
-        //summons some active object B, while B added to map grid loading called again and so on.. 
+        //summons some active object B, while B added to map grid loading called again and so on..
         setGridObjectDataLoaded(true,cell.GridX(), cell.GridY());
         ObjectGridLoader loader(*grid, this, cell);
         loader.LoadN();
@@ -659,28 +659,6 @@ Map::Remove(T *obj, bool remove)
     }
 }
 
-float  Map::relocation_lower_limit_sq   = 10.f * 10.f;
-uint32 Map::relocation_ai_notify_delay  = 1000u;
-
-inline void _F_optimized(Unit & u)
-{
-    float dx = u.m_last_notified_position.x - u.GetPositionX();
-    float dy = u.m_last_notified_position.y - u.GetPositionY();
-    float dz = u.m_last_notified_position.z - u.GetPositionZ();
-    float distsq = dx*dx+dy*dy+dz*dz;
-
-    if (distsq > Map::relocation_lower_limit_sq)
-    {
-        u.m_last_notified_position.x = u.GetPositionX();
-        u.m_last_notified_position.y = u.GetPositionY();
-        u.m_last_notified_position.z = u.GetPositionZ();
-
-        u.SheduleVisibilityUpdate();
-    }
-
-    u.SheduleAINotify(Map::relocation_ai_notify_delay);
-}
-
 void
 Map::PlayerRelocation(Player *player, float x, float y, float z, float orientation)
 {
@@ -710,7 +688,7 @@ Map::PlayerRelocation(Player *player, float x, float y, float z, float orientati
         player->GetViewPoint().Event_GridChanged(&(*newGrid)(new_cell.CellX(),new_cell.CellY()));
     }
 
-    _F_optimized(*player);
+    player->OnRelocated();
 
     NGridType* newGrid = getNGrid(new_cell.GridX(), new_cell.GridY());
     if( !same_cell && newGrid->GetGridState()!= GRID_STATE_ACTIVE )
@@ -746,7 +724,7 @@ Map::CreatureRelocation(Creature *creature, float x, float y, float z, float ang
     if (!moved_to_resp)
         creature->Relocate(x, y, z, ang);
 
-    _F_optimized(*creature);
+    creature->OnRelocated();
     MANGOS_ASSERT(CheckGridIntegrity(creature,true));
 }
 
@@ -1397,10 +1375,12 @@ bool InstanceMap::Add(Player *player)
                     // players also become permanently bound when they enter
                     if (groupBind->perm)
                     {
-                        WorldPacket data(SMSG_INSTANCE_SAVE_CREATED, 4);
-                        data << uint32(0);
+                        WorldPacket data(SMSG_INSTANCE_LOCK_WARNING_QUERY, 9);
+                        data << uint32(60000);
+                        data << uint32(0); // Completed Encounter Mask (Feanor: TODO)
+                        data << uint8(0);
                         player->GetSession()->SendPacket(&data);
-                        player->BindToInstance(GetInstanceSave(), true);
+                        player->SetPendingBind(GetInstanceSave(), 60000);
                     }
                 }
             }
@@ -2861,33 +2841,33 @@ void Map::ScriptsProcess()
             }
             case SCRIPT_COMMAND_ADD_QUEST_COUNT:
             {
-                if(!source)
+                if (!source)
                 {
                     sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT call for NULL object.");
                     break;
                 }
 
-                if(source->GetTypeId() != TYPEID_PLAYER) 
+                if (source->GetTypeId() != TYPEID_PLAYER) 
                 {
                     sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT call for non-player (QuestId: %u TypeId is %u), skipping.",step.script->add_quest_count.quest_id, uint32(source->GetTypeId()));
                     break;
                 }
                 Player * user = static_cast<Player*>(source);
 
-                uint32 QuestID = step.script->add_quest_count.quest_id;
-                uint32 x = step.script->add_quest_count.quest_field;
+                uint32 questId = step.script->add_quest_count.quest_id;
+                uint32 i = step.script->add_quest_count.quest_field;
                 uint32 increment = step.script->add_quest_count.inc_value;
 
-                if( increment < 1 ) // We havent anything to increment (it cant be either 0 nor minus value )
+                if (increment < 1) // We havent anything to increment (it cant be either 0 nor minus value )
                 {
-                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT increment is lower than 0 for quest: %u",QuestID);
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT increment is lower than 0 for quest: %u",questId);
                     break;
                 }
 
-                Quest const* pQuest = sObjectMgr.GetQuestTemplate(QuestID);
+                Quest const* pQuest = sObjectMgr.GetQuestTemplate(questId);
                 if (!pQuest)
                 {
-                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT Quest Template doesnt exist for quest: %u",QuestID);
+                    sLog.outError("SCRIPT_COMMAND_ADD_QUEST_COUNT Quest Template doesnt exist for quest: %u",questId);
                     break;
                 }
 
@@ -2895,19 +2875,19 @@ void Map::ScriptsProcess()
                 if (log_slot > MAX_QUEST_LOG_SIZE)
                     break;
 
-                QuestStatusData& q_status = user->getQuestStatusMap()[QuestID];
+                QuestStatusData& q_status = user->getQuestStatusMap()[questId];
 
-                if(q_status.m_creatureOrGOcount[x] + increment > pQuest->ReqCreatureOrGOCount[x]) // We shouldnt go above required count
+                if (q_status.m_creatureOrGOcount[i] + increment > pQuest->ReqCreatureOrGOCount[i]) // We shouldnt go above required count
                     break;
 
-                uint32 oldCount = q_status.m_creatureOrGOcount[x];
-                q_status.m_creatureOrGOcount[x] = oldCount + increment;
+                uint32 oldCount = q_status.m_creatureOrGOcount[i];
+                q_status.m_creatureOrGOcount[i] = oldCount + increment;
                 if (q_status.uState != QUEST_NEW) 
                     q_status.uState = QUEST_CHANGED;
 
-                user->SendQuestUpdateAddCreatureOrGo(pQuest, ObjectGuid(), x, oldCount + increment);
-                if (user->CanCompleteQuest(QuestID))
-                    user->CompleteQuest(QuestID);
+                user->SendQuestUpdateAddCreatureOrGo(pQuest, ObjectGuid(), i, oldCount + increment);
+                if (user->CanCompleteQuest(questId))
+                    user->CompleteQuest(questId);
 
                 break;
             }
@@ -2926,10 +2906,10 @@ void Map::ScriptsProcess()
                 float z = step.script->z;
                 float o = step.script->o;
 
-                if(!x && !y && !z)
+                if (!x && !y && !z)
                     pSummoner->GetPosition(x,y,z);
 
-                if(GameObject * pGameObj = pSummoner->SummonGameObject(step.script->go_summon.go_entry, x,y,z, o, step.script->go_summon.despawn_delay))
+                if (GameObject * pGameObj = pSummoner->SummonGameObject(step.script->go_summon.go_entry, x,y,z, o, step.script->go_summon.despawn_delay))
                     if (pSummoner->GetTypeId() == TYPEID_UNIT)
                         ((Unit*)pSummoner)->AddGameObject(pGameObj);
                 break;
@@ -2944,6 +2924,22 @@ void Map::ScriptsProcess()
 
                 Creature *pCreature = (Creature*)target;
                 pCreature->UpdateEntry(step.script->set_entry.entry, ALLIANCE, 0, 0, step.script->set_entry.keep_stat ? true : false);
+            }
+            case SCRIPT_COMMAND_ENTER_VEHICLE:
+            {
+                if (!target || target->GetTypeId() != TYPEID_PLAYER)
+                {
+                    sLog.outError("SCRIPT_COMMAND_ENTER_VEHICLE (script id %u) call for NULL source or non-player type.", step.script->id);
+                    break;
+                }
+
+                if (!source || !source->GetObjectGuid().IsVehicle())
+                {
+                    sLog.outError("SCRIPT_COMMAND_ENTER_VEHICLE (script id %u) call for NULL target or non-vehicle type.", step.script->id);
+                    break;
+                }
+
+                ((Unit*)target)->EnterVehicle(((Unit*)source)->GetVehicleKit());
             }
             case SCRIPT_COMMAND_SET_RUN:
             {

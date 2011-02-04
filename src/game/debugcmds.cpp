@@ -548,7 +548,7 @@ bool ChatHandler::HandleDebugGetItemStateCommand(char* args)
                     if (container != bag)
                     {
                         PSendSysMessage("%s in bag %u at slot %u has a different container %s from slot %u!",
-                            item2->GetGuidStr().c_str(), bag->GetSlot(), item2->GetSlot(), 
+                            item2->GetGuidStr().c_str(), bag->GetSlot(), item2->GetSlot(),
                             container->GetGuidStr().c_str(), container->GetSlot());
                         error = true; continue;
                     }
@@ -1047,7 +1047,7 @@ bool ChatHandler::HandleDebugSpellModsCommand(char* args)
     if (!typeStr)
         return false;
 
-    uint16 opcode; 
+    uint16 opcode;
     if (strncmp(typeStr, "flat", strlen(typeStr)) == 0)
         opcode = SMSG_SET_FLAT_SPELL_MODIFIER;
     else if (strncmp(typeStr, "pct", strlen(typeStr)) == 0)
@@ -1107,14 +1107,43 @@ bool ChatHandler::HandleDebugEnterVehicleCommand(char* args)
     if (!target->GetVehicleKit())
         return false;
 
-    if (!*args)
-        return false;
-
-    uint32 seat = atoi(args);
+    uint32 seat;
+    if (!ExtractUInt32(&args, seat))
+    {
+        seat = 0;
+    }
 
     if (!target->GetVehicleKit()->HasEmptySeat(seat))
         return false;
     
     m_session->GetPlayer()->EnterVehicle(target->GetVehicleKit(), seat);
+    return true;
+}
+
+
+bool ChatHandler::HandleDebugSetVehicleIdCommand(char* args)
+{
+    Unit* target = getSelectedUnit();
+    if (!target)
+    {
+        SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    uint32 vehicleId;
+    if (!ExtractUInt32(&args, vehicleId))
+        return false;
+
+    VehicleEntry const* vehicleInfo = sVehicleStore.LookupEntry(vehicleId);
+    if(!vehicleInfo)
+    {
+        SendSysMessage("Vehicle ID is invalid.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    target->RemoveVehicleKit();
+    target->CreateVehicleKit(vehicleId);
     return true;
 }

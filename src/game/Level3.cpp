@@ -1228,7 +1228,7 @@ bool ChatHandler::HandleAchievementCriteriaAddCommand(char* args)
         return false;
 
     uint32 new_val;
-    
+
     if (maxValue)
         new_val = progress < maxValue && maxValue - progress > val ? progress + val : maxValue;
     else
@@ -4060,7 +4060,7 @@ bool ChatHandler::HandleNpcInfoCommand(char* /*args*/)
     uint32 Entry = target->GetEntry();
     uint32 phaseMask = target->GetPhaseMask();
     CreatureInfo const* cInfo = target->GetCreatureInfo();
-    uint32 VehicleId = cInfo ? cInfo->VehicleId : 0;
+    uint32 VehicleId = target->GetVehicleKit() ? target->GetVehicleKit()->GetVehicleId() : 0;
     uint32 difficulty_entry_1 = cInfo ? cInfo->DifficultyEntry[0] : 0;
     uint32 difficulty_entry_2 = cInfo ? cInfo->DifficultyEntry[1] : 0;
     uint32 difficulty_entry_3 = cInfo ? cInfo->DifficultyEntry[2] : 0;
@@ -4588,7 +4588,7 @@ bool ChatHandler::HandleListAurasCommand (char* /*args*/)
     for (Unit::SpellAuraHolderMap::const_iterator itr = uAuras.begin(); itr != uAuras.end(); ++itr)
     {
         bool talent = GetTalentSpellCost(itr->second->GetId()) > 0;
-        
+
         SpellAuraHolder *holder = itr->second;
         char const* name = holder->GetSpellProto()->SpellName[GetSessionDbcLocale()];
 
@@ -4597,7 +4597,7 @@ bool ChatHandler::HandleListAurasCommand (char* /*args*/)
             Aura *aur = holder->GetAuraByEffectIndex(SpellEffectIndex(i));
             if (!aur)
                 continue;
-            
+
             if (m_session)
             {
                 std::ostringstream ss_name;

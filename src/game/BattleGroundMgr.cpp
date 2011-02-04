@@ -1493,7 +1493,7 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
     //for arenas there is random map used
     if (bg_template->isArena())
     {
-        BattleGroundTypeId arenas[] = {BATTLEGROUND_NA, BATTLEGROUND_BE, BATTLEGROUND_RL};
+        BattleGroundTypeId arenas[] = {BATTLEGROUND_NA, BATTLEGROUND_BE, BATTLEGROUND_RL/*, BATTLEGROUND_DS*/};
         uint32 arena_num = urand(0,2);
         bgTypeId = arenas[arena_num];
         bg_template = GetBattleGroundTemplate(bgTypeId);
@@ -1508,9 +1508,33 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
 
     if(bgTypeId==BATTLEGROUND_RB)
     {
-        BattleGroundTypeId random_bgs[] = {BATTLEGROUND_AV, BATTLEGROUND_WS, BATTLEGROUND_AB, BATTLEGROUND_EY/*, BATTLEGROUND_SA, BATTLEGROUND_IC*/};
-        uint32 bg_num = urand(0, sizeof(random_bgs)/sizeof(BattleGroundTypeId)-1);
-        bgTypeId = random_bgs[bg_num];
+        int count = 0;
+        if (!sBattleGroundMgr.isTesting())
+        {
+            for(World::SessionMap::const_iterator itr = sWorld.GetSessions().begin(); itr != sWorld.GetSessions().end(); ++itr)
+            {
+                if (!itr->second || !itr->second->GetPlayer())
+                    continue;
+
+                if (itr->second->GetPlayer()->getLevel() == 80)
+                    ++count;
+            }
+        }
+
+        bgTypeId = BATTLEGROUND_AB; // Default initialization
+        if(count > 100 || sBattleGroundMgr.isTesting())
+        {
+            BattleGroundTypeId random_bgs[] = {BATTLEGROUND_AV, BATTLEGROUND_WS, BATTLEGROUND_AB, BATTLEGROUND_EY/*, BATTLEGROUND_SA*/?};
+            uint32 bg_num = urand(0, 4);
+            bgTypeId = random_bgs[bg_num];
+        }
+        else
+        {
+            BattleGroundTypeId random_bgs[] = {BATTLEGROUND_WS, BATTLEGROUND_AB, BATTLEGROUND_EY/*, BATTLEGROUND_SA*/};
+            uint32 bg_num = urand(0, 3);
+            bgTypeId = random_bgs[bg_num];
+        }
+
         bg_template = GetBattleGroundTemplate(bgTypeId);
         if (!bg_template)
         {
@@ -1907,7 +1931,8 @@ bool BattleGroundMgr::IsArenaType(BattleGroundTypeId bgTypeId)
     return ( bgTypeId == BATTLEGROUND_AA ||
         bgTypeId == BATTLEGROUND_BE ||
         bgTypeId == BATTLEGROUND_NA ||
-        bgTypeId == BATTLEGROUND_RL );
+        bgTypeId == BATTLEGROUND_RL ||
+        bgTypeId == BATTLEGROUND_DS);
 }
 
 BattleGroundQueueTypeId BattleGroundMgr::BGQueueTypeId(BattleGroundTypeId bgTypeId, uint8 arenaType)
@@ -2120,7 +2145,7 @@ BattleGroundTypeId BattleGroundMgr::WeekendHolidayIdToBGType(HolidayIds holiday)
 
 bool BattleGroundMgr::IsBGWeekend(BattleGroundTypeId bgTypeId)
 {
-    return IsHolidayActive(BGTypeToWeekendHolidayId(bgTypeId));
+    return sGameEventMgr.IsActiveHoliday(BGTypeToWeekendHolidayId(bgTypeId));
 }
 
 void BattleGroundMgr::LoadBattleEventIndexes()

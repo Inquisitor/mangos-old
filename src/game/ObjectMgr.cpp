@@ -174,7 +174,8 @@ ObjectMgr::~ObjectMgr()
         delete itr->second;
 
     for (GuildMap::iterator itr = mGuildMap.begin(); itr != mGuildMap.end(); ++itr)
-        delete itr->second;
+        if (*itr)
+            delete *itr;
 
     for (ArenaTeamMap::iterator itr = mArenaTeamMap.begin(); itr != mArenaTeamMap.end(); ++itr)
         delete itr->second;
@@ -198,38 +199,44 @@ Group* ObjectMgr::GetGroupById(uint32 id) const
     return NULL;
 }
 
-Guild* ObjectMgr::GetGuildById(uint32 GuildId) const
+Guild* ObjectMgr::GetGuildById(uint32 guildId) const
 {
-    GuildMap::const_iterator itr = mGuildMap.find(GuildId);
-    if (itr != mGuildMap.end())
-        return itr->second;
+    // Make sure given index exists in collection
+    if (guildId < uint32(mGuildMap.size()))
+        return mGuildMap[guildId];
 
     return NULL;
 }
 
 Guild * ObjectMgr::GetGuildByName(const std::string& guildname) const
 {
-    for(GuildMap::const_iterator itr = mGuildMap.begin(); itr != mGuildMap.end(); ++itr)
-        if (itr->second->GetName() == guildname)
-            return itr->second;
-
+    std::string search = guildname;
+    std::transform(search.begin(), search.end(), search.begin(), ::toupper);
+    for (GuildMap::const_iterator itr = mGuildMap.begin(); itr != mGuildMap.end(); ++itr)
+    {
+        if (*itr)
+        {
+            std::string gname = (*itr)->GetName();
+            std::transform(gname.begin(), gname.end(), gname.begin(), ::toupper);
+            if (search == gname)
+                return *itr;
+        }
+    }
     return NULL;
 }
 
-std::string ObjectMgr::GetGuildNameById(uint32 GuildId) const
+std::string ObjectMgr::GetGuildNameById(uint32 guildId) const
 {
-    GuildMap::const_iterator itr = mGuildMap.find(GuildId);
-    if (itr != mGuildMap.end())
-        return itr->second->GetName();
-
+    if (Guild* pGuild = GetGuildById(guildId))
+        return pGuild->GetName();
     return "";
 }
 
 Guild* ObjectMgr::GetGuildByLeader(ObjectGuid guid) const
 {
-    for(GuildMap::const_iterator itr = mGuildMap.begin(); itr != mGuildMap.end(); ++itr)
-        if (itr->second->GetLeaderGuid() == guid)
-            return itr->second;
+    for (GuildMap::const_iterator itr = mGuildMap.begin(); itr != mGuildMap.end(); ++itr)
+        if ((*itr) && (*itr)->GetLeaderGuid() == guid)
+            return *itr;
 
     return NULL;
 }
@@ -591,14 +598,14 @@ void ObjectMgr::LoadCreatureTemplates()
             if (difficultyInfo->AIName && *difficultyInfo->AIName)
             {
                 sLog.outErrorDb("Difficulty %u mode creature (Entry: %u) has `AIName`, but in any case will used difficulty 0 mode creature (Entry: %u) AIName.",
-                    diff, cInfo->DifficultyEntry[diff], i);
+                    diff + 1, cInfo->DifficultyEntry[diff], i);
                 continue;
             }
 
             if (difficultyInfo->ScriptID)
             {
                 sLog.outErrorDb("Difficulty %u mode creature (Entry: %u) has `ScriptName`, but in any case will used difficulty 0 mode creature (Entry: %u) ScriptName.",
-                    diff, cInfo->DifficultyEntry[diff], i);
+                    diff + 1, cInfo->DifficultyEntry[diff], i);
                 continue;
             }
 
@@ -1367,7 +1374,15 @@ void ObjectMgr::LoadCreatures()
         if(cInfo->flags_extra & CREATURE_FLAG_EXTRA_INSTANCE_BIND)
         {
             if(!mapEntry || !mapEntry->IsDungeon())
-                sLog.outErrorDb("Table `creature` have creature (GUID: %u Entry: %u) with `creature_template`.`flags_extra` including CREATURE_FLAG_EXTRA_INSTANCE_BIND but creature are not in instance.",guid,data.id);
+                sLog.outErrorDb("Table `creature` have creature (GUID: %u Entry: %u) with `creature_template`.`flags_extra` including CREATURE_FLAG_EXTRA_INSTANCE_BIND (%u) but creature are not in instance.",
+                    guid, data.id, CREATURE_FLAG_EXTRA_INSTANCE_BIND);
+        }
+
+        if(cInfo->flags_extra & CREATURE_FLAG_EXTRA_AGGRO_ZONE)
+        {
+            if(!mapEntry || !mapEntry->IsDungeon())
+                sLog.outErrorDb("Table `creature` have creature (GUID: %u Entry: %u) with `creature_template`.`flags_extra` including CREATURE_FLAG_EXTRA_AGGRO_ZONE (%u) but creature are not in instance.",
+                    guid, data.id, CREATURE_FLAG_EXTRA_AGGRO_ZONE);
         }
 
         if(data.curmana < cInfo->minmana)
@@ -3632,6 +3647,8 @@ void ObjectMgr::LoadGuilds()
         return;
     }
 
+    mGuildMap.resize(m_GuildIds.GetNextAfterMaxUsed(), NULL);         // Reserve space and initialize storage for loading guilds //TODOLEAK: fix this shit
+
     // load guild ranks
     //                                                                0       1   2     3      4
     QueryResult *guildRanksResult   = CharacterDatabase.Query("SELECT guildid,rid,rname,rights,BankMoneyPerDay FROM guild_rank ORDER BY guildid ASC, rid ASC");
@@ -5794,8 +5811,10 @@ void ObjectMgr::PackGroupIds()
 
             if (id == 0)
             {
+                CharacterDatabase.BeginTransaction();
                 CharacterDatabase.PExecute("DELETE FROM groups WHERE groupId = '%u'", id);
                 CharacterDatabase.PExecute("DELETE FROM group_member WHERE groupId = '%u'", id);
+                CharacterDatabase.CommitTransaction();
                 continue;
             }
 
@@ -5815,8 +5834,10 @@ void ObjectMgr::PackGroupIds()
         if (*i != groupId)
         {
             // remap group id
+            CharacterDatabase.BeginTransaction();
             CharacterDatabase.PExecute("UPDATE groups SET groupId = '%u' WHERE groupId = '%u'", groupId, *i);
             CharacterDatabase.PExecute("UPDATE group_member SET groupId = '%u' WHERE groupId = '%u'", groupId, *i);
+            CharacterDatabase.CommitTransaction();
         }
 
         ++groupId;
@@ -5860,10 +5881,12 @@ void ObjectMgr::SetHighestGuids()
     }
 
     // Cleanup other tables from nonexistent guids (>=m_hiItemGuid)
+    CharacterDatabase.BeginTransaction();
     CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item >= '%u'", m_ItemGuids.GetNextAfterMaxUsed());
     CharacterDatabase.PExecute("DELETE FROM mail_items WHERE item_guid >= '%u'", m_ItemGuids.GetNextAfterMaxUsed());
     CharacterDatabase.PExecute("DELETE FROM auction WHERE itemguid >= '%u'", m_ItemGuids.GetNextAfterMaxUsed());
     CharacterDatabase.PExecute("DELETE FROM guild_bank_item WHERE item_guid >= '%u'", m_ItemGuids.GetNextAfterMaxUsed());
+    CharacterDatabase.CommitTransaction();
 
     result = WorldDatabase.Query("SELECT MAX(guid) FROM gameobject" );
     if( result )
@@ -6997,9 +7020,12 @@ void ObjectMgr::LoadWeatherZoneChances()
 void ObjectMgr::SaveCreatureRespawnTime(uint32 loguid, uint32 instance, time_t t)
 {
     mCreatureRespawnTimes[MAKE_PAIR64(loguid,instance)] = t;
+
+    CharacterDatabase.BeginTransaction();
     CharacterDatabase.PExecute("DELETE FROM creature_respawn WHERE guid = '%u' AND instance = '%u'", loguid, instance);
     if(t)
         CharacterDatabase.PExecute("INSERT INTO creature_respawn VALUES ( '%u', '" UI64FMTD "', '%u' )", loguid, uint64(t), instance);
+    CharacterDatabase.CommitTransaction();
 }
 
 void ObjectMgr::DeleteCreatureData(uint32 guid)
@@ -7015,9 +7041,12 @@ void ObjectMgr::DeleteCreatureData(uint32 guid)
 void ObjectMgr::SaveGORespawnTime(uint32 loguid, uint32 instance, time_t t)
 {
     mGORespawnTimes[MAKE_PAIR64(loguid,instance)] = t;
+
+    CharacterDatabase.BeginTransaction();
     CharacterDatabase.PExecute("DELETE FROM gameobject_respawn WHERE guid = '%u' AND instance = '%u'", loguid, instance);
     if(t)
         CharacterDatabase.PExecute("INSERT INTO gameobject_respawn VALUES ( '%u', '" UI64FMTD "', '%u' )", loguid, uint64(t), instance);
+    CharacterDatabase.CommitTransaction();
 }
 
 void ObjectMgr::DeleteRespawnTimeForInstance(uint32 instance)
@@ -7042,8 +7071,10 @@ void ObjectMgr::DeleteRespawnTimeForInstance(uint32 instance)
             mCreatureRespawnTimes.erase(itr);
     }
 
+    CharacterDatabase.BeginTransaction();
     CharacterDatabase.PExecute("DELETE FROM creature_respawn WHERE instance = '%u'", instance);
     CharacterDatabase.PExecute("DELETE FROM gameobject_respawn WHERE instance = '%u'", instance);
+    CharacterDatabase.CommitTransaction();
 }
 
 void ObjectMgr::DeleteGOData(uint32 guid)
@@ -7748,7 +7779,7 @@ bool PlayerCondition::Meets(Player const * player) const
         }
         case CONDITION_NO_AURA:
             return !player->HasAura(value1, SpellEffectIndex(value2));
-        case CONDITION_ACTIVE_EVENT:
+        case CONDITION_ACTIVE_GAME_EVENT:
             return sGameEventMgr.IsActiveEvent(value1);
         case CONDITION_AREA_FLAG:
         {
@@ -7829,6 +7860,12 @@ bool PlayerCondition::Meets(Player const * player) const
             return player->HasItemCount(value1, value2, true);
         case CONDITION_NOITEM_WITH_BANK:
             return !player->HasItemCount(value1, value2, true);
+        case CONDITION_NOT_ACTIVE_GAME_EVENT:
+            return !sGameEventMgr.IsActiveEvent(value1);
+        case CONDITION_ACTIVE_HOLIDAY:
+            return sGameEventMgr.IsActiveHoliday(HolidayIds(value1));
+        case CONDITION_NOT_ACTIVE_HOLIDAY:
+            return !sGameEventMgr.IsActiveHoliday(HolidayIds(value1));
         default:
             return false;
     }
@@ -7977,10 +8014,10 @@ bool PlayerCondition::IsValid(ConditionType condition, uint32 value1, uint32 val
             }
             break;
         }
-        case CONDITION_ACTIVE_EVENT:
+        case CONDITION_ACTIVE_GAME_EVENT:
+        case CONDITION_NOT_ACTIVE_GAME_EVENT:
         {
-            GameEventMgr::GameEventDataMap const& events = sGameEventMgr.GetEventMap();
-            if (value1 >=events.size() || !events[value1].isValid())
+            if (!sGameEventMgr.IsValidEvent(value1))
             {
                 sLog.outErrorDb("Active event (%u) condition requires existing event id (%u), skipped", condition, value1);
                 return false;
@@ -8075,6 +8112,16 @@ bool PlayerCondition::IsValid(ConditionType condition, uint32 value1, uint32 val
                 return false;
             }
 
+            break;
+        }
+        case CONDITION_ACTIVE_HOLIDAY:
+        case CONDITION_NOT_ACTIVE_HOLIDAY:
+        {
+            if (!sHolidaysStore.LookupEntry(value1))
+            {
+                sLog.outErrorDb("Active holiday (%u) condition requires existing holiday id (%u), skipped", condition, value1);
+                return false;
+            }
             break;
         }
         case CONDITION_NONE:
@@ -9032,14 +9079,23 @@ bool ObjectMgr::IsVendorItemValid(bool isTemplate, char const* tableName, uint32
     return true;
 }
 
-void ObjectMgr::AddGuild( Guild* guild )
+void ObjectMgr::AddGuild(Guild* pGuild)
 {
-    mGuildMap[guild->GetId()] = guild ;
+    uint32 guildId = pGuild->GetId();
+    // Allocate space if necessary
+    if (guildId >= uint32(mGuildMap.size()))
+        // Reserve a bit more space than necessary.
+        // 16 is intentional and it will allow creation of next 16 guilds happen
+        // without reallocation.
+        mGuildMap.resize(guildId + 16);
+    mGuildMap[guildId] = pGuild;
 }
 
-void ObjectMgr::RemoveGuild( uint32 Id )
+void ObjectMgr::RemoveGuild(uint32 guildId)
 {
-    mGuildMap.erase(Id);
+    // Make sure given index exists
+    if (guildId < uint32(mGuildMap.size()))
+        mGuildMap[guildId] = NULL;
 }
 
 void ObjectMgr::AddGroup( Group* group )
@@ -9186,7 +9242,7 @@ bool FindCreatureData::operator()( CreatureDataPair const& dataPair )
         i_mapDist = new_dist;
     }
 
-    // skip not spawned (in any state), 
+    // skip not spawned (in any state),
     uint16 pool_id = sPoolMgr.IsPartOfAPool<Creature>(dataPair.first);
     if (pool_id && !sPoolMgr.IsSpawnedObject<Creature>(dataPair.first))
         return false;

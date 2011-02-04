@@ -401,12 +401,12 @@ void WorldSession::HandleSetSelectionOpcode( WorldPacket & recv_data )
     ObjectGuid guid;
     recv_data >> guid;
 
-    _player->SetSelectionGuid(guid);
-
     // update reputation list if need
     Unit* unit = ObjectAccessor::GetUnit(*_player, guid );  // can select group members at diff maps
     if (!unit)
         return;
+
+    _player->SetSelectionGuid(guid);
 
     if(FactionTemplateEntry const* factionTemplateEntry = sFactionTemplateStore.LookupEntry(unit->getFaction()))
         _player->GetReputationMgr().SetVisible(factionTemplateEntry);
@@ -1472,7 +1472,7 @@ void WorldSession::HandleCancelMountAuraOpcode( WorldPacket & /*recv_data*/ )
         return;
     }
 
-    _player->Unmount();
+    _player->Unmount(_player->HasAuraType(SPELL_AURA_MOUNTED));
     _player->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
 }
 
@@ -1553,4 +1553,24 @@ void WorldSession::HandleHearthandResurrect(WorldPacket & /*recv_data*/)
     _player->BuildPlayerRepop();
     _player->ResurrectPlayer(100);
     _player->TeleportToHomebind();
+}
+
+void WorldSession::HandleInstanceLockResponse(WorldPacket& recvPacket)
+{
+    printf("\n ! got HandleInstanceLockResponse ! \n ");
+    uint8 accept;
+    recvPacket >> accept;
+
+    if (!_player->HasPendingBind())
+    {
+        sLog.outDetail("InstanceLockResponse: Player %s (guid %u) tried to bind himself/teleport to graveyard without a pending bind!", _player->GetName(), _player->GetGUIDLow());
+        return;
+    }
+
+    if (accept)
+        _player->BindToInstance();
+    else
+        _player->RepopAtGraveyard();
+
+    _player->SetPendingBind(NULL, 0);
 }

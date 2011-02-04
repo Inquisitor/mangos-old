@@ -128,6 +128,7 @@ enum SpellFacingFlags
     SPELL_FACING_FLAG_INFRONT = 0x0001
 };
 
+#define BASE_MELEERANGE_OFFSET 1.33f
 #define BASE_MINDAMAGE 1.0f
 #define BASE_MAXDAMAGE 2.0f
 #define BASE_ATTACK_TIME 2000
@@ -824,11 +825,12 @@ inline ByteBuffer& operator>> (ByteBuffer& buf, MovementInfo& mi)
     return buf;
 }
 
-enum RelocationOperations
+enum VisibilityUpdateFlags
 {
-    AI_Notify_Sheduled          = 0x01,
-    AI_Notify_Execution         = 0x02,
-    Visibility_Update_Sheduled  = 0x04,
+    VisibilityUpdateFlag_None        = 0x00,
+    VisibilityUpdateFlag_AI_Sheduled = 0x01,         // AI relocation notification sheduled
+    VisibilityUpdateFlag_AI_Now      = 0x02,         // AI relocation notification will be executed in next update tick
+    VisibilityUpdateFlag_Client      = 0x04,         // Visibility will be updated in next update tick
 };
 
 enum DiminishingLevels
@@ -1207,7 +1209,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
                     return !HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_DISARM_RANGED);
             }
         }
-        bool canReachWithAttack(Unit *pVictim) const;
+        bool CanReachWithMeleeAttack(Unit* pVictim, float flat_mod = 0.0f) const;
         uint32 m_extraAttacks;
 
         void _addAttacker(Unit *pAttacker)                  // must be called only from Unit::Attack(Unit*)
@@ -1336,7 +1338,7 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         bool IsMounted() const { return HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_MOUNT ); }
         uint32 GetMountID() const { return GetUInt32Value(UNIT_FIELD_MOUNTDISPLAYID); }
         void Mount(uint32 mount, uint32 spellId = 0, uint32 vehicleId = 0, uint32 creatureEntry = 0);
-        void Unmount();
+        void Unmount(bool from_aura = false);
 
         uint16 GetMaxSkillValueForLevel(Unit const* target = NULL) const { return (target ? GetLevelForTarget(target) : getLevel()) * 5; }
         void DealDamageMods(Unit *pVictim, uint32 &damage, uint32* absorb);
@@ -1563,7 +1565,6 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         Pet* GetPet() const;
         Unit* GetCharmer() const;
         Unit* GetCharm() const;
-        Unit* GetCreator() const;
         void Uncharm();
         Unit* GetCharmerOrOwner() const { return !GetCharmerGuid().IsEmpty() ? GetCharmer() : GetOwner(); }
         Unit* GetCharmOrPet() const { return !GetCharmGuid().IsEmpty() ? GetCharm() : (Unit*)GetPet(); }
@@ -2045,11 +2046,11 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         void SheduleAINotify(uint32 delay);
         void SheduleVisibilityUpdate();
 
-        uint8 m_notify_sheduled;
-        struct 
-        {
-            float x, y, z;
-        } m_last_notified_position;
+        bool isVisibilityUpdatePending(uint8 f) const { return m_sheduled_visibility_updates & f;}
+        void _AddVisibilityUpdateFlag(uint8 f) { m_sheduled_visibility_updates |= f;}
+        void _RemoveVisibilityUpdateFlag(uint8 f) { m_sheduled_visibility_updates &= ~f;}
+
+        void OnRelocated();
 
     protected:
         explicit Unit ();
@@ -2125,6 +2126,8 @@ class MANGOS_DLL_SPEC Unit : public WorldObject
         uint32 m_castCounter;                               // count casts chain of triggered spells for prevent infinity cast crashes
 
         UnitVisibility m_Visibility;
+        Position m_last_notified_position;
+        uint8 m_sheduled_visibility_updates;
 
         Diminishing m_Diminishing;
         // Manage all Units threatening us
