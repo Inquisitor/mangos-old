@@ -17978,9 +17978,9 @@ void Player::_SaveStats()
        << GetUInt32Value(UNIT_FIELD_ATTACK_POWER) << ", "
        << GetUInt32Value(UNIT_FIELD_RANGED_ATTACK_POWER) << ", "
        << GetBaseSpellPowerBonus() << ", "
-       << GetUInt32Value(UNIT_FIELD_BASEATTACKTIME) << ", "
-       << GetUInt32Value(UNIT_FIELD_BASEATTACKTIME+1) << ", "
-       << GetUInt32Value(UNIT_FIELD_RANGEDATTACKTIME) << ", "
+       << GetFloatValue(UNIT_FIELD_BASEATTACKTIME) << ", "
+       << GetFloatValue(UNIT_FIELD_BASEATTACKTIME+1) << ", "
+       << GetFloatValue(UNIT_FIELD_RANGEDATTACKTIME) << ", "
        << GetFloatValue(UNIT_FIELD_MINDAMAGE) << ", "
        << GetFloatValue(UNIT_FIELD_MAXDAMAGE) << ", "
        << GetFloatValue(UNIT_FIELD_MINOFFHANDDAMAGE) << ", "
@@ -17996,7 +17996,7 @@ void Player::_SaveStats()
        << GetUInt32Value(PLAYER_OFFHAND_EXPERTISE) << ", "
        << GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS) << ", "
        << GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_NEG) << ", "
-       << GetUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_PCT) << ", "
+       << GetFloatValue(PLAYER_FIELD_MOD_DAMAGE_DONE_PCT) << ", "
        << GetUInt32Value(PLAYER_FIELD_MOD_TARGET_RESISTANCE) << ", "
        << GetUInt32Value(PLAYER_FIELD_MOD_TARGET_PHYSICAL_RESISTANCE) << ", ";
     for(int i = 0; i < MAX_COMBAT_RATING; ++i)
