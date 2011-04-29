@@ -657,6 +657,8 @@ bool IsPositiveEffect(uint32 spellId, SpellEffectIndex effIndex)
         case 59286:                                         // Opening
         case 64343:                                         // Impact
         case 12042:                                         // Arcane Power
+        case 61734:                                         // Noblegarden Bunny
+        case 61716:                                         // Rabbit Costume
             return true;
     }
 
@@ -4541,6 +4543,14 @@ int32 GetDiminishingReturnsLimitDuration(DiminishingGroup group, SpellEntry cons
     // Explicit diminishing duration
     switch(spellproto->SpellFamilyName)
     {
+        case SPELLFAMILY_GENERIC:
+        {
+            // Noblegarden Bunny and Rabbit Costume
+             if (spellproto->Id ==  61734 || spellproto->Id == 61716)
+             {
+                  return 0;
+             }
+        }
         case SPELLFAMILY_HUNTER:
         {
             // Wyvern Sting

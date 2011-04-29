@@ -3998,6 +3998,12 @@ void Aura::HandleAuraTransform(bool apply, bool Real)
             if (target->IsMounted())
                 target->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED, GetHolder());
         }
+
+        // Noblegarden Bunny - cast Easter Lay Noblegarden Egg Aura
+        if (GetId() == 61734 || GetId() == 61716)
+        {
+            target->CastSpell(target, 61719, true);
+        }
     }
     else
     {
@@ -4043,6 +4049,12 @@ void Aura::HandleAuraTransform(bool apply, bool Real)
                     target->SetUInt32Value(UNIT_FIELD_MOUNTDISPLAYID, display_id);
                 }
             }
+        }
+
+        // Noblegarden Bunny - cast Easter Lay Noblegarden Egg Aura
+        if (GetId() == 61734 || GetId() == 61716)
+        {
+            target->RemoveAurasDueToSpell(61719);
         }
     }
 }
