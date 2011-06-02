@@ -1986,6 +1986,29 @@ void Aura::TriggerSpell()
                     caster->CastSpell(triggerTarget, trigger_spell_id, true, NULL, this);
                 return;
             }
+            // Penance
+            case 47757:
+            case 52986:
+            case 52987:
+            case 52988:
+            {
+                if (Unit* caster = GetCaster())
+                {
+                    ObjectGuid triggerTargetGuid = caster->GetChannelObjectGuid();
+                    if (triggerTargetGuid.IsUnit())
+                    {
+                        if (Map * casterMap = caster->GetMap())
+                        {
+                            if (Unit * newTriggerTarget = casterMap->GetUnit(triggerTargetGuid))
+                            {
+                                triggerTarget = newTriggerTarget;
+                            }
+                        }
+                        else return;
+                    }
+                }
+                break;
+            }
             case 53563:                                     // Beacon of Light
                 // original caster must be target (beacon)
                 target->CastSpell(target, trigger_spell_id, true, NULL, this, target->GetGUID());
@@ -2017,18 +2040,6 @@ void Aura::TriggerSpell()
                         irangeIndex = 18; // 15 yards
 
                     const_cast<SpellEntry*>(triggeredSpellInfo)->EffectRadiusIndex[0] = irangeIndex;
-                }
-                break;
-            }
-            // Penance target hack
-            case 47757:
-            case 52986:
-            case 52987:
-            case 52988:
-            {
-                if (!(triggerTarget->HasAura(47757) || triggerTarget->HasAura(52986) || triggerTarget->HasAura(52987) || triggerTarget->HasAura(52988)))
-                {
-                    triggerTarget = target;
                 }
                 break;
             }
