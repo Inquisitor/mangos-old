@@ -371,12 +371,12 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
             static const float MaxDeltaXYT = 0.035f;
 
             if (delta_xyt > MaxDeltaXYT && delta<=100.0f && GetPlayer()->GetZoneId() != 2257)
-                sLog.outError("ANTI-CHEAT ENGINE: Possible hack detected (speedhack) of %s ", GetPlayer()->GetName());
+                sLog.outError("ANTI-CHEAT ENGINE: Possible hack detected (speedhack) of %s ", GetPlayer()->GetGuidStr().c_str());
         }
 
         if (delta > 100.0f && GetPlayer()->GetZoneId() != 2257)
         {
-            sLog.outError("ANTI-CHEAT ENGINE: Possible hack detected (telehack) of %s ", GetPlayer()->GetName());
+            sLog.outError("ANTI-CHEAT ENGINE: Possible hack detected (telehack) of %s ", GetPlayer()->GetGuidStr().c_str());
             //Anti__ReportCheat("Tele hack",delta,LookupOpcodeName(opcode));
         }
     }
