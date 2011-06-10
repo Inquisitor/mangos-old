@@ -1521,7 +1521,7 @@ BattleGround * BattleGroundMgr::CreateNewBattleGround(BattleGroundTypeId bgTypeI
             }
         }
 
-//        bgTypeId = BATTLEGROUND_AB; // Default initialization
+        bgTypeId = BATTLEGROUND_AB; // Default initialization
 //        if(count > 55 || sBattleGroundMgr.isTesting())
 //        {
 //            BattleGroundTypeId random_bgs[] = {BATTLEGROUND_AV, BATTLEGROUND_WS, BATTLEGROUND_AB, BATTLEGROUND_EY/*, BATTLEGROUND_SA*/};
