@@ -87,7 +87,7 @@ enum BG_AV_OTHER_VALUES
     BG_AV_NORTH_MINE            = 0,
     BG_AV_SOUTH_MINE            = 1,
     BG_AV_MINE_TICK_TIMER       = 45000,
-    BG_AV_MINE_RECLAIM_TIMER    = 1200000,                  // TODO: get the right value.. this is currently 20 minutes
+    BG_AV_MINE_RECLAIM_TIMER    = 1800000,
     BG_AV_FACTION_A             = 730,
     BG_AV_FACTION_H             = 729,
 };
