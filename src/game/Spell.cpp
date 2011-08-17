@@ -7185,6 +7185,11 @@ bool Spell::CheckTarget( Unit* target, SpellEffectIndex eff )
          || m_spellInfo->Id == 71055)
          && target->HasAura(70867))
          return false;
+
+     // Mind Vision hack
+     if (m_spellInfo->Id == 10909)
+         return true;
+
     // Check targets for LOS visibility (except spells without range limitations )
     switch(m_spellInfo->Effect[eff])
     {
