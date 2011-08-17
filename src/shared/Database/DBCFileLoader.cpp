@@ -119,7 +119,7 @@ bool DBCFileLoader::Load(const char *filename, const char *fmt)
             if (*patched_record > entry) 
                 break;
 
-            sLog.outString ("Applying patch: entry=%u ,%s",entry,patch_data.c_str());
+            sLog.outString ("Applying patch: entry=%u, patch=\"%s\"",entry,patch_data.c_str());
             ++applied_count;
             Tokens::iterator iter;
             int index;
