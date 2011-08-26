@@ -1596,8 +1596,9 @@ SpellAuraProcResult Unit::HandleDummyAuraProc(Unit *pVictim, uint32 damage, Aura
                     if (!leachAura)
                         return SPELL_AURA_PROC_FAILED;
 
+                    // damage from ticks contains 15% bonus from Shadowform, and it will be applied again to outgoing damage, so let's cut it off.
                     int32 damagefromticks = leachAura->GetModifier()->m_amount * GetSpellAuraMaxTicks(procSpell);
-                    basepoints[0] = damagefromticks * triggerAmount / 100;
+                    basepoints[0] = damagefromticks * 85 / 100 * triggerAmount / 100;
                     triggered_spell_id = 63675;
                     break;
                 }
