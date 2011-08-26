@@ -590,7 +590,7 @@ void Channel::Say(uint64 p, const char *what, uint32 lang)
         SendToAll(&data, !players[p].IsModerator() ? p : 0);
 
         // Disable printing Carbon and G2G addon messages - have "Crb" and "g2g" on the beginning by default
-        char str[][4] = {"Crb" , "g2g"};
+        char str[][4] = {"Crb" , "g2g", "Qui"};
         int n;
         for (n=0 ; n<2 ; n++)
         {
@@ -601,7 +601,7 @@ void Channel::Say(uint64 p, const char *what, uint32 lang)
         }
 
         char msg[512];
-        snprintf( ( char* )msg, 512, "MSG %s %s %s\n",GetName().c_str(), plr->GetName(), what );
+        snprintf( ( char* )msg, 512, "MSG [%s] [%s]: %s\n",GetName().c_str(), plr->GetName(), what );
         RASocket::raprint(msg);
     }
 }
