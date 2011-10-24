@@ -65,6 +65,7 @@ class UpdateData;
 class WorldSession;
 class Creature;
 class Player;
+class Group;
 class Unit;
 class Map;
 class UpdateMask;
@@ -575,6 +576,16 @@ class MANGOS_DLL_SPEC WorldObject : public Object
 
         GameObject* SummonGameObject(uint32 id, float x, float y, float z, float ang, uint32 despwtime);
         Creature* SummonCreature(uint32 id, float x, float y, float z, float ang,TempSummonType spwtype,uint32 despwtime, bool asActiveObject = false, bool setOwnerGuid = false);
+        void StartGroupLoot(Group* group, uint32 timer);
+        void StopGroupLoot();
+        ObjectGuid GetLootRecipientGuid() const { return m_lootRecipientGuid; }
+        uint32 GetLootGroupRecipientId() const { return m_lootGroupRecipientId; }
+        Player* GetLootRecipient() const;                   // use group cases as prefered
+        Group* GetGroupLootRecipient() const;
+        bool HasLootRecipient() const { return m_lootGroupRecipientId || !m_lootRecipientGuid.IsEmpty(); }
+        bool IsGroupLootRecipient() const { return m_lootGroupRecipientId; }
+        void SetLootRecipient(Unit* unit);
+        Player* GetOriginalLootRecipient() const;           // ignore group changes/etc, not for looting
 
         // helper functions to select units
         Creature* GetClosestCreatureWithEntry(WorldObject* pSource, uint32 uiEntry, float fMaxSearchRange);
@@ -595,6 +606,12 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         void SetLocationInstanceId(uint32 _instanceId) { m_InstanceId = _instanceId; }
 
         std::string m_name;
+
+        uint32 m_groupLootTimer;                            // (msecs)timer used for group loot
+        uint32 m_groupLootId;                               // used to find group which is looting corpse
+
+        ObjectGuid m_lootRecipientGuid;                     // player who will have rights for looting if m_lootGroupRecipient==0 or group disbanded
+        uint32 m_lootGroupRecipientId;                      // group who will have rights for looting if set and exist
 
         bool m_isActiveObject;
     private:
