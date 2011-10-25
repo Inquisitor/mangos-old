@@ -389,6 +389,15 @@ void GameObject::Update(uint32 update_diff, uint32 p_time)
                         m_cooldownTime = 0;
                     }
                     break;
+                case GAMEOBJECT_TYPE_CHEST:
+                    if (m_groupLootId)
+                    {
+                        if(update_diff < m_groupLootTimer)
+                            m_groupLootTimer -= update_diff;
+                        else
+                            StopGroupLoot();
+                    }
+                    break;
                 default:
                     break;
             }
