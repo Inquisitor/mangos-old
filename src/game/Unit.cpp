@@ -6771,8 +6771,9 @@ int32 Unit::SpellBonusWithCoeffs(SpellEntry const *spellProto, int32 total, int3
             modOwner->ApplySpellMod(spellProto->Id,SPELLMOD_SPELL_BONUS_DAMAGE, coeff);
             coeff /= 100.0f;
         }
+        float LvlPenalty = CalculateLevelPenalty(spellProto);
 
-        total += int32(benefit * coeff);
+        total += int32(benefit * coeff * LvlPenalty);
     }
 
     return total;
@@ -12361,4 +12362,28 @@ bool Unit::IsAllowedDamageInArea(Unit* pVictim) const
         return false;
 
     return true;
+}
+
+float Unit::CalculateLevelPenalty(SpellEntry const* spellProto) const
+{
+    if(!spellProto->spellLevel || !spellProto->maxLevel)
+        return 1.0f;
+
+    if (spellProto->maxLevel <= 0)
+        return 1.0f;
+    //if caster level is lower that max caster level
+    if (getLevel() < spellProto->maxLevel)
+        return 1.0f;
+
+    float LvlPenalty = 0.0f;
+
+    LvlPenalty = (22.0f + float (spellProto->maxLevel) - float (getLevel())) / 20.0f;
+    //to prevent positive effect
+    if (LvlPenalty > 1.0f)
+        return 1.0f;
+    //level penalty is capped at 0
+    if (LvlPenalty < 0.0f)
+        return 0.0f;
+
+    return LvlPenalty;
 }
